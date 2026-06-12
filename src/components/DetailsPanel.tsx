@@ -109,7 +109,10 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
               </div>
               <div>
                 <dt>表示用の角速度</dt>
-                <dd>x(t) = {pattern.mathematics.visualAngularRate.toFixed(2)}t rad</dd>
+                <dd>
+                  x(t) = {pattern.mathematics.visualTime.angularRateRadiansPerSecond.toFixed(2)}t
+                  rad
+                </dd>
               </div>
               <div>
                 <dt>音楽構成</dt>

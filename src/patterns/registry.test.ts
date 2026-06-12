@@ -11,7 +11,19 @@ describe("pattern mathematical provenance", () => {
       coefficientSource: "analytic",
       phasorProjection: "imaginary",
       fftUsed: false,
-      visualAngularRate: 0.31,
+      visualTime: {
+        mode: "absolute-linear",
+        angularRateRadiansPerSecond: 0.31,
+        wrapsWithScore: false,
+      },
+      spectrum: {
+        kind: "analytic-one-sided-sine-amplitude",
+        frequencyScale: "logarithmic",
+        referenceFrequencyHz: 55,
+      },
+      rendering: {
+        method: "sampled-polyline",
+      },
     });
     expect(pattern?.audio.mode).toBe("sonification");
   });
@@ -31,7 +43,7 @@ describe("pattern mathematical provenance", () => {
     expect(pattern?.audio.score.totalSteps).toBe(768);
     expect(pattern?.audio.score.events.filter((event) => event.active)).toHaveLength(468);
     expect(pattern?.audio.score.phasorMapping.visualAngularRate).toBe(
-      pattern?.mathematics.visualAngularRate,
+      pattern?.mathematics.visualTime.angularRateRadiansPerSecond,
     );
   });
 

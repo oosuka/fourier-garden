@@ -20,7 +20,19 @@ export interface MathematicalProvenance {
   coefficientSource: "analytic";
   phasorProjection: "imaginary";
   fftUsed: false;
-  visualAngularRate: number;
+  visualTime: {
+    mode: "absolute-linear";
+    angularRateRadiansPerSecond: number;
+    wrapsWithScore: false;
+  };
+  spectrum: {
+    kind: "analytic-one-sided-sine-amplitude";
+    frequencyScale: "logarithmic";
+    referenceFrequencyHz: number;
+  };
+  rendering: {
+    method: "sampled-polyline";
+  };
   phasorLatex: string;
   complexCoefficientLatex: string;
 }
