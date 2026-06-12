@@ -35,4 +35,21 @@ describe("Transport", () => {
     audioClock = 101;
     expect(transport.currentTime).toBe(4);
   });
+
+  it("rebases a paused position onto the audio clock before playback", () => {
+    let performanceClock = 12;
+    let audioClock = 100;
+    const transport = new Transport(() => performanceClock);
+
+    transport.reset(7.5);
+    transport.setClock(() => audioClock);
+    transport.reset(7.5);
+    transport.play();
+
+    audioClock = 101.25;
+    expect(transport.currentTime).toBeCloseTo(8.75, 12);
+
+    performanceClock = 20;
+    expect(transport.currentTime).toBeCloseTo(8.75, 12);
+  });
 });

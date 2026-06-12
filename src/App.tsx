@@ -13,8 +13,8 @@ export function App() {
   const pattern = patternRegistry[0]!;
   const transport = useMemo(() => new Transport(), []);
   const audio = useMemo(
-    () => new AudioEngine(pattern.audio.fundamentalHz, pattern.audio.initialVolume),
-    [pattern.audio.fundamentalHz, pattern.audio.initialVolume],
+    () => new AudioEngine(pattern.audio.score, pattern.audio.initialVolume),
+    [pattern.audio.initialVolume, pattern.audio.score],
   );
   const [entered, setEntered] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -48,13 +48,20 @@ export function App() {
 
   const startPlayback = useCallback(async () => {
     const position = transport.currentTime;
-    transport.play();
-    setPlaying(true);
+    setPlaying(false);
+
     try {
       await audio.play(position);
       transport.setClock(() => audio.currentTime);
+      transport.reset(position);
+      transport.play();
+      setPlaying(true);
       setAudioError("");
     } catch (error) {
+      transport.pause();
+      transport.reset(position);
+      audio.pause();
+      setPlaying(false);
       setAudioError(error instanceof Error ? error.message : "音声を開始できませんでした");
     }
   }, [audio, transport]);
@@ -228,7 +235,7 @@ export function App() {
       {audioError && entered && (
         <div className="audioNotice interfaceLayer">
           <AlertCircle aria-hidden="true" />
-          <span>映像のみで再生中</span>
+          <span>音声を開始できませんでした</span>
         </div>
       )}
 

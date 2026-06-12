@@ -1,10 +1,5 @@
 import { createSeededRandom } from "../core/seed";
-import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
-import {
-  RESIDUE_BLOOM_SCORE_DEFINITION,
-  buildMusicalScoreProgram,
-  type MusicalScoreProgram,
-} from "./musicalScore";
+import type { MusicalScoreProgram } from "./musicalScore";
 import { createWorkletConfiguration } from "./synthesis";
 
 const VOLUME_KEY = "fourier-garden:volume";
@@ -15,21 +10,12 @@ export class AudioEngine {
   private master: GainNode | null = null;
   private analyser: AnalyserNode | null = null;
   private audioNodes: AudioNode[] = [];
-  private readonly score: MusicalScoreProgram;
   private volume: number;
 
-  constructor(score: MusicalScoreProgram, initialVolume?: number);
-  constructor(fundamentalHz: number, initialVolume?: number);
-  constructor(scoreOrFundamental: MusicalScoreProgram | number, initialVolume = 0.35) {
-    this.score =
-      typeof scoreOrFundamental === "number"
-        ? buildMusicalScoreProgram(
-            RESIDUE_BLOOM_SCORE_DEFINITION,
-            RESIDUE_BLOOM_SERIES,
-            scoreOrFundamental,
-            RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
-          )
-        : scoreOrFundamental;
+  constructor(
+    private readonly score: MusicalScoreProgram,
+    initialVolume = 0.35,
+  ) {
     const saved = Number.parseFloat(localStorage.getItem(VOLUME_KEY) ?? "");
     this.volume = Number.isFinite(saved) ? Math.min(1, Math.max(0, saved)) : initialVolume;
   }
