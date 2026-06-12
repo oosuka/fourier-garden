@@ -52,6 +52,27 @@
 - [x] WebGPU and forced WebGL2 states rendered successfully.
 - [x] 3840 x 2160 viewport measured at `60.0 fps` in the in-app Chrome runtime.
 
+**Audiovisual Score Synchronization QA**
+
+- fixed query parameters: `?seed=qa&quality=high`
+- renderer: 未実施（WebGPU / forced WebGL2を個別記録する）
+- viewport: 未実施（16:10 / 16:9 / ultrawide / 3840 x 2160）
+- tested score timestamps: 未実施
+- audible onset to halo: 未実施
+- audible onset to burst particles: 未実施
+- audible onset to membrane and bloom: 未実施
+- phrase index 0 distinguishability: 未実施
+- exact epicycles, endpoint, connector, and primary waveform stability: 未実施
+- 144-second loop boundary: 未実施
+- pause and resume: 未実施
+- tab visibility recovery: 未実施
+- console errors and unhandled rejections: 未実施
+- 3840 x 2160 bloom-section average FPS over 60 seconds: 未実施
+- headphone listening: 未実施
+- Mac built-in speaker listening: 未実施
+- continuous listening duration: 0分
+- remaining risks: ブラウザ実測と実機試聴後に更新する
+
 **Follow-up Polish**
 
 - [P3] A future chapter can push the membrane topology closer to reference 03 without changing this chapter's residue-class identity.

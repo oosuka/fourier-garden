@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { renderToString } from "katex";
 
 import type { AudioEngine } from "../audio/AudioEngine";
-import { createRhythmPreset } from "../audio/synthesis";
 import { getAnalyticSpectrum } from "../math/fourier";
 import type { PatternDefinition } from "../patterns/types";
 import { SpectrumCanvas, WaveformCanvas } from "./DataCanvas";
@@ -38,7 +37,7 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
     pattern.mathematics.phasorLatex,
   ]);
   const spectrum = getAnalyticSpectrum(pattern.formula, pattern.audio.fundamentalHz);
-  const rhythm = createRhythmPreset(pattern.audio.fundamentalHz);
+  const score = pattern.audio.score;
 
   return (
     <aside className={`detailsPanel ${open ? "detailsPanel--open" : ""}`}>
@@ -97,6 +96,11 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
               dangerouslySetInnerHTML={{ __html: renderedMath.phasor }}
             />
             <p>{pattern.education.mathematicalBody}</p>
+            <p>
+              イベント時刻 tₑ の z(0.31tₑ) を ΣAₖ で正規化し、実部を定位、
+              虚部を後段フィルターの明るさ、絶対値をアクセントと余韻へ有界に写像します。
+              円、終点、主波形の座標は変形しません。
+            </p>
             <p className="scopeNotice">{pattern.education.scopeNotice}</p>
             <dl className="parameterList">
               <div>
@@ -108,14 +112,29 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
                 <dd>x(t) = {pattern.mathematics.visualAngularRate.toFixed(2)}t rad</dd>
               </div>
               <div>
-                <dt>音響パルス</dt>
-                <dd>{rhythm.bpm} BPM / 16分音符</dd>
+                <dt>音楽構成</dt>
+                <dd>80 BPM / 4/4 / 48小節 / 2分24秒</dd>
+              </div>
+              <div>
+                <dt>区間</dt>
+                <dd>導入 → 成長 → 開花 → 静寂 → 再開</dd>
+              </div>
+              <div>
+                <dt>同期</dt>
+                <dd>AudioContext基準の共通イベントスコア</dd>
               </div>
               <div>
                 <dt>発音中心</dt>
                 <dd>
-                  8f₀ / 9f₀ ({rhythm.frequenciesHz[1]?.toFixed(0)} /{" "}
-                  {rhythm.frequenciesHz[0]?.toFixed(0)} Hz)
+                  8f₀ / 9f₀ (
+                  {(score.definition.carrierMultipliers[1] * pattern.audio.fundamentalHz).toFixed(
+                    0,
+                  )}{" "}
+                  /{" "}
+                  {(score.definition.carrierMultipliers[0] * pattern.audio.fundamentalHz).toFixed(
+                    0,
+                  )}{" "}
+                  Hz)
                 </dd>
               </div>
               <div>
