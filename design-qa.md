@@ -124,9 +124,26 @@
 - listening status:
   音響実装は変更していない。ユーザーは変更前の音楽変化を心地よいと確認済みだが、
   ヘッドホンとMac内蔵スピーカーの機器別試聴は未確認
-- pending final pass:
-  全アスペクト比、144秒連続境界、一時停止・再開、タブ復帰、60秒性能計測、
-  `npm run check`、`git diff --check`
+- final standard verification:
+  `npm run check`成功。format、Oxlint、54 tests、typecheck、production buildが成功。
+  `git diff --check`も成功
+- final aspect-ratio QA:
+  `1440 x 900`、`1600 x 900`、`2560 x 1080`、`3840 x 2160`で
+  scene canvasがviewport全体へ一致し、documentのscroll width/heightもviewportと一致。
+  水平・垂直overflowは0
+- final 144-second loop QA:
+  Chrome WebGPUでseekなしに`03:43`まで連続再生し、144秒境界通過後も
+  一時停止表示、描画、音声transportが継続。warning/errorは0件
+- final pause/resume QA:
+  Chrome forced WebGL2で`00:00`停止、1.1秒後も`00:00`維持、再開1.1秒後に
+  `00:01`へ進むことを確認。warning/errorは0件
+- final tab visibility QA:
+  Chrome拡張管理下のWebGPU/WebGL2両タブが同時に`visible`を返したため、
+  実際のhidden状態とタブ復帰は自動確認できず未確認
+- final 4K performance QA:
+  内蔵Chrome runtime、WebGPU、`3840 x 2160`、`?seed=qa&quality=high`で
+  60秒・30標本を計測。平均`59.95 fps`、最小`58.5 fps`、最大`60.0 fps`。
+  warning/errorは0件。JS heapの長時間増加は今回の計測APIでは未測定
 
 **Follow-up Polish**
 
