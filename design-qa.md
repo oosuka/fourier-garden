@@ -165,9 +165,54 @@
   二周目フェーザ、ループ直後の前周回履歴、反復表の禁止フィールド、
   デチューン後ガード、章定義validator、スペクトル軸の回帰テストを追加
 - browser verification:
-  新実装のWebGPU/WebGL2二周QAは未実施。完了結果は後続QAで追記する
+  新実装をWebGPUとforced WebGL2で確認。詳細は後続の実測結果を参照
 - listening status:
   ヘッドホンとMac内蔵スピーカーの実機試聴は未実施のまま
+
+**Mathematical Integrity Browser QA**
+
+- date: `2026-06-13`
+- Chrome query:
+  WebGPUは`?seed=qa&quality=high`、WebGL2は
+  `?renderer=webgl&seed=qa&quality=high`
+- viewport:
+  `1563 x 843`、device pixel ratio `2`。document overflowは水平・垂直ともに0
+- first-three-second response:
+  WebGPU開始後`00:02`で発音に同期するハロー、粒子、膜、色変化と
+  処理後音響波形を視認。厳密な円、終点、connector、主波形は独立した数学線を維持
+- mathematical details:
+  数学時刻`x(t)=0.31t`の非リセット、絶対イベント時刻による`p_x`、`p_y`、
+  `p_r`、片側正弦振幅`A_k`、解析的周波数対応、数値描画の説明を確認。
+  スペクトル棒と`55`、`440`、`1k`、`2.7k Hz`目盛は同じ対数軸を使用
+- 144-second boundary:
+  WebGPUをseekなしで`02:33`まで再生し、144秒境界後も描画、音声transport、
+  一時停止表示が継続。さらに`08:51`まで動作し、warning/errorは0件。
+  forced WebGL2もseekなしで`03:13`まで再生し、同じく境界後の描画とtransportを確認。
+  二周目の絶対時刻フェーザ値そのものは単体テストで検証
+- pause and resume:
+  WebGPUは`03:07`で停止し1.2秒後も同時刻、再開後`03:09`へ進行。
+  forced WebGL2はSpaceで`01:18`に停止し1.3秒後も同時刻、再開後`01:19`へ進行
+- volume persistence:
+  UIで`55%`から`35%`へ変更し、再読み込み後も`35%`を復元。
+  QA後は元の`55%`へ戻した
+- renderer and console:
+  WebGPU、forced WebGL2とも描画と音声開始を確認。
+  warning、error、未処理rejectionは取得範囲で0件
+- performance:
+  WebGPU単独通常表示、`1563 x 843`、device pixel ratio `2`で60秒・30標本を計測。
+  平均、最小、最大すべて`60.0 fps`。この結果は既存の4K計測とは別条件
+- tab visibility recovery:
+  Chrome拡張管理下ではWebGPU/WebGL2両タブが`visible`を返し、hidden状態を
+  発生させられなかったため未確認
+- fullscreen:
+  自動操作からFullscreen APIへ遷移しなかったため、実ブラウザでの全画面遷移と解除は未確認
+- headphone listening: 未実施
+- Mac built-in speaker listening: 未実施
+- continuous listening duration: 0分
+- completion status:
+  数学、DSP、表示、renderer、transport、性能の自動・ブラウザ検証は成功。
+  全画面、タブ非表示復帰、ヘッドホン、Mac内蔵スピーカーは手動QAが必要なため、
+  音響を含む最終完了とは判定しない
 
 **Follow-up Polish**
 
