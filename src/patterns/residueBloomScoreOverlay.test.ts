@@ -12,6 +12,7 @@ import {
   getHistoryPulsePoint,
   getHistoryPulseWindow,
   getPhraseColorHex,
+  getRendererVisibilityScale,
   getWaveTrailVerticalDrift,
 } from "./residueBloomScoreOverlay";
 
@@ -112,5 +113,10 @@ describe("Residue Bloom score overlay", () => {
   it("keeps the strict primary waveform free of poetic vertical drift", () => {
     expect(getWaveTrailVerticalDrift(10, 0)).toBe(0);
     expect(Math.abs(getWaveTrailVerticalDrift(10, 1))).toBeGreaterThan(0);
+  });
+
+  it("compensates poetic overlay opacity only on WebGL", () => {
+    expect(getRendererVisibilityScale("webgpu")).toBe(1);
+    expect(getRendererVisibilityScale("webgl")).toBeCloseTo(1.32, 12);
   });
 });

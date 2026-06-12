@@ -34,6 +34,7 @@ import {
   getHistoryPulsePoint,
   getHistoryPulseWindow,
   getPhraseColorHex,
+  getRendererVisibilityScale,
   getWaveTrailVerticalDrift,
 } from "./residueBloomScoreOverlay";
 import type {
@@ -725,6 +726,7 @@ class ResidueBloomScene implements PatternScene {
     phraseIndex: number,
   ): void {
     const spokePositions = this.spokes.positions;
+    const rendererVisibilityScale = getRendererVisibilityScale(this.backend);
     spokePositions[0] = 0;
     spokePositions[1] = 0;
     spokePositions[2] = 0.2;
@@ -739,7 +741,7 @@ class ResidueBloomScene implements PatternScene {
       corona.scale.copy(circle.scale);
       const presentation = getCoronaPresentation(index, response.coronaStrength, phraseIndex);
       const coronaMaterial = corona.material as THREE.LineBasicMaterial;
-      coronaMaterial.opacity = presentation.opacity;
+      coronaMaterial.opacity = Math.min(1, presentation.opacity * rendererVisibilityScale);
       coronaMaterial.color.setHex(presentation.colorHex);
 
       const offset = (index + 1) * 3;
@@ -757,7 +759,7 @@ class ResidueBloomScene implements PatternScene {
     this.spokeNodes.geometry.computeBoundingSphere();
     const spokeNodeMaterial = this.spokeNodes.material as THREE.PointsMaterial;
     spokeNodeMaterial.color.setHex(getPhraseColorHex(phraseIndex));
-    spokeNodeMaterial.opacity = response.spokeNodeOpacity;
+    spokeNodeMaterial.opacity = Math.min(1, response.spokeNodeOpacity * rendererVisibilityScale);
   }
 
   private updateConnector(endpointX: number, endpointY: number, waveStart: number): void {
@@ -795,6 +797,7 @@ class ResidueBloomScene implements PatternScene {
     scale: number,
   ): void {
     const worldRight = this.camera.right + 1.4;
+    const rendererVisibilityScale = getRendererVisibilityScale(this.backend);
 
     for (let slot = 0; slot < HISTORY_PULSE_SLOT_COUNT; slot += 1) {
       const pulse = this.historyPulseLines[slot]!;
@@ -828,7 +831,10 @@ class ResidueBloomScene implements PatternScene {
 
       const colorHex = getPhraseColorHex(impulse.event.phraseIndex);
       const eventStrength = Math.max(impulse.impact, impulse.tail * 0.45);
-      const opacity = Math.min(0.96, response.historyPulseOpacity * eventStrength);
+      const opacity = Math.min(
+        0.96,
+        response.historyPulseOpacity * eventStrength * rendererVisibilityScale,
+      );
       const pulseMaterial = pulse.line.material as THREE.LineBasicMaterial;
       pulseMaterial.color.setHex(colorHex);
       pulseMaterial.opacity = opacity;

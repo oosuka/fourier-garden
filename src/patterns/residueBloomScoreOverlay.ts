@@ -80,3 +80,7 @@ export function getHistoryPulsePoint(
 export function getWaveTrailVerticalDrift(timeSeconds: number, trailIndex: number): number {
   return trailIndex === 0 ? 0 : Math.sin(timeSeconds * 0.037) * 0.12;
 }
+
+export function getRendererVisibilityScale(backend: "webgpu" | "webgl"): number {
+  return backend === "webgl" ? 1.32 : 1;
+}
