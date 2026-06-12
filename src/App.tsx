@@ -1,12 +1,6 @@
 import { AlertCircle, AudioLines, LoaderCircle } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import katex from "katex";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { renderToString } from "katex";
 
 import { AudioEngine } from "./audio/AudioEngine";
 import { CanvasStage } from "./components/CanvasStage";
@@ -19,11 +13,7 @@ export function App() {
   const pattern = patternRegistry[0]!;
   const transport = useMemo(() => new Transport(), []);
   const audio = useMemo(
-    () =>
-      new AudioEngine(
-        pattern.audio.fundamentalHz,
-        pattern.audio.initialVolume,
-      ),
+    () => new AudioEngine(pattern.audio.fundamentalHz, pattern.audio.initialVolume),
     [pattern.audio.fundamentalHz, pattern.audio.initialVolume],
   );
   const [entered, setEntered] = useState(false);
@@ -32,16 +22,14 @@ export function App() {
   const [fullscreen, setFullscreen] = useState(false);
   const [volume, setVolume] = useState(audio.currentVolume);
   const [uiVisible, setUiVisible] = useState(true);
-  const [sceneStatus, setSceneStatus] = useState<
-    "loading" | "ready" | "error"
-  >("loading");
+  const [sceneStatus, setSceneStatus] = useState<"loading" | "ready" | "error">("loading");
   const [sceneError, setSceneError] = useState("");
   const [audioError, setAudioError] = useState("");
   const hideTimer = useRef<number>(0);
   const autoPaused = useRef(false);
   const formula = useMemo(
     () =>
-      katex.renderToString(pattern.formulaLatex, {
+      renderToString(pattern.formulaLatex, {
         throwOnError: false,
         displayMode: true,
       }),
@@ -67,11 +55,7 @@ export function App() {
       transport.setClock(() => audio.currentTime);
       setAudioError("");
     } catch (error) {
-      setAudioError(
-        error instanceof Error
-          ? error.message
-          : "音声を開始できませんでした",
-      );
+      setAudioError(error instanceof Error ? error.message : "音声を開始できませんでした");
     }
   }, [audio, transport]);
 
@@ -212,14 +196,8 @@ export function App() {
 
       <section className="formulaBlock interfaceLayer">
         <span className="eyebrow">FOURIER SERIES / フーリエ級数</span>
-        <div
-          className="mainFormula"
-          dangerouslySetInnerHTML={{ __html: formula }}
-        />
-        <p>
-          Exact phasor synthesis and primary waveform · band-limited
-          musical sonification.
-        </p>
+        <div className="mainFormula" dangerouslySetInnerHTML={{ __html: formula }} />
+        <p>Exact phasor synthesis and primary waveform · band-limited musical sonification.</p>
       </section>
 
       <section className="poeticBlock interfaceLayer">
@@ -285,9 +263,7 @@ export function App() {
             <i />
             <span>∞</span>
           </div>
-          <p className="entryEyebrow">
-            FINITE FOURIER SERIES · PHASOR SYNTHESIS
-          </p>
+          <p className="entryEyebrow">FINITE FOURIER SERIES · PHASOR SYNTHESIS</p>
           <h2>FOURIER GARDEN</h2>
           <p className="entryJapanese">
             複素平面を回る13のフェーザが、

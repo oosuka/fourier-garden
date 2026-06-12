@@ -1,20 +1,14 @@
 import { useEffect, useRef } from "react";
 
 import type { AudioEngine } from "../audio/AudioEngine";
-import {
-  RESIDUE_BLOOM_SERIES,
-  evaluateSeries,
-  getAnalyticSpectrum,
-} from "../math/fourier";
+import { RESIDUE_BLOOM_SERIES, evaluateSeries, getAnalyticSpectrum } from "../math/fourier";
 
 interface DataCanvasProps {
   audio: AudioEngine;
   playing: boolean;
 }
 
-function resizeCanvas(
-  canvas: HTMLCanvasElement,
-): CanvasRenderingContext2D | null {
+function resizeCanvas(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
   const rect = canvas.getBoundingClientRect();
   const width = Math.max(1, Math.floor(rect.width * ratio));
@@ -52,10 +46,7 @@ export function SpectrumCanvas() {
     }
 
     spectrum.forEach((bin, index) => {
-      const x =
-        8 +
-        (Math.log10(bin.frequencyHz / 45) / Math.log10(3_200 / 45)) *
-          (rect.width - 16);
+      const x = 8 + (Math.log10(bin.frequencyHz / 45) / Math.log10(3_200 / 45)) * (rect.width - 16);
       const normalized = bin.amplitude / 5;
       const height = Math.max(3, normalized * (rect.height - 12));
       context.strokeStyle = colors[index % colors.length]!;
@@ -70,7 +61,13 @@ export function SpectrumCanvas() {
     context.shadowBlur = 0;
   }, []);
 
-  return <canvas ref={canvasRef} className="dataCanvas spectrumCanvas" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="dataCanvas spectrumCanvas"
+      aria-label="有限フーリエ級数の解析的係数スペクトル"
+    />
+  );
 }
 
 export function WaveformCanvas({ audio, playing }: DataCanvasProps) {
@@ -107,11 +104,7 @@ export function WaveformCanvas({ audio, playing }: DataCanvasProps) {
           const dataIndex = Math.floor(progress * (audioData.length - 1));
           value = (audioData[dataIndex]! - 128) / 128;
         } else {
-          value =
-            evaluateSeries(
-              RESIDUE_BLOOM_SERIES,
-              progress * Math.PI * 3 + phase,
-            ) / 9;
+          value = evaluateSeries(RESIDUE_BLOOM_SERIES, progress * Math.PI * 3 + phase) / 9;
         }
         const x = progress * rect.width;
         const y = rect.height * 0.5 - value * rect.height * 0.34;
@@ -127,5 +120,11 @@ export function WaveformCanvas({ audio, playing }: DataCanvasProps) {
     return () => cancelAnimationFrame(frame);
   }, [audio, playing]);
 
-  return <canvas ref={canvasRef} className="dataCanvas waveformCanvas" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="dataCanvas waveformCanvas"
+      aria-label="ソニフィケーション音声の時間波形"
+    />
+  );
 }

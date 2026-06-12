@@ -1,11 +1,6 @@
 import type { QualityLevel } from "../patterns/types";
 
-const LEVELS: readonly QualityLevel[] = [
-  "low",
-  "medium",
-  "high",
-  "ultra",
-];
+const LEVELS: readonly QualityLevel[] = ["low", "medium", "high", "ultra"];
 
 export class AdaptiveQuality {
   private samples: number[] = [];
@@ -16,18 +11,14 @@ export class AdaptiveQuality {
   ) {}
 
   sample(deltaSeconds: number): QualityLevel | null {
-    if (
-      !Number.isFinite(deltaSeconds) ||
-      deltaSeconds <= 0 ||
-      deltaSeconds > 0.25
-    ) {
+    if (!Number.isFinite(deltaSeconds) || deltaSeconds <= 0 || deltaSeconds > 0.25) {
       return null;
     }
 
     this.samples.push(1 / deltaSeconds);
     if (this.samples.length < this.windowSize) return null;
 
-    const sorted = [...this.samples].sort((a, b) => a - b);
+    const sorted = this.samples.toSorted((a, b) => a - b);
     const percentileIndex = Math.floor(sorted.length * 0.2);
     const lowPercentile = sorted[percentileIndex] ?? 60;
     this.samples = [];

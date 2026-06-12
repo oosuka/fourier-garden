@@ -19,14 +19,8 @@ describe("pattern mathematical provenance", () => {
   it("provides the exact phasor, complex-coefficient, and sonification equations", () => {
     const pattern = patternRegistry[0];
 
-    expect(pattern?.mathematics.phasorLatex).toContain(
-      "\\operatorname{Im}",
-    );
-    expect(pattern?.mathematics.complexCoefficientLatex).toContain(
-      "c_{-n_k}",
-    );
-    expect(pattern?.audio.sonificationLatex).toContain(
-      "n_k\\nu_j",
-    );
+    expect(pattern?.mathematics.phasorLatex).toContain("\\operatorname{Im}");
+    expect(pattern?.mathematics.complexCoefficientLatex).toContain("c_{-n_k}");
+    expect(pattern?.audio.sonificationLatex).toContain("n_k\\nu_j");
   });
 });

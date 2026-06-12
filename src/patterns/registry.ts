@@ -1,7 +1,4 @@
-import {
-  RESIDUE_BLOOM_SERIES,
-  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
-} from "../math/fourier";
+import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
 import type { PatternDefinition } from "./types";
 
 export const patternRegistry: readonly PatternDefinition[] = [
@@ -16,8 +13,7 @@ export const patternRegistry: readonly PatternDefinition[] = [
       en: "An observatory for harmonics congruent to one",
       ja: "4で割って1余る倍音の観測所",
     },
-    formulaLatex:
-      "f(x)=5\\sum_{k=0}^{12}\\frac{1}{k+1}\\sin((4k+1)x)",
+    formulaLatex: "f(x)=5\\sum_{k=0}^{12}\\frac{1}{k+1}\\sin((4k+1)x)",
     formula: RESIDUE_BLOOM_SERIES,
     terms: RESIDUE_BLOOM_SERIES.terms,
     mathematics: {
@@ -26,10 +22,8 @@ export const patternRegistry: readonly PatternDefinition[] = [
       phasorProjection: "imaginary",
       fftUsed: false,
       visualAngularRate: RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
-      phasorLatex:
-        "z(x)=\\sum_{k=0}^{12}A_k e^{i n_kx},\\quad f(x)=\\operatorname{Im}z(x)",
-      complexCoefficientLatex:
-        "c_{n_k}=-\\frac{iA_k}{2},\\quad c_{-n_k}=\\frac{iA_k}{2}",
+      phasorLatex: "z(x)=\\sum_{k=0}^{12}A_k e^{i n_kx},\\quad f(x)=\\operatorname{Im}z(x)",
+      complexCoefficientLatex: "c_{n_k}=-\\frac{iA_k}{2},\\quad c_{-n_k}=\\frac{iA_k}{2}",
     },
     audio: {
       mode: "sonification",

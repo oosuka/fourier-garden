@@ -15,9 +15,7 @@ export class Transport {
   }
 
   get currentTime(): number {
-    return this.playing
-      ? this.elapsed + (this.clock() - this.anchorTime)
-      : this.elapsed;
+    return this.playing ? this.elapsed + (this.clock() - this.anchorTime) : this.elapsed;
   }
 
   play(): void {

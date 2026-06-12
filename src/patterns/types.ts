@@ -1,7 +1,4 @@
-import type {
-  FourierSeriesDefinition,
-  FourierTerm,
-} from "../math/fourier";
+import type { FourierSeriesDefinition, FourierTerm } from "../math/fourier";
 
 export interface LocalizedText {
   en: string;
@@ -63,9 +60,7 @@ export interface PatternSceneOptions {
   onDeviceLost?: () => void;
 }
 
-export type PatternSceneFactory = (
-  options: PatternSceneOptions,
-) => Promise<PatternScene>;
+export type PatternSceneFactory = (options: PatternSceneOptions) => Promise<PatternScene>;
 
 export interface PatternDefinition {
   id: string;

@@ -1,10 +1,4 @@
-import {
-  Expand,
-  Info,
-  Pause,
-  Play,
-  Volume2,
-} from "lucide-react";
+import { Expand, Info, Pause, Play, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { Transport } from "../core/transport";
@@ -94,8 +88,7 @@ export function ControlBar({
 
       <div className="chapterControl">
         <span className="eyebrow">
-          CHAPTER {String(pattern.order).padStart(2, "0")} /{" "}
-          {String(chapterCount).padStart(2, "0")}
+          CHAPTER {String(pattern.order).padStart(2, "0")} / {String(chapterCount).padStart(2, "0")}
         </span>
         <strong>{pattern.title.en}</strong>
         <small>{pattern.title.ja}</small>

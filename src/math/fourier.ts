@@ -48,23 +48,14 @@ export const RESIDUE_BLOOM_SERIES: FourierSeriesDefinition = {
 
 export const RESIDUE_BLOOM_VISUAL_ANGULAR_RATE = 0.31;
 
-export function evaluateSeries(
-  series: FourierSeriesDefinition,
-  angle: number,
-): number {
+export function evaluateSeries(series: FourierSeriesDefinition, angle: number): number {
   return series.terms.reduce(
-    (sum, term) =>
-      sum +
-      term.amplitude *
-        Math.sin(term.harmonic * angle + term.sinePhase),
+    (sum, term) => sum + term.amplitude * Math.sin(term.harmonic * angle + term.sinePhase),
     0,
   );
 }
 
-export function getEpicycleSteps(
-  series: FourierSeriesDefinition,
-  angle: number,
-): EpicycleStep[] {
+export function getEpicycleSteps(series: FourierSeriesDefinition, angle: number): EpicycleStep[] {
   let x = 0;
   let y = 0;
 
@@ -86,10 +77,7 @@ export function getEpicycleSteps(
   });
 }
 
-export function evaluateEpicycle(
-  series: FourierSeriesDefinition,
-  angle: number,
-): ComplexPoint {
+export function evaluateEpicycle(series: FourierSeriesDefinition, angle: number): ComplexPoint {
   const endpoint = getEpicycleSteps(series, angle).at(-1);
   return endpoint ? { x: endpoint.x, y: endpoint.y } : { x: 0, y: 0 };
 }
@@ -98,10 +86,8 @@ export function getComplexFourierCoefficients(
   series: FourierSeriesDefinition,
 ): ComplexFourierCoefficient[] {
   return series.terms.flatMap((term) => {
-    const real =
-      (term.amplitude * Math.sin(term.sinePhase)) / 2;
-    const imaginary =
-      (-term.amplitude * Math.cos(term.sinePhase)) / 2;
+    const real = (term.amplitude * Math.sin(term.sinePhase)) / 2;
+    const imaginary = (-term.amplitude * Math.cos(term.sinePhase)) / 2;
 
     return [
       {

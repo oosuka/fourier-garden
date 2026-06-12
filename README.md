@@ -36,22 +36,42 @@ n_k=4k+1
 
 - macOS最新版
 - Chrome最新版
-- Node.js 24以降
+- [Volta](https://volta.sh/)
+- Node.js `24.16.0`
+- npm `11.17.0`
+
+Node.jsとnpmは `package.json` の `volta` フィールドでプロジェクト単位に固定しています。
+Voltaを導入した状態でこのディレクトリへ移動すると、固定バージョンが使用されます。
 
 ## Development
 
 ```bash
+node --version
+npm --version
 npm install
 npm run dev
 ```
 
-production build:
+すべての品質検証:
 
 ```bash
+npm run check
+```
+
+個別のコマンド:
+
+```bash
+npm run format
+npm run format:check
+npm run lint
+npm run lint:fix
 npm run typecheck
 npm test
 npm run build
 ```
+
+コード整形はBiome、静的解析はOxlint、型検査はTypeScriptが担当します。
+Biomeのlinterは無効化し、規則の二重管理を避けています。
 
 ## Controls
 

@@ -884,7 +884,7 @@ input:focus-visible {
   }
 }
 
-@media (min-aspect-ratio: 2/1) {
+@media (min-aspect-ratio: 2 / 1) {
   .brandBlock {
     left: 3vw;
   }

@@ -13,9 +13,5 @@ export function createSeededRandom(seed: number): RandomSource {
 }
 
 export function dateSeed(date = new Date()): number {
-  return (
-    date.getFullYear() * 10_000 +
-    (date.getMonth() + 1) * 100 +
-    date.getDate()
-  );
+  return date.getFullYear() * 10_000 + (date.getMonth() + 1) * 100 + date.getDate();
 }

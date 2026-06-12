@@ -4,10 +4,7 @@ import { AdaptiveQuality } from "../core/adaptiveQuality";
 import { dateSeed } from "../core/seed";
 import type { Transport } from "../core/transport";
 import type { PatternDefinition } from "../patterns/types";
-import type {
-  PatternScene,
-  PatternSceneFactory,
-} from "../patterns/types";
+import type { PatternScene, PatternSceneFactory } from "../patterns/types";
 
 interface CanvasStageProps {
   pattern: PatternDefinition;
@@ -24,13 +21,7 @@ function getSceneSeed(): number {
   return Number.isFinite(parsed) ? parsed : dateSeed();
 }
 
-export function CanvasStage({
-  pattern,
-  transport,
-  playing,
-  onStatus,
-  onError,
-}: CanvasStageProps) {
+export function CanvasStage({ pattern, transport, playing, onStatus, onError }: CanvasStageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playingRef = useRef(playing);
 
@@ -51,16 +42,12 @@ export function CanvasStage({
     let sampleStarted = previousFrame;
     let sampleFrames = 0;
     const initialQuality =
-      new URLSearchParams(window.location.search).get("quality") ===
-      "ultra"
-        ? "ultra"
-        : "high";
+      new URLSearchParams(window.location.search).get("quality") === "ultra" ? "ultra" : "high";
     const adaptiveQuality = new AdaptiveQuality(initialQuality, 180);
 
     const fail = (error: unknown) => {
       console.error("Fourier Garden scene initialization failed", error);
-      const message =
-        error instanceof Error ? error.message : "描画の初期化に失敗しました";
+      const message = error instanceof Error ? error.message : "描画の初期化に失敗しました";
       onStatus("error");
       onError(message);
     };
@@ -81,17 +68,11 @@ export function CanvasStage({
         return;
       }
 
-      const delta = Math.min(
-        0.1,
-        Math.max(1 / 240, (now - previousFrame) / 1_000),
-      );
+      const delta = Math.min(0.1, Math.max(1 / 240, (now - previousFrame) / 1_000));
       previousFrame = now;
       sampleFrames += 1;
       if (now - sampleStarted >= 2_000) {
-        canvas.dataset.fps = (
-          sampleFrames /
-          ((now - sampleStarted) / 1_000)
-        ).toFixed(1);
+        canvas.dataset.fps = (sampleFrames / ((now - sampleStarted) / 1_000)).toFixed(1);
         sampleStarted = now;
         sampleFrames = 0;
       }
@@ -160,10 +141,7 @@ export function CanvasStage({
       disposed = true;
       cancelAnimationFrame(animationFrame);
       window.removeEventListener("resize", resize);
-      canvas.removeEventListener(
-        "webglcontextrestored",
-        onWebGLContextRestored,
-      );
+      canvas.removeEventListener("webglcontextrestored", onWebGLContextRestored);
       scene?.dispose();
       scene = null;
     };

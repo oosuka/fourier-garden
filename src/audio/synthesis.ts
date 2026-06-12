@@ -1,7 +1,4 @@
-import {
-  RESIDUE_BLOOM_SERIES,
-  getAnalyticSpectrum,
-} from "../math/fourier";
+import { RESIDUE_BLOOM_SERIES, getAnalyticSpectrum } from "../math/fourier";
 
 export interface AudioPartial {
   harmonic: number;
@@ -35,22 +32,16 @@ export interface SonificationComponent extends AudioPartial {
   included: boolean;
 }
 
-export function createAudioPartials(
-  fundamentalHz: number,
-): AudioPartial[] {
-  return getAnalyticSpectrum(RESIDUE_BLOOM_SERIES, fundamentalHz).map(
-    (bin) => ({
-      harmonic: bin.harmonic,
-      sourceFrequencyHz: bin.frequencyHz,
-      sourceAmplitude: bin.amplitude,
-      sinePhase: bin.sinePhase,
-    }),
-  );
+export function createAudioPartials(fundamentalHz: number): AudioPartial[] {
+  return getAnalyticSpectrum(RESIDUE_BLOOM_SERIES, fundamentalHz).map((bin) => ({
+    harmonic: bin.harmonic,
+    sourceFrequencyHz: bin.frequencyHz,
+    sourceAmplitude: bin.amplitude,
+    sinePhase: bin.sinePhase,
+  }));
 }
 
-export function createRhythmPreset(
-  fundamentalHz: number,
-): AudioRhythmPreset {
+export function createRhythmPreset(fundamentalHz: number): AudioRhythmPreset {
   const bpm = 80;
   const stepsPerBeat = 4;
   const pitchMultipliers = [9, 8, 8, 9];
@@ -59,9 +50,7 @@ export function createRhythmPreset(
     bpm,
     stepsPerBeat,
     stepSeconds: 60 / bpm / stepsPerBeat,
-    frequenciesHz: pitchMultipliers.map(
-      (multiplier) => fundamentalHz * multiplier,
-    ),
+    frequenciesHz: pitchMultipliers.map((multiplier) => fundamentalHz * multiplier),
     attackSeconds: 0.006,
     decaySeconds: 0.075,
     releaseSeconds: 0.024,
@@ -77,24 +66,21 @@ export function getSonificationComponents(
   sampleRate: number,
 ): SonificationComponent[] {
   const rhythm = createRhythmPreset(fundamentalHz);
-  const frequencyLimit =
-    sampleRate * 0.5 * rhythm.antiAliasRatio;
+  const frequencyLimit = sampleRate * 0.5 * rhythm.antiAliasRatio;
 
-  return createAudioPartials(fundamentalHz).map(
-    (partial, index) => {
-      const audibleFrequencyHz =
-        carrierHz * partial.harmonic;
+  return createAudioPartials(fundamentalHz).map((partial, index) => {
+    const audibleFrequencyHz = carrierHz * partial.harmonic;
 
-      return {
-        ...partial,
-        audibleFrequencyHz,
-        weightedAmplitude:
-          partial.sourceAmplitude /
-          Math.pow(index + 1, rhythm.timbreDamping),
-        included: audibleFrequencyHz < frequencyLimit,
-      };
-    },
-  );
+    return {
+      harmonic: partial.harmonic,
+      sourceFrequencyHz: partial.sourceFrequencyHz,
+      sourceAmplitude: partial.sourceAmplitude,
+      sinePhase: partial.sinePhase,
+      audibleFrequencyHz,
+      weightedAmplitude: partial.sourceAmplitude / Math.pow(index + 1, rhythm.timbreDamping),
+      included: audibleFrequencyHz < frequencyLimit,
+    };
+  });
 }
 
 function smoothstep(value: number): number {
@@ -102,20 +88,12 @@ function smoothstep(value: number): number {
   return clamped * clamped * (3 - 2 * clamped);
 }
 
-function getPluckEnvelope(
-  localTime: number,
-  rhythm: AudioRhythmPreset,
-): number {
+function getPluckEnvelope(localTime: number, rhythm: AudioRhythmPreset): number {
   const attack =
     localTime < rhythm.attackSeconds
       ? smoothstep(localTime / rhythm.attackSeconds)
-      : Math.exp(
-          -(localTime - rhythm.attackSeconds) /
-            rhythm.decaySeconds,
-        );
-  const release = smoothstep(
-    (rhythm.stepSeconds - localTime) / rhythm.releaseSeconds,
-  );
+      : Math.exp(-(localTime - rhythm.attackSeconds) / rhythm.decaySeconds);
+  const release = smoothstep((rhythm.stepSeconds - localTime) / rhythm.releaseSeconds);
   return attack * release;
 }
 
@@ -128,11 +106,9 @@ export function renderRhythmicSeries({
   const componentsByCarrier = new Map(
     rhythm.frequenciesHz.map((carrier) => [
       carrier,
-      getSonificationComponents(
-        fundamentalHz,
-        carrier,
-        sampleRate,
-      ).filter((component) => component.included),
+      getSonificationComponents(fundamentalHz, carrier, sampleRate).filter(
+        (component) => component.included,
+      ),
     ]),
   );
   const sampleCount = Math.floor(durationSeconds * sampleRate);
@@ -141,10 +117,7 @@ export function renderRhythmicSeries({
     const time = sample / sampleRate;
     const stepIndex = Math.floor(time / rhythm.stepSeconds);
     const localTime = time - stepIndex * rhythm.stepSeconds;
-    const carrier =
-      rhythm.frequenciesHz[
-        stepIndex % rhythm.frequenciesHz.length
-      ]!;
+    const carrier = rhythm.frequenciesHz[stepIndex % rhythm.frequenciesHz.length]!;
     const components = componentsByCarrier.get(carrier) ?? [];
     const normalization = components.reduce(
       (sum, component) => sum + component.weightedAmplitude,
@@ -155,20 +128,11 @@ export function renderRhythmicSeries({
 
     for (const component of components) {
       value +=
-        Math.sin(
-          Math.PI *
-            2 *
-            component.audibleFrequencyHz *
-            localTime +
-            component.sinePhase,
-        ) * component.weightedAmplitude;
+        Math.sin(Math.PI * 2 * component.audibleFrequencyHz * localTime + component.sinePhase) *
+        component.weightedAmplitude;
     }
 
-    return (
-      (normalization > 0 ? value / normalization : 0) *
-      envelope *
-      rhythm.outputGain
-    );
+    return (normalization > 0 ? value / normalization : 0) * envelope * rhythm.outputGain;
   });
 }
 
@@ -178,10 +142,7 @@ export function renderRawSeries({
   fundamentalHz,
 }: RenderOptions): number[] {
   const partials = createAudioPartials(fundamentalHz);
-  const normalization = partials.reduce(
-    (sum, partial) => sum + partial.sourceAmplitude,
-    0,
-  );
+  const normalization = partials.reduce((sum, partial) => sum + partial.sourceAmplitude, 0);
   const sampleCount = Math.floor(durationSeconds * sampleRate);
 
   return Array.from({ length: sampleCount }, (_, sample) => {
@@ -190,13 +151,7 @@ export function renderRawSeries({
       (sum, partial) =>
         sum +
         partial.sourceAmplitude *
-          Math.sin(
-            Math.PI *
-              2 *
-              partial.sourceFrequencyHz *
-              time +
-              partial.sinePhase,
-          ),
+          Math.sin(Math.PI * 2 * partial.sourceFrequencyHz * time + partial.sinePhase),
       0,
     );
     return value / normalization;

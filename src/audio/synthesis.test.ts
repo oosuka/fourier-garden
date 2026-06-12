@@ -8,6 +8,10 @@ import {
   renderRawSeries,
 } from "./synthesis";
 
+function rms(values: number[]): number {
+  return Math.sqrt(values.reduce((sum, value) => sum + value * value, 0) / values.length);
+}
+
 describe("Residue Bloom audio synthesis", () => {
   it("preserves the analytic source terms before sonification", () => {
     const partials = createAudioPartials(55);
@@ -42,12 +46,7 @@ describe("Residue Bloom audio synthesis", () => {
     const rhythm = createRhythmPreset(55);
 
     expect(rhythm.stepSeconds).toBeCloseTo(0.1875);
-    expect(rhythm.frequenciesHz).toEqual([
-      495,
-      440,
-      440,
-      495,
-    ]);
+    expect(rhythm.frequenciesHz).toEqual([495, 440, 440, 495]);
     expect(Math.min(...rhythm.frequenciesHz)).toBeGreaterThanOrEqual(440);
   });
 
@@ -62,10 +61,7 @@ describe("Residue Bloom audio synthesis", () => {
       audibleFrequencyHz: 24_255,
       included: false,
     });
-    expect(at495[1]?.weightedAmplitude).toBeCloseTo(
-      2.5 / 2 ** 1.4,
-      12,
-    );
+    expect(at495[1]?.weightedAmplitude).toBeCloseTo(2.5 / 2 ** 1.4, 12);
   });
 
   it("renders separated plucks instead of a continuous low drone", () => {
@@ -80,30 +76,15 @@ describe("Residue Bloom audio synthesis", () => {
     const attackWindow = Math.round(0.055 * sampleRate);
     const tailWindow = Math.round(0.025 * sampleRate);
 
-    const rms = (values: number[]) =>
-      Math.sqrt(
-        values.reduce((sum, value) => sum + value * value, 0) /
-          values.length,
-      );
-
     for (let step = 0; step < 4; step += 1) {
       const start = step * stepSamples;
-      const attack = rms(
-        samples.slice(start, start + attackWindow),
-      );
-      const tail = rms(
-        samples.slice(
-          start + stepSamples - tailWindow,
-          start + stepSamples,
-        ),
-      );
+      const attack = rms(samples.slice(start, start + attackWindow));
+      const tail = rms(samples.slice(start + stepSamples - tailWindow, start + stepSamples));
 
       expect(attack).toBeGreaterThan(0.03);
       expect(tail).toBeLessThan(attack * 0.28);
     }
 
-    expect(Math.max(...samples.map(Math.abs))).toBeLessThanOrEqual(
-      10 ** (-1 / 20),
-    );
+    expect(Math.max(...samples.map(Math.abs))).toBeLessThanOrEqual(10 ** (-1 / 20));
   });
 });

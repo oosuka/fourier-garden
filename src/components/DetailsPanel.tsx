@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { useMemo, useState } from "react";
-import katex from "katex";
+import { renderToString } from "katex";
 
 import type { AudioEngine } from "../audio/AudioEngine";
 import { createRhythmPreset } from "../audio/synthesis";
@@ -16,42 +16,28 @@ interface DetailsPanelProps {
   onClose: () => void;
 }
 
-export function DetailsPanel({
-  open,
-  pattern,
-  audio,
-  playing,
-  onClose,
-}: DetailsPanelProps) {
+export function DetailsPanel({ open, pattern, audio, playing, onClose }: DetailsPanelProps) {
   const [tab, setTab] = useState<"gentle" | "mathematical">("gentle");
-  const renderedMath = useMemo(
-    () => {
-      const render = (latex: string) =>
-        katex.renderToString(latex, {
-          throwOnError: false,
-          displayMode: true,
-        });
+  const renderedMath = useMemo(() => {
+    const render = (latex: string) =>
+      renderToString(latex, {
+        throwOnError: false,
+        displayMode: true,
+      });
 
-      return {
-        formula: render(pattern.formulaLatex),
-        phasor: render(pattern.mathematics.phasorLatex),
-        complexCoefficients: render(
-          pattern.mathematics.complexCoefficientLatex,
-        ),
-        sonification: render(pattern.audio.sonificationLatex),
-      };
-    },
-    [
-      pattern.audio.sonificationLatex,
-      pattern.formulaLatex,
-      pattern.mathematics.complexCoefficientLatex,
-      pattern.mathematics.phasorLatex,
-    ],
-  );
-  const spectrum = getAnalyticSpectrum(
-    pattern.formula,
-    pattern.audio.fundamentalHz,
-  );
+    return {
+      formula: render(pattern.formulaLatex),
+      phasor: render(pattern.mathematics.phasorLatex),
+      complexCoefficients: render(pattern.mathematics.complexCoefficientLatex),
+      sonification: render(pattern.audio.sonificationLatex),
+    };
+  }, [
+    pattern.audio.sonificationLatex,
+    pattern.formulaLatex,
+    pattern.mathematics.complexCoefficientLatex,
+    pattern.mathematics.phasorLatex,
+  ]);
+  const spectrum = getAnalyticSpectrum(pattern.formula, pattern.audio.fundamentalHz);
   const rhythm = createRhythmPreset(pattern.audio.fundamentalHz);
 
   return (
@@ -101,9 +87,7 @@ export function DetailsPanel({
           </section>
         ) : (
           <section className="mathSection">
-            <span className="layerLabel">
-              EXACT MATHEMATICAL LAYER / 厳密な数学層
-            </span>
+            <span className="layerLabel">EXACT MATHEMATICAL LAYER / 厳密な数学層</span>
             <div
               className="detailsFormula"
               dangerouslySetInnerHTML={{ __html: renderedMath.formula }}
@@ -121,11 +105,7 @@ export function DetailsPanel({
               </div>
               <div>
                 <dt>表示用の角速度</dt>
-                <dd>
-                  x(t) ={" "}
-                  {pattern.mathematics.visualAngularRate.toFixed(2)}t
-                  rad
-                </dd>
+                <dd>x(t) = {pattern.mathematics.visualAngularRate.toFixed(2)}t rad</dd>
               </div>
               <div>
                 <dt>音響パルス</dt>
@@ -134,8 +114,7 @@ export function DetailsPanel({
               <div>
                 <dt>発音中心</dt>
                 <dd>
-                  8f₀ / 9f₀ (
-                  {rhythm.frequenciesHz[1]?.toFixed(0)} /{" "}
+                  8f₀ / 9f₀ ({rhythm.frequenciesHz[1]?.toFixed(0)} /{" "}
                   {rhythm.frequenciesHz[0]?.toFixed(0)} Hz)
                 </dd>
               </div>
@@ -220,9 +199,7 @@ export function DetailsPanel({
               {spectrum.map((bin, index) => (
                 <tr key={bin.harmonic}>
                   <td>
-                    <i
-                      className={`coefficientDot coefficientDot--${index % 5}`}
-                    />
+                    <i className={`coefficientDot coefficientDot--${index % 5}`} />
                     {index}
                   </td>
                   <td>{bin.harmonic}</td>

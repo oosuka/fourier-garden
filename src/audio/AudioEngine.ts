@@ -1,8 +1,5 @@
 import { createSeededRandom } from "../core/seed";
-import {
-  createAudioPartials,
-  createRhythmPreset,
-} from "./synthesis";
+import { createAudioPartials, createRhythmPreset } from "./synthesis";
 
 const VOLUME_KEY = "fourier-garden:volume";
 
@@ -18,9 +15,7 @@ export class AudioEngine {
     initialVolume = 0.35,
   ) {
     const saved = Number.parseFloat(localStorage.getItem(VOLUME_KEY) ?? "");
-    this.volume = Number.isFinite(saved)
-      ? Math.min(1, Math.max(0, saved))
-      : initialVolume;
+    this.volume = Number.isFinite(saved) ? Math.min(1, Math.max(0, saved)) : initialVolume;
   }
 
   get currentTime(): number {
@@ -39,18 +34,12 @@ export class AudioEngine {
     if (this.context) return;
 
     const context = new AudioContext({ latencyHint: "interactive" });
-    await context.audioWorklet.addModule(
-      "/audio/fourier-worklet.js?v=3",
-    );
+    await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=3");
 
-    const source = new AudioWorkletNode(
-      context,
-      "fourier-garden-processor",
-      {
-        numberOfOutputs: 1,
-        outputChannelCount: [2],
-      },
-    );
+    const source = new AudioWorkletNode(context, "fourier-garden-processor", {
+      numberOfOutputs: 1,
+      outputChannelCount: [2],
+    });
     source.port.postMessage({
       type: "configure",
       partials: createAudioPartials(this.fundamentalHz),
@@ -155,11 +144,7 @@ export class AudioEngine {
     return volume * volume * 0.72;
   }
 
-  private createImpulse(
-    context: AudioContext,
-    seconds: number,
-    decay: number,
-  ): AudioBuffer {
+  private createImpulse(context: AudioContext, seconds: number, decay: number): AudioBuffer {
     const length = Math.floor(context.sampleRate * seconds);
     const buffer = context.createBuffer(2, length, context.sampleRate);
     const random = createSeededRandom(41_041);
@@ -168,8 +153,7 @@ export class AudioEngine {
       const data = buffer.getChannelData(channel);
       for (let index = 0; index < length; index += 1) {
         const envelope = Math.pow(1 - index / length, decay);
-        const diffusion =
-          Math.sin(index * (0.0113 + channel * 0.0007)) * 0.18;
+        const diffusion = Math.sin(index * (0.0113 + channel * 0.0007)) * 0.18;
         data[index] = ((random() * 2 - 1) * 0.82 + diffusion) * envelope;
       }
     }
