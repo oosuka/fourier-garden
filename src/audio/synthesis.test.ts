@@ -4,6 +4,7 @@ import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math
 import { RESIDUE_BLOOM_SCORE_DEFINITION, buildMusicalScoreProgram } from "./musicalScore";
 import {
   createAudioPartials,
+  createWorkletConfiguration,
   getSonificationComponents,
   renderRhythmicSeries,
   renderRawSeries,
@@ -148,5 +149,15 @@ describe("Residue Bloom audio synthesis", () => {
     });
 
     expect(second).toEqual(first);
+  });
+
+  it("creates a structured-clone-safe worklet configuration from the shared score", () => {
+    const message = createWorkletConfiguration(score);
+    const cloned = structuredClone(message);
+
+    expect(cloned.type).toBe("configure");
+    expect(cloned.score).toEqual(score);
+    expect(cloned.partials).toEqual(createAudioPartials(55));
+    expect(JSON.stringify(cloned)).not.toContain("pitchMultipliers");
   });
 });

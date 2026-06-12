@@ -45,6 +45,12 @@ export interface SonificationComponent extends AudioPartial {
   included: boolean;
 }
 
+export interface WorkletConfigurationMessage {
+  type: "configure";
+  partials: AudioPartial[];
+  score: MusicalScoreProgram;
+}
+
 export function createAudioPartials(fundamentalHz: number): AudioPartial[] {
   return getAnalyticSpectrum(RESIDUE_BLOOM_SERIES, fundamentalHz).map((bin) => ({
     harmonic: bin.harmonic,
@@ -52,6 +58,16 @@ export function createAudioPartials(fundamentalHz: number): AudioPartial[] {
     sourceAmplitude: bin.amplitude,
     sinePhase: bin.sinePhase,
   }));
+}
+
+export function createWorkletConfiguration(
+  score: MusicalScoreProgram,
+): WorkletConfigurationMessage {
+  return {
+    type: "configure",
+    partials: createAudioPartials(score.fundamentalHz),
+    score,
+  };
 }
 
 export function createRhythmPreset(fundamentalHz: number): AudioRhythmPreset {

@@ -1,5 +1,11 @@
 import { createSeededRandom } from "../core/seed";
-import { createAudioPartials, createRhythmPreset } from "./synthesis";
+import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
+import {
+  RESIDUE_BLOOM_SCORE_DEFINITION,
+  buildMusicalScoreProgram,
+  type MusicalScoreProgram,
+} from "./musicalScore";
+import { createWorkletConfiguration } from "./synthesis";
 
 const VOLUME_KEY = "fourier-garden:volume";
 
@@ -8,12 +14,22 @@ export class AudioEngine {
   private source: AudioWorkletNode | null = null;
   private master: GainNode | null = null;
   private analyser: AnalyserNode | null = null;
+  private audioNodes: AudioNode[] = [];
+  private readonly score: MusicalScoreProgram;
   private volume: number;
 
-  constructor(
-    private readonly fundamentalHz = 55,
-    initialVolume = 0.35,
-  ) {
+  constructor(score: MusicalScoreProgram, initialVolume?: number);
+  constructor(fundamentalHz: number, initialVolume?: number);
+  constructor(scoreOrFundamental: MusicalScoreProgram | number, initialVolume = 0.35) {
+    this.score =
+      typeof scoreOrFundamental === "number"
+        ? buildMusicalScoreProgram(
+            RESIDUE_BLOOM_SCORE_DEFINITION,
+            RESIDUE_BLOOM_SERIES,
+            scoreOrFundamental,
+            RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+          )
+        : scoreOrFundamental;
     const saved = Number.parseFloat(localStorage.getItem(VOLUME_KEY) ?? "");
     this.volume = Number.isFinite(saved) ? Math.min(1, Math.max(0, saved)) : initialVolume;
   }
@@ -34,17 +50,13 @@ export class AudioEngine {
     if (this.context) return;
 
     const context = new AudioContext({ latencyHint: "interactive" });
-    await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=3");
+    await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=4");
 
     const source = new AudioWorkletNode(context, "fourier-garden-processor", {
-      numberOfOutputs: 1,
-      outputChannelCount: [2],
+      numberOfOutputs: 2,
+      outputChannelCount: [2, 2],
     });
-    source.port.postMessage({
-      type: "configure",
-      partials: createAudioPartials(this.fundamentalHz),
-      rhythm: createRhythmPreset(this.fundamentalHz),
-    });
+    source.port.postMessage(createWorkletConfiguration(this.score));
 
     const highPass = new BiquadFilterNode(context, {
       type: "highpass",
@@ -62,6 +74,11 @@ export class AudioEngine {
       Q: 0.3,
     });
     const dry = new GainNode(context, { gain: 0.88 });
+    const wetHighPass = new BiquadFilterNode(context, {
+      type: "highpass",
+      frequency: 180,
+      Q: 0.45,
+    });
     const wet = new GainNode(context, { gain: 0.16 });
     const convolver = new ConvolverNode(context, {
       buffer: this.createImpulse(context, 1.9, 3.4),
@@ -81,15 +98,27 @@ export class AudioEngine {
       gain: this.volumeToGain(this.volume),
     });
 
-    source.connect(highPass).connect(highShelf).connect(softLowPass);
+    source.connect(highPass, 0, 0).connect(highShelf).connect(softLowPass);
     softLowPass.connect(dry).connect(compressor);
-    softLowPass.connect(convolver).connect(wet).connect(compressor);
+    source.connect(wetHighPass, 1, 0).connect(convolver).connect(wet).connect(compressor);
     compressor.connect(analyser).connect(master).connect(context.destination);
 
     this.context = context;
     this.source = source;
     this.master = master;
     this.analyser = analyser;
+    this.audioNodes = [
+      highPass,
+      highShelf,
+      softLowPass,
+      dry,
+      wetHighPass,
+      wet,
+      convolver,
+      compressor,
+      analyser,
+      master,
+    ];
   }
 
   async play(positionSeconds: number): Promise<void> {
@@ -124,11 +153,14 @@ export class AudioEngine {
 
   async dispose(): Promise<void> {
     this.source?.disconnect();
-    this.master?.disconnect();
+    for (const node of this.audioNodes) {
+      node.disconnect();
+    }
     await this.context?.close();
     this.source = null;
     this.master = null;
     this.analyser = null;
+    this.audioNodes = [];
     this.context = null;
   }
 
