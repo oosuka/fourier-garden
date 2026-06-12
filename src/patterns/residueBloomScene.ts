@@ -413,8 +413,11 @@ class ResidueBloomScene implements PatternScene {
     const endpointY = centerY + (endpoint?.y ?? 0) * epicycleScale;
     this.endpointCore.position.set(endpointX, endpointY, 1.4);
     this.endpointHalo.position.set(endpointX, endpointY, 1.3);
-    this.endpointHalo.scale.setScalar(response.haloScale);
-    (this.endpointHalo.material as THREE.MeshBasicMaterial).opacity = response.haloOpacity;
+    this.endpointHalo.scale.setScalar(
+      this.backend === "webgl" ? response.haloScale * 1.08 : response.haloScale,
+    );
+    (this.endpointHalo.material as THREE.MeshBasicMaterial).opacity =
+      this.backend === "webgl" ? Math.min(0.48, response.haloOpacity * 1.35) : response.haloOpacity;
 
     const waveStart = aspect < 1.6 ? 1.6 : 1.1;
     this.updateConnector(endpointX, endpointY, waveStart);
@@ -626,7 +629,7 @@ class ResidueBloomScene implements PatternScene {
     const points = new THREE.Points(
       geometry,
       new THREE.PointsMaterial({
-        size: 0.052,
+        size: 0.16,
         sizeAttenuation: true,
         transparent: true,
         opacity: 0.92,
@@ -792,7 +795,8 @@ class ResidueBloomScene implements PatternScene {
         const intensity =
           impulse.impact *
           Math.exp(-impulse.ageSeconds / 0.38) *
-          (0.45 + hash01(eventSeed, particleIndex, 3) * 0.55);
+          (0.45 + hash01(eventSeed, particleIndex, 3) * 0.55) *
+          (this.backend === "webgl" ? 1.35 : 1);
         const colorMix = hash01(eventSeed, particleIndex, 4);
         let red = 0.22;
         let green = 0.88;

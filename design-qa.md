@@ -54,28 +54,46 @@
 
 **Audiovisual Score Synchronization QA**
 
+- date: `2026-06-12`
 - fixed query parameters: `?seed=qa&quality=high`
-- renderer: 未実施（WebGPU / forced WebGL2を個別記録する）
-- viewport: 未実施（16:10 / 16:9 / ultrawide / 3840 x 2160）
-- tested score timestamps: 未実施
-- audible onset to halo: 未実施
-- audible onset to burst particles: 未実施
-- audible onset to membrane and bloom: 未実施
-- phrase index 0 distinguishability: 未実施
-- exact epicycles, endpoint, connector, and primary waveform stability: 未実施
-- 144-second loop boundary: 未実施
-- pause and resume: 未実施
-- tab visibility recovery: 未実施
-- console errors and unhandled rejections: 未実施
-- 3840 x 2160 bloom-section average FPS over 60 seconds: 未実施
+- renderer: WebGPUと`?renderer=webgl`の両方で描画を確認
+- viewport: `1440 x 900`（16:10）、`1600 x 900`（16:9）、
+  `2560 x 1080`（ultrawide）、`3840 x 2160`
+- tested score timestamps: `0.02`, `0.12`, `0.25`, `0.77`, `24.02`,
+  `36.02`, `48.02`, `60.02`, `96.02`, `108.02`, `120.02`, `132.02`,
+  `141.02`, `143.95`, `144.02`秒
+- visual onset to halo: 先頭3秒の固定時刻比較で発音イベントに対応する拡縮を確認
+- visual onset to burst particles: イベント時点の履歴フェーザ位置から金色粒子が広がることを確認
+- visual onset to membrane and bloom: イベント強度に応じた膜、流線、ブルームの変化を確認
+- phrase index 0 distinguishability: 先頭フレーズが次フレーズより強い視覚応答を確認
+- exact epicycles, endpoint, connector, and primary waveform stability:
+  スコア応答が詩的造形だけへ適用され、数学層が変形されないことをコードとテストで確認
+- 144-second loop boundary:
+  `143.95`秒と`144.02`秒の固定描画、スコア評価のmodulo単体テストに加え、
+  実Chromeで`01:30`から`02:38`まで連続再生して境界通過後も再生継続を確認
+- pause and resume:
+  自動テストと実Chromeのボタン操作で停止・再開を確認。再開後の警告・エラーは0件
+- tab visibility recovery: ブラウザ実動作は未確認
+- console errors and unhandled rejections:
+  WebGPU、forced WebGL2、全固定時刻、全対象アスペクト比で0件
+- 3840 x 2160 bloom-section average FPS over 60 seconds:
+  固定ブルームフレームで30標本すべて`60.0 fps`（平均、最小、最大ともに`60.0`）
 - headphone listening: 未実施
 - Mac built-in speaker listening: 未実施
 - continuous listening duration: 0分
-- remaining risks: ブラウザ実測と実機試聴後に更新する
+- playback observation:
+  実Chromeでtransport累積`02:38`まで確認。再開後の`01:30`から`02:38`は
+  seekなしで連続再生し、144秒境界を通過
+- remaining risks:
+  Codex内蔵ブラウザでは`AudioContext.resume()`が`suspended`のまま完了しなかったが、
+  実Chromeでは音声開始、一時停止・再開、144秒境界通過まで動作した。
+  自動操作では前面タブを切り替えられず、タブ非表示からの復帰は未確認。
+  ヘッドホンとMac内蔵スピーカーによる実機試聴も未実施のため、
+  音響品質を含む完了判定には手動QAが必要
 
 **Follow-up Polish**
 
 - [P3] A future chapter can push the membrane topology closer to reference 03 without changing this chapter's residue-class identity.
 - [P3] A production performance session on the exact MacBook Air M2 target should run for the full planned 60 seconds.
 
-final result: passed
+final result: automated and visual QA passed; manual audio QA remains incomplete
