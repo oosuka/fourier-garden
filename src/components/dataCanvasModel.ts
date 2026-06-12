@@ -34,7 +34,10 @@ export function createSpectrumLayout(
     amplitudeLabel: "片側正弦振幅 A_k" as const,
     renderingLabel: "解析式から評価した標本点を結ぶ数値描画" as const,
     bars: spectrum.map((bin) => ({
-      ...bin,
+      harmonic: bin.harmonic,
+      amplitude: bin.amplitude,
+      sinePhase: bin.sinePhase,
+      frequencyHz: bin.frequencyHz,
       progress: getLogFrequencyProgress(bin.frequencyHz, minimumHz, maximumHz),
       heightRatio: bin.amplitude / maximumAmplitude,
     })),

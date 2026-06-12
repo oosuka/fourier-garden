@@ -76,7 +76,13 @@ describe("pattern mathematical provenance", () => {
           phasorMapping: {
             ...pattern.audio.score.phasorMapping,
             terms: pattern.audio.score.phasorMapping.terms.map((term, index) =>
-              index === 0 ? { ...term, amplitude: term.amplitude + 1 } : term,
+              index === 0
+                ? {
+                    harmonic: term.harmonic,
+                    amplitude: term.amplitude + 1,
+                    sinePhase: term.sinePhase,
+                  }
+                : term,
             ),
           },
         },
@@ -114,7 +120,11 @@ describe("pattern mathematical provenance", () => {
         score: {
           ...pattern.audio.score,
           events: pattern.audio.score.events.map((event, index) =>
-            index === 0 ? ({ ...event, normalizedPhasorX: 0 } as typeof event) : event,
+            index === 0
+              ? (Object.assign({}, event, {
+                  normalizedPhasorX: 0,
+                }) as typeof event)
+              : event,
           ),
         },
       },

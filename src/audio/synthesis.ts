@@ -106,7 +106,10 @@ export function getSonificationComponents(
     const maximumGeneratedFrequencyHz = Math.max(leftFrequencyHz, rightFrequencyHz);
 
     return {
-      ...partial,
+      harmonic: partial.harmonic,
+      sourceFrequencyHz: partial.sourceFrequencyHz,
+      sourceAmplitude: partial.sourceAmplitude,
+      sinePhase: partial.sinePhase,
       nominalFrequencyHz,
       leftFrequencyHz,
       rightFrequencyHz,
