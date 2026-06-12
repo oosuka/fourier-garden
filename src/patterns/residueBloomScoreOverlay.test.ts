@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  RESIDUE_BLOOM_SERIES,
+  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+  projectSeriesToVerticalAxis,
+} from "../math/fourier";
+import {
   RESIDUE_BLOOM_CORONA_WEIGHTS,
   getCoronaOpacity,
   getCoronaPresentation,
+  getHistoryPulsePoint,
+  getHistoryPulseWindow,
   getPhraseColorHex,
+  getWaveTrailVerticalDrift,
 } from "./residueBloomScoreOverlay";
 
 describe("Residue Bloom score overlay", () => {
@@ -46,5 +54,63 @@ describe("Residue Bloom score overlay", () => {
     expect(presentation).not.toHaveProperty("y");
     expect(presentation).not.toHaveProperty("scale");
     expect(presentation).not.toHaveProperty("phase");
+  });
+
+  it("projects history pulse points with the exact primary waveform equation", () => {
+    const point = getHistoryPulsePoint({
+      timeSeconds: 144.02,
+      progress: 0.02 / 8.6,
+      waveStartX: 4.8,
+      waveEndX: 14.2,
+      centerY: 0.35,
+      scale: 0.42,
+    });
+    const historyAngle = (144.02 - point.progress * 8.6) * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE;
+
+    expect(point.y).toBeCloseTo(
+      projectSeriesToVerticalAxis(RESIDUE_BLOOM_SERIES, historyAngle, 0.35, 0.42),
+      12,
+    );
+    expect(point.x).toBeCloseTo(4.8 + point.progress * (14.2 - 4.8), 12);
+  });
+
+  it("maps recent impulse age to a bounded history window", () => {
+    const window = getHistoryPulseWindow(0.375);
+
+    expect(window.centerProgress).toBeCloseTo(0.375 / 8.6, 12);
+    expect(window.startProgress).toBeGreaterThanOrEqual(0);
+    expect(window.endProgress).toBeLessThanOrEqual(1);
+    expect(window.startProgress).toBeLessThan(window.centerProgress);
+    expect(window.endProgress).toBeGreaterThan(window.centerProgress);
+  });
+
+  it("keeps exact history projection finite across the score loop boundary", () => {
+    for (const timeSeconds of [143.99, 144.01]) {
+      const point = getHistoryPulsePoint({
+        timeSeconds,
+        progress: 0.035,
+        waveStartX: 1.1,
+        waveEndX: 15.5,
+        centerY: 0.35,
+        scale: 0.54,
+      });
+
+      expect(Number.isFinite(point.x)).toBe(true);
+      expect(Number.isFinite(point.y)).toBe(true);
+      expect(point.y).toBeCloseTo(
+        projectSeriesToVerticalAxis(
+          RESIDUE_BLOOM_SERIES,
+          (timeSeconds - point.progress * 8.6) * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+          0.35,
+          0.54,
+        ),
+        12,
+      );
+    }
+  });
+
+  it("keeps the strict primary waveform free of poetic vertical drift", () => {
+    expect(getWaveTrailVerticalDrift(10, 0)).toBe(0);
+    expect(Math.abs(getWaveTrailVerticalDrift(10, 1))).toBeGreaterThan(0);
   });
 });

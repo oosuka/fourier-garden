@@ -28,7 +28,14 @@ import {
   getResidueBloomVisualResponse,
   type ResidueBloomVisualResponse,
 } from "./residueBloomVisualResponse";
-import { getCoronaPresentation, getPhraseColorHex } from "./residueBloomScoreOverlay";
+import {
+  RESIDUE_BLOOM_HISTORY_PULSE_POINTS,
+  getCoronaPresentation,
+  getHistoryPulsePoint,
+  getHistoryPulseWindow,
+  getPhraseColorHex,
+  getWaveTrailVerticalDrift,
+} from "./residueBloomScoreOverlay";
 import type {
   FrameContext,
   PatternScene,
@@ -42,6 +49,7 @@ const TWO_PI = Math.PI * 2;
 const BURST_SLOT_COUNT = 4;
 const BURST_PARTICLES_PER_SLOT = 96;
 const BURST_PARTICLE_COUNT = BURST_SLOT_COUNT * BURST_PARTICLES_PER_SLOT;
+const HISTORY_PULSE_SLOT_COUNT = 4;
 const RESIDUE_BLOOM_AMPLITUDE_BOUND = RESIDUE_BLOOM_SERIES.terms.reduce(
   (sum, term) => sum + term.amplitude,
   0,
@@ -248,6 +256,8 @@ class ResidueBloomScene implements PatternScene {
   private readonly spokeNodePositions = new Float32Array(14 * 3);
   private readonly spokeNodes: THREE.Points;
   private readonly waveLines: DynamicLine[] = [];
+  private readonly historyPulseLines: DynamicLine[] = [];
+  private readonly historyPulseBeads: THREE.Mesh[] = [];
   private readonly organicLines: DynamicLine[] = [];
   private readonly particleCloud: THREE.Points;
   private readonly particleBase: Float32Array;
@@ -309,6 +319,31 @@ class ResidueBloomScene implements PatternScene {
       );
       this.waveLines.push(wave);
       this.fieldGroup.add(wave.line);
+    }
+
+    for (let index = 0; index < HISTORY_PULSE_SLOT_COUNT; index += 1) {
+      const pulse = makeLine(RESIDUE_BLOOM_HISTORY_PULSE_POINTS, 0xffc782, 0);
+      pulse.line.visible = false;
+      pulse.line.frustumCulled = false;
+      pulse.line.renderOrder = 4;
+      this.historyPulseLines.push(pulse);
+      this.fieldGroup.add(pulse.line);
+
+      const bead = new THREE.Mesh(
+        new THREE.CircleGeometry(0.085, 32),
+        new THREE.MeshBasicMaterial({
+          color: 0xffc782,
+          transparent: true,
+          opacity: 0,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      );
+      bead.visible = false;
+      bead.renderOrder = 5;
+      this.historyPulseBeads.push(bead);
+      this.fieldGroup.add(bead);
     }
 
     for (let index = 0; index < 11; index += 1) {
@@ -446,6 +481,7 @@ class ResidueBloomScene implements PatternScene {
     const waveStart = aspect < 1.6 ? 1.6 : 1.1;
     this.updateConnector(endpointX, endpointY, waveStart);
     this.updateWaves(timeValue, centerY, waveStart, epicycleScale);
+    this.updateHistoryPulses(frame, response, timeValue, centerY, waveStart, epicycleScale);
     this.updateOrganicField(timeValue, endpointX, endpointY, response);
     this.updateFlowParticles(timeValue, endpointX, endpointY, response);
     this.updateBurstParticles(frame, response, centerX, centerY, epicycleScale);
@@ -454,7 +490,9 @@ class ResidueBloomScene implements PatternScene {
     this.atmosphereGroup.rotation.z = Math.sin(timeValue * 0.027) * 0.025;
     this.stars[0]!.rotation.z = timeValue * 0.0018;
     this.stars[1]!.rotation.z = -timeValue * 0.0011;
-    this.fieldGroup.position.y = Math.sin(timeValue * 0.037) * 0.12;
+    this.waveLines.forEach((wave, trailIndex) => {
+      wave.line.position.y = getWaveTrailVerticalDrift(timeValue, trailIndex);
+    });
 
     if (this.bloomNode) {
       const baseStrength = this.quality === "low" ? 0.48 : this.quality === "medium" ? 0.58 : 0.72;
@@ -746,6 +784,72 @@ class ResidueBloomScene implements PatternScene {
       }
       updateAttribute(wave);
     });
+  }
+
+  private updateHistoryPulses(
+    frame: FrameContext,
+    response: ResidueBloomVisualResponse,
+    timeValue: number,
+    centerY: number,
+    waveStart: number,
+    scale: number,
+  ): void {
+    const worldRight = this.camera.right + 1.4;
+
+    for (let slot = 0; slot < HISTORY_PULSE_SLOT_COUNT; slot += 1) {
+      const pulse = this.historyPulseLines[slot]!;
+      const bead = this.historyPulseBeads[slot]!;
+      const impulse = frame.score.recentImpulses[slot];
+
+      if (!impulse) {
+        pulse.line.visible = false;
+        bead.visible = false;
+        continue;
+      }
+
+      const window = getHistoryPulseWindow(impulse.ageSeconds);
+      for (let index = 0; index < RESIDUE_BLOOM_HISTORY_PULSE_POINTS; index += 1) {
+        const pointProgress = index / (RESIDUE_BLOOM_HISTORY_PULSE_POINTS - 1);
+        const progress =
+          window.startProgress + (window.endProgress - window.startProgress) * pointProgress;
+        const point = getHistoryPulsePoint({
+          timeSeconds: timeValue,
+          progress,
+          waveStartX: waveStart,
+          waveEndX: worldRight,
+          centerY,
+          scale,
+        });
+        const offset = index * 3;
+        pulse.positions[offset] = point.x;
+        pulse.positions[offset + 1] = point.y;
+        pulse.positions[offset + 2] = 0.42;
+      }
+
+      const colorHex = getPhraseColorHex(impulse.event.phraseIndex);
+      const eventStrength = Math.max(impulse.impact, impulse.tail * 0.45);
+      const opacity = Math.min(0.96, response.historyPulseOpacity * eventStrength);
+      const pulseMaterial = pulse.line.material as THREE.LineBasicMaterial;
+      pulseMaterial.color.setHex(colorHex);
+      pulseMaterial.opacity = opacity;
+      pulse.line.visible = opacity > 0.002;
+      updateAttribute(pulse);
+
+      const centerPoint = getHistoryPulsePoint({
+        timeSeconds: timeValue,
+        progress: window.centerProgress,
+        waveStartX: waveStart,
+        waveEndX: worldRight,
+        centerY,
+        scale,
+      });
+      bead.position.set(centerPoint.x, centerPoint.y, 0.5);
+      bead.scale.setScalar(0.78 + Math.min(1.4, impulse.impact) * 0.42);
+      const beadMaterial = bead.material as THREE.MeshBasicMaterial;
+      beadMaterial.color.setHex(colorHex);
+      beadMaterial.opacity = Math.min(1, opacity * 1.18);
+      bead.visible = pulse.line.visible;
+    }
   }
 
   private updateOrganicField(
