@@ -220,6 +220,13 @@ Node.jsとnpmのバージョンは `package.json` の `volta` フィールドを
 確認し、`volta pin node@<version> npm@<version>` で厳密なバージョンを固定する。
 `engines`、`packageManager`、README、AGENTS.mdも同時に更新する。
 
+依存パッケージのinstall scriptは `.npmrc` の `strict-allow-scripts=true` で
+未審査の実行を拒否する。必要なinstall scriptは、内容と導入経路を確認してから
+`npm approve-scripts <package>` で承認し、`package.json` の `allowScripts` に
+厳密なバージョンを記録する。依存更新でバージョンが変わった場合は自動承認せず、
+再審査すること。`--no-allow-scripts-pin`、`npm approve-scripts --all`、
+`dangerously-allow-all-scripts=true` を通常運用で使用しない。
+
 新規依存を追加する前に、標準APIまたは既存依存で解決できないか確認する。
 描画やDSPの中核依存を変更する場合は、品質、バンドルサイズ、Chrome対応、
 メンテナンス状況を説明できること。
@@ -445,6 +452,17 @@ npm install
 上記はそれぞれ `v24.16.0` と `11.17.0` を返さなければならない。
 異なる場合は、Voltaがインストールされ、Volta shimが `PATH` の先頭側にあるかを
 確認する。
+
+依存更新後に未審査のinstall scriptが検出された場合:
+
+```bash
+npm approve-scripts --allow-scripts-pending
+npm explain <package>
+npm view <package>@<version> scripts
+npm approve-scripts <package>
+```
+
+不要または信頼できないスクリプトは `npm deny-scripts <package>` で拒否する。
 
 開発:
 

@@ -48,5 +48,8 @@
   "volta": {
     "node": "24.16.0",
     "npm": "11.17.0"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }

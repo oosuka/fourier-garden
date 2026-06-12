@@ -52,6 +52,10 @@ npm install
 npm run dev
 ```
 
+依存パッケージのinstall scriptはバージョン単位で審査し、未審査のものは
+インストール時に拒否します。審査が必要な場合は
+`npm approve-scripts --allow-scripts-pending` で対象を確認してください。
+
 すべての品質検証:
 
 ```bash
