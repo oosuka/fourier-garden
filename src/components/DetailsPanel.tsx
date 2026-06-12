@@ -11,11 +11,10 @@ interface DetailsPanelProps {
   open: boolean;
   pattern: PatternDefinition;
   audio: AudioEngine;
-  playing: boolean;
   onClose: () => void;
 }
 
-export function DetailsPanel({ open, pattern, audio, playing, onClose }: DetailsPanelProps) {
+export function DetailsPanel({ open, pattern, audio, onClose }: DetailsPanelProps) {
   const [tab, setTab] = useState<"gentle" | "mathematical">("gentle");
   const renderedMath = useMemo(() => {
     const render = (latex: string) =>
@@ -36,7 +35,10 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
     pattern.mathematics.complexCoefficientLatex,
     pattern.mathematics.phasorLatex,
   ]);
-  const spectrum = getAnalyticSpectrum(pattern.formula, pattern.audio.fundamentalHz);
+  const spectrum = getAnalyticSpectrum(
+    pattern.formula,
+    pattern.mathematics.spectrum.referenceFrequencyHz,
+  );
   const score = pattern.audio.score;
 
   return (
@@ -97,21 +99,21 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
             />
             <p>{pattern.education.mathematicalBody}</p>
             <p>
-              イベント時刻 tₑ の z(0.31tₑ) を ΣAₖ で正規化し、実部を定位、
-              虚部を後段フィルターの明るさ、絶対値をアクセントと余韻へ有界に写像します。
-              円、終点、主波形の座標は変形しません。
+              各発音の絶対イベント時刻 tₑ における z(0.31tₑ) を ΣAₖ
+              で正規化します。pₓは定位、pᵧは合成後ローパスの明るさ、pᵣはアクセントと減衰へ写像します。
+              残響送出は区間プロファイルから決まり、144秒の音楽形式が反復しても数学時刻はリセットしません。
             </p>
             <p className="scopeNotice">{pattern.education.scopeNotice}</p>
             <dl className="parameterList">
               <div>
-                <dt>数学上の基準周波数</dt>
-                <dd>{pattern.audio.fundamentalHz.toFixed(2)} Hz</dd>
+                <dt>解析的スペクトルの周波数対応基準</dt>
+                <dd>{pattern.mathematics.spectrum.referenceFrequencyHz.toFixed(2)} Hz</dd>
               </div>
               <div>
-                <dt>表示用の角速度</dt>
+                <dt>表示用の数学時刻</dt>
                 <dd>
                   x(t) = {pattern.mathematics.visualTime.angularRateRadiansPerSecond.toFixed(2)}t
-                  rad
+                  rad（144秒で非リセット）
                 </dd>
               </div>
               <div>
@@ -150,7 +152,11 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
               </div>
               <div>
                 <dt>表示スペクトル</dt>
-                <dd>解析的係数</dd>
+                <dd>片側正弦振幅 Aₖ の解析値</dd>
+              </div>
+              <div>
+                <dt>数学曲線の描画</dt>
+                <dd>解析式の標本点を結ぶ数値描画</dd>
               </div>
               <div>
                 <dt>変換アルゴリズム</dt>
@@ -163,7 +169,7 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
         <section className="dataSection">
           <div className="sectionLabel">
             <span>SPECTRUM</span>
-            <span>数学層・解析的係数</span>
+            <span>数学層・片側正弦振幅 Aₖ</span>
           </div>
           <SpectrumCanvas
             series={pattern.formula}
@@ -180,7 +186,7 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
             <span>AUDIO OUTPUT</span>
             <span>処理後の音響波形</span>
           </div>
-          <WaveformCanvas audio={audio} playing={playing} />
+          <WaveformCanvas audio={audio} />
         </section>
 
         <section className="dataSection sonificationSection">
@@ -214,7 +220,7 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
                 <th>k</th>
                 <th>n</th>
                 <th>Hz</th>
-                <th>Aₙ</th>
+                <th>Aₖ (sin)</th>
                 <th>φₙ (sin)</th>
               </tr>
             </thead>

@@ -54,4 +54,14 @@ describe("pattern mathematical provenance", () => {
     expect(body).toContain("履歴パルス");
     expect(body).toContain("座標を変形しません");
   });
+
+  it("describes the implemented stereo sonification without assigning wet-send to phasor radius", () => {
+    const pattern = patternRegistry[0]!;
+
+    expect(pattern.audio.sonificationLatex).toContain("f_{k,j}^{L/R}");
+    expect(pattern.audio.sonificationLatex).toContain("P_k^{L/R}");
+    expect(pattern.education.sonificationBody).toContain("絶対イベント時刻");
+    expect(pattern.education.sonificationBody).toContain("残響量は区間プロファイル");
+    expect(pattern.education.sonificationBody).not.toContain("絶対値をアクセントと余韻");
+  });
 });

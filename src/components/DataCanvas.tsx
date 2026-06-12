@@ -1,16 +1,11 @@
 import { useEffect, useRef } from "react";
 
 import type { AudioEngine } from "../audio/AudioEngine";
-import {
-  RESIDUE_BLOOM_SERIES,
-  evaluateSeries,
-  type FourierSeriesDefinition,
-} from "../math/fourier";
-import { createSpectrumLayout } from "./dataCanvasModel";
+import type { FourierSeriesDefinition } from "../math/fourier";
+import { createSpectrumLayout, getAudioWaveformMode } from "./dataCanvasModel";
 
 interface DataCanvasProps {
   audio: AudioEngine;
-  playing: boolean;
 }
 
 interface SpectrumCanvasProps {
@@ -94,7 +89,7 @@ export function SpectrumAxis({ series, referenceFrequencyHz }: SpectrumCanvasPro
   );
 }
 
-export function WaveformCanvas({ audio, playing }: DataCanvasProps) {
+export function WaveformCanvas({ audio }: DataCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -102,7 +97,6 @@ export function WaveformCanvas({ audio, playing }: DataCanvasProps) {
     if (!canvas) return;
     const audioData = new Uint8Array(2_048);
     let frame = 0;
-    let phase = 0;
 
     const draw = () => {
       frame = requestAnimationFrame(draw);
@@ -111,10 +105,25 @@ export function WaveformCanvas({ audio, playing }: DataCanvasProps) {
       const rect = canvas.getBoundingClientRect();
       context.clearRect(0, 0, rect.width, rect.height);
 
-      if (audio.initialized) {
-        audio.getWaveformData(audioData);
+      if (getAudioWaveformMode(audio.initialized) === "waiting") {
+        context.strokeStyle = "rgba(137, 240, 255, .28)";
+        context.lineWidth = 0.6;
+        context.beginPath();
+        context.moveTo(0, rect.height * 0.5);
+        context.lineTo(rect.width, rect.height * 0.5);
+        context.stroke();
+        context.fillStyle = "rgba(174, 207, 214, .46)";
+        context.font = '9px "Inter", sans-serif';
+        context.textAlign = "center";
+        context.fillText(
+          "再生開始後に処理後の音響波形を表示",
+          rect.width * 0.5,
+          rect.height * 0.5 - 8,
+        );
+        return;
       }
 
+      audio.getWaveformData(audioData);
       context.strokeStyle = "rgba(137, 240, 255, .8)";
       context.shadowColor = "#5be9ff";
       context.shadowBlur = 8;
@@ -123,13 +132,8 @@ export function WaveformCanvas({ audio, playing }: DataCanvasProps) {
 
       for (let index = 0; index < 320; index += 1) {
         const progress = index / 319;
-        let value: number;
-        if (audio.initialized) {
-          const dataIndex = Math.floor(progress * (audioData.length - 1));
-          value = (audioData[dataIndex]! - 128) / 128;
-        } else {
-          value = evaluateSeries(RESIDUE_BLOOM_SERIES, progress * Math.PI * 3 + phase) / 9;
-        }
+        const dataIndex = Math.floor(progress * (audioData.length - 1));
+        const value = (audioData[dataIndex]! - 128) / 128;
         const x = progress * rect.width;
         const y = rect.height * 0.5 - value * rect.height * 0.34;
         if (index === 0) context.moveTo(x, y);
@@ -137,12 +141,11 @@ export function WaveformCanvas({ audio, playing }: DataCanvasProps) {
       }
       context.stroke();
       context.shadowBlur = 0;
-      if (playing) phase += 0.006;
     };
 
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [audio, playing]);
+  }, [audio]);
 
   return (
     <canvas

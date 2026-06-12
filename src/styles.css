@@ -191,6 +191,16 @@ input:focus-visible {
   pointer-events: none;
 }
 
+.annotationContext {
+  position: absolute;
+  top: 15%;
+  left: 29%;
+  color: rgba(176, 215, 222, 0.42);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
 .annotation {
   position: absolute;
   display: flex;
@@ -243,7 +253,8 @@ input:focus-visible {
   color: #dffcff;
 }
 
-.app--details .annotation {
+.app--details .annotation,
+.app--details .annotationContext {
   opacity: 0.35;
 }
 

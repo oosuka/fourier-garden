@@ -183,6 +183,7 @@ export function App() {
       </header>
 
       <div className="mathAnnotations interfaceLayer" aria-hidden="true">
+        <span className="annotationContext">ANALYTIC SPECTRUM MAPPING / 解析的周波数対応</span>
         <span className="annotation annotation--one">
           <b>n = 1</b>
           <small>55.00 Hz</small>
@@ -259,7 +260,6 @@ export function App() {
         open={detailsOpen}
         pattern={pattern}
         audio={audio}
-        playing={playing}
         onClose={() => setDetailsOpen(false)}
       />
 

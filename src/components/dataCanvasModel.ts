@@ -30,6 +30,9 @@ export function createSpectrumLayout(
     minimumHz,
     maximumHz,
     amplitudeConvention: "analytic-one-sided-sine-amplitude" as const,
+    referenceLabel: "解析的スペクトルの周波数対応基準" as const,
+    amplitudeLabel: "片側正弦振幅 A_k" as const,
+    renderingLabel: "解析式から評価した標本点を結ぶ数値描画" as const,
     bars: spectrum.map((bin) => ({
       ...bin,
       progress: getLogFrequencyProgress(bin.frequencyHz, minimumHz, maximumHz),

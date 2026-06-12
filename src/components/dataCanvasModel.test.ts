@@ -37,4 +37,12 @@ describe("data canvas model", () => {
     expect(getAudioWaveformMode(false)).toBe("waiting");
     expect(getAudioWaveformMode(true)).toBe("analyser");
   });
+
+  it("uses precise public labels for the mathematical display", () => {
+    const layout = createSpectrumLayout(RESIDUE_BLOOM_SERIES, 55);
+
+    expect(layout.referenceLabel).toBe("解析的スペクトルの周波数対応基準");
+    expect(layout.amplitudeLabel).toBe("片側正弦振幅 A_k");
+    expect(layout.renderingLabel).toBe("解析式から評価した標本点を結ぶ数値描画");
+  });
 });
