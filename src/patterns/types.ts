@@ -9,9 +9,21 @@ export interface LocalizedText {
 }
 
 export interface AudioPreset {
+  mode: "sonification";
   fundamentalHz: number;
   initialVolume: number;
   roomSeconds: number;
+  sonificationLatex: string;
+}
+
+export interface MathematicalProvenance {
+  operation: "finite-fourier-series-synthesis";
+  coefficientSource: "analytic";
+  phasorProjection: "imaginary";
+  fftUsed: false;
+  visualAngularRate: number;
+  phasorLatex: string;
+  complexCoefficientLatex: string;
 }
 
 export interface EducationContent {
@@ -19,6 +31,9 @@ export interface EducationContent {
   gentleBody: string;
   mathematicalTitle: string;
   mathematicalBody: string;
+  scopeNotice: string;
+  sonificationBody: string;
+  poeticLayerBody: string;
 }
 
 export interface FrameContext {
@@ -60,6 +75,7 @@ export interface PatternDefinition {
   formulaLatex: string;
   formula: FourierSeriesDefinition;
   terms: readonly FourierTerm[];
+  mathematics: MathematicalProvenance;
   audio: AudioPreset;
   education: EducationContent;
   loadScene(): Promise<PatternSceneFactory>;

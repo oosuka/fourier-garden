@@ -217,8 +217,8 @@ export function App() {
           dangerouslySetInnerHTML={{ __html: formula }}
         />
         <p>
-          Every visible orbit and the audible timbre derive from this
-          finite series.
+          Exact phasor synthesis and primary waveform · band-limited
+          musical sonification.
         </p>
       </section>
 
@@ -285,12 +285,14 @@ export function App() {
             <i />
             <span>∞</span>
           </div>
-          <p className="entryEyebrow">A LIVING FOURIER OBSERVATORY</p>
+          <p className="entryEyebrow">
+            FINITE FOURIER SERIES · PHASOR SYNTHESIS
+          </p>
           <h2>FOURIER GARDEN</h2>
           <p className="entryJapanese">
-            見えない音の粒たちが、
+            複素平面を回る13のフェーザが、
             <br />
-            円を描き、重なりあい、ひとつの波になる。
+            虚部へ射影され、ひとつの波になる。
           </p>
           <button
             className="enterButton"

@@ -1,7 +1,7 @@
 export interface FourierTerm {
   harmonic: number;
   amplitude: number;
-  phase: number;
+  sinePhase: number;
 }
 
 export interface FourierSeriesDefinition {
@@ -26,11 +26,17 @@ export interface SpectrumBin extends FourierTerm {
   frequencyHz: number;
 }
 
+export interface ComplexFourierCoefficient {
+  harmonic: number;
+  real: number;
+  imaginary: number;
+}
+
 export function buildResidueBloomTerms(): FourierTerm[] {
   return Array.from({ length: 13 }, (_, k) => ({
     harmonic: 4 * k + 1,
     amplitude: 5 / (k + 1),
-    phase: -Math.PI / 2,
+    sinePhase: 0,
   }));
 }
 
@@ -40,13 +46,17 @@ export const RESIDUE_BLOOM_SERIES: FourierSeriesDefinition = {
   terms: buildResidueBloomTerms(),
 };
 
+export const RESIDUE_BLOOM_VISUAL_ANGULAR_RATE = 0.31;
+
 export function evaluateSeries(
   series: FourierSeriesDefinition,
   angle: number,
 ): number {
   return series.terms.reduce(
     (sum, term) =>
-      sum + term.amplitude * Math.sin(term.harmonic * angle),
+      sum +
+      term.amplitude *
+        Math.sin(term.harmonic * angle + term.sinePhase),
     0,
   );
 }
@@ -61,7 +71,7 @@ export function getEpicycleSteps(
   return series.terms.map((term) => {
     const originX = x;
     const originY = y;
-    const phase = term.harmonic * angle + term.phase;
+    const phase = term.harmonic * angle + term.sinePhase;
     x += term.amplitude * Math.cos(phase);
     y += term.amplitude * Math.sin(phase);
 
@@ -81,7 +91,40 @@ export function evaluateEpicycle(
   angle: number,
 ): ComplexPoint {
   const endpoint = getEpicycleSteps(series, angle).at(-1);
-  return endpoint ? { x: endpoint.y, y: endpoint.x } : { x: 0, y: 0 };
+  return endpoint ? { x: endpoint.x, y: endpoint.y } : { x: 0, y: 0 };
+}
+
+export function getComplexFourierCoefficients(
+  series: FourierSeriesDefinition,
+): ComplexFourierCoefficient[] {
+  return series.terms.flatMap((term) => {
+    const real =
+      (term.amplitude * Math.sin(term.sinePhase)) / 2;
+    const imaginary =
+      (-term.amplitude * Math.cos(term.sinePhase)) / 2;
+
+    return [
+      {
+        harmonic: -term.harmonic,
+        real,
+        imaginary: -imaginary,
+      },
+      {
+        harmonic: term.harmonic,
+        real,
+        imaginary,
+      },
+    ];
+  });
+}
+
+export function projectSeriesToVerticalAxis(
+  series: FourierSeriesDefinition,
+  angle: number,
+  centerY: number,
+  scale: number,
+): number {
+  return centerY + evaluateSeries(series, angle) * scale;
 }
 
 export function getAnalyticSpectrum(

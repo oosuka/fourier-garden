@@ -537,6 +537,25 @@ input:focus-visible {
   font-size: 10px;
 }
 
+.layerLabel {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(125, 232, 243, 0.62);
+  font-family: "Inter", sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+}
+
+.scopeNotice {
+  margin-top: 14px !important;
+  padding: 10px 11px;
+  border-left: 1px solid rgba(255, 200, 130, 0.52);
+  background: rgba(255, 199, 126, 0.035);
+  color: rgba(235, 220, 193, 0.7);
+  font-size: 10px;
+  line-height: 1.8;
+}
+
 .observationRule {
   width: 100%;
   margin: 15px 0;
@@ -555,6 +574,25 @@ input:focus-visible {
 
 .detailsFormula .katex {
   font-size: 14px;
+}
+
+.mathIdentity {
+  overflow: hidden;
+  margin: 3px 0 13px;
+  color: rgba(195, 244, 248, 0.82);
+}
+
+.mathIdentity .katex-display {
+  margin: 0;
+  text-align: left;
+}
+
+.mathIdentity .katex {
+  font-size: 12px;
+}
+
+.mathIdentity--compact .katex {
+  font-size: 10.5px;
 }
 
 .parameterList {
@@ -586,6 +624,14 @@ input:focus-visible {
   margin-top: 22px;
   padding-top: 16px;
   border-top: 1px solid var(--line);
+}
+
+.sonificationSection p {
+  margin: 10px 0 0;
+  color: rgba(192, 219, 224, 0.62);
+  font-family: "Noto Serif JP", serif;
+  font-size: 10px;
+  line-height: 1.85;
 }
 
 .sectionLabel {

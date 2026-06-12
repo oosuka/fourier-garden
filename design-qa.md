@@ -1,5 +1,13 @@
 # Fourier Garden Design QA
 
+**Product Definition**
+
+- Fourier Garden is a finite Fourier-series synthesis and phasor-visualization product.
+- `Residue Bloom` uses analytic coefficients and does not perform or visualize a DFT/FFT.
+- The primary epicycles, connector, waveform, and coefficient spectrum are the exact mathematical layer.
+- Audio is an explicitly weighted and band-limited musical sonification.
+- Particles, membranes, nebulae, bloom, and secondary trails are interpretive visual layers.
+
 **Evidence**
 
 - source visual truth path: `/Users/oosuka/Downloads/イメージ画像1.png`, `/Users/oosuka/Downloads/イメージ画像2.png`, `/Users/oosuka/Downloads/イメージ画像3.png`
@@ -16,7 +24,9 @@
 - Spacing and layout: the fixed composition preserves black space, a left mathematical focal area, a right-flowing waveform, and a bottom control rail across the target desktop viewport.
 - Colors and visual tokens: cyan, violet, warm gold, low-opacity glass, and additive bloom retain the reference palette without flattening the black background.
 - Image quality: all visible imagery is generated at runtime from vector geometry, GPU particles, TSL atmosphere, and mathematical wave data. Thin lines remain native-resolution while scalable effects degrade independently.
-- Copy and content: title, chapter naming, Japanese explanation, mathematical formula, analytic spectrum, coefficients, and controls are internally consistent with the implemented series.
+- Copy and content: the UI distinguishes exact series synthesis, musical sonification, and poetic visual layers. It explicitly states that the chapter does not visualize FFT computation.
+- Mathematical projection: the raw phasor endpoint uses the sine-phase convention, and its imaginary coordinate equals the primary waveform at the connector.
+- Time scale: the UI identifies `x(t) = 0.31t` as an observation-speed visualization and does not imply that the displayed circles rotate at 55 Hz.
 
 **Open Questions**
 
@@ -30,6 +40,9 @@
 - Added scene disposal and automatic rendering reinitialization for WebGPU device loss and WebGL context restoration.
 - Increased detail-panel body, tab, formula, axis, and coefficient-table optical sizes.
 - Removed unsupported `LineLoop` objects from the WebGPU path.
+- Corrected the phasor convention from a cosine-shift representation to a zero-phase sine/imaginary projection.
+- Removed taper and perturbation from the primary mathematical waveform.
+- Added conventional two-sided complex coefficients and explicit sonification equations.
 
 **Implementation Checklist**
 

@@ -23,8 +23,9 @@ import {
 } from "../core/rendererBackend";
 import {
   RESIDUE_BLOOM_SERIES,
-  evaluateSeries,
+  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
   getEpicycleSteps,
+  projectSeriesToVerticalAxis,
 } from "../math/fourier";
 import type {
   FrameContext,
@@ -403,7 +404,8 @@ class ResidueBloomScene implements PatternScene {
   update(frame: FrameContext): void {
     const timeValue = frame.time;
     this.sceneTime.value = timeValue;
-    const angle = timeValue * 0.31;
+    const angle =
+      timeValue * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE;
     const aspect = this.viewport.width / this.viewport.height;
     const epicycleScale = aspect < 1.6 ? 0.49 : 0.54;
     const centerX = aspect < 1.6 ? -4.9 : -5.9;
@@ -423,7 +425,7 @@ class ResidueBloomScene implements PatternScene {
 
     const waveStart = aspect < 1.6 ? 1.6 : 1.1;
     this.updateConnector(endpointX, endpointY, waveStart);
-    this.updateWaves(timeValue, endpointY, waveStart);
+    this.updateWaves(timeValue, centerY, waveStart, epicycleScale);
     this.updateOrganicField(timeValue, endpointX, endpointY);
     this.updateFlowParticles(timeValue, endpointX, endpointY);
 
@@ -659,8 +661,9 @@ class ResidueBloomScene implements PatternScene {
 
   private updateWaves(
     timeValue: number,
-    endpointY: number,
+    centerY: number,
     waveStart: number,
+    scale: number,
   ): void {
     const worldRight = this.camera.right + 1.4;
     const lengthValue = worldRight - waveStart;
@@ -670,19 +673,23 @@ class ResidueBloomScene implements PatternScene {
       for (let index = 0; index < 720; index += 1) {
         const progress = index / 719;
         const historyAngle =
-          (timeValue - progress * 8.6 - delay) * 0.31;
-        const amplitude = evaluateSeries(
-          RESIDUE_BLOOM_SERIES,
-          historyAngle,
-        );
-        const taper = 0.72 + progress * 0.28;
+          (timeValue - progress * 8.6 - delay) *
+          RESIDUE_BLOOM_VISUAL_ANGULAR_RATE;
         const offset = index * 3;
         wave.positions[offset] =
           waveStart + progress * lengthValue + trailIndex * 0.018;
         wave.positions[offset + 1] =
-          endpointY +
-          amplitude * 0.39 * taper +
-          Math.sin(progress * 21 + timeValue * 0.22) * trailIndex * 0.012;
+          projectSeriesToVerticalAxis(
+            RESIDUE_BLOOM_SERIES,
+            historyAngle,
+            centerY,
+            scale,
+          ) +
+          (trailIndex === 0
+            ? 0
+            : Math.sin(progress * 21 + timeValue * 0.22) *
+              trailIndex *
+              0.012);
         wave.positions[offset + 2] = 0.25 - trailIndex * 0.028;
       }
       updateAttribute(wave);

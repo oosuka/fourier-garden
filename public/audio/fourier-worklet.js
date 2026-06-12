@@ -78,9 +78,14 @@ class FourierGardenProcessor extends AudioWorkletProcessor {
       for (let index = 0; index < this.partials.length; index += 1) {
         const partial = this.partials[index];
         const frequency = carrier * partial.harmonic;
-        if (frequency >= sampleRate * 0.45) continue;
+        if (
+          frequency >=
+          sampleRate * 0.5 * rhythm.antiAliasRatio
+        ) {
+          continue;
+        }
         const gain =
-          partial.gain /
+          partial.sourceAmplitude /
           Math.pow(index + 1, rhythm.timbreDamping);
         const detune = 0.00125;
         const leftPhase =
@@ -89,21 +94,21 @@ class FourierGardenProcessor extends AudioWorkletProcessor {
             frequency *
             (1 - detune) *
             localTime +
-          partial.phase;
+          partial.sinePhase;
         const rightPhase =
           Math.PI *
             2 *
             frequency *
             (1 + detune) *
             localTime +
-          partial.phase;
+          partial.sinePhase;
         const pan = Math.sin(index * 2.399963229728653) * 0.24;
         leftSample +=
-          Math.cos(leftPhase) *
+          Math.sin(leftPhase) *
           gain *
           Math.sqrt((1 - pan) * 0.5);
         rightSample +=
-          Math.cos(rightPhase) *
+          Math.sin(rightPhase) *
           gain *
           Math.sqrt((1 + pan) * 0.5);
         normalization += gain;

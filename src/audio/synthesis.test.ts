@@ -3,36 +3,39 @@ import { describe, expect, it } from "vitest";
 import {
   createAudioPartials,
   createRhythmPreset,
+  getSonificationComponents,
   renderRhythmicSeries,
   renderRawSeries,
 } from "./synthesis";
 
 describe("Residue Bloom audio synthesis", () => {
-  it("maps all thirteen analytic terms to 55 Hz partials", () => {
+  it("preserves the analytic source terms before sonification", () => {
     const partials = createAudioPartials(55);
 
     expect(partials).toHaveLength(13);
     expect(partials[0]).toMatchObject({
-      frequencyHz: 55,
-      gain: 1,
-      phase: -Math.PI / 2,
+      sourceFrequencyHz: 55,
+      sourceAmplitude: 5,
+      sinePhase: 0,
     });
     expect(partials[12]).toMatchObject({
-      frequencyHz: 2695,
-      gain: 1 / 13,
+      sourceFrequencyHz: 2695,
+      sourceAmplitude: 5 / 13,
     });
   });
 
-  it("renders a finite normalized raw waveform", () => {
+  it("renders the normalized sine series with the declared phase convention", () => {
     const samples = renderRawSeries({
-      durationSeconds: 0.1,
-      sampleRate: 48_000,
+      durationSeconds: 0.01,
+      sampleRate: 44_000,
       fundamentalHz: 55,
     });
 
-    expect(samples).toHaveLength(4_800);
+    expect(samples).toHaveLength(440);
     expect(samples.every(Number.isFinite)).toBe(true);
     expect(Math.max(...samples.map(Math.abs))).toBeLessThanOrEqual(1);
+    expect(samples[0]).toBeCloseTo(0, 12);
+    expect(samples[200]).toBeCloseTo(1, 10);
   });
 
   it("uses the reference-like 80 BPM sixteenth-note pulse pattern", () => {
@@ -46,6 +49,23 @@ describe("Residue Bloom audio synthesis", () => {
       495,
     ]);
     expect(Math.min(...rhythm.frequenciesHz)).toBeGreaterThanOrEqual(440);
+  });
+
+  it("reports perceptual weighting and Nyquist exclusions explicitly", () => {
+    const at440 = getSonificationComponents(55, 440, 48_000);
+    const at495 = getSonificationComponents(55, 495, 48_000);
+
+    expect(at440.filter((component) => component.included)).toHaveLength(13);
+    expect(at495.filter((component) => component.included)).toHaveLength(11);
+    expect(at495.at(-1)).toMatchObject({
+      harmonic: 49,
+      audibleFrequencyHz: 24_255,
+      included: false,
+    });
+    expect(at495[1]?.weightedAmplitude).toBeCloseTo(
+      2.5 / 2 ** 1.4,
+      12,
+    );
   });
 
   it("renders separated plucks instead of a continuous low drone", () => {

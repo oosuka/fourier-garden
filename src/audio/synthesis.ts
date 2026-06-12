@@ -5,9 +5,9 @@ import {
 
 export interface AudioPartial {
   harmonic: number;
-  frequencyHz: number;
-  gain: number;
-  phase: number;
+  sourceFrequencyHz: number;
+  sourceAmplitude: number;
+  sinePhase: number;
 }
 
 interface RenderOptions {
@@ -25,18 +25,25 @@ export interface AudioRhythmPreset {
   decaySeconds: number;
   releaseSeconds: number;
   timbreDamping: number;
+  antiAliasRatio: number;
   outputGain: number;
+}
+
+export interface SonificationComponent extends AudioPartial {
+  audibleFrequencyHz: number;
+  weightedAmplitude: number;
+  included: boolean;
 }
 
 export function createAudioPartials(
   fundamentalHz: number,
 ): AudioPartial[] {
   return getAnalyticSpectrum(RESIDUE_BLOOM_SERIES, fundamentalHz).map(
-    (bin, index) => ({
+    (bin) => ({
       harmonic: bin.harmonic,
-      frequencyHz: bin.frequencyHz,
-      gain: 1 / (index + 1),
-      phase: bin.phase,
+      sourceFrequencyHz: bin.frequencyHz,
+      sourceAmplitude: bin.amplitude,
+      sinePhase: bin.sinePhase,
     }),
   );
 }
@@ -59,8 +66,35 @@ export function createRhythmPreset(
     decaySeconds: 0.075,
     releaseSeconds: 0.024,
     timbreDamping: 1.4,
+    antiAliasRatio: 0.9,
     outputGain: 0.5,
   };
+}
+
+export function getSonificationComponents(
+  fundamentalHz: number,
+  carrierHz: number,
+  sampleRate: number,
+): SonificationComponent[] {
+  const rhythm = createRhythmPreset(fundamentalHz);
+  const frequencyLimit =
+    sampleRate * 0.5 * rhythm.antiAliasRatio;
+
+  return createAudioPartials(fundamentalHz).map(
+    (partial, index) => {
+      const audibleFrequencyHz =
+        carrierHz * partial.harmonic;
+
+      return {
+        ...partial,
+        audibleFrequencyHz,
+        weightedAmplitude:
+          partial.sourceAmplitude /
+          Math.pow(index + 1, rhythm.timbreDamping),
+        included: audibleFrequencyHz < frequencyLimit,
+      };
+    },
+  );
 }
 
 function smoothstep(value: number): number {
@@ -90,15 +124,16 @@ export function renderRhythmicSeries({
   sampleRate,
   fundamentalHz,
 }: RenderOptions): number[] {
-  const partials = createAudioPartials(fundamentalHz);
   const rhythm = createRhythmPreset(fundamentalHz);
-  const dampedGains = partials.map(
-    (partial, index) =>
-      partial.gain / Math.pow(index + 1, rhythm.timbreDamping),
-  );
-  const normalization = dampedGains.reduce(
-    (sum, gain) => sum + gain,
-    0,
+  const componentsByCarrier = new Map(
+    rhythm.frequenciesHz.map((carrier) => [
+      carrier,
+      getSonificationComponents(
+        fundamentalHz,
+        carrier,
+        sampleRate,
+      ).filter((component) => component.included),
+    ]),
   );
   const sampleCount = Math.floor(durationSeconds * sampleRate);
 
@@ -110,21 +145,29 @@ export function renderRhythmicSeries({
       rhythm.frequenciesHz[
         stepIndex % rhythm.frequenciesHz.length
       ]!;
+    const components = componentsByCarrier.get(carrier) ?? [];
+    const normalization = components.reduce(
+      (sum, component) => sum + component.weightedAmplitude,
+      0,
+    );
     const envelope = getPluckEnvelope(localTime, rhythm);
     let value = 0;
 
-    for (let index = 0; index < partials.length; index += 1) {
-      const partial = partials[index]!;
-      const frequency = carrier * partial.harmonic;
-      if (frequency >= sampleRate * 0.45) continue;
+    for (const component of components) {
       value +=
-        Math.cos(
-          Math.PI * 2 * frequency * localTime + partial.phase,
-        ) * dampedGains[index]!;
+        Math.sin(
+          Math.PI *
+            2 *
+            component.audibleFrequencyHz *
+            localTime +
+            component.sinePhase,
+        ) * component.weightedAmplitude;
     }
 
     return (
-      (value / normalization) * envelope * rhythm.outputGain
+      (normalization > 0 ? value / normalization : 0) *
+      envelope *
+      rhythm.outputGain
     );
   });
 }
@@ -136,7 +179,7 @@ export function renderRawSeries({
 }: RenderOptions): number[] {
   const partials = createAudioPartials(fundamentalHz);
   const normalization = partials.reduce(
-    (sum, partial) => sum + partial.gain,
+    (sum, partial) => sum + partial.sourceAmplitude,
     0,
   );
   const sampleCount = Math.floor(durationSeconds * sampleRate);
@@ -146,9 +189,13 @@ export function renderRawSeries({
     const value = partials.reduce(
       (sum, partial) =>
         sum +
-        partial.gain *
-          Math.cos(
-            Math.PI * 2 * partial.frequencyHz * time + partial.phase,
+        partial.sourceAmplitude *
+          Math.sin(
+            Math.PI *
+              2 *
+              partial.sourceFrequencyHz *
+              time +
+              partial.sinePhase,
           ),
       0,
     );

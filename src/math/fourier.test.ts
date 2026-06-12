@@ -6,6 +6,9 @@ import {
   evaluateEpicycle,
   evaluateSeries,
   getAnalyticSpectrum,
+  getComplexFourierCoefficients,
+  getEpicycleSteps,
+  projectSeriesToVerticalAxis,
 } from "./fourier";
 
 describe("Residue Bloom Fourier series", () => {
@@ -18,19 +21,62 @@ describe("Residue Bloom Fourier series", () => {
     ]);
     expect(terms[0]).toMatchObject({
       amplitude: 5,
-      phase: -Math.PI / 2,
+      sinePhase: 0,
     });
     expect(terms[12]?.amplitude).toBeCloseTo(5 / 13, 12);
   });
 
-  it("keeps the epicycle endpoint equal to direct series evaluation", () => {
+  it("uses the phasor imaginary projection as the direct series value", () => {
     for (let sample = 0; sample <= 256; sample += 1) {
       const angle = (sample / 256) * Math.PI * 2;
       const direct = evaluateSeries(RESIDUE_BLOOM_SERIES, angle);
+      const rawEndpoint = getEpicycleSteps(
+        RESIDUE_BLOOM_SERIES,
+        angle,
+      ).at(-1);
       const endpoint = evaluateEpicycle(RESIDUE_BLOOM_SERIES, angle);
 
+      expect(rawEndpoint?.y).toBeCloseTo(direct, 10);
+      expect(endpoint).toEqual({
+        x: rawEndpoint?.x,
+        y: rawEndpoint?.y,
+      });
       expect(endpoint.y).toBeCloseTo(direct, 10);
     }
+  });
+
+  it("reports the conventional two-sided complex Fourier coefficients", () => {
+    const coefficients = getComplexFourierCoefficients(
+      RESIDUE_BLOOM_SERIES,
+    );
+    const positive = coefficients.find(
+      (coefficient) => coefficient.harmonic === 1,
+    );
+    const negative = coefficients.find(
+      (coefficient) => coefficient.harmonic === -1,
+    );
+
+    expect(coefficients).toHaveLength(26);
+    expect(positive?.real).toBeCloseTo(0, 12);
+    expect(positive?.imaginary).toBeCloseTo(-2.5, 12);
+    expect(negative?.real).toBeCloseTo(0, 12);
+    expect(negative?.imaginary).toBeCloseTo(2.5, 12);
+  });
+
+  it("projects the primary waveform with the same center and scale as the phasor", () => {
+    const centerY = 0.35;
+    const scale = 0.54;
+    const angle = 1.234;
+    const endpoint = evaluateEpicycle(RESIDUE_BLOOM_SERIES, angle);
+
+    expect(
+      projectSeriesToVerticalAxis(
+        RESIDUE_BLOOM_SERIES,
+        angle,
+        centerY,
+        scale,
+      ),
+    ).toBeCloseTo(centerY + endpoint.y * scale, 12);
   });
 
   it("reports the analytic spectrum without FFT estimation", () => {

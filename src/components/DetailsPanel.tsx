@@ -24,13 +24,29 @@ export function DetailsPanel({
   onClose,
 }: DetailsPanelProps) {
   const [tab, setTab] = useState<"gentle" | "mathematical">("gentle");
-  const formula = useMemo(
-    () =>
-      katex.renderToString(pattern.formulaLatex, {
-        throwOnError: false,
-        displayMode: true,
-      }),
-    [pattern.formulaLatex],
+  const renderedMath = useMemo(
+    () => {
+      const render = (latex: string) =>
+        katex.renderToString(latex, {
+          throwOnError: false,
+          displayMode: true,
+        });
+
+      return {
+        formula: render(pattern.formulaLatex),
+        phasor: render(pattern.mathematics.phasorLatex),
+        complexCoefficients: render(
+          pattern.mathematics.complexCoefficientLatex,
+        ),
+        sonification: render(pattern.audio.sonificationLatex),
+      };
+    },
+    [
+      pattern.audio.sonificationLatex,
+      pattern.formulaLatex,
+      pattern.mathematics.complexCoefficientLatex,
+      pattern.mathematics.phasorLatex,
+    ],
   );
   const spectrum = getAnalyticSpectrum(
     pattern.formula,
@@ -76,25 +92,40 @@ export function DetailsPanel({
             <p>{pattern.education.gentleBody}</p>
             <p>
               小さな円ほど速く回ります。すべての円の動きを足し合わせたものが、
-              右へ流れる一本の波です。耳には同じ比率が音色として届きます。
+              右へ流れる主波形です。音は同じ調波番号を使いながら、
+              聞きやすい高さと明るさへ変換されています。
             </p>
             <div className="observationRule" />
-            <p className="quietNote">
-              数式は景色の設計図です。光の膜、粒子の流れ、残響の呼吸まで、
-              同じ時間を共有しています。
-            </p>
+            <p className="quietNote">{pattern.education.poeticLayerBody}</p>
+            <p className="scopeNotice">{pattern.education.scopeNotice}</p>
           </section>
         ) : (
           <section className="mathSection">
+            <span className="layerLabel">
+              EXACT MATHEMATICAL LAYER / 厳密な数学層
+            </span>
             <div
               className="detailsFormula"
-              dangerouslySetInnerHTML={{ __html: formula }}
+              dangerouslySetInnerHTML={{ __html: renderedMath.formula }}
+            />
+            <div
+              className="mathIdentity"
+              dangerouslySetInnerHTML={{ __html: renderedMath.phasor }}
             />
             <p>{pattern.education.mathematicalBody}</p>
+            <p className="scopeNotice">{pattern.education.scopeNotice}</p>
             <dl className="parameterList">
               <div>
-                <dt>基音</dt>
+                <dt>数学上の基準周波数</dt>
                 <dd>{pattern.audio.fundamentalHz.toFixed(2)} Hz</dd>
+              </div>
+              <div>
+                <dt>表示用の角速度</dt>
+                <dd>
+                  x(t) ={" "}
+                  {pattern.mathematics.visualAngularRate.toFixed(2)}t
+                  rad
+                </dd>
               </div>
               <div>
                 <dt>音響パルス</dt>
@@ -120,6 +151,10 @@ export function DetailsPanel({
                 <dt>表示スペクトル</dt>
                 <dd>解析的係数</dd>
               </div>
+              <div>
+                <dt>変換アルゴリズム</dt>
+                <dd>FFT不使用</dd>
+              </div>
             </dl>
           </section>
         )}
@@ -127,7 +162,7 @@ export function DetailsPanel({
         <section className="dataSection">
           <div className="sectionLabel">
             <span>SPECTRUM</span>
-            <span>解析的係数スペクトル</span>
+            <span>数学層・解析的係数</span>
           </div>
           <SpectrumCanvas />
           <div className="frequencyAxis">
@@ -140,17 +175,37 @@ export function DetailsPanel({
 
         <section className="dataSection">
           <div className="sectionLabel">
-            <span>WAVEFORM</span>
-            <span>合成波形</span>
+            <span>AUDIO OUTPUT</span>
+            <span>処理後の音響波形</span>
           </div>
           <WaveformCanvas audio={audio} playing={playing} />
+        </section>
+
+        <section className="dataSection sonificationSection">
+          <div className="sectionLabel">
+            <span>SONIFICATION</span>
+            <span>音楽的変換</span>
+          </div>
+          <div
+            className="mathIdentity mathIdentity--compact"
+            dangerouslySetInnerHTML={{
+              __html: renderedMath.sonification,
+            }}
+          />
+          <p>{pattern.education.sonificationBody}</p>
         </section>
 
         <section className="coefficientSection">
           <div className="sectionLabel">
             <span>COEFFICIENTS</span>
-            <span>解析的フーリエ係数</span>
+            <span>正弦形式と複素係数</span>
           </div>
+          <div
+            className="mathIdentity mathIdentity--compact"
+            dangerouslySetInnerHTML={{
+              __html: renderedMath.complexCoefficients,
+            }}
+          />
           <table>
             <thead>
               <tr>
@@ -158,7 +213,7 @@ export function DetailsPanel({
                 <th>n</th>
                 <th>Hz</th>
                 <th>Aₙ</th>
-                <th>φₙ</th>
+                <th>φₙ (sin)</th>
               </tr>
             </thead>
             <tbody>
@@ -173,7 +228,7 @@ export function DetailsPanel({
                   <td>{bin.harmonic}</td>
                   <td>{bin.frequencyHz.toFixed(0)}</td>
                   <td>{bin.amplitude.toFixed(3)}</td>
-                  <td>−π/2</td>
+                  <td>{bin.sinePhase.toFixed(3)}</td>
                 </tr>
               ))}
             </tbody>

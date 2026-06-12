@@ -2,13 +2,31 @@ import { describe, expect, it } from "vitest";
 
 import { patternRegistry } from "./registry";
 
-describe("pattern registry", () => {
-  it("exposes the first chapter without imposing a chapter limit", () => {
-    expect(patternRegistry).toHaveLength(1);
-    expect(patternRegistry[0]).toMatchObject({
-      id: "residue-bloom",
-      order: 1,
+describe("pattern mathematical provenance", () => {
+  it("defines Residue Bloom as analytic finite-series synthesis rather than FFT analysis", () => {
+    const pattern = patternRegistry[0];
+
+    expect(pattern?.mathematics).toMatchObject({
+      operation: "finite-fourier-series-synthesis",
+      coefficientSource: "analytic",
+      phasorProjection: "imaginary",
+      fftUsed: false,
+      visualAngularRate: 0.31,
     });
-    expect(patternRegistry[0]?.loadScene).toBeTypeOf("function");
+    expect(pattern?.audio.mode).toBe("sonification");
+  });
+
+  it("provides the exact phasor, complex-coefficient, and sonification equations", () => {
+    const pattern = patternRegistry[0];
+
+    expect(pattern?.mathematics.phasorLatex).toContain(
+      "\\operatorname{Im}",
+    );
+    expect(pattern?.mathematics.complexCoefficientLatex).toContain(
+      "c_{-n_k}",
+    );
+    expect(pattern?.audio.sonificationLatex).toContain(
+      "n_k\\nu_j",
+    );
   });
 });

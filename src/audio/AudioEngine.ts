@@ -40,7 +40,7 @@ export class AudioEngine {
 
     const context = new AudioContext({ latencyHint: "interactive" });
     await context.audioWorklet.addModule(
-      "/audio/fourier-worklet.js?v=2",
+      "/audio/fourier-worklet.js?v=3",
     );
 
     const source = new AudioWorkletNode(
