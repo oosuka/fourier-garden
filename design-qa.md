@@ -69,7 +69,7 @@
 - exact epicycles, endpoint, connector, and primary waveform stability:
   スコア応答が詩的造形だけへ適用され、数学層が変形されないことをコードとテストで確認
 - 144-second loop boundary:
-  `143.95`秒と`144.02`秒の固定描画、スコア評価のmodulo単体テストに加え、
+  `143.95`秒と`144.02`秒の固定描画、音楽形式の周期評価単体テストに加え、
   実Chromeで`01:30`から`02:38`まで連続再生して境界通過後も再生継続を確認
 - pause and resume:
   自動テストと実Chromeのボタン操作で停止・再開を確認。再開後の警告・エラーは0件
@@ -100,8 +100,8 @@
   全体コンセプトと音楽変化は良好で、背景との連動は確認済み。左側の
   エピサイクルと右側の主波形は音楽連動が弱いという指摘を受けた
 - shared score source:
-  既存の直列化可能な48小節イベント表と`recentImpulses`だけを使用。
-  AudioWorklet、音響DSP、イベント構成は変更していない
+  このQA時点では既存の直列化可能な48小節イベント表と`recentImpulses`だけを使用。
+  当時はAudioWorklet、音響DSP、イベント構成を変更していない
 - strict math preservation:
   13円、スポーク、フェーザ終点、connector、主波形の式・位相・倍率を変更していない。
   既存の親groupによる主波形Yドリフトを検出し、主線は常に0、二次トレイルだけが
@@ -133,7 +133,9 @@
   水平・垂直overflowは0
 - final 144-second loop QA:
   Chrome WebGPUでseekなしに`03:43`まで連続再生し、144秒境界通過後も
-  一時停止表示、描画、音声transportが継続。warning/errorは0件
+  一時停止表示、描画、音声transportが継続。warning/errorは0件。
+  この記録は再生継続の確認であり、二周目のフェーザ制御値が一周目と異なることを
+  当時検証した記録ではない
 - final pause/resume QA:
   Chrome forced WebGL2で`00:00`停止、1.1秒後も`00:00`維持、再開1.1秒後に
   `00:01`へ進むことを確認。warning/errorは0件
@@ -145,9 +147,32 @@
   60秒・30標本を計測。平均`59.95 fps`、最小`58.5 fps`、最大`60.0 fps`。
   warning/errorは0件。JS heapの長時間増加は今回の計測APIでは未測定
 
+**Mathematical Integrity Correction Status**
+
+- date: `2026-06-13`
+- corrected defect:
+  旧実装は144秒の反復イベント表へ一周目のフェーザ結果を保存していたため、
+  二周目以降の音響・詩的制御が絶対数学時刻`x(t)=0.31t`と一致しなかった
+- corrected ownership:
+  反復イベント表は音楽形式と基礎プロファイルだけを保持し、フェーザ座標、
+  半径、brightness、accentは各周回の絶対イベント時刻から評価する
+- corrected band limit:
+  左右デチューン後の最大実周波数へ`0.45F_s`条件を適用する
+- corrected display semantics:
+  スペクトルは片側正弦振幅`A_k`、棒と目盛は同一対数軸、数学線は解析式の
+  厳密な標本点を結ぶ数値描画として扱う
+- automated verification:
+  二周目フェーザ、ループ直後の前周回履歴、反復表の禁止フィールド、
+  デチューン後ガード、章定義validator、スペクトル軸の回帰テストを追加
+- browser verification:
+  新実装のWebGPU/WebGL2二周QAは未実施。完了結果は後続QAで追記する
+- listening status:
+  ヘッドホンとMac内蔵スピーカーの実機試聴は未実施のまま
+
 **Follow-up Polish**
 
 - [P3] A future chapter can push the membrane topology closer to reference 03 without changing this chapter's residue-class identity.
 - [P3] A production performance session on the exact MacBook Air M2 target should run for the full planned 60 seconds.
 
-final result: automated and visual QA passed; manual audio QA remains incomplete
+historical result: previous automated and visual QA passed; the mathematical-integrity
+correction still requires the new browser QA below, and manual audio QA remains incomplete
