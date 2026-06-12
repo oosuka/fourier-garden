@@ -36,7 +36,7 @@ export class AudioEngine {
     if (this.context) return;
 
     const context = new AudioContext({ latencyHint: "interactive" });
-    await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=4");
+    await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=5");
 
     const source = new AudioWorkletNode(context, "fourier-garden-processor", {
       numberOfOutputs: 2,
