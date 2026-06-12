@@ -131,7 +131,7 @@ export function renderRhythmicSeries({
     ]),
   );
   const sampleCount = Math.floor(durationSeconds * sampleRate);
-  const samples = new Array<number>(sampleCount);
+  const samples = Array.from({ length: sampleCount }, () => 0);
   let filterState = 0;
 
   for (let sample = 0; sample < sampleCount; sample += 1) {
