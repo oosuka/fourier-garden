@@ -5,7 +5,7 @@ import { renderToString } from "katex";
 import type { AudioEngine } from "../audio/AudioEngine";
 import { getAnalyticSpectrum } from "../math/fourier";
 import type { PatternDefinition } from "../patterns/types";
-import { SpectrumCanvas, WaveformCanvas } from "./DataCanvas";
+import { SpectrumAxis, SpectrumCanvas, WaveformCanvas } from "./DataCanvas";
 
 interface DetailsPanelProps {
   open: boolean;
@@ -165,13 +165,14 @@ export function DetailsPanel({ open, pattern, audio, playing, onClose }: Details
             <span>SPECTRUM</span>
             <span>数学層・解析的係数</span>
           </div>
-          <SpectrumCanvas />
-          <div className="frequencyAxis">
-            <span>55</span>
-            <span>440</span>
-            <span>1k</span>
-            <span>2.7k Hz</span>
-          </div>
+          <SpectrumCanvas
+            series={pattern.formula}
+            referenceFrequencyHz={pattern.mathematics.spectrum.referenceFrequencyHz}
+          />
+          <SpectrumAxis
+            series={pattern.formula}
+            referenceFrequencyHz={pattern.mathematics.spectrum.referenceFrequencyHz}
+          />
         </section>
 
         <section className="dataSection">

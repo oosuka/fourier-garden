@@ -657,10 +657,18 @@ input:focus-visible {
 }
 
 .frequencyAxis {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 12px;
+  margin-inline: 8px;
   color: rgba(174, 207, 214, 0.38);
   font-size: 8px;
+}
+
+.frequencyAxis span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 
 .coefficientSection table {

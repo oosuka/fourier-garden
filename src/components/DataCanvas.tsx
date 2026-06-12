@@ -1,11 +1,21 @@
 import { useEffect, useRef } from "react";
 
 import type { AudioEngine } from "../audio/AudioEngine";
-import { RESIDUE_BLOOM_SERIES, evaluateSeries, getAnalyticSpectrum } from "../math/fourier";
+import {
+  RESIDUE_BLOOM_SERIES,
+  evaluateSeries,
+  type FourierSeriesDefinition,
+} from "../math/fourier";
+import { createSpectrumLayout } from "./dataCanvasModel";
 
 interface DataCanvasProps {
   audio: AudioEngine;
   playing: boolean;
+}
+
+interface SpectrumCanvasProps {
+  series: FourierSeriesDefinition;
+  referenceFrequencyHz: number;
 }
 
 function resizeCanvas(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
@@ -22,7 +32,7 @@ function resizeCanvas(canvas: HTMLCanvasElement): CanvasRenderingContext2D | nul
   return context;
 }
 
-export function SpectrumCanvas() {
+export function SpectrumCanvas({ series, referenceFrequencyHz }: SpectrumCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -31,7 +41,7 @@ export function SpectrumCanvas() {
     const context = resizeCanvas(canvas);
     if (!context) return;
     const rect = canvas.getBoundingClientRect();
-    const spectrum = getAnalyticSpectrum(RESIDUE_BLOOM_SERIES, 55);
+    const layout = createSpectrumLayout(series, referenceFrequencyHz);
     const colors = ["#70edff", "#8dc5ff", "#a990ff", "#ef9cff", "#ffc982"];
 
     context.clearRect(0, 0, rect.width, rect.height);
@@ -45,10 +55,9 @@ export function SpectrumCanvas() {
       context.stroke();
     }
 
-    spectrum.forEach((bin, index) => {
-      const x = 8 + (Math.log10(bin.frequencyHz / 45) / Math.log10(3_200 / 45)) * (rect.width - 16);
-      const normalized = bin.amplitude / 5;
-      const height = Math.max(3, normalized * (rect.height - 12));
+    layout.bars.forEach((bin, index) => {
+      const x = 8 + bin.progress * (rect.width - 16);
+      const height = bin.heightRatio * (rect.height - 12);
       context.strokeStyle = colors[index % colors.length]!;
       context.shadowColor = context.strokeStyle;
       context.shadowBlur = 7;
@@ -59,14 +68,29 @@ export function SpectrumCanvas() {
       context.stroke();
     });
     context.shadowBlur = 0;
-  }, []);
+  }, [series, referenceFrequencyHz]);
 
   return (
     <canvas
       ref={canvasRef}
       className="dataCanvas spectrumCanvas"
-      aria-label="有限フーリエ級数の解析的係数スペクトル"
+      aria-label="片側正弦振幅 A_k の解析的スペクトル"
     />
+  );
+}
+
+export function SpectrumAxis({ series, referenceFrequencyHz }: SpectrumCanvasProps) {
+  const layout = createSpectrumLayout(series, referenceFrequencyHz);
+
+  return (
+    <div className="frequencyAxis" aria-hidden="true">
+      {layout.ticks.map((tick, index) => (
+        <span key={tick.frequencyHz} style={{ left: `${tick.progress * 100}%` }}>
+          {tick.label}
+          {index === layout.ticks.length - 1 ? " Hz" : ""}
+        </span>
+      ))}
+    </div>
   );
 }
 
