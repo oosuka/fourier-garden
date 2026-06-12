@@ -24,6 +24,10 @@ import {
   getEpicycleSteps,
   projectSeriesToVerticalAxis,
 } from "../math/fourier";
+import {
+  getResidueBloomVisualResponse,
+  type ResidueBloomVisualResponse,
+} from "./residueBloomVisualResponse";
 import type {
   FrameContext,
   PatternScene,
@@ -34,13 +38,34 @@ import type {
 
 const PALETTE = [0x78f3ff, 0x8ac8ff, 0xa798ff, 0xe59aff, 0xffc782, 0xc8fff3] as const;
 const TWO_PI = Math.PI * 2;
+const BURST_SLOT_COUNT = 4;
+const BURST_PARTICLES_PER_SLOT = 96;
+const BURST_PARTICLE_COUNT = BURST_SLOT_COUNT * BURST_PARTICLES_PER_SLOT;
+const RESIDUE_BLOOM_AMPLITUDE_BOUND = RESIDUE_BLOOM_SERIES.terms.reduce(
+  (sum, term) => sum + term.amplitude,
+  0,
+);
 
 interface DynamicLine {
   line: THREE.Line;
   positions: Float32Array;
 }
 
+interface AtmosphereLayer {
+  mesh: THREE.Mesh;
+  scaleX: number;
+  scaleY: number;
+}
+
 type SceneRenderer = THREE.WebGPURenderer | WebGLRenderer;
+
+function hash01(eventSeed: number, particleIndex: number, channel: number): number {
+  let value =
+    eventSeed ^ Math.imul(particleIndex + 1, 0x9e3779b1) ^ Math.imul(channel + 1, 0x85ebca6b);
+  value = Math.imul(value ^ (value >>> 16), 0x7feb352d);
+  value = Math.imul(value ^ (value >>> 15), 0x846ca68b);
+  return ((value ^ (value >>> 16)) >>> 0) / 0xffffffff;
+}
 
 function makeLine(pointCount: number, color: number, opacity: number, loop = false): DynamicLine {
   const positions = new Float32Array(pointCount * 3);
@@ -113,6 +138,8 @@ function createAtmosphereMaterial(
   violet: readonly [number, number, number],
   phase: number,
   sceneTime: THREE.UniformNode<"float", number>,
+  scoreEnergy: THREE.UniformNode<"float", number>,
+  scoreWarmth: THREE.UniformNode<"float", number>,
 ): THREE.MeshBasicNodeMaterial {
   const material = new THREE.MeshBasicNodeMaterial({
     transparent: true,
@@ -125,12 +152,14 @@ function createAtmosphereMaterial(
   material.colorNode = Fn(() => {
     const centered = uv().sub(vec2(0.5, 0.5));
     const distance = length(centered.mul(vec2(1.0, 1.45)));
-    const rings = sin(distance.mul(42).sub(sceneTime.mul(0.27)).add(float(phase)))
+    const displacedDistance = distance.add(scoreEnergy.mul(0.018));
+    const rings = sin(displacedDistance.mul(42).sub(sceneTime.mul(0.27)).add(float(phase)))
       .mul(0.5)
       .add(0.5);
-    const veil = float(1).sub(smoothstep(0.02, 0.68, distance));
-    const tone = mix(vec3(...cyan), vec3(...violet), rings);
-    const alpha = veil.mul(rings.mul(0.055).add(0.018));
+    const veil = float(1).sub(smoothstep(0.02, 0.68, displacedDistance));
+    const baseTone = mix(vec3(...cyan), vec3(...violet), rings);
+    const tone = mix(baseTone, vec3(1, 0.58, 0.24), scoreWarmth.mul(0.24));
+    const alpha = veil.mul(rings.mul(0.055).add(0.018).add(scoreEnergy.mul(0.12)));
     return vec4(tone, alpha);
   })();
 
@@ -206,15 +235,21 @@ class ResidueBloomScene implements PatternScene {
   private readonly backend: RendererBackend;
   private readonly random: () => number;
   private readonly sceneTime = uniform(0);
+  private readonly scoreEnergy = uniform(0);
+  private readonly scoreWarmth = uniform(0);
   private readonly epicycleGroup = new THREE.Group();
   private readonly atmosphereGroup = new THREE.Group();
   private readonly fieldGroup = new THREE.Group();
+  private readonly atmosphereLayers: AtmosphereLayer[] = [];
   private readonly circles: THREE.Line[] = [];
   private readonly spokes: DynamicLine;
   private readonly waveLines: DynamicLine[] = [];
   private readonly organicLines: DynamicLine[] = [];
   private readonly particleCloud: THREE.Points;
   private readonly particleBase: Float32Array;
+  private readonly burstParticles: THREE.Points;
+  private readonly burstPositions: Float32Array;
+  private readonly burstColors: Float32Array;
   private readonly stars: THREE.Points[] = [];
   private readonly endpointCore: THREE.Mesh;
   private readonly endpointHalo: THREE.Mesh;
@@ -271,6 +306,12 @@ class ResidueBloomScene implements PatternScene {
     this.particleCloud = particleData.points;
     this.particleBase = particleData.base;
     this.atmosphereGroup.add(this.particleCloud);
+
+    const burstData = this.createBurstParticles();
+    this.burstParticles = burstData.points;
+    this.burstPositions = burstData.positions;
+    this.burstColors = burstData.colors;
+    this.scene.add(this.burstParticles);
 
     const coreGeometry = new THREE.CircleGeometry(0.105, 48);
     this.endpointCore = new THREE.Mesh(
@@ -353,7 +394,10 @@ class ResidueBloomScene implements PatternScene {
 
   update(frame: FrameContext): void {
     const timeValue = frame.time;
+    const response = getResidueBloomVisualResponse(frame.score);
     this.sceneTime.value = timeValue;
+    this.scoreEnergy.value = response.membraneDisplacement;
+    this.scoreWarmth.value = response.warmth;
     const angle = timeValue * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE;
     const aspect = this.viewport.width / this.viewport.height;
     const epicycleScale = aspect < 1.6 ? 0.49 : 0.54;
@@ -369,19 +413,26 @@ class ResidueBloomScene implements PatternScene {
     const endpointY = centerY + (endpoint?.y ?? 0) * epicycleScale;
     this.endpointCore.position.set(endpointX, endpointY, 1.4);
     this.endpointHalo.position.set(endpointX, endpointY, 1.3);
-    const pulse = 0.82 + Math.sin(timeValue * 2.1) * 0.16;
-    this.endpointHalo.scale.setScalar(pulse);
+    this.endpointHalo.scale.setScalar(response.haloScale);
+    (this.endpointHalo.material as THREE.MeshBasicMaterial).opacity = response.haloOpacity;
 
     const waveStart = aspect < 1.6 ? 1.6 : 1.1;
     this.updateConnector(endpointX, endpointY, waveStart);
     this.updateWaves(timeValue, centerY, waveStart, epicycleScale);
-    this.updateOrganicField(timeValue, endpointX, endpointY);
-    this.updateFlowParticles(timeValue, endpointX, endpointY);
+    this.updateOrganicField(timeValue, endpointX, endpointY, response);
+    this.updateFlowParticles(timeValue, endpointX, endpointY, response);
+    this.updateBurstParticles(frame, response, centerX, centerY, epicycleScale);
+    this.updateAtmosphereResponse(response);
 
     this.atmosphereGroup.rotation.z = Math.sin(timeValue * 0.027) * 0.025;
     this.stars[0]!.rotation.z = timeValue * 0.0018;
     this.stars[1]!.rotation.z = -timeValue * 0.0011;
     this.fieldGroup.position.y = Math.sin(timeValue * 0.037) * 0.12;
+
+    if (this.bloomNode) {
+      const baseStrength = this.quality === "low" ? 0.48 : this.quality === "medium" ? 0.58 : 0.72;
+      this.bloomNode.strength.value = Math.min(0.9, baseStrength + response.bloomBoost);
+    }
 
     if (this.renderPipeline) {
       this.renderPipeline.render();
@@ -405,13 +456,7 @@ class ResidueBloomScene implements PatternScene {
 
   setQuality(level: QualityLevel): void {
     this.quality = level;
-    const drawCounts: Record<QualityLevel, number> = {
-      low: 2_400,
-      medium: 4_200,
-      high: 5_800,
-      ultra: 7_200,
-    };
-    this.particleCloud.geometry.setDrawRange(0, drawCounts[level]);
+    this.particleCloud.geometry.setDrawRange(0, this.getQualityMaximum());
     if (this.bloomNode) {
       this.bloomNode.strength.value = level === "low" ? 0.48 : level === "medium" ? 0.58 : 0.72;
     }
@@ -467,12 +512,24 @@ class ResidueBloomScene implements PatternScene {
     veils.forEach((veil, index) => {
       const material =
         this.backend === "webgpu"
-          ? createAtmosphereMaterial(veil.colorA, veil.colorB, veil.phase, this.sceneTime)
+          ? createAtmosphereMaterial(
+              veil.colorA,
+              veil.colorB,
+              veil.phase,
+              this.sceneTime,
+              this.scoreEnergy,
+              this.scoreWarmth,
+            )
           : createFallbackAtmosphereMaterial(veil.colorA, veil.colorB, veil.phase);
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(28, 17, 1, 1), material);
       mesh.scale.set(veil.scale[0], veil.scale[1], 1);
       mesh.rotation.z = veil.rotation;
       mesh.position.set(index * 1.8 - 2.4, index * -0.8 + 0.7, -4 - index);
+      this.atmosphereLayers.push({
+        mesh,
+        scaleX: veil.scale[0],
+        scaleY: veil.scale[1],
+      });
       this.atmosphereGroup.add(mesh);
     });
   }
@@ -551,6 +608,38 @@ class ResidueBloomScene implements PatternScene {
     return { points, base };
   }
 
+  private createBurstParticles(): {
+    points: THREE.Points;
+    positions: Float32Array;
+    colors: Float32Array;
+  } {
+    const positions = new Float32Array(BURST_PARTICLE_COUNT * 3);
+    const colors = new Float32Array(BURST_PARTICLE_COUNT * 3);
+    positions.fill(-1_000);
+    const geometry = new THREE.BufferGeometry();
+    const positionAttribute = new THREE.BufferAttribute(positions, 3);
+    const colorAttribute = new THREE.BufferAttribute(colors, 3);
+    positionAttribute.setUsage(THREE.DynamicDrawUsage);
+    colorAttribute.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute("position", positionAttribute);
+    geometry.setAttribute("color", colorAttribute);
+    const points = new THREE.Points(
+      geometry,
+      new THREE.PointsMaterial({
+        size: 0.052,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.92,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    );
+    points.frustumCulled = false;
+    return { points, positions, colors };
+  }
+
   private updateEpicycles(steps: ReturnType<typeof getEpicycleSteps>, scale: number): void {
     const spokePositions = this.spokes.positions;
     spokePositions[0] = 0;
@@ -596,16 +685,24 @@ class ResidueBloomScene implements PatternScene {
     });
   }
 
-  private updateOrganicField(timeValue: number, endpointX: number, endpointY: number): void {
+  private updateOrganicField(
+    timeValue: number,
+    endpointX: number,
+    endpointY: number,
+    response: ResidueBloomVisualResponse,
+  ): void {
     this.organicLines.forEach((organic, lineIndex) => {
       const huePhase = lineIndex / this.organicLines.length;
       for (let index = 0; index < 460; index += 1) {
         const progress = index / 459;
         const theta = progress * TWO_PI;
+        const responseLobe =
+          response.membraneDisplacement * Math.sin(theta * 2 - timeValue * 1.7 + lineIndex * 0.4);
         const lobe =
           1 +
           0.2 * Math.sin(theta * (3 + (lineIndex % 4)) + timeValue * 0.17) +
-          0.08 * Math.sin(theta * 11 - timeValue * 0.11);
+          0.08 * Math.sin(theta * 11 - timeValue * 0.11) +
+          responseLobe;
         const radiusX = 5.1 + lineIndex * 0.21;
         const radiusY = 3.25 + lineIndex * 0.17;
         const drift = Math.sin(timeValue * 0.043 + lineIndex) * 0.6;
@@ -622,21 +719,23 @@ class ResidueBloomScene implements PatternScene {
     });
   }
 
-  private updateFlowParticles(timeValue: number, endpointX: number, endpointY: number): void {
+  private updateFlowParticles(
+    timeValue: number,
+    endpointX: number,
+    endpointY: number,
+    response: ResidueBloomVisualResponse,
+  ): void {
     const positions = (
       this.particleCloud.geometry.getAttribute("position") as THREE.BufferAttribute
     ).array as Float32Array;
-    const activeCount =
-      this.quality === "low"
-        ? 2_400
-        : this.quality === "medium"
-          ? 4_200
-          : this.quality === "high"
-            ? 5_800
-            : 7_200;
+    const qualityMaximum = this.getQualityMaximum();
+    const activeCount = Math.floor(qualityMaximum * (0.55 + response.sectionDensity * 0.45));
+    const scoreDrift = response.flowEnergy * 0.16;
+    this.particleCloud.geometry.setDrawRange(0, activeCount);
 
     for (let index = 0; index < activeCount; index += 1) {
-      const progress = (this.particleBase[index * 4]! + timeValue * 0.0038) % 1;
+      const progress =
+        (this.particleBase[index * 4]! + timeValue * (0.0038 + scoreDrift * 0.002)) % 1;
       const spread = this.particleBase[index * 4 + 1]!;
       const depth = this.particleBase[index * 4 + 2]!;
       const phase = this.particleBase[index * 4 + 3]!;
@@ -651,6 +750,101 @@ class ResidueBloomScene implements PatternScene {
     }
     (this.particleCloud.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate =
       true;
+  }
+
+  private updateBurstParticles(
+    frame: FrameContext,
+    response: ResidueBloomVisualResponse,
+    centerX: number,
+    centerY: number,
+    epicycleScale: number,
+  ): void {
+    for (let slot = 0; slot < BURST_SLOT_COUNT; slot += 1) {
+      const impulse = frame.score.recentImpulses[slot];
+      for (let particleIndex = 0; particleIndex < BURST_PARTICLES_PER_SLOT; particleIndex += 1) {
+        const globalParticleIndex = slot * BURST_PARTICLES_PER_SLOT + particleIndex;
+        const offset = globalParticleIndex * 3;
+
+        if (!impulse) {
+          this.burstPositions[offset] = -1_000;
+          this.burstPositions[offset + 1] = -1_000;
+          this.burstPositions[offset + 2] = -1_000;
+          this.burstColors[offset] = 0;
+          this.burstColors[offset + 1] = 0;
+          this.burstColors[offset + 2] = 0;
+          continue;
+        }
+
+        const eventSeed = Math.imul(frame.score.cycleIndex, 768) + impulse.event.globalStep;
+        const angle = hash01(eventSeed, particleIndex, 0) * TWO_PI;
+        const radius =
+          impulse.ageSeconds *
+          (2.4 + hash01(eventSeed, particleIndex, 1) * 2.2) *
+          response.burstEnergy;
+        const originX =
+          centerX + impulse.event.normalizedPhasorX * RESIDUE_BLOOM_AMPLITUDE_BOUND * epicycleScale;
+        const originY =
+          centerY + impulse.event.normalizedPhasorY * RESIDUE_BLOOM_AMPLITUDE_BOUND * epicycleScale;
+        this.burstPositions[offset] = originX + Math.cos(angle) * radius;
+        this.burstPositions[offset + 1] = originY + Math.sin(angle) * radius;
+        this.burstPositions[offset + 2] = 1.08 - hash01(eventSeed, particleIndex, 2) * 0.42;
+
+        const intensity =
+          impulse.impact *
+          Math.exp(-impulse.ageSeconds / 0.38) *
+          (0.45 + hash01(eventSeed, particleIndex, 3) * 0.55);
+        const colorMix = hash01(eventSeed, particleIndex, 4);
+        let red = 0.22;
+        let green = 0.88;
+        let blue = 1;
+
+        if (impulse.event.phraseIndex === 0) {
+          red = 1;
+          green = 0.82;
+          blue = 0.5;
+        } else if (impulse.event.phraseIndex === 2) {
+          red = 0.5;
+          green = 0.42;
+          blue = 1;
+        } else if (impulse.event.phraseIndex === 3) {
+          red = 0.68 + colorMix * 0.32;
+          green = 0.32 + colorMix * 0.38;
+          blue = 1 - colorMix * 0.72;
+        }
+
+        this.burstColors[offset] = red * intensity;
+        this.burstColors[offset + 1] = green * intensity;
+        this.burstColors[offset + 2] = blue * intensity;
+      }
+    }
+
+    (this.burstParticles.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate =
+      true;
+    (this.burstParticles.geometry.getAttribute("color") as THREE.BufferAttribute).needsUpdate =
+      true;
+  }
+
+  private updateAtmosphereResponse(response: ResidueBloomVisualResponse): void {
+    if (this.backend !== "webgl") return;
+
+    const scaleBoost = 1 + response.membraneDisplacement * 0.08;
+    for (const layer of this.atmosphereLayers) {
+      layer.mesh.scale.set(layer.scaleX * scaleBoost, layer.scaleY * scaleBoost, 1);
+      (layer.mesh.material as THREE.MeshBasicMaterial).opacity = Math.min(
+        1,
+        0.86 + response.membraneOpacityBoost,
+      );
+    }
+  }
+
+  private getQualityMaximum(): number {
+    const drawCounts: Record<QualityLevel, number> = {
+      low: 2_400,
+      medium: 4_200,
+      high: 5_800,
+      ultra: 7_200,
+    };
+    return drawCounts[this.quality];
   }
 }
 

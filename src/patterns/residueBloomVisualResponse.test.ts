@@ -52,4 +52,36 @@ describe("Residue Bloom poetic visual response", () => {
     expect(response).not.toHaveProperty("waveScale");
     expect(response).not.toHaveProperty("cameraOffset");
   });
+
+  it("makes the phrase-opening bloom accent at least ten percent stronger", () => {
+    const phraseOpening = getResidueBloomVisualResponse(evaluateMusicalScore(score, 60.02));
+    const followingNote = getResidueBloomVisualResponse(evaluateMusicalScore(score, 60.2075));
+
+    expect(phraseOpening.haloScale).toBeGreaterThan(followingNote.haloScale * 1.1);
+  });
+
+  it("returns the final bar toward the intro density and brightness", () => {
+    const introFrame = evaluateMusicalScore(score, 0.02);
+    const denseReturnFrame = evaluateMusicalScore(score, 132.02);
+    const finalReturnFrame = evaluateMusicalScore(score, 143.95);
+    const intro = getResidueBloomVisualResponse(introFrame);
+    const denseReturn = getResidueBloomVisualResponse(denseReturnFrame);
+    const finalReturn = getResidueBloomVisualResponse(finalReturnFrame);
+
+    expect(Math.abs(finalReturn.sectionDensity - intro.sectionDensity)).toBeLessThan(
+      Math.abs(denseReturn.sectionDensity - intro.sectionDensity),
+    );
+    expect(Math.abs(finalReturnFrame.event.brightness - introFrame.event.brightness)).toBeLessThan(
+      Math.abs(denseReturnFrame.event.brightness - introFrame.event.brightness),
+    );
+  });
+
+  it("keeps all controls finite at boundaries and several cycles later", () => {
+    const times = [0, 24, 60, 96, 120, 143.999, 144, 144 * 7 + 60.02];
+
+    for (const time of times) {
+      const response = getResidueBloomVisualResponse(evaluateMusicalScore(score, time));
+      expect(Object.values(response).every(Number.isFinite)).toBe(true);
+    }
+  });
 });
