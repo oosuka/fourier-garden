@@ -28,6 +28,7 @@ import {
   getResidueBloomVisualResponse,
   type ResidueBloomVisualResponse,
 } from "./residueBloomVisualResponse";
+import { getCoronaPresentation, getPhraseColorHex } from "./residueBloomScoreOverlay";
 import type {
   FrameContext,
   PatternScene,
@@ -242,7 +243,10 @@ class ResidueBloomScene implements PatternScene {
   private readonly fieldGroup = new THREE.Group();
   private readonly atmosphereLayers: AtmosphereLayer[] = [];
   private readonly circles: THREE.Line[] = [];
+  private readonly coronas: THREE.Line[] = [];
   private readonly spokes: DynamicLine;
+  private readonly spokeNodePositions = new Float32Array(14 * 3);
+  private readonly spokeNodes: THREE.Points;
   private readonly waveLines: DynamicLine[] = [];
   private readonly organicLines: DynamicLine[] = [];
   private readonly particleCloud: THREE.Points;
@@ -276,6 +280,26 @@ class ResidueBloomScene implements PatternScene {
 
     this.spokes = makeLine(14, 0xd6f8ff, 0.48);
     this.epicycleGroup.add(this.spokes.line);
+
+    const spokeNodeGeometry = new THREE.BufferGeometry();
+    const spokeNodeAttribute = new THREE.BufferAttribute(this.spokeNodePositions, 3);
+    spokeNodeAttribute.setUsage(THREE.DynamicDrawUsage);
+    spokeNodeGeometry.setAttribute("position", spokeNodeAttribute);
+    this.spokeNodes = new THREE.Points(
+      spokeNodeGeometry,
+      new THREE.PointsMaterial({
+        color: 0xffc782,
+        size: this.backend === "webgl" ? 0.1 : 0.085,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    );
+    this.spokeNodes.frustumCulled = false;
+    this.epicycleGroup.add(this.spokeNodes);
 
     for (let index = 0; index < 9; index += 1) {
       const wave = makeLine(
@@ -406,7 +430,7 @@ class ResidueBloomScene implements PatternScene {
     const steps = getEpicycleSteps(RESIDUE_BLOOM_SERIES, angle);
 
     this.epicycleGroup.position.set(centerX, centerY, 0.7);
-    this.updateEpicycles(steps, epicycleScale);
+    this.updateEpicycles(steps, epicycleScale, response, frame.score.event.phraseIndex);
 
     const endpoint = steps.at(-1);
     const endpointX = centerX + (endpoint?.x ?? 0) * epicycleScale;
@@ -564,8 +588,21 @@ class ResidueBloomScene implements PatternScene {
         toneMapped: false,
       });
       const circle = new THREE.Line(geometry, material);
+      const corona = new THREE.Line(
+        geometry.clone(),
+        new THREE.LineBasicMaterial({
+          color: 0xffc782,
+          transparent: true,
+          opacity: 0,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      );
+      corona.renderOrder = 3;
       this.circles.push(circle);
-      this.epicycleGroup.add(circle);
+      this.coronas.push(corona);
+      this.epicycleGroup.add(circle, corona);
     }
   }
 
@@ -643,7 +680,12 @@ class ResidueBloomScene implements PatternScene {
     return { points, positions, colors };
   }
 
-  private updateEpicycles(steps: ReturnType<typeof getEpicycleSteps>, scale: number): void {
+  private updateEpicycles(
+    steps: ReturnType<typeof getEpicycleSteps>,
+    scale: number,
+    response: ResidueBloomVisualResponse,
+    phraseIndex: number,
+  ): void {
     const spokePositions = this.spokes.positions;
     spokePositions[0] = 0;
     spokePositions[1] = 0;
@@ -654,12 +696,30 @@ class ResidueBloomScene implements PatternScene {
       circle.position.set(step.originX * scale, step.originY * scale, 0.2);
       circle.scale.setScalar(step.radius * scale);
 
+      const corona = this.coronas[index]!;
+      corona.position.copy(circle.position);
+      corona.scale.copy(circle.scale);
+      const presentation = getCoronaPresentation(index, response.coronaStrength, phraseIndex);
+      const coronaMaterial = corona.material as THREE.LineBasicMaterial;
+      coronaMaterial.opacity = presentation.opacity;
+      coronaMaterial.color.setHex(presentation.colorHex);
+
       const offset = (index + 1) * 3;
       spokePositions[offset] = step.x * scale;
       spokePositions[offset + 1] = step.y * scale;
       spokePositions[offset + 2] = 0.3;
     });
     updateAttribute(this.spokes);
+
+    this.spokeNodePositions.set(spokePositions);
+    const spokeNodeAttribute = this.spokeNodes.geometry.getAttribute(
+      "position",
+    ) as THREE.BufferAttribute;
+    spokeNodeAttribute.needsUpdate = true;
+    this.spokeNodes.geometry.computeBoundingSphere();
+    const spokeNodeMaterial = this.spokeNodes.material as THREE.PointsMaterial;
+    spokeNodeMaterial.color.setHex(getPhraseColorHex(phraseIndex));
+    spokeNodeMaterial.opacity = response.spokeNodeOpacity;
   }
 
   private updateConnector(endpointX: number, endpointY: number, waveStart: number): void {

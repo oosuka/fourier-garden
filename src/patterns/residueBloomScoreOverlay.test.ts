@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   RESIDUE_BLOOM_CORONA_WEIGHTS,
   getCoronaOpacity,
+  getCoronaPresentation,
   getPhraseColorHex,
 } from "./residueBloomScoreOverlay";
 
@@ -32,5 +33,18 @@ describe("Residue Bloom score overlay", () => {
     expect(getPhraseColorHex(0)).toBe(0xffc782);
     expect(getPhraseColorHex(1)).not.toBe(getPhraseColorHex(0));
     expect(getPhraseColorHex(4)).toBe(getPhraseColorHex(0));
+  });
+
+  it("keeps corona presentation free of geometry deformation data", () => {
+    const presentation = getCoronaPresentation(0, 0.8, 0);
+
+    expect(presentation).toEqual({
+      opacity: getCoronaOpacity(RESIDUE_BLOOM_CORONA_WEIGHTS[0]!, 0.8),
+      colorHex: 0xffc782,
+    });
+    expect(presentation).not.toHaveProperty("x");
+    expect(presentation).not.toHaveProperty("y");
+    expect(presentation).not.toHaveProperty("scale");
+    expect(presentation).not.toHaveProperty("phase");
   });
 });

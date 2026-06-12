@@ -23,3 +23,14 @@ export function getPhraseColorHex(phraseIndex: number): number {
     ((phraseIndex % PHRASE_COLORS.length) + PHRASE_COLORS.length) % PHRASE_COLORS.length;
   return PHRASE_COLORS[colorIndex]!;
 }
+
+export function getCoronaPresentation(
+  harmonicIndex: number,
+  strength: number,
+  phraseIndex: number,
+): Readonly<{ opacity: number; colorHex: number }> {
+  return {
+    opacity: getCoronaOpacity(RESIDUE_BLOOM_CORONA_WEIGHTS[harmonicIndex] ?? 0, strength),
+    colorHex: getPhraseColorHex(phraseIndex),
+  };
+}
