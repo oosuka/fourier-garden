@@ -31,6 +31,7 @@ describe("Residue Bloom musical score", () => {
     expect(program.stepSeconds).toBeCloseTo(0.1875, 12);
     expect(program.totalSteps).toBe(768);
     expect(program.cycleSeconds).toBeCloseTo(144, 12);
+    expect(program.definition.stereoDetuneRatio).toBeCloseTo(0.00125, 12);
     expect(program.definition.sections).toEqual([
       { id: "intro", startBar: 0, barCount: 8 },
       { id: "growth", startBar: 8, barCount: 12 },

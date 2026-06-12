@@ -18,6 +18,7 @@ export interface MusicalScoreDefinition {
   decaySeconds: number;
   releaseSeconds: number;
   antiAliasRatio: number;
+  stereoDetuneRatio: number;
   timbreDamping: number;
   outputGain: number;
   sections: readonly MusicalSectionDefinition[];
@@ -100,6 +101,7 @@ export const RESIDUE_BLOOM_SCORE_DEFINITION: MusicalScoreDefinition = {
   decaySeconds: 0.075,
   releaseSeconds: 0.024,
   antiAliasRatio: 0.9,
+  stereoDetuneRatio: 0.00125,
   timbreDamping: 1.4,
   outputGain: 0.5,
   sections: [

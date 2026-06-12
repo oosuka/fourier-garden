@@ -89,10 +89,43 @@ describe("Residue Bloom audio synthesis", () => {
     expect(at495.filter((component) => component.included)).toHaveLength(11);
     expect(at495.at(-1)).toMatchObject({
       harmonic: 49,
-      audibleFrequencyHz: 24_255,
+      nominalFrequencyHz: 24_255,
       included: false,
     });
     expect(at495[1]?.weightedAmplitude).toBeCloseTo(2.5 / 2 ** 1.4, 12);
+  });
+
+  it("applies the anti-alias guard to the higher detuned frequency", () => {
+    const definition = {
+      ...score.definition,
+      antiAliasRatio: 0.9,
+      stereoDetuneRatio: 0.00125,
+    };
+    const nominalFrequencyHz = 10_000;
+    const sampleRate =
+      (nominalFrequencyHz * (1 + definition.stereoDetuneRatio)) / (0.5 * definition.antiAliasRatio);
+    const components = getSonificationComponents(55, nominalFrequencyHz, sampleRate, definition);
+    const fundamental = components.find((component) => component.harmonic === 1)!;
+
+    expect(fundamental.nominalFrequencyHz).toBe(nominalFrequencyHz);
+    expect(fundamental.rightFrequencyHz).toBeGreaterThanOrEqual(
+      sampleRate * 0.5 * definition.antiAliasRatio,
+    );
+    expect(fundamental.included).toBe(false);
+  });
+
+  it.each([
+    44_100, 48_000, 96_000,
+  ])("keeps every included detuned component below 0.45 Fs at %i Hz", (sampleRate) => {
+    for (const carrierHz of [440, 495]) {
+      const components = getSonificationComponents(55, carrierHz, sampleRate, score.definition);
+
+      for (const component of components.filter((candidate) => candidate.included)) {
+        expect(Math.max(component.leftFrequencyHz, component.rightFrequencyHz)).toBeLessThan(
+          sampleRate * 0.45,
+        );
+      }
+    }
   });
 
   it("renders separated plucks instead of a continuous low drone", () => {

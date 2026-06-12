@@ -36,11 +36,14 @@ export interface AudioRhythmPreset {
   releaseSeconds: number;
   timbreDamping: number;
   antiAliasRatio: number;
+  stereoDetuneRatio: number;
   outputGain: number;
 }
 
 export interface SonificationComponent extends AudioPartial {
-  audibleFrequencyHz: number;
+  nominalFrequencyHz: number;
+  leftFrequencyHz: number;
+  rightFrequencyHz: number;
   weightedAmplitude: number;
   included: boolean;
 }
@@ -83,6 +86,7 @@ export function createRhythmPreset(fundamentalHz: number): AudioRhythmPreset {
     releaseSeconds: definition.releaseSeconds,
     timbreDamping: definition.timbreDamping,
     antiAliasRatio: definition.antiAliasRatio,
+    stereoDetuneRatio: definition.stereoDetuneRatio,
     outputGain: definition.outputGain,
   };
 }
@@ -96,17 +100,19 @@ export function getSonificationComponents(
   const frequencyLimit = sampleRate * 0.5 * scoreDefinition.antiAliasRatio;
 
   return createAudioPartials(fundamentalHz).map((partial, index) => {
-    const audibleFrequencyHz = carrierHz * partial.harmonic;
+    const nominalFrequencyHz = carrierHz * partial.harmonic;
+    const leftFrequencyHz = nominalFrequencyHz * (1 - scoreDefinition.stereoDetuneRatio);
+    const rightFrequencyHz = nominalFrequencyHz * (1 + scoreDefinition.stereoDetuneRatio);
+    const maximumGeneratedFrequencyHz = Math.max(leftFrequencyHz, rightFrequencyHz);
 
     return {
-      harmonic: partial.harmonic,
-      sourceFrequencyHz: partial.sourceFrequencyHz,
-      sourceAmplitude: partial.sourceAmplitude,
-      sinePhase: partial.sinePhase,
-      audibleFrequencyHz,
+      ...partial,
+      nominalFrequencyHz,
+      leftFrequencyHz,
+      rightFrequencyHz,
       weightedAmplitude:
         partial.sourceAmplitude / Math.pow(index + 1, scoreDefinition.timbreDamping),
-      included: audibleFrequencyHz < frequencyLimit,
+      included: maximumGeneratedFrequencyHz < frequencyLimit,
     };
   });
 }
@@ -147,7 +153,7 @@ export function renderRhythmicSeries({
     for (const component of components) {
       value +=
         Math.sin(
-          Math.PI * 2 * component.audibleFrequencyHz * frame.localStepTimeSeconds +
+          Math.PI * 2 * component.nominalFrequencyHz * frame.localStepTimeSeconds +
             component.sinePhase,
         ) * component.weightedAmplitude;
     }
