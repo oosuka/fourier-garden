@@ -1,15 +1,39 @@
 import { describe, expect, it } from "vitest";
 
+import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
+import { RESIDUE_BLOOM_SCORE_DEFINITION, buildMusicalScoreProgram } from "./musicalScore";
 import {
   createAudioPartials,
-  createRhythmPreset,
   getSonificationComponents,
   renderRhythmicSeries,
   renderRawSeries,
 } from "./synthesis";
 
+const score = buildMusicalScoreProgram(
+  RESIDUE_BLOOM_SCORE_DEFINITION,
+  RESIDUE_BLOOM_SERIES,
+  55,
+  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+);
+
 function rms(values: number[]): number {
   return Math.sqrt(values.reduce((sum, value) => sum + value * value, 0) / values.length);
+}
+
+function countAttackRegions(values: number[], sampleRate: number): number {
+  const windowSamples = Math.round(sampleRate * 0.003125);
+  let previousBelowThreshold = true;
+  let count = 0;
+
+  for (let start = 0; start < values.length; start += windowSamples) {
+    const level = rms(values.slice(start, start + windowSamples));
+    if (previousBelowThreshold && level > 0.02) {
+      count += 1;
+    }
+    previousBelowThreshold = level < 0.005;
+  }
+
+  return count;
 }
 
 describe("Residue Bloom audio synthesis", () => {
@@ -42,17 +66,19 @@ describe("Residue Bloom audio synthesis", () => {
     expect(samples[200]).toBeCloseTo(1, 10);
   });
 
-  it("uses the reference-like 80 BPM sixteenth-note pulse pattern", () => {
-    const rhythm = createRhythmPreset(55);
-
-    expect(rhythm.stepSeconds).toBeCloseTo(0.1875);
-    expect(rhythm.frequenciesHz).toEqual([495, 440, 440, 495]);
-    expect(Math.min(...rhythm.frequenciesHz)).toBeGreaterThanOrEqual(440);
+  it("uses the approved 144-second score and carrier pattern", () => {
+    expect(score.cycleSeconds).toBeCloseTo(144, 12);
+    expect(
+      score.events
+        .filter((event) => event.active)
+        .slice(0, 4)
+        .map((event) => event.carrierHz),
+    ).toEqual([495, 440, 440, 495]);
   });
 
   it("reports perceptual weighting and Nyquist exclusions explicitly", () => {
-    const at440 = getSonificationComponents(55, 440, 48_000);
-    const at495 = getSonificationComponents(55, 495, 48_000);
+    const at440 = getSonificationComponents(55, 440, 48_000, score.definition);
+    const at495 = getSonificationComponents(55, 495, 48_000, score.definition);
 
     expect(at440.filter((component) => component.included)).toHaveLength(13);
     expect(at495.filter((component) => component.included)).toHaveLength(11);
@@ -66,17 +92,17 @@ describe("Residue Bloom audio synthesis", () => {
 
   it("renders separated plucks instead of a continuous low drone", () => {
     const sampleRate = 48_000;
-    const rhythm = createRhythmPreset(55);
     const samples = renderRhythmicSeries({
-      durationSeconds: rhythm.stepSeconds * 4,
+      durationSeconds: 3,
       sampleRate,
-      fundamentalHz: 55,
+      score,
+      startTimeSeconds: 60,
     });
-    const stepSamples = Math.round(rhythm.stepSeconds * sampleRate);
+    const stepSamples = Math.round(score.stepSeconds * sampleRate);
     const attackWindow = Math.round(0.055 * sampleRate);
     const tailWindow = Math.round(0.025 * sampleRate);
 
-    for (let step = 0; step < 4; step += 1) {
+    for (let step = 0; step < 16; step += 1) {
       const start = step * stepSamples;
       const attack = rms(samples.slice(start, start + attackWindow));
       const tail = rms(samples.slice(start + stepSamples - tailWindow, start + stepSamples));
@@ -85,6 +111,42 @@ describe("Residue Bloom audio synthesis", () => {
       expect(tail).toBeLessThan(attack * 0.28);
     }
 
-    expect(Math.max(...samples.map(Math.abs))).toBeLessThanOrEqual(10 ** (-1 / 20));
+    expect(samples.every(Number.isFinite)).toBe(true);
+    expect(
+      samples.reduce((peak, sample) => Math.max(peak, Math.abs(sample)), 0),
+    ).toBeLessThanOrEqual(10 ** (-1 / 20));
+  });
+
+  it("renders sparse intro attacks and dense bloom attacks from the same score", () => {
+    const sampleRate = 48_000;
+    const intro = renderRhythmicSeries({
+      durationSeconds: 3,
+      sampleRate,
+      score,
+    });
+    const bloom = renderRhythmicSeries({
+      durationSeconds: 3,
+      sampleRate,
+      score,
+      startTimeSeconds: 60,
+    });
+
+    expect(countAttackRegions(intro, sampleRate)).toBe(4);
+    expect(countAttackRegions(bloom, sampleRate)).toBe(16);
+  });
+
+  it("loops without changing the score waveform at the same cycle position", () => {
+    const options = {
+      durationSeconds: 0.5,
+      sampleRate: 48_000,
+      score,
+    };
+    const first = renderRhythmicSeries({ ...options, startTimeSeconds: 18.25 });
+    const second = renderRhythmicSeries({
+      ...options,
+      startTimeSeconds: 18.25 + score.cycleSeconds,
+    });
+
+    expect(second).toEqual(first);
   });
 });

@@ -1,4 +1,10 @@
 import { RESIDUE_BLOOM_SERIES, getAnalyticSpectrum } from "../math/fourier";
+import {
+  RESIDUE_BLOOM_SCORE_DEFINITION,
+  evaluateMusicalScore,
+  type MusicalScoreDefinition,
+  type MusicalScoreProgram,
+} from "./musicalScore";
 
 export interface AudioPartial {
   harmonic: number;
@@ -7,10 +13,17 @@ export interface AudioPartial {
   sinePhase: number;
 }
 
-interface RenderOptions {
+interface RawRenderOptions {
   durationSeconds: number;
   sampleRate: number;
   fundamentalHz: number;
+}
+
+interface RhythmicRenderOptions {
+  durationSeconds: number;
+  sampleRate: number;
+  score: MusicalScoreProgram;
+  startTimeSeconds?: number;
 }
 
 export interface AudioRhythmPreset {
@@ -42,21 +55,19 @@ export function createAudioPartials(fundamentalHz: number): AudioPartial[] {
 }
 
 export function createRhythmPreset(fundamentalHz: number): AudioRhythmPreset {
-  const bpm = 80;
-  const stepsPerBeat = 4;
-  const pitchMultipliers = [9, 8, 8, 9];
+  const definition = RESIDUE_BLOOM_SCORE_DEFINITION;
 
   return {
-    bpm,
-    stepsPerBeat,
-    stepSeconds: 60 / bpm / stepsPerBeat,
-    frequenciesHz: pitchMultipliers.map((multiplier) => fundamentalHz * multiplier),
-    attackSeconds: 0.006,
-    decaySeconds: 0.075,
-    releaseSeconds: 0.024,
-    timbreDamping: 1.4,
-    antiAliasRatio: 0.9,
-    outputGain: 0.5,
+    bpm: definition.bpm,
+    stepsPerBeat: definition.stepsPerBeat,
+    stepSeconds: 60 / definition.bpm / definition.stepsPerBeat,
+    frequenciesHz: definition.carrierMultipliers.map((multiplier) => fundamentalHz * multiplier),
+    attackSeconds: definition.attackSeconds,
+    decaySeconds: definition.decaySeconds,
+    releaseSeconds: definition.releaseSeconds,
+    timbreDamping: definition.timbreDamping,
+    antiAliasRatio: definition.antiAliasRatio,
+    outputGain: definition.outputGain,
   };
 }
 
@@ -64,9 +75,9 @@ export function getSonificationComponents(
   fundamentalHz: number,
   carrierHz: number,
   sampleRate: number,
+  scoreDefinition: MusicalScoreDefinition,
 ): SonificationComponent[] {
-  const rhythm = createRhythmPreset(fundamentalHz);
-  const frequencyLimit = sampleRate * 0.5 * rhythm.antiAliasRatio;
+  const frequencyLimit = sampleRate * 0.5 * scoreDefinition.antiAliasRatio;
 
   return createAudioPartials(fundamentalHz).map((partial, index) => {
     const audibleFrequencyHz = carrierHz * partial.harmonic;
@@ -77,70 +88,77 @@ export function getSonificationComponents(
       sourceAmplitude: partial.sourceAmplitude,
       sinePhase: partial.sinePhase,
       audibleFrequencyHz,
-      weightedAmplitude: partial.sourceAmplitude / Math.pow(index + 1, rhythm.timbreDamping),
+      weightedAmplitude:
+        partial.sourceAmplitude / Math.pow(index + 1, scoreDefinition.timbreDamping),
       included: audibleFrequencyHz < frequencyLimit,
     };
   });
 }
 
-function smoothstep(value: number): number {
-  const clamped = Math.min(1, Math.max(0, value));
-  return clamped * clamped * (3 - 2 * clamped);
-}
-
-function getPluckEnvelope(localTime: number, rhythm: AudioRhythmPreset): number {
-  const attack =
-    localTime < rhythm.attackSeconds
-      ? smoothstep(localTime / rhythm.attackSeconds)
-      : Math.exp(-(localTime - rhythm.attackSeconds) / rhythm.decaySeconds);
-  const release = smoothstep((rhythm.stepSeconds - localTime) / rhythm.releaseSeconds);
-  return attack * release;
-}
-
 export function renderRhythmicSeries({
   durationSeconds,
   sampleRate,
-  fundamentalHz,
-}: RenderOptions): number[] {
-  const rhythm = createRhythmPreset(fundamentalHz);
+  score,
+  startTimeSeconds = 0,
+}: RhythmicRenderOptions): number[] {
+  const cycleStartSeconds =
+    ((startTimeSeconds % score.cycleSeconds) + score.cycleSeconds) % score.cycleSeconds;
+  const carriers = Array.from(
+    new Set(score.events.filter((event) => event.active).map((event) => event.carrierHz)),
+  );
   const componentsByCarrier = new Map(
-    rhythm.frequenciesHz.map((carrier) => [
+    carriers.map((carrier) => [
       carrier,
-      getSonificationComponents(fundamentalHz, carrier, sampleRate).filter(
+      getSonificationComponents(score.fundamentalHz, carrier, sampleRate, score.definition).filter(
         (component) => component.included,
       ),
     ]),
   );
   const sampleCount = Math.floor(durationSeconds * sampleRate);
+  const samples = new Array<number>(sampleCount);
+  let filterState = 0;
 
-  return Array.from({ length: sampleCount }, (_, sample) => {
-    const time = sample / sampleRate;
-    const stepIndex = Math.floor(time / rhythm.stepSeconds);
-    const localTime = time - stepIndex * rhythm.stepSeconds;
-    const carrier = rhythm.frequenciesHz[stepIndex % rhythm.frequenciesHz.length]!;
-    const components = componentsByCarrier.get(carrier) ?? [];
+  for (let sample = 0; sample < sampleCount; sample += 1) {
+    const frame = evaluateMusicalScore(score, cycleStartSeconds + sample / sampleRate);
+    const components = frame.event.active
+      ? (componentsByCarrier.get(frame.event.carrierHz) ?? [])
+      : [];
     const normalization = components.reduce(
       (sum, component) => sum + component.weightedAmplitude,
       0,
     );
-    const envelope = getPluckEnvelope(localTime, rhythm);
     let value = 0;
 
     for (const component of components) {
       value +=
-        Math.sin(Math.PI * 2 * component.audibleFrequencyHz * localTime + component.sinePhase) *
-        component.weightedAmplitude;
+        Math.sin(
+          Math.PI * 2 * component.audibleFrequencyHz * frame.localStepTimeSeconds +
+            component.sinePhase,
+        ) * component.weightedAmplitude;
     }
 
-    return (normalization > 0 ? value / normalization : 0) * envelope * rhythm.outputGain;
-  });
+    const dryValue =
+      (normalization > 0 ? value / normalization : 0) *
+      frame.noteEnvelope *
+      frame.event.gain *
+      frame.event.accent *
+      score.definition.outputGain;
+    const minimumCutoffHz = 1_800;
+    const maximumCutoffHz = Math.min(6_200, sampleRate * 0.18);
+    const cutoffHz = minimumCutoffHz + (maximumCutoffHz - minimumCutoffHz) * frame.event.brightness;
+    const filterCoefficient = 1 - Math.exp((-2 * Math.PI * cutoffHz) / sampleRate);
+    filterState += (dryValue - filterState) * filterCoefficient;
+    samples[sample] = filterState;
+  }
+
+  return samples;
 }
 
 export function renderRawSeries({
   durationSeconds,
   sampleRate,
   fundamentalHz,
-}: RenderOptions): number[] {
+}: RawRenderOptions): number[] {
   const partials = createAudioPartials(fundamentalHz);
   const normalization = partials.reduce((sum, partial) => sum + partial.sourceAmplitude, 0);
   const sampleCount = Math.floor(durationSeconds * sampleRate);
