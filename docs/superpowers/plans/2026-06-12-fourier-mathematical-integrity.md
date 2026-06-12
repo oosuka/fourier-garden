@@ -1,106 +1,87 @@
-# Fourier Mathematical Integrity Implementation Plan
+# フーリエ表現の数学的整合性 実装記録
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **状態:** 実装済み。これは2026年6月12日の初期是正計画を、完了後の状態に
+> 合わせて整理した履歴資料である。現在の数理定義は
+> [`../../mathematical-model.md`](../../mathematical-model.md)、後続の制約は
+> [`../specs/2026-06-13-mathematical-integrity-hardening-design.md`](../specs/2026-06-13-mathematical-integrity-hardening-design.md)
+> を正とする。
 
-**Goal:** Make the phasor geometry, waveform, coefficient conventions, audio
-sonification, UI copy, and documentation mathematically consistent.
+**目的:** フェーザ幾何、主波形、係数規約、ソニフィケーション、UI説明を
+同一の有限フーリエ級数へ整合させる。
 
-**Architecture:** Keep the finite Fourier series as the single mathematical
-source. Use an explicitly named sine phase whose phasor imaginary projection
-reconstructs the series. Treat audio as a separate, documented transformation
-that preserves harmonic indices while applying declared weighting and
-band-limiting.
+**構成:** 有限フーリエ級数を数学層の唯一の正本とし、正弦位相と虚部射影で
+級数を再構成する。音声は調波指数を維持しつつ、知覚重みと帯域制限を加える
+別レイヤーとして定義する。
 
-**Tech Stack:** TypeScript 6, React 19, Three.js, KaTeX, AudioWorklet, Vitest.
+**技術要素:** TypeScript 6、React 19、Three.js、KaTeX、AudioWorklet、Vitest
 
----
+## 完了した作業
 
-### Task 1: Establish the phasor and complex-coefficient convention
+### 1. フェーザと複素係数の規約
 
-**Files:**
-- Modify: `src/math/fourier.ts`
-- Modify: `src/math/fourier.test.ts`
+- [x] 全項の正弦位相を0として定義した
+- [x] エピサイクル終点の虚部と級数の直接評価が一致するテストを追加した
+- [x] 二側複素係数と共役対称性を実装・検証した
+- [x] 曖昧な`phase`を`sinePhase`へ整理した
 
-- [ ] Add failing tests requiring every source term to have zero sine phase.
-- [ ] Add a failing test requiring the raw epicycle endpoint's imaginary
-  coordinate to equal direct series evaluation.
-- [ ] Add failing tests for
-  \(c_n=A(\sin\phi-i\cos\phi)/2\) and \(c_{-n}=\overline{c_n}\).
-- [ ] Rename the ambiguous `phase` field to `sinePhase`.
-- [ ] Make `evaluateEpicycle` return the unmodified complex endpoint.
-- [ ] Implement two-sided complex coefficient generation.
-- [ ] Run `npm test -- --run src/math/fourier.test.ts`.
+対象:
 
-### Task 2: Make the primary history waveform an exact projection
+- `src/math/fourier.ts`
+- `src/math/fourier.test.ts`
 
-**Files:**
-- Modify: `src/math/fourier.ts`
-- Modify: `src/math/fourier.test.ts`
-- Modify: `src/patterns/residueBloomScene.ts`
+### 2. 主履歴波形の厳密な射影
 
-- [ ] Add a failing test for a reusable series-to-screen projection helper.
-- [ ] Implement the helper as `centerY + scale * evaluateSeries(series, angle)`.
-- [ ] Pass the epicycle center and scale into waveform rendering.
-- [ ] Use the exact helper for the primary trail and reserve perturbation for
-  secondary artistic trails.
-- [ ] Run the focused math tests.
+- [x] 級数から画面Y座標への純粋な射影関数を追加した
+- [x] 主履歴波形から装飾テーパーと摂動を除去した
+- [x] 詩的な変形を二次トレイルだけへ分離した
 
-### Task 3: Formalize the sonification transform
+対象:
 
-**Files:**
-- Modify: `src/audio/synthesis.ts`
-- Modify: `src/audio/synthesis.test.ts`
-- Modify: `public/audio/fourier-worklet.js`
+- `src/math/fourier.ts`
+- `src/math/fourier.test.ts`
+- `src/patterns/residueBloomScene.ts`
 
-- [ ] Add failing tests requiring sine synthesis, source amplitudes matching
-  the analytic series up to a common normalization, and explicit Nyquist
-  exclusion metadata.
-- [ ] Rename audio phase and gain fields so source coefficients and perceptual
-  weighting cannot be confused.
-- [ ] Centralize the anti-alias ratio and damping exponent in the rhythm preset.
-- [ ] Use `sin` in offline and AudioWorklet synthesis.
-- [ ] Run `npm test -- --run src/audio/synthesis.test.ts`.
+### 3. ソニフィケーション変換
 
-### Task 4: Correct the educational UI
+- [x] 音源係数と知覚重みを別の値として定義した
+- [x] 短いエンベロープを持つ正弦合成へ統一した
+- [x] 帯域制限と知覚減衰指数を音響プリセットへ集約した
+- [x] TypeScript側とAudioWorklet側の定義を同期した
 
-**Files:**
-- Modify: `src/patterns/types.ts`
-- Modify: `src/patterns/registry.ts`
-- Modify: `src/components/DetailsPanel.tsx`
-- Modify: `src/App.tsx`
-- Modify: `src/styles.css`
+対象:
 
-- [ ] Add pattern-level phasor and sonification equations.
-- [ ] State explicitly that this chapter is synthesis, not FFT analysis.
-- [ ] Show \(f=\operatorname{Im}z\), the two-sided complex coefficients, the
-  sine phase convention, and the declared sonification transform.
-- [ ] Replace claims that every visual layer or audible ratio is a literal
-  rendering of the source coefficients.
-- [ ] Keep the current composition and interaction model unchanged.
+- `src/audio/synthesis.ts`
+- `src/audio/synthesis.test.ts`
+- `public/audio/fourier-worklet.js`
 
-### Task 5: Update project documentation
+### 4. 教育UI
 
-**Files:**
-- Modify: `README.md`
-- Modify: `design-qa.md`
-- Create: `docs/mathematical-model.md`
+- [x] \(f=\operatorname{Im}z\)と二側複素係数を表示した
+- [x] 正弦位相規約を明示した
+- [x] 有限フーリエ級数の合成とFFT解析を区別した
+- [x] 数学層、ソニフィケーション層、詩的造形層を分離して説明した
 
-- [ ] Put the product definition near the top of the README.
-- [ ] Document the exact, sonification, and poetic layers.
-- [ ] Record the corrected phase convention and complex coefficients.
-- [ ] Record the QA criterion that the primary waveform is exact while
-  decorative layers are interpretive.
+対象:
 
-### Task 6: Verify the complete change
+- `src/patterns/types.ts`
+- `src/patterns/registry.ts`
+- `src/components/DetailsPanel.tsx`
+- `src/App.tsx`
+- `src/styles.css`
 
-**Files:**
-- Verify all modified files.
+### 5. 文書
 
-- [ ] Run `npm test -- --run`.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run build`.
-- [ ] Open the fixed-seed local site in Chrome.
-- [ ] Verify the mathematical explanation and coefficient table.
-- [ ] Verify play, pause, and details interactions.
-- [ ] Inspect Chrome errors and warnings.
-- [ ] Run `git diff --check`.
+- [x] READMEへプロダクト定義と3層の区別を追加した
+- [x] `docs/mathematical-model.md`を作成した
+- [x] `design-qa.md`へ数学層と装飾層のQA条件を記録した
+
+### 6. 検証
+
+- [x] 数学・音響の単体テスト
+- [x] 型検査と本番ビルド
+- [x] 固定シードによるChrome確認
+- [x] 詳細パネルと再生操作の確認
+- [x] `git diff --check`
+
+後続で、絶対イベント時刻、デチューン後帯域条件、スペクトル軸、
+章定義検証を追加した。詳細は2026年6月13日の数学的整合性是正記録を参照する。

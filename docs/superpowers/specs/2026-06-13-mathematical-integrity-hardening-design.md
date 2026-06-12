@@ -1,5 +1,7 @@
 # 数学的整合性の是正と将来章向け制約
 
+> **状態:** 実装済み。現在の数理・音響・表示契約を記録する設計文書である。
+
 ## 目的
 
 `Residue Bloom / 剰余の花` の数学層、ソニフィケーション層、説明UIを再監査し、
@@ -10,7 +12,7 @@
 - ステレオデチューン後の周波数へナイキストガードが適用されない
 - AudioContext未初期化時に、数学級数を処理後音響波形として表示する
 - ソニフィケーション式が実装中のステレオ定位とデチューンを表していない
-- 文書が\(p_r\)を残響量へ写すと説明しているが、実装のwet-sendは区間制御である
+- 文書が\(p_r\)を残響量へ写すと説明しているが、実装のウェット送出は区間制御である
 - 55 Hz、スペクトル振幅、数値描画の説明に曖昧さがある
 
 同じ種類の誤りを将来章へ持ち込まないよう、章定義、共有スコア、数学写像、
@@ -42,10 +44,10 @@ f(x)=\operatorname{Im}z(x),\qquad x(t)=0.31t
 \]
 
 \[
-n_k\nu_j<0.45F_s
+\max\left(n_k\nu_j(1-d),n_k\nu_j(1+d)\right)<0.45F_s
 \]
 
-ただし帯域条件は、実際に生成する左右デチューン後の周波数に対して適用する。
+帯域条件は、実際に生成する左右デチューン後の周波数に対して適用する。
 
 ## 時間規約
 
@@ -95,15 +97,15 @@ z_e=z(0.31t_e^{\mathrm{abs}})
 - `baseGain`
 - `baseBrightness`
 - `baseAccent`
-- section由来のwet-send、stereo spread
+- 区間由来のウェット送出、ステレオ幅
 
 次のフェーザ評価結果を保存してはならない。
 
 - `normalizedPhasorX`
 - `normalizedPhasorY`
 - `normalizedPhasorRadius`
-- フェーザ由来の最終brightness
-- フェーザ由来の最終accent
+- フェーザ由来の最終的な明るさ
+- フェーザ由来の最終的なアクセント
 
 型からこれらを除去し、反復表へ誤って固定できないようにする。
 `baseAccent`はフレーズと小節頭だけから得る。フェーザ半径による倍率は
@@ -111,7 +113,7 @@ z_e=z(0.31t_e^{\mathrm{abs}})
 
 ### 実行時評価
 
-`evaluateMusicalScore()` は、反復イベントと絶対transport時刻から
+`evaluateMusicalScore()`は、反復イベントと絶対トランスポート時刻から
 `EvaluatedMusicalScoreEvent` を生成する。
 
 ```ts
@@ -151,12 +153,12 @@ AudioWorkletは区間、発音マスク、キャリア列を再定義しない�
 
 AudioWorkletは各サンプルで次を行う。
 
-1. `sampleCursor / sampleRate`から絶対transport時刻を得る
+1. `sampleCursor / sampleRate`から絶対トランスポート時刻を得る
 2. 144秒moduloで反復イベントを選ぶ
 3. 周回番号と`globalStep * stepSeconds`から絶対イベント時刻を得る
 4. イベントまたは周回が切り替わったときだけ、渡された数学写像から
    イベント時フェーザを評価してキャッシュする
-5. brightness、accent、decay、panを同じ式で導く
+5. 明るさ、アクセント、減衰、定位を同じ式で導く
 6. 左右デチューン後の各周波数へ帯域条件を適用する
 
 区間構成や発音判断をWorkletへ複製しない。TypeScript側とWorklet側で
@@ -200,7 +202,7 @@ w_k=\frac{A_k}{(k+1)^{1.4}}
 f_{k,j}^{L/R}=n_k\nu_j(1\mp d)
 \]
 
-イベント定位\(p\)と部分音定位\(p_k\)を合成した有界panを
+イベント定位\(p\)と部分音定位\(p_k\)を合成した有界な定位値を
 \(\hat p_k\)とし、equal-power gainを
 
 \[
@@ -208,7 +210,7 @@ f_{k,j}^{L/R}=n_k\nu_j(1\mp d)
 r_k=\sqrt{\frac{1+\hat p_k}{2}}
 \]
 
-とする。実装上のdry信号は概念的に
+とする。実装上のドライ信号は概念的に
 
 \[
 g_{\nu_j}^{L/R}(\tau)=
@@ -220,12 +222,13 @@ w_k\,P_k^{L/R}
 
 である。ここで\(G_e\)は区間・フレーズ・フェーザ由来の有界イベントゲイン、
 \(P_k^{L/R}\)は\(\ell_k,r_k\)、\(K(F_s)\)はデチューン込み帯域条件を満たす
-部分音集合である。その後にone-pole low-pass、EQ、reverb send、
-compressor、master gainを適用する。
+部分音集合である。その後に1極ローパス、EQ、残響送出、
+コンプレッサー、マスターゲインを適用する。
 
 フェーザ実部\(p_x\)はイベント定位、虚部\(p_y\)は基礎明るさと混合した
-low-pass cutoff、半径\(p_r\)はaccentとdecay scaleへ使う。wet-sendは区間
-プロファイルから得る。音質を変える目的で新たに\(p_r\)をwet-sendへ加えない。
+ローパスのカットオフ、半径\(p_r\)はアクセントと減衰倍率へ使う。
+ウェット送出は区間プロファイルから得る。音質を変える目的で新たに
+\(p_r\)をウェット送出へ加えない。
 
 これは表示級数の無加工再生ではなく、ソニフィケーションである。
 
@@ -244,7 +247,7 @@ function getLogFrequencyProgress(
 ): number
 ```
 
-棒と目盛はこの`0..1`のprogressをCSS percentageへ変換する。
+棒と目盛はこの`0..1`の進行率をCSSのパーセント値へ変換する。
 `justify-content: space-between`による別規約の目盛配置は禁止する。
 棒の高さは\(A_k/\max_j A_j\)へ比例させ、視認性のための最小高さを数学量へ
 混入させない。必要な場合は振幅棒とは別のマーカーとして描く。
@@ -265,8 +268,8 @@ function getLogFrequencyProgress(
 次の用語へ統一する。
 
 - `55 Hz`: 「解析的スペクトルの周波数対応基準」
-- spectrum: 「片側正弦振幅 \(A_k\) の解析的スペクトル」
-- coefficient table `Aₙ`: 「\(A_k\) (sin)」
+- スペクトル: 「片側正弦振幅 \(A_k\) の解析的スペクトル」
+- 係数表`Aₙ`: 「\(A_k\) (sin)」
 - 円と波形: 「解析式から評価した標本点を結ぶ数値描画」
 
 メイン画面の`n = 1 / 55 Hz`等の注釈にも、音声の発音周波数ではなく
@@ -337,8 +340,8 @@ interface MathematicalProvenance {
 
 - スペクトル棒と主要目盛が同じ対数座標関数を使う
 - AudioContext未初期化時に`evaluateSeries()`を呼ばない
-- 55 Hz、\(A_k\)、sampled polylineの用語がUIへ表示される
-- \(p_r\)とwet-sendの説明が実装の責務と一致する
+- 55 Hz、\(A_k\)、数値折れ線の用語がUIへ表示される
+- \(p_r\)とウェット送出の説明が実装の責務と一致する
 
 ### 章契約
 
@@ -354,7 +357,7 @@ interface MathematicalProvenance {
   - 絶対数学時刻と反復スコア時刻を混同しない規則
   - デチューン後帯域条件
   - スペクトル軸と振幅規約
-  - sampled polylineの説明規約
+  - 数値折れ線の説明規約
 - `docs/mathematical-model.md`
   - 3種類の時刻
   - 絶対イベント時刻のフェーザ写像

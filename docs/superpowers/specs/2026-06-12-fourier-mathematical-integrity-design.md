@@ -1,89 +1,98 @@
-# Fourier Garden Mathematical Integrity Design
+# Fourier Garden 数学的整合性設計
 
-## Product Definition
+> **状態:** 実装済みの初期設計記録。絶対イベント時刻、デチューン後の帯域制限、
+> スペクトル軸などの現在の制約は、後続の
+> [`2026-06-13-mathematical-integrity-hardening-design.md`](2026-06-13-mathematical-integrity-hardening-design.md)
+> を正とする。
 
-Fourier Garden is an audiovisual product built around:
+## プロダクトの定義
 
-- finite Fourier-series synthesis;
-- geometric visualization of that synthesis with complex exponentials and phasors;
-- real-time images and musical sonification derived from the selected series.
+Fourier Gardenは、次を中核とするオーディオビジュアル作品である。
 
-It is not a visualization of the Fast Fourier Transform algorithm. No unknown
-coefficients are estimated by a DFT or FFT in `Residue Bloom`; its coefficients
-are known analytically.
+- 有限フーリエ級数の合成
+- 複素指数関数とフェーザによる合成結果の幾何学的可視化
+- 選択した級数から導くリアルタイム映像と音楽的ソニフィケーション
 
-## Mathematical Layer
+本作品はFFTアルゴリズムの計算過程を可視化しない。`Residue Bloom`では
+未知の標本列からDFTやFFTで係数を推定せず、解析的に既知の係数を使う。
 
-The first chapter uses
+## 数学層
+
+最初の章では次の有限フーリエ級数を使う。
 
 \[
 f(x)=5\sum_{k=0}^{12}\frac{1}{k+1}\sin((4k+1)x).
 \]
 
-Define \(n_k=4k+1\), \(A_k=5/(k+1)\), and
+\(n_k=4k+1\)、\(A_k=5/(k+1)\)とし、
 
 \[
-z(x)=\sum_{k=0}^{12}A_k e^{i n_k x}.
+z(x)=\sum_{k=0}^{12}A_k e^{i n_k x}
 \]
 
-The circles are the summands of \(z(x)\). Their chained endpoint is \(z(x)\),
-and the displayed primary waveform is exactly
+と定義する。円は\(z(x)\)の各項であり、連結した終点は\(z(x)\)、
+表示する主波形は厳密に
 
 \[
-f(x)=\operatorname{Im}z(x).
+f(x)=\operatorname{Im}z(x)
 \]
 
-The screen uses the observation time scale \(x(t)=0.31t\). The 55 Hz labels
-belong to the analytic frequency mapping and do not claim that the visible
-fundamental phasor rotates 55 times per second.
+である。
 
-The stored phase uses the sine/imaginary-projection convention. It is zero for
-this chapter. For the conventional two-sided complex Fourier series,
+画面上の観察時間は\(x(t)=0.31t\)とする。55 Hzは解析的スペクトルの
+周波数対応基準であり、基本フェーザが実時間で毎秒55回転するという意味ではない。
+
+保存する位相は正弦形式と虚部射影の規約に従い、この章では0である。
+標準的な二側複素フーリエ係数は
 
 \[
 c_{n_k}=-\frac{iA_k}{2},\qquad
-c_{-n_k}=\frac{iA_k}{2}.
+c_{-n_k}=\frac{iA_k}{2}
 \]
 
-The coefficient spectrum is analytic source data, not an FFT estimate.
+となる。係数スペクトルは解析的な元データであり、FFT推定値ではない。
 
-## Sonification Layer
+## ソニフィケーション層
 
-The audible result is a musical sonification, not a claim that a 55 Hz
-rendering of \(f\) is heard without modification. For each rhythmic carrier
-\(\nu_j\), the dry source is
+音声は\(f(x)\)を55 Hzで無加工再生したものではない。各リズムキャリア
+\(\nu_j\)に対し、基礎知覚重みを
 
 \[
-g_{\nu_j}(\tau)=
-C\sum_{\substack{k\\n_k\nu_j<\eta F_s/2}}
-\frac{A_k}{(k+1)^\delta}
-\sin(2\pi n_k\nu_j\tau),
+w_k=\frac{A_k}{(k+1)^{1.4}}
 \]
 
-multiplied by a short envelope. Here \(\delta=1.4\) is perceptual high-order
-damping, \(\eta=0.9\) is the anti-alias guard, and the carriers follow the
-80 BPM pattern \(9f_0,8f_0,8f_0,9f_0\), with \(f_0=55\) Hz.
+とする。左右デチューン率を\(d=0.00125\)とした実周波数は
 
-EQ, stereo detuning, dynamics, and generated reverberation are post-synthesis
-sound design. The UI and documentation must describe this distinction.
+\[
+f_{k,j}^{L/R}=n_k\nu_j(1\mp d)
+\]
 
-## Poetic Layer
+であり、採用条件は
 
-Particles, membranes, nebulae, bloom, and secondary trails share the transport,
-palette, and focal point of the mathematical layer. They are interpretive
-artwork and must not be described as literal graphs of the Fourier series.
+\[
+\max(f_{k,j}^{L},f_{k,j}^{R})<0.45F_s
+\]
 
-## Acceptance Criteria
+とする。キャリアは80 BPMで\(9f_0,8f_0,8f_0,9f_0\)を循環し、
+\(f_0=55\ \mathrm{Hz}\)である。
 
-- The raw epicycle endpoint's vertical coordinate equals `evaluateSeries`.
-- The first point of the primary history waveform equals the current endpoint.
-- The primary history waveform is a uniformly scaled evaluation of the series,
-  without decorative taper or perturbation.
-- The observation angular rate is explicit and distinct from the 55 Hz
-  analytic frequency mapping.
-- The phase table identifies the sine convention and reports zero.
-- The complex coefficient relation is shown in the mathematical explanation.
-- The audio implementation and explanation use the same explicit
-  band-limited, perceptually weighted sonification model.
-- README, mathematical documentation, design QA, and in-product copy all state
-  that this is Fourier-series synthesis rather than FFT computation.
+EQ、ステレオデチューン、ダイナミクス、生成残響は合成後の音響設計である。
+UIと文書では、数学層の無加工音声ではなくソニフィケーションであることを明示する。
+
+## 詩的な造形層
+
+粒子、膜、星雲、ブルーム、二次トレイルは、数学層とトランスポート、
+色彩、焦点を共有する解釈的な表現である。フーリエ級数の値そのものの
+グラフとして説明しない。
+
+## 受け入れ条件
+
+- 生のエピサイクル終点の虚部が`evaluateSeries()`と一致する
+- 主履歴波形の先頭点が現在の終点と一致する
+- 主履歴波形が装飾テーパーや摂動を含まない一様倍率の級数評価である
+- 観察角速度と55 Hzの解析的周波数対応を区別する
+- 位相表が正弦規約と位相0を示す
+- 数学説明に二側複素係数の関係を示す
+- 音響実装と説明が同じ帯域制限・知覚重み付きモデルを使う
+- README、数理文書、設計QA、画面内説明が有限フーリエ級数の合成と
+  FFT計算過程を区別する

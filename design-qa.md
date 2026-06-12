@@ -1,223 +1,220 @@
-# Fourier Garden Design QA
+# Fourier Garden 設計QA
 
-**Product Definition**
+## 文書の位置付け
 
-- Fourier Garden is a finite Fourier-series synthesis and phasor-visualization product.
-- `Residue Bloom` uses analytic coefficients and does not perform or visualize a DFT/FFT.
-- The primary epicycles, connector, waveform, and coefficient spectrum are the exact mathematical layer.
-- Audio is an explicitly weighted and band-limited musical sonification.
-- Particles, membranes, nebulae, bloom, and secondary trails are interpretive visual layers.
+この文書は、視覚、操作、音響、数学表示、レンダラー、性能に関する実測結果と
+未確認事項を記録する。数理定義は
+[`docs/mathematical-model.md`](docs/mathematical-model.md)を正本とする。
 
-**Evidence**
+過去の参照画像と比較用スクリーンショットはQA実施時に使用したが、
+リポジトリ外のローカル絶対パスや一時ファイルであり、恒久的な証拠として
+参照しない。再検証では固定シード、固定ビューポート、URLクエリ、実行日時、
+レンダラー、計測結果を記録する。
 
-- source visual truth path: `/Users/oosuka/Downloads/イメージ画像1.png`, `/Users/oosuka/Downloads/イメージ画像2.png`, `/Users/oosuka/Downloads/イメージ画像3.png`
-- implementation screenshot path: `/tmp/fourier-garden-final-main.png`
-- viewport: `1487 x 1058`, device pixel ratio `1`
-- state: `Residue Bloom`, playing, volume `35%`, fixed seed `qa`, WebGPU high quality
-- full-view comparison evidence: `/tmp/fourier-garden-comparison.png`
-- focused region comparison evidence: `/tmp/fourier-garden-details-comparison-final.png`
+## プロダクトの確認事項
 
-**Findings**
+- Fourier Gardenは有限フーリエ級数の合成とフェーザ可視化を扱う
+- `Residue Bloom`は解析係数を使い、DFTやFFTによる係数推定を行わない
+- エピサイクル、接続線、主波形、解析的係数スペクトルは厳密な数学層である
+- 音声は知覚重みと帯域制限を加えた音楽的ソニフィケーションである
+- 粒子、膜、星雲、ブルーム、二次トレイル、調波コロナ、履歴パルスは
+  詩的な造形層である
 
-- No actionable P0, P1, or P2 findings remain.
-- Typography: the self-hosted Cormorant Garamond, Inter, and Noto Serif JP hierarchy matches the observatory tone. Detail copy and coefficient rows were enlarged after focused comparison.
-- Spacing and layout: the fixed composition preserves black space, a left mathematical focal area, a right-flowing waveform, and a bottom control rail across the target desktop viewport.
-- Colors and visual tokens: cyan, violet, warm gold, low-opacity glass, and additive bloom retain the reference palette without flattening the black background.
-- Image quality: all visible imagery is generated at runtime from vector geometry, GPU particles, TSL atmosphere, and mathematical wave data. Thin lines remain native-resolution while scalable effects degrade independently.
-- Copy and content: the UI distinguishes exact series synthesis, musical sonification, and poetic visual layers. It explicitly states that the chapter does not visualize FFT computation.
-- Mathematical projection: the raw phasor endpoint uses the sine-phase convention, and its imaginary coordinate equals the primary waveform at the connector.
-- Time scale: the UI identifies `x(t) = 0.31t` as an observation-speed visualization and does not imply that the displayed circles rotate at 55 Hz.
+## 初期視覚QA
 
-**Open Questions**
+実施日: 2026年6月12日
 
-- The references are art-direction targets rather than a single pixel-identical screen. `Residue Bloom` intentionally emphasizes a denser particle field and softer organic atmosphere than reference 01.
-- Automated Chromium blocks the fullscreen API. The control and error path are implemented, but final native fullscreen behavior remains a manual Chrome check.
+条件:
 
-**Patches Made Since Previous QA Pass**
+- ビューポート: `1487 x 1058`
+- デバイスピクセル比: `1`
+- 章: `Residue Bloom`
+- 音量: `35%`
+- 固定シード: `qa`
+- レンダラー: WebGPU
+- 品質: `high`
 
-- Replaced the volume slider event with `onInput` so its numeric display and persisted audio state update together.
-- Replaced the failing `WebGPURenderer(forceWebGL)` path with a dedicated classic `WebGLRenderer` fallback.
-- Added scene disposal and automatic rendering reinitialization for WebGPU device loss and WebGL context restoration.
-- Increased detail-panel body, tab, formula, axis, and coefficient-table optical sizes.
-- Removed unsupported `LineLoop` objects from the WebGPU path.
-- Corrected the phasor convention from a cosine-shift representation to a zero-phase sine/imaginary projection.
-- Removed taper and perturbation from the primary mathematical waveform.
-- Added conventional two-sided complex coefficients and explicit sonification equations.
+結果:
 
-**Implementation Checklist**
+- 自前配信のCormorant Garamond、Inter、Noto Serif JPにより、
+  観測所を意図した文字階層を維持した
+- 黒い余白、左側の数学焦点、右へ流れる主波形、下部操作列を維持した
+- シアン、バイオレット、暖色の金、低不透明度のガラス、加算発光を使い、
+  背景の黒を均一な発光で潰していない
+- 表示画像はベクトルジオメトリ、GPU粒子、TSLの大気表現、
+  数学波形から実行時生成した
+- 数学線をネイティブ解像度で維持し、適応品質では装飾効果を先に削減した
+- UIは有限級数の合成、音楽的ソニフィケーション、詩的造形を区別し、
+  FFT計算過程の可視化ではないことを明記した
+- 正弦位相規約でフェーザ終点の虚部と主波形が一致した
+- `x(t)=0.31t`を観察速度とし、55 Hzの周波数対応と区別した
 
-- [x] Full-view composition compared against reference 01 and reference 03.
-- [x] Details panel compared at a focused crop.
-- [x] Fixed seed and deterministic viewport used.
-- [x] WebGPU and forced WebGL2 states rendered successfully.
-- [x] 3840 x 2160 viewport measured at `60.0 fps` in the in-app Chrome runtime.
+初期是正で行った主な修正:
 
-**Audiovisual Score Synchronization QA**
+- 音量スライダーを`onInput`へ変更し、表示値と保存値を同期した
+- 強制WebGL経路を専用`WebGLRenderer`へ変更した
+- WebGPU device lossとWebGL context restoration時の再初期化を追加した
+- 詳細パネルの本文、タブ、数式、軸、係数表を拡大した
+- WebGPU非対応の`LineLoop`使用を除去した
+- フェーザ規約を正弦位相0と虚部射影へ是正した
+- 主波形からテーパーと摂動を除去した
+- 二側複素係数と明示的なソニフィケーション式を追加した
 
-- date: `2026-06-12`
-- fixed query parameters: `?seed=qa&quality=high`
-- renderer: WebGPUと`?renderer=webgl`の両方で描画を確認
-- viewport: `1440 x 900`（16:10）、`1600 x 900`（16:9）、
-  `2560 x 1080`（ultrawide）、`3840 x 2160`
-- tested score timestamps: `0.02`, `0.12`, `0.25`, `0.77`, `24.02`,
-  `36.02`, `48.02`, `60.02`, `96.02`, `108.02`, `120.02`, `132.02`,
-  `141.02`, `143.95`, `144.02`秒
-- visual onset to halo: 先頭3秒の固定時刻比較で発音イベントに対応する拡縮を確認
-- visual onset to burst particles: イベント時点の履歴フェーザ位置から金色粒子が広がることを確認
-- visual onset to membrane and bloom: イベント強度に応じた膜、流線、ブルームの変化を確認
-- phrase index 0 distinguishability: 先頭フレーズが次フレーズより強い視覚応答を確認
-- exact epicycles, endpoint, connector, and primary waveform stability:
-  スコア応答が詩的造形だけへ適用され、数学層が変形されないことをコードとテストで確認
-- 144-second loop boundary:
-  `143.95`秒と`144.02`秒の固定描画、音楽形式の周期評価単体テストに加え、
-  実Chromeで`01:30`から`02:38`まで連続再生して境界通過後も再生継続を確認
-- pause and resume:
-  自動テストと実Chromeのボタン操作で停止・再開を確認。再開後の警告・エラーは0件
-- tab visibility recovery: ブラウザ実動作は未確認
-- console errors and unhandled rejections:
-  WebGPU、forced WebGL2、全固定時刻、全対象アスペクト比で0件
-- 3840 x 2160 bloom-section average FPS over 60 seconds:
-  固定ブルームフレームで30標本すべて`60.0 fps`（平均、最小、最大ともに`60.0`）
-- headphone listening: 未実施
-- Mac built-in speaker listening: 未実施
-- continuous listening duration: 0分
-- playback observation:
-  実Chromeでtransport累積`02:38`まで確認。再開後の`01:30`から`02:38`は
-  seekなしで連続再生し、144秒境界を通過
-- remaining risks:
-  Codex内蔵ブラウザでは`AudioContext.resume()`が`suspended`のまま完了しなかったが、
-  実Chromeでは音声開始、一時停止・再開、144秒境界通過まで動作した。
-  自動操作では前面タブを切り替えられず、タブ非表示からの復帰は未確認。
-  ヘッドホンとMac内蔵スピーカーによる実機試聴も未実施のため、
-  音響品質を含む完了判定には手動QAが必要
+## 映像と音楽の共有スコアQA
 
-**Math-Layer Score Linkage QA**
+実施日: 2026年6月12日
 
-- date: `2026-06-13`
-- implementation direction: B案。厳密な数学線は維持し、その上へ詩的な
-  調波コロナ、14節点、履歴パルスを別オブジェクトとして重ねた
-- user feedback before this pass:
-  全体コンセプトと音楽変化は良好で、背景との連動は確認済み。左側の
-  エピサイクルと右側の主波形は音楽連動が弱いという指摘を受けた
-- shared score source:
-  このQA時点では既存の直列化可能な48小節イベント表と`recentImpulses`だけを使用。
-  当時はAudioWorklet、音響DSP、イベント構成を変更していない
-- strict math preservation:
-  13円、スポーク、フェーザ終点、connector、主波形の式・位相・倍率を変更していない。
-  既存の親groupによる主波形Yドリフトを検出し、主線は常に0、二次トレイルだけが
-  詩的ドリフトを持つよう回帰テスト付きで修正
-- harmonic corona:
-  `A_k/(k+1)^1.4`を正規化した13重みを使用し、低次ほど強く発光。
-  phrase index 0は後続フレーズより10%以上強い
-- history pulse:
-  最大4件、各64点の固定slot。各点は主波形と同じ
-  `projectSeriesToVerticalAxis()`で計算し、144秒境界前後でも有限かつ一致
-- Chrome WebGPU:
-  `?seed=qa&quality=high`で開始後3秒以内のコロナ、節点、履歴パルスを確認。
-  console warning/errorは0件
-- Chrome forced WebGL2:
-  `?renderer=webgl&seed=qa&quality=high`で同じ連動を確認。
-  ブルームなしでも識別できるよう詩的overlayのopacityだけを1.32倍し、上限1へ制限。
-  console warning/errorは0件
-- automated focused verification:
-  score overlay、visual response、registryの単体テスト、typecheck、production buildが成功
-- listening status:
-  音響実装は変更していない。ユーザーは変更前の音楽変化を心地よいと確認済みだが、
-  ヘッドホンとMac内蔵スピーカーの機器別試聴は未確認
-- final standard verification:
-  `npm run check`成功。format、Oxlint、54 tests、typecheck、production buildが成功。
-  `git diff --check`も成功
-- final aspect-ratio QA:
-  `1440 x 900`、`1600 x 900`、`2560 x 1080`、`3840 x 2160`で
-  scene canvasがviewport全体へ一致し、documentのscroll width/heightもviewportと一致。
-  水平・垂直overflowは0
-- final 144-second loop QA:
-  Chrome WebGPUでseekなしに`03:43`まで連続再生し、144秒境界通過後も
-  一時停止表示、描画、音声transportが継続。warning/errorは0件。
-  この記録は再生継続の確認であり、二周目のフェーザ制御値が一周目と異なることを
-  当時検証した記録ではない
-- final pause/resume QA:
-  Chrome forced WebGL2で`00:00`停止、1.1秒後も`00:00`維持、再開1.1秒後に
-  `00:01`へ進むことを確認。warning/errorは0件
-- final tab visibility QA:
-  Chrome拡張管理下のWebGPU/WebGL2両タブが同時に`visible`を返したため、
-  実際のhidden状態とタブ復帰は自動確認できず未確認
-- final 4K performance QA:
-  内蔵Chrome runtime、WebGPU、`3840 x 2160`、`?seed=qa&quality=high`で
-  60秒・30標本を計測。平均`59.95 fps`、最小`58.5 fps`、最大`60.0 fps`。
-  warning/errorは0件。JS heapの長時間増加は今回の計測APIでは未測定
+条件:
 
-**Mathematical Integrity Correction Status**
+- URLクエリ: `?seed=qa&quality=high`
+- レンダラー: WebGPU、強制WebGL2
+- ビューポート: `1440 x 900`、`1600 x 900`、`2560 x 1080`、`3840 x 2160`
+- 評価時刻: `0.02`、`0.12`、`0.25`、`0.77`、`24.02`、`36.02`、
+  `48.02`、`60.02`、`96.02`、`108.02`、`120.02`、`132.02`、
+  `141.02`、`143.95`、`144.02`秒
 
-- date: `2026-06-13`
-- corrected defect:
-  旧実装は144秒の反復イベント表へ一周目のフェーザ結果を保存していたため、
-  二周目以降の音響・詩的制御が絶対数学時刻`x(t)=0.31t`と一致しなかった
-- corrected ownership:
-  反復イベント表は音楽形式と基礎プロファイルだけを保持し、フェーザ座標、
-  半径、brightness、accentは各周回の絶対イベント時刻から評価する
-- corrected band limit:
-  左右デチューン後の最大実周波数へ`0.45F_s`条件を適用する
-- corrected display semantics:
-  スペクトルは片側正弦振幅`A_k`、棒と目盛は同一対数軸、数学線は解析式の
-  厳密な標本点を結ぶ数値描画として扱う
-- automated verification:
-  二周目フェーザ、ループ直後の前周回履歴、反復表の禁止フィールド、
-  デチューン後ガード、章定義validator、スペクトル軸の回帰テストを追加
-- browser verification:
-  新実装をWebGPUとforced WebGL2で確認。詳細は後続の実測結果を参照
-- listening status:
-  ヘッドホンとMac内蔵スピーカーの実機試聴は未実施のまま
+結果:
 
-**Mathematical Integrity Browser QA**
+- 発音イベントに対応してハロー、粒子バースト、膜、流線、ブルームが応答した
+- 粒子バーストはイベント発生時の履歴フェーザ位置を起点とした
+- 4音句の先頭は後続音より強い視覚応答を示した
+- 厳密な円、終点、接続線、主波形は発音イベントで変形しなかった
+- `143.95`秒と`144.02`秒の描画、および実Chromeでの連続再生により、
+  144秒境界後も音楽形式とトランスポートが継続した
+- 再生、一時停止、再開後の警告・エラーは0件だった
+- 対象アスペクト比で水平・垂直overflowは発生しなかった
+- 4Kの固定ブルームフレームを60秒・30標本で計測し、
+  平均・最小・最大ともに`60.0 fps`だった
 
-- date: `2026-06-13`
-- Chrome query:
-  WebGPUは`?seed=qa&quality=high`、WebGL2は
-  `?renderer=webgl&seed=qa&quality=high`
-- viewport:
-  `1563 x 843`、device pixel ratio `2`。document overflowは水平・垂直ともに0
-- first-three-second response:
-  WebGPU開始後`00:02`で発音に同期するハロー、粒子、膜、色変化と
-  処理後音響波形を視認。厳密な円、終点、connector、主波形は独立した数学線を維持
-- mathematical details:
-  数学時刻`x(t)=0.31t`の非リセット、絶対イベント時刻による`p_x`、`p_y`、
-  `p_r`、片側正弦振幅`A_k`、解析的周波数対応、数値描画の説明を確認。
-  スペクトル棒と`55`、`440`、`1k`、`2.7k Hz`目盛は同じ対数軸を使用
-- 144-second boundary:
-  WebGPUをseekなしで`02:33`まで再生し、144秒境界後も描画、音声transport、
-  一時停止表示が継続。さらに`08:51`まで動作し、warning/errorは0件。
-  forced WebGL2もseekなしで`03:13`まで再生し、同じく境界後の描画とtransportを確認。
-  二周目の絶対時刻フェーザ値そのものは単体テストで検証
-- pause and resume:
-  WebGPUは`03:07`で停止し1.2秒後も同時刻、再開後`03:09`へ進行。
-  forced WebGL2はSpaceで`01:18`に停止し1.3秒後も同時刻、再開後`01:19`へ進行
-- volume persistence:
-  UIで`55%`から`35%`へ変更し、再読み込み後も`35%`を復元。
-  QA後は元の`55%`へ戻した
-- renderer and console:
-  WebGPU、forced WebGL2とも描画と音声開始を確認。
-  warning、error、未処理rejectionは取得範囲で0件
-- performance:
-  WebGPU単独通常表示、`1563 x 843`、device pixel ratio `2`で60秒・30標本を計測。
-  平均、最小、最大すべて`60.0 fps`。この結果は既存の4K計測とは別条件
-- tab visibility recovery:
-  Chrome拡張管理下ではWebGPU/WebGL2両タブが`visible`を返し、hidden状態を
-  発生させられなかったため未確認
-- fullscreen:
-  自動操作からFullscreen APIへ遷移しなかったため、実ブラウザでの全画面遷移と解除は未確認
-- headphone listening: 未実施
-- Mac built-in speaker listening: 未実施
-- continuous listening duration: 0分
-- completion status:
-  数学、DSP、表示、renderer、transport、性能の自動・ブラウザ検証は成功。
-  全画面、タブ非表示復帰、ヘッドホン、Mac内蔵スピーカーは手動QAが必要なため、
-  音響を含む最終完了とは判定しない
+この時点では、タブ非表示からの復帰と実機試聴を確認していない。
 
-**Follow-up Polish**
+## 数学線と音楽の視覚連動QA
 
-- [P3] A future chapter can push the membrane topology closer to reference 03 without changing this chapter's residue-class identity.
-- [P3] A production performance session on the exact MacBook Air M2 target should run for the full planned 60 seconds.
+実施日: 2026年6月13日
 
-historical result: previous automated and visual QA passed; the mathematical-integrity
-correction still requires the new browser QA below, and manual audio QA remains incomplete
+実装:
+
+- 左側へ13本の調波コロナと14個の節点を追加した
+- 右側へ最大4件、各64点の履歴パルスを追加した
+- 追加物は厳密な数学線と別オブジェクトであり、座標と倍率だけを共有した
+- コロナ重みは`A_k/(k+1)^1.4`の正規化値を使った
+- 履歴パルスは主波形と同じ`projectSeriesToVerticalAxis()`を使った
+
+結果:
+
+- `?seed=qa&quality=high`のWebGPUで開始後3秒以内のコロナ、節点、
+  履歴パルスを確認した
+- `?renderer=webgl&seed=qa&quality=high`でも同じ連動を確認した
+- WebGL2ではブルームがなくても識別できるよう、詩的オーバーレイの
+  不透明度だけを1.32倍し、上限1へ制限した
+- WebGPUとWebGL2のコンソール警告・エラーは0件だった
+- `npm run check`は当時の54テストを含め成功した
+- 4KのWebGPUを60秒・30標本で計測し、平均`59.95 fps`、
+  最小`58.5 fps`、最大`60.0 fps`だった
+- WebGPUはseekなしで`03:43`まで再生し、144秒境界後も描画と
+  トランスポートが継続した
+- 強制WebGL2では一時停止中に時刻が止まり、再開後に進むことを確認した
+
+この記録は再生継続の確認であり、2周目のフェーザ制御値が1周目と異なることは
+当時まだ実測していなかった。後続の数学的整合性QAで補完した。
+
+## 数学的整合性QA
+
+実施日: 2026年6月13日
+
+是正内容:
+
+- 反復イベント表からフェーザ座標、半径、明るさ、アクセントを除外した
+- 各周回の絶対イベント時刻からフェーザ制御を評価するようにした
+- ループ直後の履歴は前周回の絶対イベント時刻から再評価した
+- 左右デチューン後の最大実周波数へ`0.45F_s`条件を適用した
+- スペクトル棒と目盛を同じ対数軸へ統一した
+- 棒高を片側正弦振幅`A_k`として表示した
+- 音声未初期化時の数学級数による代替波形を除去した
+- 章登録時の`validatePatternDefinition()`を追加した
+
+ブラウザ条件:
+
+- WebGPU: `?seed=qa&quality=high`
+- WebGL2: `?renderer=webgl&seed=qa&quality=high`
+- ビューポート: `1563 x 843`
+- デバイスピクセル比: `2`
+
+結果:
+
+- 開始後2秒で発音同期のハロー、粒子、膜、色変化、処理後音響波形を確認した
+- 詳細パネルで絶対数学時刻、\(p_x\)、\(p_y\)、\(p_r\)、
+  片側正弦振幅、解析的周波数対応、数値描画の説明を確認した
+- `55`、`440`、`1k`、`2.7k Hz`の目盛と棒が同じ対数軸を使用した
+- WebGPUをseekなしで`08:51`まで動作させ、144秒境界後も継続した
+- 強制WebGL2をseekなしで`03:13`まで動作させ、同じく境界後を確認した
+- 2周目の絶対イベント時刻フェーザ値は単体テストで検証した
+- WebGPUとWebGL2で一時停止中の時刻停止と再開後の進行を確認した
+- 音量を変更し、再読み込み後に保存値が復元されることを確認した
+- 警告、エラー、未処理Promise rejectionは取得範囲で0件だった
+- WebGPU、`1563 x 843`、デバイスピクセル比2を60秒・30標本で計測し、
+  平均・最小・最大ともに`60.0 fps`だった
+
+## 操作・初期化・品質固定の追補QA
+
+実施日: 2026年6月13日
+
+対象:
+
+- 開始前の非表示操作UI
+- 閉じた詳細パネルのフォーカスとアクセシビリティ
+- AudioEngineの初期化競合と失敗時解放
+- URLで明示した品質レベルの固定
+
+自動テスト:
+
+- 開始前に再生コントロールをDOMへ配置しないことを検証した
+- 閉じた詳細パネルへ`inert`と`aria-hidden="true"`が付くことを検証した
+- Worklet読み込み中の複数初期化が1つの`AudioContext`を共有することを検証した
+- 初期化失敗時に作成済み`AudioContext`を閉じることを検証した
+- `quality`未指定時は適応品質、明示時は固定品質になることを検証した
+- `npm run check`で17テストファイル・84テスト、型検査、本番ビルドが成功した
+
+内蔵ブラウザ確認:
+
+- URL: `?seed=qa&quality=high`
+- 開始前のフォーカス可能要素は`ENTER FOURIER GARDEN`だけだった
+- 開始前に再生、詳細、全画面コントロールは存在しなかった
+- 閉じた詳細パネルは`inert`かつ`aria-hidden="true"`だった
+- `D`で開いた時は両属性が解除され、再度閉じると復元された
+- `quality=high`が選択され、表示FPSは`60.0`だった
+- コンソールの警告・エラーは0件だった
+
+内蔵ブラウザでは最新変更後の`AudioContext`が進行せず、実音声再生は確認できなかった。
+初期化競合と失敗時解放は単体テストで検証したが、実Chromeでの再生確認と
+機器別試聴は未完了である。
+
+## 現在の性能記録
+
+| 条件 | 時間・標本 | 平均 | 最小 | 最大 |
+| --- | ---: | ---: | ---: | ---: |
+| 内蔵ブラウザ、WebGPU、3840 x 2160、固定ブルーム | 60秒・30標本 | 60.0 fps | 60.0 fps | 60.0 fps |
+| 内蔵Chrome実行環境、WebGPU、3840 x 2160、視覚連動後 | 60秒・30標本 | 59.95 fps | 58.5 fps | 60.0 fps |
+| WebGPU、1563 x 843、DPR 2、数学的整合性是正後 | 60秒・30標本 | 60.0 fps | 60.0 fps | 60.0 fps |
+
+4K計測ではJS heapとGPUメモリの長時間増加を測定していない。
+本番ビルドは成功しているが、Viteは`residueBloomScene`のminify後チャンクが
+500 kBを超えるという警告を出している。遅延ロードは維持されており、
+今回の文書変更による増加ではない。
+
+## 未確認事項
+
+- 最新変更後の実Chromeによる音声開始、再生、一時停止、再開
+- ヘッドホンによる10分以上の連続試聴
+- Mac内蔵スピーカーによる10分以上の連続試聴
+- 実際のhidden状態を伴うタブ非表示と復帰
+- ネイティブ全画面への遷移と解除
+- 長時間実行時のJS heap、GPUメモリ、AudioNode残留
+- 基準機MacBook Air M2での4K性能再計測
+
+## 現在の判定
+
+数学、スコア、DSP契約、スペクトル、レンダラー、レイアウト、操作UIの
+自動検証と取得可能なブラウザQAは成功している。音響品質、hidden復帰、
+全画面、長時間メモリは手動QAが残っているため、作品全体の最終QA完了とは
+判定しない。
