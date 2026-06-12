@@ -91,6 +91,43 @@
   ヘッドホンとMac内蔵スピーカーによる実機試聴も未実施のため、
   音響品質を含む完了判定には手動QAが必要
 
+**Math-Layer Score Linkage QA**
+
+- date: `2026-06-13`
+- implementation direction: B案。厳密な数学線は維持し、その上へ詩的な
+  調波コロナ、14節点、履歴パルスを別オブジェクトとして重ねた
+- user feedback before this pass:
+  全体コンセプトと音楽変化は良好で、背景との連動は確認済み。左側の
+  エピサイクルと右側の主波形は音楽連動が弱いという指摘を受けた
+- shared score source:
+  既存の直列化可能な48小節イベント表と`recentImpulses`だけを使用。
+  AudioWorklet、音響DSP、イベント構成は変更していない
+- strict math preservation:
+  13円、スポーク、フェーザ終点、connector、主波形の式・位相・倍率を変更していない。
+  既存の親groupによる主波形Yドリフトを検出し、主線は常に0、二次トレイルだけが
+  詩的ドリフトを持つよう回帰テスト付きで修正
+- harmonic corona:
+  `A_k/(k+1)^1.4`を正規化した13重みを使用し、低次ほど強く発光。
+  phrase index 0は後続フレーズより10%以上強い
+- history pulse:
+  最大4件、各64点の固定slot。各点は主波形と同じ
+  `projectSeriesToVerticalAxis()`で計算し、144秒境界前後でも有限かつ一致
+- Chrome WebGPU:
+  `?seed=qa&quality=high`で開始後3秒以内のコロナ、節点、履歴パルスを確認。
+  console warning/errorは0件
+- Chrome forced WebGL2:
+  `?renderer=webgl&seed=qa&quality=high`で同じ連動を確認。
+  ブルームなしでも識別できるよう詩的overlayのopacityだけを1.32倍し、上限1へ制限。
+  console warning/errorは0件
+- automated focused verification:
+  score overlay、visual response、registryの単体テスト、typecheck、production buildが成功
+- listening status:
+  音響実装は変更していない。ユーザーは変更前の音楽変化を心地よいと確認済みだが、
+  ヘッドホンとMac内蔵スピーカーの機器別試聴は未確認
+- pending final pass:
+  全アスペクト比、144秒連続境界、一時停止・再開、タブ復帰、60秒性能計測、
+  `npm run check`、`git diff --check`
+
 **Follow-up Polish**
 
 - [P3] A future chapter can push the membrane topology closer to reference 03 without changing this chapter's residue-class identity.

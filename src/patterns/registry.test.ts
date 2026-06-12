@@ -32,4 +32,12 @@ describe("pattern mathematical provenance", () => {
     expect(pattern?.audio.score.events.filter((event) => event.active)).toHaveLength(468);
     expect(pattern?.audio.score.visualAngularRate).toBe(pattern?.mathematics.visualAngularRate);
   });
+
+  it("labels the score-linked math highlights as poetic overlays", () => {
+    const body = patternRegistry[0]?.education.poeticLayerBody;
+
+    expect(body).toContain("調波コロナ");
+    expect(body).toContain("履歴パルス");
+    expect(body).toContain("座標を変形しません");
+  });
 });
