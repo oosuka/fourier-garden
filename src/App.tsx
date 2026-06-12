@@ -240,28 +240,32 @@ export function App() {
         </div>
       )}
 
-      <div className="interfaceLayer controlsLayer">
-        <ControlBar
-          playing={playing}
-          volume={volume}
-          detailsOpen={detailsOpen}
-          fullscreen={fullscreen}
-          pattern={pattern}
-          chapterCount={patternRegistry.length}
-          transport={transport}
-          onTogglePlay={togglePlayback}
-          onVolume={handleVolume}
-          onToggleDetails={() => setDetailsOpen((open) => !open)}
-          onToggleFullscreen={() => void toggleFullscreen()}
-        />
-      </div>
+      {entered && (
+        <>
+          <div className="interfaceLayer controlsLayer">
+            <ControlBar
+              playing={playing}
+              volume={volume}
+              detailsOpen={detailsOpen}
+              fullscreen={fullscreen}
+              pattern={pattern}
+              chapterCount={patternRegistry.length}
+              transport={transport}
+              onTogglePlay={togglePlayback}
+              onVolume={handleVolume}
+              onToggleDetails={() => setDetailsOpen((open) => !open)}
+              onToggleFullscreen={() => void toggleFullscreen()}
+            />
+          </div>
 
-      <DetailsPanel
-        open={detailsOpen}
-        pattern={pattern}
-        audio={audio}
-        onClose={() => setDetailsOpen(false)}
-      />
+          <DetailsPanel
+            open={detailsOpen}
+            pattern={pattern}
+            audio={audio}
+            onClose={() => setDetailsOpen(false)}
+          />
+        </>
+      )}
 
       {!entered && (
         <section className="entryScreen">

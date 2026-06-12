@@ -5,7 +5,7 @@ import { AdaptiveQuality } from "../core/adaptiveQuality";
 import { dateSeed } from "../core/seed";
 import type { Transport } from "../core/transport";
 import type { PatternDefinition } from "../patterns/types";
-import type { PatternScene, PatternSceneFactory } from "../patterns/types";
+import type { PatternScene, PatternSceneFactory, QualityLevel } from "../patterns/types";
 
 interface CanvasStageProps {
   pattern: PatternDefinition;
@@ -20,6 +20,29 @@ function getSceneSeed(): number {
   if (seed === "qa") return 41_041;
   const parsed = Number.parseInt(seed ?? "", 10);
   return Number.isFinite(parsed) ? parsed : dateSeed();
+}
+
+export function getSceneQualityPreference(search: string): {
+  initialQuality: QualityLevel;
+  adaptive: boolean;
+} {
+  const requestedQuality = new URLSearchParams(search).get("quality");
+  if (
+    requestedQuality === "low" ||
+    requestedQuality === "medium" ||
+    requestedQuality === "high" ||
+    requestedQuality === "ultra"
+  ) {
+    return {
+      initialQuality: requestedQuality,
+      adaptive: false,
+    };
+  }
+
+  return {
+    initialQuality: "high",
+    adaptive: true,
+  };
 }
 
 export function CanvasStage({ pattern, transport, playing, onStatus, onError }: CanvasStageProps) {
@@ -42,9 +65,8 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
     let previousFrame = performance.now();
     let sampleStarted = previousFrame;
     let sampleFrames = 0;
-    const initialQuality =
-      new URLSearchParams(window.location.search).get("quality") === "ultra" ? "ultra" : "high";
-    const adaptiveQuality = new AdaptiveQuality(initialQuality, 180);
+    const qualityPreference = getSceneQualityPreference(window.location.search);
+    const adaptiveQuality = new AdaptiveQuality(qualityPreference.initialQuality, 180);
 
     const fail = (error: unknown) => {
       console.error("Fourier Garden scene initialization failed", error);
@@ -85,7 +107,7 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
         score: evaluateMusicalScore(pattern.audio.score, time),
       });
 
-      if (playingRef.current) {
+      if (playingRef.current && qualityPreference.adaptive) {
         const nextQuality = adaptiveQuality.sample(delta);
         if (nextQuality) scene.setQuality(nextQuality);
       }
@@ -105,7 +127,7 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
 
       scene = nextScene;
       resize();
-      scene.setQuality(initialQuality);
+      scene.setQuality(qualityPreference.initialQuality);
       previousFrame = performance.now();
       sampleStarted = previousFrame;
       sampleFrames = 0;

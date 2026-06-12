@@ -42,7 +42,11 @@ export function DetailsPanel({ open, pattern, audio, onClose }: DetailsPanelProp
   const score = pattern.audio.score;
 
   return (
-    <aside className={`detailsPanel ${open ? "detailsPanel--open" : ""}`}>
+    <aside
+      className={`detailsPanel ${open ? "detailsPanel--open" : ""}`}
+      aria-hidden={!open}
+      inert={!open}
+    >
       <header className="detailsHeader">
         <div>
           <span className="eyebrow">OBSERVATION NOTES</span>

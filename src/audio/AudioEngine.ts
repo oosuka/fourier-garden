@@ -10,6 +10,7 @@ export class AudioEngine {
   private master: GainNode | null = null;
   private analyser: AnalyserNode | null = null;
   private audioNodes: AudioNode[] = [];
+  private initialization: Promise<void> | null = null;
   private volume: number;
 
   constructor(
@@ -32,79 +33,92 @@ export class AudioEngine {
     return this.context !== null;
   }
 
-  async initialize(): Promise<void> {
-    if (this.context) return;
+  initialize(): Promise<void> {
+    if (this.context) return Promise.resolve();
+    if (this.initialization) return this.initialization;
 
+    this.initialization = this.initializeContext();
+    return this.initialization;
+  }
+
+  private async initializeContext(): Promise<void> {
     const context = new AudioContext({ latencyHint: "interactive" });
-    await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=5");
+    try {
+      await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=5");
 
-    const source = new AudioWorkletNode(context, "fourier-garden-processor", {
-      numberOfOutputs: 2,
-      outputChannelCount: [2, 2],
-    });
-    source.port.postMessage(createWorkletConfiguration(this.score));
+      const source = new AudioWorkletNode(context, "fourier-garden-processor", {
+        numberOfOutputs: 2,
+        outputChannelCount: [2, 2],
+      });
+      source.port.postMessage(createWorkletConfiguration(this.score));
 
-    const highPass = new BiquadFilterNode(context, {
-      type: "highpass",
-      frequency: 125,
-      Q: 0.45,
-    });
-    const highShelf = new BiquadFilterNode(context, {
-      type: "highshelf",
-      frequency: 3_200,
-      gain: -2.2,
-    });
-    const softLowPass = new BiquadFilterNode(context, {
-      type: "lowpass",
-      frequency: 4_600,
-      Q: 0.3,
-    });
-    const dry = new GainNode(context, { gain: 0.88 });
-    const wetHighPass = new BiquadFilterNode(context, {
-      type: "highpass",
-      frequency: 180,
-      Q: 0.45,
-    });
-    const wet = new GainNode(context, { gain: 0.16 });
-    const convolver = new ConvolverNode(context, {
-      buffer: this.createImpulse(context, 1.9, 3.4),
-    });
-    const compressor = new DynamicsCompressorNode(context, {
-      threshold: -12,
-      knee: 12,
-      ratio: 3,
-      attack: 0.006,
-      release: 0.2,
-    });
-    const analyser = new AnalyserNode(context, {
-      fftSize: 2_048,
-      smoothingTimeConstant: 0.86,
-    });
-    const master = new GainNode(context, {
-      gain: this.volumeToGain(this.volume),
-    });
+      const highPass = new BiquadFilterNode(context, {
+        type: "highpass",
+        frequency: 125,
+        Q: 0.45,
+      });
+      const highShelf = new BiquadFilterNode(context, {
+        type: "highshelf",
+        frequency: 3_200,
+        gain: -2.2,
+      });
+      const softLowPass = new BiquadFilterNode(context, {
+        type: "lowpass",
+        frequency: 4_600,
+        Q: 0.3,
+      });
+      const dry = new GainNode(context, { gain: 0.88 });
+      const wetHighPass = new BiquadFilterNode(context, {
+        type: "highpass",
+        frequency: 180,
+        Q: 0.45,
+      });
+      const wet = new GainNode(context, { gain: 0.16 });
+      const convolver = new ConvolverNode(context, {
+        buffer: this.createImpulse(context, 1.9, 3.4),
+      });
+      const compressor = new DynamicsCompressorNode(context, {
+        threshold: -12,
+        knee: 12,
+        ratio: 3,
+        attack: 0.006,
+        release: 0.2,
+      });
+      const analyser = new AnalyserNode(context, {
+        fftSize: 2_048,
+        smoothingTimeConstant: 0.86,
+      });
+      const master = new GainNode(context, {
+        gain: this.volumeToGain(this.volume),
+      });
 
-    source.connect(highPass, 0, 0).connect(highShelf).connect(softLowPass);
-    softLowPass.connect(dry).connect(compressor);
-    source.connect(wetHighPass, 1, 0).connect(convolver).connect(wet).connect(compressor);
-    compressor.connect(analyser).connect(master).connect(context.destination);
+      source.connect(highPass, 0, 0).connect(highShelf).connect(softLowPass);
+      softLowPass.connect(dry).connect(compressor);
+      source.connect(wetHighPass, 1, 0).connect(convolver).connect(wet).connect(compressor);
+      compressor.connect(analyser).connect(master).connect(context.destination);
 
-    this.context = context;
-    this.source = source;
-    this.master = master;
-    this.analyser = analyser;
-    this.audioNodes = [
-      highPass,
-      highShelf,
-      softLowPass,
-      dry,
-      wetHighPass,
-      wet,
-      convolver,
-      compressor,
-      analyser,
-      master,
-    ];
+      this.context = context;
+      this.source = source;
+      this.master = master;
+      this.analyser = analyser;
+      this.audioNodes = [
+        highPass,
+        highShelf,
+        softLowPass,
+        dry,
+        wetHighPass,
+        wet,
+        convolver,
+        compressor,
+        analyser,
+        master,
+      ];
+    } catch (error) {
+      await context.close();
+      throw error;
+    } finally {
+      this.initialization = null;
+    }
   }
 
   async play(positionSeconds: number): Promise<void> {
