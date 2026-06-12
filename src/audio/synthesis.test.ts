@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
-import { RESIDUE_BLOOM_SCORE_DEFINITION, buildMusicalScoreProgram } from "./musicalScore";
+import {
+  RESIDUE_BLOOM_SCORE_DEFINITION,
+  buildMusicalScoreProgram,
+  evaluateMusicalScore,
+} from "./musicalScore";
 import {
   createAudioPartials,
   createWorkletConfiguration,
@@ -136,19 +140,32 @@ describe("Residue Bloom audio synthesis", () => {
     expect(countAttackRegions(bloom, sampleRate)).toBe(16);
   });
 
-  it("loops without changing the score waveform at the same cycle position", () => {
+  it("repeats the musical form while retaining absolute phasor controls", () => {
+    const firstTime = 18.02;
+    const secondTime = firstTime + score.cycleSeconds;
+    const firstFrame = evaluateMusicalScore(score, firstTime);
+    const secondFrame = evaluateMusicalScore(score, secondTime);
     const options = {
       durationSeconds: 0.5,
       sampleRate: 48_000,
       score,
     };
-    const first = renderRhythmicSeries({ ...options, startTimeSeconds: 18.25 });
+    const first = renderRhythmicSeries({
+      ...options,
+      startTimeSeconds: firstTime,
+    });
     const second = renderRhythmicSeries({
       ...options,
-      startTimeSeconds: 18.25 + score.cycleSeconds,
+      startTimeSeconds: secondTime,
     });
 
-    expect(second).toEqual(first);
+    expect(secondFrame.globalStep).toBe(firstFrame.globalStep);
+    expect(secondFrame.event.carrierHz).toBe(firstFrame.event.carrierHz);
+    expect(secondFrame.event.normalizedPhasorX).not.toBeCloseTo(
+      firstFrame.event.normalizedPhasorX,
+      4,
+    );
+    expect(second).not.toEqual(first);
   });
 
   it("creates a structured-clone-safe worklet configuration from the shared score", () => {

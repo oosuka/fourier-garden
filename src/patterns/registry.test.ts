@@ -30,7 +30,9 @@ describe("pattern mathematical provenance", () => {
     expect(pattern?.audio.score.cycleSeconds).toBeCloseTo(144, 12);
     expect(pattern?.audio.score.totalSteps).toBe(768);
     expect(pattern?.audio.score.events.filter((event) => event.active)).toHaveLength(468);
-    expect(pattern?.audio.score.visualAngularRate).toBe(pattern?.mathematics.visualAngularRate);
+    expect(pattern?.audio.score.phasorMapping.visualAngularRate).toBe(
+      pattern?.mathematics.visualAngularRate,
+    );
   });
 
   it("labels the score-linked math highlights as poetic overlays", () => {

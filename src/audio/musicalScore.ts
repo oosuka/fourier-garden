@@ -1,4 +1,4 @@
-import { evaluateEpicycle, type FourierSeriesDefinition } from "../math/fourier";
+import type { FourierSeriesDefinition } from "../math/fourier";
 
 export type MusicalSectionId = "intro" | "growth" | "bloom" | "hush" | "return";
 
@@ -23,6 +23,16 @@ export interface MusicalScoreDefinition {
   sections: readonly MusicalSectionDefinition[];
 }
 
+export interface SerializablePhasorMapping {
+  visualAngularRate: number;
+  amplitudeBound: number;
+  terms: readonly {
+    harmonic: number;
+    amplitude: number;
+    sinePhase: number;
+  }[];
+}
+
 export interface MusicalScoreEvent {
   globalStep: number;
   barIndex: number;
@@ -33,11 +43,18 @@ export interface MusicalScoreEvent {
   activeNoteOrdinal: number;
   phraseIndex: 0 | 1 | 2 | 3;
   carrierHz: number;
-  gain: number;
-  accent: number;
-  brightness: number;
+  baseGain: number;
+  baseAccent: number;
+  baseBrightness: number;
   wetSend: number;
   stereoSpread: number;
+  visualIntensity: number;
+}
+
+export interface EvaluatedMusicalScoreEvent extends MusicalScoreEvent {
+  absoluteTimeSeconds: number;
+  accent: number;
+  brightness: number;
   normalizedPhasorX: number;
   normalizedPhasorY: number;
   normalizedPhasorRadius: number;
@@ -46,17 +63,16 @@ export interface MusicalScoreEvent {
 export interface MusicalScoreProgram {
   definition: MusicalScoreDefinition;
   fundamentalHz: number;
-  visualAngularRate: number;
   stepSeconds: number;
   stepsPerBar: number;
   totalSteps: number;
   cycleSeconds: number;
-  amplitudeBound: number;
+  phasorMapping: SerializablePhasorMapping;
   events: readonly MusicalScoreEvent[];
 }
 
 export interface RecentMusicalImpulse {
-  event: MusicalScoreEvent;
+  event: EvaluatedMusicalScoreEvent;
   ageSeconds: number;
   impact: number;
   tail: number;
@@ -67,7 +83,7 @@ export interface MusicalScoreFrame {
   cycleIndex: number;
   globalStep: number;
   localStepTimeSeconds: number;
-  event: MusicalScoreEvent;
+  event: EvaluatedMusicalScoreEvent;
   noteEnvelope: number;
   visualImpact: number;
   visualTail: number;
@@ -257,7 +273,15 @@ export function buildMusicalScoreProgram(
   const stepSeconds = 60 / definition.bpm / definition.stepsPerBeat;
   const totalSteps = definition.totalBars * stepsPerBar;
   const cycleSeconds = totalSteps * stepSeconds;
-  const amplitudeBound = series.terms.reduce((sum, term) => sum + term.amplitude, 0);
+  const phasorMapping: SerializablePhasorMapping = {
+    visualAngularRate,
+    amplitudeBound: series.terms.reduce((sum, term) => sum + Math.abs(term.amplitude), 0),
+    terms: series.terms.map((term) => ({
+      harmonic: term.harmonic,
+      amplitude: term.amplitude,
+      sinePhase: term.sinePhase,
+    })),
+  };
   let activeNoteOrdinal = 0;
   const events = Array.from({ length: totalSteps }, (_, globalStep): MusicalScoreEvent => {
     const barIndex = Math.floor(globalStep / stepsPerBar);
@@ -271,14 +295,6 @@ export function buildMusicalScoreProgram(
     const phraseIndex = (active ? eventOrdinal % 4 : 0) as 0 | 1 | 2 | 3;
     const downbeatAccent = stepInBar === 0 ? 1.08 : 1;
     const carrierHz = active ? definition.carrierMultipliers[phraseIndex] * fundamentalHz : 0;
-    const eventTimeSeconds = globalStep * stepSeconds;
-    const endpoint = evaluateEpicycle(series, eventTimeSeconds * visualAngularRate);
-    const normalizedPhasorX = clamp(endpoint.x / amplitudeBound, -1, 1);
-    const normalizedPhasorY = clamp(endpoint.y / amplitudeBound, -1, 1);
-    const normalizedPhasorRadius = clamp(Math.hypot(endpoint.x, endpoint.y) / amplitudeBound, 0, 1);
-    const phasorBrightness = (normalizedPhasorY + 1) * 0.5;
-    const brightness = clamp(profile.brightness * 0.72 + phasorBrightness * 0.28, 0, 1);
-    const phasorAccent = 0.9 + normalizedPhasorRadius * 0.2;
 
     if (active) {
       activeNoteOrdinal += 1;
@@ -294,27 +310,70 @@ export function buildMusicalScoreProgram(
       activeNoteOrdinal: eventOrdinal,
       phraseIndex,
       carrierHz,
-      gain: active ? profile.gain : 0,
-      accent: active ? PHRASE_ACCENTS[phraseIndex] * downbeatAccent * phasorAccent : 0,
-      brightness,
+      baseGain: active ? profile.gain : 0,
+      baseAccent: active ? PHRASE_ACCENTS[phraseIndex] * downbeatAccent : 0,
+      baseBrightness: profile.brightness,
       wetSend: profile.wetSend,
       stereoSpread: profile.stereoSpread,
-      normalizedPhasorX,
-      normalizedPhasorY,
-      normalizedPhasorRadius,
+      visualIntensity: profile.visualIntensity,
     };
   });
 
   return {
     definition,
     fundamentalHz,
-    visualAngularRate,
     stepSeconds,
     stepsPerBar,
     totalSteps,
     cycleSeconds,
-    amplitudeBound,
+    phasorMapping,
     events,
+  };
+}
+
+export function evaluateSerializedPhasor(
+  mapping: SerializablePhasorMapping,
+  absoluteTimeSeconds: number,
+): Readonly<{
+  normalizedX: number;
+  normalizedY: number;
+  normalizedRadius: number;
+}> {
+  const angle = absoluteTimeSeconds * mapping.visualAngularRate;
+  let x = 0;
+  let y = 0;
+
+  for (const term of mapping.terms) {
+    const phase = term.harmonic * angle + term.sinePhase;
+    x += term.amplitude * Math.cos(phase);
+    y += term.amplitude * Math.sin(phase);
+  }
+
+  return {
+    normalizedX: clamp(x / mapping.amplitudeBound, -1, 1),
+    normalizedY: clamp(y / mapping.amplitudeBound, -1, 1),
+    normalizedRadius: clamp(Math.hypot(x, y) / mapping.amplitudeBound, 0, 1),
+  };
+}
+
+export function evaluateScoreEvent(
+  program: MusicalScoreProgram,
+  event: MusicalScoreEvent,
+  cycleIndex: number,
+): EvaluatedMusicalScoreEvent {
+  const absoluteTimeSeconds =
+    cycleIndex * program.cycleSeconds + event.globalStep * program.stepSeconds;
+  const phasor = evaluateSerializedPhasor(program.phasorMapping, absoluteTimeSeconds);
+  const phasorBrightness = (phasor.normalizedY + 1) * 0.5;
+
+  return {
+    ...event,
+    absoluteTimeSeconds,
+    brightness: clamp(event.baseBrightness * 0.72 + phasorBrightness * 0.28, 0, 1),
+    accent: event.active ? event.baseAccent * (0.9 + phasor.normalizedRadius * 0.2) : 0,
+    normalizedPhasorX: phasor.normalizedX,
+    normalizedPhasorY: phasor.normalizedY,
+    normalizedPhasorRadius: phasor.normalizedRadius,
   };
 }
 
@@ -330,7 +389,8 @@ export function evaluateMusicalScore(
     Math.floor(cycleTimeSeconds / program.stepSeconds),
   );
   const localStepTimeSeconds = cycleTimeSeconds - globalStep * program.stepSeconds;
-  const event = program.events[globalStep]!;
+  const baseEvent = program.events[globalStep]!;
+  const event = evaluateScoreEvent(program, baseEvent, cycleIndex);
   const decayScale = 0.88 + event.normalizedPhasorRadius * 0.24;
   const noteEnvelope = event.active
     ? getNoteEnvelope(
@@ -354,17 +414,17 @@ export function evaluateMusicalScore(
     const eventAgeSeconds = localStepTimeSeconds + stepOffset * program.stepSeconds;
     if (eventAgeSeconds > maximumImpulseAgeSeconds) break;
 
-    const recentEvent = program.events[eventIndex]!;
-    if (!recentEvent.active) continue;
+    const wrappedIntoPreviousCycle = eventIndex > globalStep;
+    const eventCycleIndex = wrappedIntoPreviousCycle ? cycleIndex - 1 : cycleIndex;
+    if (eventCycleIndex < 0) continue;
 
+    const recentBaseEvent = program.events[eventIndex]!;
+    if (!recentBaseEvent.active) continue;
+    const recentEvent = evaluateScoreEvent(program, recentBaseEvent, eventCycleIndex);
     const visualAttack = smoothstep01(eventAgeSeconds / 0.025);
-    const profileVisualIntensity = getSectionProfile(
-      recentEvent.section,
-      recentEvent.sectionProgress,
-    ).visualIntensity;
     const impact =
       recentEvent.accent *
-      profileVisualIntensity *
+      recentEvent.visualIntensity *
       visualAttack *
       Math.exp(-Math.max(0, eventAgeSeconds - 0.025) / 0.18);
 

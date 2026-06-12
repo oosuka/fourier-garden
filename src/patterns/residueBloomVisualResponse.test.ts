@@ -98,8 +98,10 @@ describe("Residue Bloom poetic visual response", () => {
     expect(Math.abs(finalReturn.sectionDensity - intro.sectionDensity)).toBeLessThan(
       Math.abs(denseReturn.sectionDensity - intro.sectionDensity),
     );
-    expect(Math.abs(finalReturnFrame.event.brightness - introFrame.event.brightness)).toBeLessThan(
-      Math.abs(denseReturnFrame.event.brightness - introFrame.event.brightness),
+    expect(
+      Math.abs(finalReturnFrame.event.baseBrightness - introFrame.event.baseBrightness),
+    ).toBeLessThan(
+      Math.abs(denseReturnFrame.event.baseBrightness - introFrame.event.baseBrightness),
     );
   });
 

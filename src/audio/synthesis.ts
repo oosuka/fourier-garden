@@ -117,8 +117,7 @@ export function renderRhythmicSeries({
   score,
   startTimeSeconds = 0,
 }: RhythmicRenderOptions): number[] {
-  const cycleStartSeconds =
-    ((startTimeSeconds % score.cycleSeconds) + score.cycleSeconds) % score.cycleSeconds;
+  const absoluteStartSeconds = Math.max(0, startTimeSeconds);
   const carriers = Array.from(
     new Set(score.events.filter((event) => event.active).map((event) => event.carrierHz)),
   );
@@ -135,7 +134,7 @@ export function renderRhythmicSeries({
   let filterState = 0;
 
   for (let sample = 0; sample < sampleCount; sample += 1) {
-    const frame = evaluateMusicalScore(score, cycleStartSeconds + sample / sampleRate);
+    const frame = evaluateMusicalScore(score, absoluteStartSeconds + sample / sampleRate);
     const components = frame.event.active
       ? (componentsByCarrier.get(frame.event.carrierHz) ?? [])
       : [];
@@ -156,7 +155,7 @@ export function renderRhythmicSeries({
     const dryValue =
       (normalization > 0 ? value / normalization : 0) *
       frame.noteEnvelope *
-      frame.event.gain *
+      frame.event.baseGain *
       frame.event.accent *
       score.definition.outputGain;
     const minimumCutoffHz = 1_800;

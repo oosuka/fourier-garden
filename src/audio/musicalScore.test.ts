@@ -8,7 +8,9 @@ import {
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   buildMusicalScoreProgram,
+  evaluateScoreEvent,
   evaluateMusicalScore,
+  type MusicalScoreEvent,
 } from "./musicalScore";
 
 function createProgram() {
@@ -78,22 +80,38 @@ describe("Residue Bloom musical score", () => {
     expect(activeEvents.every((event, index) => event.phraseIndex === index % 4)).toBe(true);
   });
 
-  it("samples exact phasor metadata at each active event time", () => {
+  it("repeats musical form without storing phasor results in the event table", () => {
+    const program = createProgram();
+    const event = program.events[0] as MusicalScoreEvent & Record<string, unknown>;
+
+    expect(event).not.toHaveProperty("normalizedPhasorX");
+    expect(event).not.toHaveProperty("normalizedPhasorY");
+    expect(event).not.toHaveProperty("normalizedPhasorRadius");
+    expect(event).not.toHaveProperty("brightness");
+    expect(event).not.toHaveProperty("accent");
+    expect(event).toMatchObject({
+      baseGain: expect.any(Number),
+      baseBrightness: expect.any(Number),
+      baseAccent: expect.any(Number),
+    });
+  });
+
+  it("evaluates exact phasor metadata at an event absolute time", () => {
     const program = createProgram();
     const amplitudeBound = RESIDUE_BLOOM_SERIES.terms.reduce(
       (sum, term) => sum + term.amplitude,
       0,
     );
-    const event = program.events.find(
+    const baseEvent = program.events.find(
       (candidate) => candidate.active && candidate.globalStep > 20,
     )!;
-    const eventTime = event.globalStep * program.stepSeconds;
+    const event = evaluateScoreEvent(program, baseEvent, 0);
     const endpoint = evaluateEpicycle(
       RESIDUE_BLOOM_SERIES,
-      eventTime * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+      event.absoluteTimeSeconds * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
     );
 
-    expect(program.amplitudeBound).toBeCloseTo(amplitudeBound, 12);
+    expect(program.phasorMapping.amplitudeBound).toBeCloseTo(amplitudeBound, 12);
     expect(event.normalizedPhasorX).toBeCloseTo(endpoint.x / amplitudeBound, 12);
     expect(event.normalizedPhasorY).toBeCloseTo(endpoint.y / amplitudeBound, 12);
     expect(event.normalizedPhasorRadius).toBeCloseTo(
@@ -105,7 +123,8 @@ describe("Residue Bloom musical score", () => {
   it("keeps all phasor-derived controls bounded", () => {
     const program = createProgram();
 
-    for (const event of program.events) {
+    for (let step = 0; step < program.totalSteps * 2; step += 1) {
+      const event = evaluateMusicalScore(program, step * program.stepSeconds + 0.01).event;
       expect(event.normalizedPhasorX).toBeGreaterThanOrEqual(-1);
       expect(event.normalizedPhasorX).toBeLessThanOrEqual(1);
       expect(event.normalizedPhasorY).toBeGreaterThanOrEqual(-1);
@@ -115,16 +134,62 @@ describe("Residue Bloom musical score", () => {
     }
   });
 
-  it("evaluates identical score state one full cycle apart", () => {
+  it("evaluates the same musical step from each cycle at its absolute event time", () => {
     const program = createProgram();
-    const first = evaluateMusicalScore(program, 27.431);
-    const second = evaluateMusicalScore(program, 27.431 + program.cycleSeconds);
+    const first = evaluateMusicalScore(program, 0.02);
+    const second = evaluateMusicalScore(program, program.cycleSeconds + 0.02);
+    const expectedSecondEndpoint = evaluateEpicycle(
+      RESIDUE_BLOOM_SERIES,
+      program.cycleSeconds * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+    );
 
-    expect(second.cycleIndex).toBe(first.cycleIndex + 1);
     expect(second.globalStep).toBe(first.globalStep);
-    expect(second.localStepTimeSeconds).toBeCloseTo(first.localStepTimeSeconds, 10);
-    expect(second.event).toEqual(first.event);
-    expect(second.noteEnvelope).toBeCloseTo(first.noteEnvelope, 10);
+    expect(second.event.carrierHz).toBe(first.event.carrierHz);
+    expect(second.event.absoluteTimeSeconds).toBeCloseTo(program.cycleSeconds, 12);
+    expect(second.event.normalizedPhasorX).toBeCloseTo(
+      expectedSecondEndpoint.x / program.phasorMapping.amplitudeBound,
+      12,
+    );
+    expect(second.event.normalizedPhasorY).toBeCloseTo(
+      expectedSecondEndpoint.y / program.phasorMapping.amplitudeBound,
+      12,
+    );
+    expect(second.event.normalizedPhasorX).not.toBeCloseTo(first.event.normalizedPhasorX, 4);
+  });
+
+  it("does not reset the event phasor to z(0) at 144 seconds", () => {
+    const frame = evaluateMusicalScore(createProgram(), 144.02);
+
+    expect(frame.event.absoluteTimeSeconds).toBeCloseTo(144, 12);
+    expect(frame.event.normalizedPhasorX).not.toBeCloseTo(1, 4);
+    expect(frame.event.normalizedPhasorY).not.toBeCloseTo(0, 4);
+  });
+
+  it("evaluates a wrapped recent impulse in the cycle where it occurred", () => {
+    const program = createProgram();
+    const frame = evaluateMusicalScore(program, 144);
+    const previousCycleEvent = frame.recentImpulses.find(
+      (impulse) => impulse.event.globalStep === 764,
+    );
+    const expectedTime = 143.25;
+    const expectedEndpoint = evaluateEpicycle(
+      RESIDUE_BLOOM_SERIES,
+      expectedTime * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+    );
+
+    expect(previousCycleEvent?.event.absoluteTimeSeconds).toBeCloseTo(expectedTime, 12);
+    expect(previousCycleEvent?.event.normalizedPhasorX).toBeCloseTo(
+      expectedEndpoint.x / program.phasorMapping.amplitudeBound,
+      12,
+    );
+  });
+
+  it("does not invent impulses before transport time zero", () => {
+    const frame = evaluateMusicalScore(createProgram(), 0.01);
+
+    expect(frame.recentImpulses.every((impulse) => impulse.event.absoluteTimeSeconds >= 0)).toBe(
+      true,
+    );
   });
 
   it("freezes to a deterministic frame for any absolute transport time", () => {
