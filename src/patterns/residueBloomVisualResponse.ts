@@ -10,6 +10,9 @@ export interface ResidueBloomVisualResponse {
   burstEnergy: number;
   warmth: number;
   sectionDensity: number;
+  coronaStrength: number;
+  spokeNodeOpacity: number;
+  historyPulseOpacity: number;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
@@ -55,5 +58,8 @@ export function getResidueBloomVisualResponse(
     burstEnergy: clamp(emphasizedImpact * 0.9 + tail * 0.15, 0, 1.25),
     warmth: clamp(phraseWarmth * 0.7 + phasorWarmth * 0.3, 0, 1),
     sectionDensity: getSectionDensity(frame.event.section, frame.event.sectionProgress),
+    coronaStrength: clamp(emphasizedImpact * 0.66 + tail * 0.12, 0, 0.82),
+    spokeNodeOpacity: clamp(emphasizedImpact * 0.74 + tail * 0.1, 0, 0.88),
+    historyPulseOpacity: clamp(emphasizedImpact * 0.78 + tail * 0.14, 0, 0.92),
   };
 }

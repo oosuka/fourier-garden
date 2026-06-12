@@ -40,6 +40,12 @@ describe("Residue Bloom poetic visual response", () => {
       expect(response.membraneDisplacement).toBeLessThanOrEqual(0.18);
       expect(response.warmth).toBeGreaterThanOrEqual(0);
       expect(response.warmth).toBeLessThanOrEqual(1);
+      expect(response.coronaStrength).toBeGreaterThanOrEqual(0);
+      expect(response.coronaStrength).toBeLessThanOrEqual(1);
+      expect(response.spokeNodeOpacity).toBeGreaterThanOrEqual(0);
+      expect(response.spokeNodeOpacity).toBeLessThanOrEqual(1);
+      expect(response.historyPulseOpacity).toBeGreaterThanOrEqual(0);
+      expect(response.historyPulseOpacity).toBeLessThanOrEqual(1);
     }
   });
 
@@ -50,6 +56,8 @@ describe("Residue Bloom poetic visual response", () => {
     expect(response).not.toHaveProperty("endpointY");
     expect(response).not.toHaveProperty("epicycleScale");
     expect(response).not.toHaveProperty("waveScale");
+    expect(response).not.toHaveProperty("waveProgressScale");
+    expect(response).not.toHaveProperty("phaseOffset");
     expect(response).not.toHaveProperty("cameraOffset");
   });
 
@@ -58,6 +66,25 @@ describe("Residue Bloom poetic visual response", () => {
     const followingNote = getResidueBloomVisualResponse(evaluateMusicalScore(score, 60.2075));
 
     expect(phraseOpening.haloScale).toBeGreaterThan(followingNote.haloScale * 1.1);
+  });
+
+  it("drives corona, nodes, and history pulses from score impact", () => {
+    const bloom = getResidueBloomVisualResponse(evaluateMusicalScore(score, 60.02));
+    const decay = getResidueBloomVisualResponse(evaluateMusicalScore(score, 60.16));
+
+    expect(bloom.coronaStrength).toBeGreaterThan(decay.coronaStrength);
+    expect(bloom.spokeNodeOpacity).toBeGreaterThan(decay.spokeNodeOpacity);
+    expect(bloom.historyPulseOpacity).toBeGreaterThan(decay.historyPulseOpacity);
+  });
+
+  it("keeps the phrase-opening math overlay stronger than the following phrase", () => {
+    const phraseOpening = getResidueBloomVisualResponse(evaluateMusicalScore(score, 60.02));
+    const followingNote = getResidueBloomVisualResponse(evaluateMusicalScore(score, 60.2075));
+
+    expect(phraseOpening.coronaStrength).toBeGreaterThan(followingNote.coronaStrength * 1.1);
+    expect(phraseOpening.historyPulseOpacity).toBeGreaterThan(
+      followingNote.historyPulseOpacity * 1.1,
+    );
   });
 
   it("returns the final bar toward the intro density and brightness", () => {
