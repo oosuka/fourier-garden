@@ -23,4 +23,13 @@ describe("pattern mathematical provenance", () => {
     expect(pattern?.mathematics.complexCoefficientLatex).toContain("c_{-n_k}");
     expect(pattern?.audio.sonificationLatex).toContain("n_k\\nu_j");
   });
+
+  it("registers a deterministic audiovisual score for Residue Bloom", () => {
+    const pattern = patternRegistry[0];
+
+    expect(pattern?.audio.score.cycleSeconds).toBeCloseTo(144, 12);
+    expect(pattern?.audio.score.totalSteps).toBe(768);
+    expect(pattern?.audio.score.events.filter((event) => event.active)).toHaveLength(468);
+    expect(pattern?.audio.score.visualAngularRate).toBe(pattern?.mathematics.visualAngularRate);
+  });
 });

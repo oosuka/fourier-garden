@@ -1,3 +1,4 @@
+import type { MusicalScoreFrame, MusicalScoreProgram } from "../audio/musicalScore";
 import type { FourierSeriesDefinition, FourierTerm } from "../math/fourier";
 
 export interface LocalizedText {
@@ -11,6 +12,7 @@ export interface AudioPreset {
   initialVolume: number;
   roomSeconds: number;
   sonificationLatex: string;
+  score: MusicalScoreProgram;
 }
 
 export interface MathematicalProvenance {
@@ -37,6 +39,7 @@ export interface FrameContext {
   time: number;
   delta: number;
   playing: boolean;
+  score: MusicalScoreFrame;
 }
 
 export interface Viewport {

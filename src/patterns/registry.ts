@@ -1,5 +1,13 @@
+import { RESIDUE_BLOOM_SCORE_DEFINITION, buildMusicalScoreProgram } from "../audio/musicalScore";
 import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
 import type { PatternDefinition } from "./types";
+
+const residueBloomScore = buildMusicalScoreProgram(
+  RESIDUE_BLOOM_SCORE_DEFINITION,
+  RESIDUE_BLOOM_SERIES,
+  55,
+  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+);
 
 export const patternRegistry: readonly PatternDefinition[] = [
   {
@@ -32,6 +40,7 @@ export const patternRegistry: readonly PatternDefinition[] = [
       roomSeconds: 1.9,
       sonificationLatex:
         "g_{\\nu_j}(\\tau)=CE(\\tau)\\sum_{n_k\\nu_j<0.45F_s}\\frac{A_k}{(k+1)^{1.4}}\\sin(2\\pi n_k\\nu_j\\tau)",
+      score: residueBloomScore,
     },
     education: {
       gentleTitle: "見えない音の粒が、ひとつの花になる。",

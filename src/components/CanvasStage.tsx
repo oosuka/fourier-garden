@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+import { evaluateMusicalScore } from "../audio/musicalScore";
 import { AdaptiveQuality } from "../core/adaptiveQuality";
 import { dateSeed } from "../core/seed";
 import type { Transport } from "../core/transport";
@@ -76,10 +77,12 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
         sampleStarted = now;
         sampleFrames = 0;
       }
+      const time = transport.currentTime;
       scene.update({
-        time: transport.currentTime,
+        time,
         delta,
         playing: playingRef.current,
+        score: evaluateMusicalScore(pattern.audio.score, time),
       });
 
       if (playingRef.current) {
