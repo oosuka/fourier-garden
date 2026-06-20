@@ -115,11 +115,26 @@ Biomeのlinterは無効化し、規則の二重管理を避けています。
 - `Space`: 再生 / 一時停止
 - `D`: 詳細パネル
 - `F`: 全画面
-- UI: 音量、詳細、全画面
+- UI: 再生、音量、章移動、詳細、全画面
 
 音声はブラウザの自動再生制限に従い、`ENTER FOURIER GARDEN`を押した後に開始します。
 再生コントロール、詳細パネル、キーボードショートカットも開始後に有効になります。
 初期音量は35%で、変更値はローカル保存されます。
+
+Chapter 2 `Spectral Cathedral / スペクトルの聖堂`は通常公開済みで、
+クエリなしのURLからChapter 1と往復できます。72 BPM、5/4、18小節、75秒の
+5幕構成で、ガラス鐘と木質アタックをtoll、answer、cascade、pulse、choirへ展開します。
+発音モードは固有関数値により7本の光柱へ局所対応し、6本のアーチ、粒子帯、
+緩やかなカメラ軌道へ伝播します。厳密な波面、境界、節線、係数は演出で変形しません。
+ヘッドホンとMac内蔵スピーカーでの最終試聴は、公開状態と分けた手動QA事項です。
+
+```text
+http://localhost:5173/?seed=qa&quality=high
+```
+
+章を切り替えると旧シーンと旧AudioContextを破棄し、transportを0秒へ戻します。
+再生中の切替では新章を0秒から再生し、一時停止中は音声を初期化せず時刻0の
+シーンだけを表示します。
 
 音響は共有スコアの有効イベントで短く発音します。発音中心は基準周波数
 `f₀ = 55 Hz`の8倍・9倍（440 / 495 Hz）です。同じ調波指数
@@ -136,6 +151,7 @@ Biomeのlinterは無効化し、規則の二重管理を避けています。
 - WebGL2強制確認: `?renderer=webgl`
 - 固定QAシード: `?seed=qa`
 - 品質固定: `?quality=high`（指定値: `low` / `medium` / `high` / `ultra`）
+- 未公開章を含む互換preview入口: `?chapters=preview`
 
 `quality`を指定しない場合は`high`から適応品質制御を開始します。明示した場合は
 その品質へ固定し、性能計測中に自動変更しません。
@@ -148,17 +164,35 @@ http://localhost:5173/?seed=qa&quality=high
 
 ## アーキテクチャ
 
-`src/patterns/registry.ts`が章レジストリです。各章は数式、数学的来歴、音響プリセット、
-共有イベントスコア、解説、遅延ロードされるシーンをまとめて登録します。
-`operation`、係数の由来、フェーザ投影軸、FFT使用有無、音声が
-ソニフィケーションであることを構造化データとして保持します。
+`src/patterns/registry.ts`が章レジストリです。各章は共通の表示メタデータ、
+数学的来歴、音響program factory、解説、遅延ロードされるscene factoryを
+まとめて登録します。数学定義は判別可能な章別型で保持し、有限フーリエ級数と
+Dirichlet固有モードを同じ汎用スペクトル型へ混同しません。
+通常`patternRegistry`には公開済みのChapter 1とChapter 2を置きます。
+`chapters=preview`は過去のQA URLとの互換性と、将来の未公開候補を統合確認する
+入口として維持します。
 
 `src/audio/musicalScore.ts`は48小節のイベント表を構築し、
-`CanvasStage`と`AudioEngine`が同一プログラムを参照します。映像とAudioWorkletは
-共通の`Transport`を使い、音声開始後は`AudioContext.currentTime`へ同期します。
+Chapter 1のscene adapterとAudioEngineが同一プログラムを参照します。
+`CanvasStage`は章固有のscoreを知らず、絶対transport時刻、frame delta、
+再生状態だけをsceneへ渡します。映像とAudioWorkletは共通の`Transport`を使い、
+音声開始後は`AudioContext.currentTime`へ同期します。
 AudioWorkletは受け取ったイベントをサンプル精度で評価し、描画側は同じ時刻の
 ハロー、粒子バースト、膜、流線、ブルーム、調波コロナ、履歴パルスを
 決定的に再構成します。
+
+Chapter 2以降の名称と表示順は維持します。各章の数学的対象、厳密表示、
+ソニフィケーション、詩的造形、実装順は
+[`docs/chapter-atlas.md`](docs/chapter-atlas.md)で検討します。
+Atlasの内容は実装済み仕様ではありません。Chapter 2は個別仕様、実装、統合QAを
+完了して通常公開済みです。Chapter 3以降は個別仕様が承認されるまで
+通常`patternRegistry`へ登録せず、未実装・未公開とします。
+次の実装対象はChapter 3 `Möbius Choir / メビウスの合唱`であり、Atlasの定義を
+そのまま実装せず、最初に独立した数理仕様として再検証・承認します。
+
+30秒を超える各章は3幕以上と3軸以上の表現変化を持ち、数学要素から局所的な音響・
+造形への対応を説明できなければなりません。数学的正確性を死守しつつ、数学層の外側で
+単調さを排除することを全章共通の品質条件とします。
 
 ## 将来の章
 

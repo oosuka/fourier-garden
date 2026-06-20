@@ -48,7 +48,7 @@ input:focus-visible {
   height: 100%;
   min-width: 1024px;
   min-height: 680px;
-  overflow: hidden;
+  overflow: clip;
   background: #010308;
   color: var(--ink);
   isolation: isolate;
@@ -284,6 +284,7 @@ input:focus-visible {
 
 .controlCluster,
 .volumeControl,
+.chapterNavigator,
 .chapterControl,
 .timeDisplay,
 .textControl {
@@ -384,6 +385,44 @@ input:focus-visible {
   justify-content: center;
   gap: 3px;
   text-align: center;
+}
+
+.chapterNavigator {
+  justify-content: center;
+  gap: 7px;
+}
+
+.chapterArrow {
+  width: 28px;
+  height: 38px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: rgba(176, 224, 232, 0.56);
+  cursor: pointer;
+}
+
+.chapterArrow:hover:not(:disabled) {
+  color: var(--cyan-soft);
+}
+
+.chapterArrow:disabled {
+  cursor: default;
+  opacity: 0.2;
+}
+
+.chapterArrow svg {
+  width: 15px;
+}
+
+.previewBadge {
+  margin-left: 7px;
+  color: rgba(255, 207, 137, 0.68);
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
 }
 
 .chapterControl strong {
@@ -733,6 +772,72 @@ input:focus-visible {
   background: #ffd08b;
 }
 
+.spectralDetailsAnalysis .spectralPlot {
+  margin-top: 13px;
+}
+
+.spectralDetailsAnalysis .spectralPlotHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+  color: rgba(209, 236, 241, 0.72);
+  font-size: 9px;
+}
+
+.spectralDetailsAnalysis .spectralPlotHeader small {
+  color: rgba(167, 202, 210, 0.48);
+  font-size: 8px;
+  text-align: right;
+}
+
+.spectralDetailsAnalysis .spectralPlot canvas {
+  width: 100%;
+  height: 92px;
+  display: block;
+}
+
+.spectralDetailsAnalysis .spectralModeTableWrap {
+  margin-top: 16px;
+  overflow-x: auto;
+}
+
+.spectralDetailsAnalysis .spectralModeTable {
+  width: 100%;
+  border-collapse: collapse;
+  color: rgba(208, 232, 236, 0.72);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.spectralDetailsAnalysis .spectralModeTable th,
+.spectralDetailsAnalysis .spectralModeTable td {
+  padding: 4px 2px;
+  border-bottom: 1px solid rgba(139, 204, 218, 0.06);
+  text-align: right;
+}
+
+.spectralDetailsAnalysis .spectralModeTable th {
+  color: rgba(165, 201, 209, 0.48);
+  font-weight: 400;
+}
+
+.spectralDetailsAnalysis .spectralModeTable th:first-child,
+.spectralDetailsAnalysis .spectralModeTable td:first-child,
+.spectralDetailsAnalysis .spectralModeTable th:nth-child(2),
+.spectralDetailsAnalysis .spectralModeTable td:nth-child(2) {
+  text-align: left;
+}
+
+.app--spectral-cathedral .mainFormula .katex {
+  font-size: clamp(11px, 0.92vw, 17px);
+}
+
+.app--spectral-cathedral .poeticBlock {
+  color: rgba(235, 243, 245, 0.63);
+}
+
 .entryScreen {
   position: absolute;
   z-index: 20;
@@ -950,6 +1055,14 @@ input:focus-visible {
 
   .detailsPanel {
     width: 35vw;
+  }
+
+  .chapterControl {
+    min-width: 150px;
+  }
+
+  .chapterArrow {
+    width: 20px;
   }
 }
 

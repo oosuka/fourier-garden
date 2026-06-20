@@ -34,7 +34,7 @@
   },
   "overrides": [
     {
-      "files": ["src/main.tsx"],
+      "files": ["src/main.tsx", "src/qa/spectralCathedralQa.tsx"],
       "rules": {
         "import/no-unassigned-import": "off"
       }
@@ -52,7 +52,8 @@
         "audioworklet": true
       },
       "rules": {
-        "unicorn/prefer-add-event-listener": "off"
+        "unicorn/prefer-add-event-listener": "off",
+        "unicorn/require-post-message-target-origin": "off"
       }
     },
     {

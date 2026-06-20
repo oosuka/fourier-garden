@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 
-import { evaluateMusicalScore } from "../audio/musicalScore";
 import { AdaptiveQuality } from "../core/adaptiveQuality";
 import { dateSeed } from "../core/seed";
 import type { Transport } from "../core/transport";
@@ -104,7 +103,6 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
         time,
         delta,
         playing: playingRef.current,
-        score: evaluateMusicalScore(pattern.audio.score, time),
       });
 
       if (playingRef.current && qualityPreference.adaptive) {
@@ -176,7 +174,7 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
     <canvas
       ref={canvasRef}
       className="sceneCanvas"
-      aria-label="フーリエ級数から生成されるエピサイクルと波形"
+      aria-label={pattern.presentation.canvasAriaLabel}
     />
   );
 }

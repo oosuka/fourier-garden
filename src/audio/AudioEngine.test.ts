@@ -1,24 +1,184 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { patternRegistry } from "../patterns/registry";
-import { AudioEngine } from "./AudioEngine";
+import { AudioEngine, createLimiterCurve } from "./AudioEngine";
+import { createSpectralCathedralAudioProgram } from "./spectralCathedralSynthesis";
 
 interface Deferred {
   promise: Promise<void>;
+  resolve: () => void;
   reject: (reason: Error) => void;
 }
 
+interface NodeRecord {
+  kind: string;
+  options: Record<string, unknown>;
+}
+
+interface ConnectionRecord {
+  source: string;
+  destination: string;
+  output?: number;
+  input?: number;
+}
+
 const rejectDeferred = (_reason: Error) => {};
+const resolveDeferred = () => {};
 
 function createDeferred(): Deferred {
+  let resolve = resolveDeferred;
   let reject = rejectDeferred;
-  const promise = new Promise<void>((_resolve, rejectPromise) => {
+  const promise = new Promise<void>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
     reject = rejectPromise;
   });
-  return { promise, reject };
+  return { promise, resolve, reject };
+}
+
+function installAudioGraphStubs() {
+  const nodes: NodeRecord[] = [];
+  const connections: ConnectionRecord[] = [];
+  const workletMessages: unknown[] = [];
+  const workletModuleUrls: string[] = [];
+  const bufferLengths: number[] = [];
+
+  class AudioParamStub {
+    value: number;
+
+    constructor(value: number) {
+      this.value = value;
+    }
+
+    cancelScheduledValues = vi.fn<(cancelTime: number) => void>();
+    setValueAtTime = vi.fn<(value: number, startTime: number) => void>();
+    linearRampToValueAtTime = vi.fn<(value: number, endTime: number) => void>();
+  }
+
+  class AudioNodeStub {
+    readonly kind: string;
+    readonly options: Record<string, unknown>;
+
+    constructor(kind: string, options: Record<string, unknown> = {}) {
+      this.kind = kind;
+      this.options = options;
+      nodes.push({ kind, options });
+    }
+
+    connect(destination: AudioNodeStub, output?: number, input?: number): AudioNodeStub {
+      connections.push({
+        source: this.kind,
+        destination: destination.kind,
+        output,
+        input,
+      });
+      return destination;
+    }
+
+    disconnect = vi.fn<() => void>();
+  }
+
+  class AudioContextStub {
+    sampleRate = 1_000;
+    currentTime = 0;
+    destination = new AudioNodeStub("destination");
+    audioWorklet = {
+      addModule: async (url: string) => {
+        workletModuleUrls.push(url);
+      },
+    };
+    close = vi.fn<() => Promise<void>>(async () => {});
+    resume = vi.fn<() => Promise<void>>(async () => {});
+
+    createBuffer(numberOfChannels: number, length: number) {
+      bufferLengths.push(length);
+      const channels = Array.from({ length: numberOfChannels }, () => new Float32Array(length));
+      return {
+        numberOfChannels,
+        getChannelData: (channel: number) => channels[channel]!,
+      };
+    }
+  }
+
+  class AudioWorkletNodeStub extends AudioNodeStub {
+    port = {
+      postMessage: (message: unknown) => {
+        workletMessages.push(message);
+      },
+    };
+
+    constructor(_context: AudioContextStub, _name: string, options: Record<string, unknown>) {
+      super("worklet", options);
+    }
+  }
+
+  class BiquadFilterNodeStub extends AudioNodeStub {
+    constructor(_context: AudioContextStub, options: Record<string, unknown>) {
+      super(`biquad:${String(options.type)}`, options);
+    }
+  }
+
+  class GainNodeStub extends AudioNodeStub {
+    gain: AudioParamStub;
+
+    constructor(_context: AudioContextStub, options: Record<string, unknown>) {
+      super("gain", options);
+      this.gain = new AudioParamStub(Number(options.gain));
+    }
+  }
+
+  class ConvolverNodeStub extends AudioNodeStub {
+    constructor(_context: AudioContextStub, options: Record<string, unknown>) {
+      super("convolver", options);
+    }
+  }
+
+  class DynamicsCompressorNodeStub extends AudioNodeStub {
+    constructor(_context: AudioContextStub, options: Record<string, unknown>) {
+      super("compressor", options);
+    }
+  }
+
+  class WaveShaperNodeStub extends AudioNodeStub {
+    constructor(_context: AudioContextStub, options: Record<string, unknown>) {
+      super("waveshaper", options);
+    }
+  }
+
+  class AnalyserNodeStub extends AudioNodeStub {
+    constructor(_context: AudioContextStub, options: Record<string, unknown>) {
+      super("analyser", options);
+    }
+
+    getByteFrequencyData = vi.fn<(target: Uint8Array<ArrayBuffer>) => void>();
+    getByteTimeDomainData = vi.fn<(target: Uint8Array<ArrayBuffer>) => void>();
+  }
+
+  vi.stubGlobal("AudioContext", AudioContextStub);
+  vi.stubGlobal("AudioWorkletNode", AudioWorkletNodeStub);
+  vi.stubGlobal("BiquadFilterNode", BiquadFilterNodeStub);
+  vi.stubGlobal("GainNode", GainNodeStub);
+  vi.stubGlobal("ConvolverNode", ConvolverNodeStub);
+  vi.stubGlobal("DynamicsCompressorNode", DynamicsCompressorNodeStub);
+  vi.stubGlobal("WaveShaperNode", WaveShaperNodeStub);
+  vi.stubGlobal("AnalyserNode", AnalyserNodeStub);
+
+  return {
+    nodes,
+    connections,
+    workletMessages,
+    workletModuleUrls,
+    bufferLengths,
+  };
+}
+
+function getResidueBloomPattern() {
+  const pattern = patternRegistry[0];
+  if (pattern?.kind !== "residue-bloom") throw new Error("Residue Bloom is missing");
+  return pattern;
 }
 
 afterEach(() => {
+  localStorage.clear();
   vi.unstubAllGlobals();
 });
 
@@ -39,8 +199,8 @@ describe("AudioEngine initialization", () => {
       }
     }
     vi.stubGlobal("AudioContext", AudioContextStub);
-    const pattern = patternRegistry[0]!;
-    const audio = new AudioEngine(pattern.audio.score, pattern.audio.initialVolume);
+    const pattern = getResidueBloomPattern();
+    const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);
 
     const first = audio.initialize();
     const second = audio.initialize();
@@ -65,12 +225,145 @@ describe("AudioEngine initialization", () => {
         close = close;
       },
     );
-    const pattern = patternRegistry[0]!;
-    const audio = new AudioEngine(pattern.audio.score, pattern.audio.initialVolume);
+    const pattern = getResidueBloomPattern();
+    const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);
 
     await expect(audio.initialize()).rejects.toThrow("worklet load failed");
 
     expect(close).toHaveBeenCalledTimes(1);
     expect(audio.initialized).toBe(false);
+  });
+
+  it("closes a context when disposed while the worklet module is still loading", async () => {
+    const deferred = createDeferred();
+    const close = vi.fn<() => Promise<void>>(async () => {});
+    vi.stubGlobal(
+      "AudioContext",
+      class {
+        audioWorklet = {
+          addModule: () => deferred.promise,
+        };
+
+        close = close;
+      },
+    );
+    const pattern = patternRegistry[0];
+    if (pattern?.kind !== "residue-bloom") throw new Error("Residue Bloom is missing");
+    const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);
+
+    const initialization = audio.initialize();
+    const disposal = audio.dispose();
+    deferred.resolve();
+    await Promise.allSettled([initialization, disposal]);
+
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(audio.initialized).toBe(false);
+    await expect(audio.play(0)).rejects.toThrow(/disposed/i);
+  });
+
+  it("builds the unchanged Residue Bloom graph without a limiter", async () => {
+    const records = installAudioGraphStubs();
+    const pattern = getResidueBloomPattern();
+    const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);
+
+    await audio.initialize();
+
+    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=6"]);
+    expect(records.workletMessages).toEqual([
+      expect.objectContaining({
+        type: "configure",
+        program: expect.objectContaining({ kind: "residue-bloom" }),
+      }),
+    ]);
+    expect(
+      records.nodes.filter((node) => node.kind.startsWith("biquad:")).map((node) => node.options),
+    ).toEqual([
+      { type: "highpass", frequency: 125, Q: 0.45 },
+      { type: "highshelf", frequency: 3_200, gain: -2.2 },
+      { type: "lowpass", frequency: 4_600, Q: 0.3 },
+      { type: "highpass", frequency: 180, Q: 0.45 },
+    ]);
+    expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
+      { kind: "gain", options: { gain: 0.88 } },
+      { kind: "gain", options: { gain: 0.16 } },
+    ]);
+    expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
+      threshold: -12,
+      knee: 12,
+      ratio: 3,
+      attack: 0.006,
+      release: 0.2,
+    });
+    expect(records.nodes.some((node) => node.kind === "waveshaper")).toBe(false);
+    expect(records.bufferLengths).toEqual([1_900]);
+    expect(records.connections).toContainEqual({
+      source: "compressor",
+      destination: "analyser",
+      output: undefined,
+      input: undefined,
+    });
+  });
+
+  it("builds the Spectral Cathedral graph with a post-compressor limiter", async () => {
+    const records = installAudioGraphStubs();
+    const audio = new AudioEngine(createSpectralCathedralAudioProgram());
+
+    await audio.initialize();
+
+    expect(records.workletMessages).toEqual([
+      expect.objectContaining({
+        type: "configure",
+        program: expect.objectContaining({ kind: "spectral-cathedral" }),
+      }),
+    ]);
+    expect(
+      records.nodes.filter((node) => node.kind.startsWith("biquad:")).map((node) => node.options),
+    ).toEqual([
+      { type: "highpass", frequency: 90, Q: 0.45 },
+      { type: "highshelf", frequency: 4_200, gain: -1 },
+      { type: "lowpass", frequency: 8_500, Q: 0.3 },
+      { type: "highpass", frequency: 160, Q: 0.45 },
+    ]);
+    expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
+      { kind: "gain", options: { gain: 0.86 } },
+      { kind: "gain", options: { gain: 0.12 } },
+    ]);
+    expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
+      threshold: -14,
+      knee: 12,
+      ratio: 3,
+      attack: 0.006,
+      release: 0.24,
+    });
+    const limiter = records.nodes.find((node) => node.kind === "waveshaper");
+    expect(limiter?.options.oversample).toBe("4x");
+    expect(
+      Math.max(...Array.from(limiter?.options.curve as Float32Array, Math.abs)),
+    ).toBeLessThanOrEqual(10 ** (-1 / 20));
+    expect(records.bufferLengths).toEqual([1_600]);
+    expect(records.connections).toContainEqual({
+      source: "compressor",
+      destination: "waveshaper",
+      output: undefined,
+      input: undefined,
+    });
+    expect(records.connections).toContainEqual({
+      source: "waveshaper",
+      destination: "analyser",
+      output: undefined,
+      input: undefined,
+    });
+  });
+});
+
+describe("AudioEngine limiter", () => {
+  it("hard-clamps a symmetric curve at the requested dBFS ceiling", () => {
+    const curve = createLimiterCurve(-1, 2_049);
+    const ceiling = 10 ** (-1 / 20);
+
+    expect(Math.max(...Array.from(curve, Math.abs))).toBeLessThanOrEqual(ceiling);
+    expect(curve[0]).toBeCloseTo(-ceiling, 7);
+    expect(curve[1_024]).toBeCloseTo(0, 7);
+    expect(curve.at(-1)).toBeCloseTo(ceiling, 7);
   });
 });

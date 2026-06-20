@@ -1,4 +1,4 @@
-import { Expand, Info, Pause, Play, Volume2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand, Info, Pause, Play, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { Transport } from "../core/transport";
@@ -11,9 +11,13 @@ interface ControlBarProps {
   fullscreen: boolean;
   pattern: PatternDefinition;
   chapterCount: number;
+  chapterIndex: number;
+  switchingChapter: boolean;
   transport: Transport;
   onTogglePlay: () => void;
   onVolume: (value: number) => void;
+  onPreviousChapter: () => void;
+  onNextChapter: () => void;
   onToggleDetails: () => void;
   onToggleFullscreen: () => void;
 }
@@ -31,9 +35,13 @@ export function ControlBar({
   fullscreen,
   pattern,
   chapterCount,
+  chapterIndex,
+  switchingChapter,
   transport,
   onTogglePlay,
   onVolume,
+  onPreviousChapter,
+  onNextChapter,
   onToggleDetails,
   onToggleFullscreen,
 }: ControlBarProps) {
@@ -86,12 +94,38 @@ export function ControlBar({
 
       <div className="controlDivider controlDivider--middle" />
 
-      <div className="chapterControl">
-        <span className="eyebrow">
-          CHAPTER {String(pattern.order).padStart(2, "0")} / {String(chapterCount).padStart(2, "0")}
-        </span>
-        <strong>{pattern.title.en}</strong>
-        <small>{pattern.title.ja}</small>
+      <div className="chapterNavigator">
+        {chapterCount > 1 && (
+          <button
+            className="chapterArrow"
+            type="button"
+            onClick={onPreviousChapter}
+            disabled={switchingChapter || chapterIndex === 0}
+            aria-label="前の章"
+          >
+            <ChevronLeft aria-hidden="true" />
+          </button>
+        )}
+        <div className="chapterControl" aria-live="polite">
+          <span className="eyebrow">
+            CHAPTER {String(pattern.order).padStart(2, "0")} /{" "}
+            {String(chapterCount).padStart(2, "0")}
+            {pattern.publication === "preview" && <b className="previewBadge">PREVIEW</b>}
+          </span>
+          <strong>{pattern.title.en}</strong>
+          <small>{pattern.title.ja}</small>
+        </div>
+        {chapterCount > 1 && (
+          <button
+            className="chapterArrow"
+            type="button"
+            onClick={onNextChapter}
+            disabled={switchingChapter || chapterIndex === chapterCount - 1}
+            aria-label="次の章"
+          >
+            <ChevronRight aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       <div className="timeDisplay">

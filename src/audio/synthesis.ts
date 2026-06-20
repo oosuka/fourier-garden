@@ -1,4 +1,10 @@
 import { RESIDUE_BLOOM_SERIES, getAnalyticSpectrum } from "../math/fourier";
+import type {
+  AudioEngineProgram,
+  AudioGraphPreset,
+  ResidueBloomAudioPartial,
+  WorkletConfigureMessage,
+} from "./audioProgram";
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   evaluateMusicalScore,
@@ -6,12 +12,7 @@ import {
   type MusicalScoreProgram,
 } from "./musicalScore";
 
-export interface AudioPartial {
-  harmonic: number;
-  sourceFrequencyHz: number;
-  sourceAmplitude: number;
-  sinePhase: number;
-}
+export type AudioPartial = ResidueBloomAudioPartial;
 
 interface RawRenderOptions {
   durationSeconds: number;
@@ -48,11 +49,30 @@ export interface SonificationComponent extends AudioPartial {
   included: boolean;
 }
 
-export interface WorkletConfigurationMessage {
-  type: "configure";
-  partials: AudioPartial[];
-  score: MusicalScoreProgram;
-}
+export type WorkletConfigurationMessage = WorkletConfigureMessage;
+
+export const RESIDUE_BLOOM_AUDIO_GRAPH: AudioGraphPreset = {
+  dryHighPassHz: 125,
+  dryHighPassQ: 0.45,
+  dryHighShelfHz: 3_200,
+  dryHighShelfGainDb: -2.2,
+  dryLowPassHz: 4_600,
+  dryLowPassQ: 0.3,
+  dryGain: 0.88,
+  wetHighPassHz: 180,
+  wetHighPassQ: 0.45,
+  wetGain: 0.16,
+  roomSeconds: 1.9,
+  roomDecay: 3.4,
+  compressor: {
+    thresholdDb: -12,
+    kneeDb: 12,
+    ratio: 3,
+    attackSeconds: 0.006,
+    releaseSeconds: 0.2,
+  },
+  limiterCeilingDbfs: null,
+};
 
 export function createAudioPartials(fundamentalHz: number): AudioPartial[] {
   return getAnalyticSpectrum(RESIDUE_BLOOM_SERIES, fundamentalHz).map((bin) => ({
@@ -68,8 +88,18 @@ export function createWorkletConfiguration(
 ): WorkletConfigurationMessage {
   return {
     type: "configure",
-    partials: createAudioPartials(score.fundamentalHz),
-    score,
+    program: {
+      kind: "residue-bloom",
+      partials: createAudioPartials(score.fundamentalHz),
+      score,
+    },
+  };
+}
+
+export function createResidueBloomAudioProgram(score: MusicalScoreProgram): AudioEngineProgram {
+  return {
+    worklet: createWorkletConfiguration(score).program,
+    graph: RESIDUE_BLOOM_AUDIO_GRAPH,
   };
 }
 

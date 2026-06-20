@@ -38,10 +38,10 @@ import {
   getWaveTrailVerticalDrift,
 } from "./residueBloomScoreOverlay";
 import type {
-  FrameContext,
-  PatternScene,
   PatternSceneOptions,
   QualityLevel,
+  ResidueBloomFrameContext,
+  ResidueBloomSceneInstance,
   Viewport,
 } from "./types";
 
@@ -236,7 +236,7 @@ function createFallbackAtmosphereMaterial(
   });
 }
 
-class ResidueBloomScene implements PatternScene {
+class ResidueBloomScene implements ResidueBloomSceneInstance {
   private readonly renderer: SceneRenderer;
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.OrthographicCamera();
@@ -452,7 +452,7 @@ class ResidueBloomScene implements PatternScene {
     return new ResidueBloomScene(renderer, createSeededRandom(seed), backend);
   }
 
-  update(frame: FrameContext): void {
+  update(frame: ResidueBloomFrameContext): void {
     const timeValue = frame.time;
     const response = getResidueBloomVisualResponse(frame.score);
     this.sceneTime.value = timeValue;
@@ -789,7 +789,7 @@ class ResidueBloomScene implements PatternScene {
   }
 
   private updateHistoryPulses(
-    frame: FrameContext,
+    frame: ResidueBloomFrameContext,
     response: ResidueBloomVisualResponse,
     timeValue: number,
     centerY: number,
@@ -926,7 +926,7 @@ class ResidueBloomScene implements PatternScene {
   }
 
   private updateBurstParticles(
-    frame: FrameContext,
+    frame: ResidueBloomFrameContext,
     response: ResidueBloomVisualResponse,
     centerX: number,
     centerY: number,
@@ -1022,6 +1022,8 @@ class ResidueBloomScene implements PatternScene {
   }
 }
 
-export async function createResidueBloomScene(options: PatternSceneOptions): Promise<PatternScene> {
+export async function createResidueBloomScene(
+  options: PatternSceneOptions,
+): Promise<ResidueBloomSceneInstance> {
   return ResidueBloomScene.create(options);
 }

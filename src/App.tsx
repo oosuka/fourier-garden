@@ -6,18 +6,31 @@ import { AudioEngine } from "./audio/AudioEngine";
 import { CanvasStage } from "./components/CanvasStage";
 import { ControlBar } from "./components/ControlBar";
 import { DetailsPanel } from "./components/DetailsPanel";
+import { DeferredDisposer } from "./core/deferredDisposer";
 import { Transport } from "./core/transport";
-import { patternRegistry } from "./patterns/registry";
+import { getPatternRegistry } from "./patterns/registry";
 
 export function App() {
-  const pattern = patternRegistry[0]!;
+  const patterns = useMemo(() => getPatternRegistry(window.location.search), []);
+  const [patternIndex, setPatternIndex] = useState(0);
+  const pattern = patterns[patternIndex]!;
   const transport = useMemo(() => new Transport(), []);
-  const audio = useMemo(
-    () => new AudioEngine(pattern.audio.score, pattern.audio.initialVolume),
-    [pattern.audio.initialVolume, pattern.audio.score],
+  const [audio, setAudio] = useState(
+    () => new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume),
+  );
+  const audioRef = useRef(audio);
+  const playbackOperation = useRef(0);
+  const unmountDisposer = useMemo(
+    () =>
+      new DeferredDisposer(() => {
+        ++playbackOperation.current;
+        void audioRef.current.dispose();
+      }),
+    [],
   );
   const [entered, setEntered] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [switchingChapter, setSwitchingChapter] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [volume, setVolume] = useState(audio.currentVolume);
@@ -46,25 +59,39 @@ export function App() {
     }
   }, [detailsOpen, entered, playing]);
 
-  const startPlayback = useCallback(async () => {
-    const position = transport.currentTime;
-    setPlaying(false);
-
-    try {
-      await audio.play(position);
-      transport.setClock(() => audio.currentTime);
-      transport.reset(position);
-      transport.play();
-      setPlaying(true);
-      setAudioError("");
-    } catch (error) {
-      transport.pause();
-      transport.reset(position);
-      audio.pause();
+  const playAudio = useCallback(
+    async (targetAudio: AudioEngine, position: number, operation: number) => {
       setPlaying(false);
-      setAudioError(error instanceof Error ? error.message : "音声を開始できませんでした");
-    }
-  }, [audio, transport]);
+
+      try {
+        await targetAudio.play(position);
+        if (operation !== playbackOperation.current) {
+          targetAudio.pause();
+          return false;
+        }
+        transport.setClock(() => targetAudio.currentTime);
+        transport.reset(position);
+        transport.play();
+        setPlaying(true);
+        setAudioError("");
+        return true;
+      } catch (error) {
+        if (operation !== playbackOperation.current) return false;
+        transport.pause();
+        transport.reset(position);
+        targetAudio.pause();
+        setPlaying(false);
+        setAudioError(error instanceof Error ? error.message : "音声を開始できませんでした");
+        return false;
+      }
+    },
+    [transport],
+  );
+
+  const startPlayback = useCallback(() => {
+    const operation = ++playbackOperation.current;
+    return playAudio(audio, transport.currentTime, operation);
+  }, [audio, playAudio, transport]);
 
   const handleEnter = useCallback(async () => {
     setEntered(true);
@@ -73,7 +100,9 @@ export function App() {
   }, [revealUi, startPlayback]);
 
   const togglePlayback = useCallback(() => {
+    if (switchingChapter) return;
     if (playing) {
+      ++playbackOperation.current;
       transport.pause();
       audio.pause();
       setPlaying(false);
@@ -81,7 +110,63 @@ export function App() {
       return;
     }
     void startPlayback();
-  }, [audio, playing, startPlayback, transport]);
+  }, [audio, playing, startPlayback, switchingChapter, transport]);
+
+  const switchChapter = useCallback(
+    async (nextIndex: number) => {
+      if (
+        switchingChapter ||
+        nextIndex < 0 ||
+        nextIndex >= patterns.length ||
+        nextIndex === patternIndex
+      ) {
+        return;
+      }
+
+      const operation = ++playbackOperation.current;
+      const resumeAfterSwitch = playing;
+      const nextPattern = patterns[nextIndex]!;
+      setSwitchingChapter(true);
+      setPlaying(false);
+      setDetailsOpen(false);
+      setUiVisible(true);
+      setSceneStatus("loading");
+      setSceneError("");
+      setAudioError("");
+      transport.pause();
+      transport.reset(0);
+      audio.pause();
+
+      try {
+        await audio.dispose();
+        if (operation !== playbackOperation.current) return;
+
+        const nextAudio = new AudioEngine(
+          nextPattern.audio.createProgram(),
+          nextPattern.audio.initialVolume,
+        );
+        audioRef.current = nextAudio;
+        setPatternIndex(nextIndex);
+        setAudio(nextAudio);
+        setVolume(nextAudio.currentVolume);
+
+        if (resumeAfterSwitch) {
+          await playAudio(nextAudio, 0, operation);
+        }
+      } catch (error) {
+        if (operation === playbackOperation.current) {
+          setAudioError(
+            error instanceof Error ? error.message : "章の音声を切り替えられませんでした",
+          );
+        }
+      } finally {
+        if (operation === playbackOperation.current) {
+          setSwitchingChapter(false);
+        }
+      }
+    },
+    [audio, patternIndex, patterns, playAudio, playing, switchingChapter, transport],
+  );
 
   const handleVolume = useCallback(
     (value: number) => {
@@ -114,8 +199,10 @@ export function App() {
     const onVisibility = () => {
       if (document.hidden && playing) {
         autoPaused.current = true;
+        ++playbackOperation.current;
         transport.pause();
         audio.pause();
+        setPlaying(false);
       } else if (!document.hidden && autoPaused.current) {
         autoPaused.current = false;
         void startPlayback();
@@ -149,24 +236,20 @@ export function App() {
     return () => window.clearTimeout(hideTimer.current);
   }, [revealUi]);
 
-  useEffect(
-    () => () => {
-      void audio.dispose();
-    },
-    [audio],
-  );
+  useEffect(() => unmountDisposer.mount(), [unmountDisposer]);
 
   const interfaceHidden = entered && !uiVisible && !detailsOpen;
 
   return (
     <main
-      className={`app ${detailsOpen ? "app--details" : ""} ${
+      className={`app app--${pattern.kind} ${detailsOpen ? "app--details" : ""} ${
         interfaceHidden ? "app--uiHidden" : ""
       }`}
       onPointerMove={revealUi}
       onPointerDown={revealUi}
     >
       <CanvasStage
+        key={pattern.id}
         pattern={pattern}
         transport={transport}
         playing={playing}
@@ -178,42 +261,38 @@ export function App() {
 
       <header className="brandBlock interfaceLayer">
         <h1>FOURIER GARDEN</h1>
-        <p>RESIDUE BLOOM OBSERVATORY</p>
+        <p>{pattern.presentation.observatoryLabel}</p>
         <small>{pattern.subtitle.ja}</small>
       </header>
 
       <div className="mathAnnotations interfaceLayer" aria-hidden="true">
-        <span className="annotationContext">ANALYTIC SPECTRUM MAPPING / 解析的周波数対応</span>
-        <span className="annotation annotation--one">
-          <b>n = 1</b>
-          <small>55.00 Hz</small>
-        </span>
-        <span className="annotation annotation--two">
-          <b>n = 5</b>
-          <small>275.00 Hz</small>
-        </span>
-        <span className="annotation annotation--three">
-          <b>n = 9</b>
-          <small>495.00 Hz</small>
-        </span>
-        <span className="annotation annotation--four">
-          <b>n = 13</b>
-          <small>715.00 Hz</small>
-        </span>
+        <span className="annotationContext">{pattern.presentation.annotationContext}</span>
+        {pattern.presentation.annotations.map((annotation, index) => (
+          <span
+            className={`annotation annotation--${["one", "two", "three", "four"][index]}`}
+            key={annotation.label}
+          >
+            <b>{annotation.label}</b>
+            <small>{annotation.value}</small>
+          </span>
+        ))}
       </div>
 
       <section className="formulaBlock interfaceLayer">
-        <span className="eyebrow">FOURIER SERIES / フーリエ級数</span>
+        <span className="eyebrow">{pattern.presentation.formulaEyebrow}</span>
         <div className="mainFormula" dangerouslySetInnerHTML={{ __html: formula }} />
-        <p>Exact phasor synthesis and primary waveform · band-limited musical sonification.</p>
+        <p>{pattern.presentation.formulaSummary}</p>
       </section>
 
       <section className="poeticBlock interfaceLayer">
-        <span>VISIBLE HARMONICS / AUDIBLE GEOMETRY</span>
+        <span>{pattern.presentation.poeticEyebrow}</span>
         <p>
-          円は音になり、
-          <br />
-          音は光の庭になる。
+          {pattern.presentation.poeticLines.map((line) => (
+            <span key={line}>
+              {line}
+              <br />
+            </span>
+          ))}
         </p>
       </section>
 
@@ -222,7 +301,7 @@ export function App() {
           {sceneStatus === "loading" ? (
             <>
               <LoaderCircle className="spin" aria-hidden="true" />
-              <span>INITIALIZING WEBGPU FIELD</span>
+              <span>INITIALIZING CHAPTER FIELD</span>
             </>
           ) : (
             <>
@@ -249,16 +328,21 @@ export function App() {
               detailsOpen={detailsOpen}
               fullscreen={fullscreen}
               pattern={pattern}
-              chapterCount={patternRegistry.length}
+              chapterCount={patterns.length}
+              chapterIndex={patternIndex}
+              switchingChapter={switchingChapter}
               transport={transport}
               onTogglePlay={togglePlayback}
               onVolume={handleVolume}
+              onPreviousChapter={() => void switchChapter(patternIndex - 1)}
+              onNextChapter={() => void switchChapter(patternIndex + 1)}
               onToggleDetails={() => setDetailsOpen((open) => !open)}
               onToggleFullscreen={() => void toggleFullscreen()}
             />
           </div>
 
           <DetailsPanel
+            key={pattern.id}
             open={detailsOpen}
             pattern={pattern}
             audio={audio}

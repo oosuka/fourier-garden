@@ -28,4 +28,12 @@ describe("AudioWorklet mathematical contract", () => {
       /QUARTER_NOTES|EIGHTH_NOTES|TWELVE_NOTES|SIXTEENTH_NOTES|carrierMultipliers/,
     );
   });
+
+  it("dispatches discriminated chapter programs without random state", () => {
+    expect(workletSource).toContain('program.kind === "residue-bloom"');
+    expect(workletSource).toContain('program.kind === "spectral-cathedral"');
+    expect(workletSource).toContain("renderResidueBloomSample");
+    expect(workletSource).toContain("renderSpectralCathedralSample");
+    expect(workletSource).not.toContain("Math.random");
+  });
 });

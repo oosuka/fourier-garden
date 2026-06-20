@@ -206,8 +206,12 @@ describe("Residue Bloom audio synthesis", () => {
     const cloned = structuredClone(message);
 
     expect(cloned.type).toBe("configure");
-    expect(cloned.score).toEqual(score);
-    expect(cloned.partials).toEqual(createAudioPartials(55));
+    expect(cloned.program.kind).toBe("residue-bloom");
+    if (cloned.program.kind !== "residue-bloom") {
+      throw new Error("Expected the Residue Bloom worklet program");
+    }
+    expect(cloned.program.score).toEqual(score);
+    expect(cloned.program.partials).toEqual(createAudioPartials(55));
     expect(JSON.stringify(cloned)).not.toContain("pitchMultipliers");
   });
 });

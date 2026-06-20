@@ -19,6 +19,10 @@
 - 音声は知覚重みと帯域制限を加えた音楽的ソニフィケーションである
 - 粒子、膜、星雲、ブルーム、二次トレイル、調波コロナ、履歴パルスは
   詩的な造形層である
+- `Spectral Cathedral`は解析的なDirichlet固有モード12個を有限合成し、
+  DFT、FFT、数値固有値問題を使用しない
+- Chapter 2の音響と詩的造形は75秒・5幕の反復スコアを使うが、厳密数学時刻は
+  周期でリセットしない
 
 ## 初期視覚QA
 
@@ -189,6 +193,239 @@
 初期化競合と失敗時解放は単体テストで検証したが、実Chromeでの再生確認と
 機器別試聴は未完了である。
 
+## Spectral Cathedral段階4・厳密描画QA
+
+実施日: 2026年6月14日
+
+条件:
+
+- 開発QAページ: `spectral-cathedral-qa.html`
+- Chrome: `149.0.7827.115`、headless new、DevTools Protocol
+- デバイスピクセル比: `1`
+- 固定数学時刻: `12.500 s`
+- レンダラー: WebGPU、強制WebGL2
+- ビューポート: `1440 x 900`、`1600 x 900`、`2560 x 1080`
+- 品質: `low`、`high`、`ultra`
+
+結果:
+
+- WebGPUとWebGL2で同じCPU評価済み面、境界、節線、頂点色を表示した
+- 固定時刻では両経路とも24,576頂点、48,514三角形、145節線だった
+- `low`と`ultra`でも頂点数、三角形数、境界、解析表示を削減しなかった
+- 16:10、16:9、ウルトラワイドで水平・垂直overflowは0だった
+- シアンと青紫の符号色、白銀の境界、金色の補間節線を識別できた
+- 12モード表と、同じ固有値27を持つ2行を別IDとして表示した
+- 固有値軸は線形`[0, 30]`であり、HzまたはFFTスペクトルと表示しなかった
+- 絶対数学時刻モードは`0.161 s`から`2.744 s`へ進み、周期で折り返さなかった
+- 再読み込み後もcanvasと解析パネルは各1件で、描画ループを重複生成しなかった
+- 初期準備後の3計測区間はすべて`60.0 fps`だった
+- コンソール警告、エラー、未処理Promise rejectionは0件だった
+
+固定時刻のWebGL2では、1回だけ描画した既定のバックバッファがChromeの合成後に
+破棄され、後から取得するスクリーンショットが黒くなることを確認した。
+QA画面から固定時刻を指定した場合だけ`preserveDrawingBuffer`を有効にし、
+通常の連続描画では既定値を維持した。修正後は固定時刻でも面、境界、節線を
+取得できた。
+
+段階4は未公開のため、通常アプリ、章レジストリ、音声開始、詳細パネル、
+全画面操作には接続していない。詩的造形、長時間性能、GPUメモリ増加は
+後続段階のQA対象である。
+
+## Spectral Cathedral段階5・作品化QA
+
+実施日: 2026年6月14日
+
+条件:
+
+- 開発QAページ: `spectral-cathedral-qa.html`
+- Chrome: `149.0.7827.115`
+- 固定seed: `qa`、内部値`41041`
+- 固定数学時刻: `12.500 s`、`12.530 s`
+- レンダラー: WebGPU、強制WebGL2、strict-only
+- ビューポート: `1440 x 900`、`1600 x 900`、`2560 x 1080`、`3840 x 2160`
+- 品質: `low`、`high`、`ultra`
+- 4K計測DPR: `1`
+
+結果:
+
+- WebGPUとWebGL2で24,576頂点、48,514三角形、正準7光柱、6アーチ芯を維持した
+- `high`は26,000粒子、WebGPU 7ハロー、WebGL2 4ハロー、2残光層だった
+- `low`は6,000粒子、0ハロー、0残光層、`ultra`は35,000粒子、7ハロー、
+  3残光層で、厳密統計は変化しなかった
+- `poetic=off`では装飾統計がすべて0となり、同じ数学面、境界、節線、
+  解析表示が残った
+- `12.500 s`の消光状態と`12.530 s`の発音直後を比較し、柱、アーチ、
+  粒子だけが強く応答し、数学面の規約は変化しなかった
+- WebGL2の初回QAで粒子が数学面を覆ったため、同じ個数と基礎配列を維持したまま、
+  粒径を`0.006`、基礎不透明度を`0.14`へ下げて是正した
+- 全画面`BloomNode`は4K headless WebGPUで定常約46 fps、GC後JS heapが
+  30秒あたり約1.38 MB増加したため不採用とし、両backendを局所ハローと
+  加算合成へ統一した
+- 是正後のWebGPU 4K highは60秒・30標本で平均・最小・最大とも`60.0 fps`だった
+- 是正後の4K計測前後でGC後JS heapは`-46,120 bytes`、embedder heapは
+  `-44,464 bytes`、backing storageは`-187 bytes`で、継続増加を認めなかった
+- `1600 x 900`のWebGPU highは3区間すべて`60.0 fps`だった
+- 絶対数学時刻は`11.817 s`、`14.050 s`、`16.250 s`と折り返さず進行した
+- 3アスペクト比でルートoverflowは0、解析パネルの横overflowも0だった
+- QAページのHMR時React rootを再利用し、再読み込み後もscene canvasと解析パネルは
+  各1件だった
+- headless lifecycleをhiddenへ切り替えると数学時刻は`238.207 s`で停止した
+- 最終WebGPU 4K計測とforced WebGL2確認で警告、エラー、未処理例外は0件だった
+
+全画面ポストプロセスを外した後も、交差ハロー平面、柱芯、アーチ残光、
+粒子による局所発光を識別できた。数学面のシアン・青紫の符号境界、白銀境界、
+金色の補間節線は両backendで読める状態を維持した。
+
+headless lifecycleを`active`へ戻した後の可視復帰は同じheadless pageでは
+再現できなかったため、実ウィンドウでのタブ非表示からの復帰は段階6の
+統合QAでも再確認する。
+
+## Spectral Cathedral段階6・統合preview QA（履歴）
+
+実施日: 2026年6月14日
+
+条件:
+
+- 通常アプリ: `?chapters=preview&seed=qa&quality=high`
+- Chrome: `149.0.7827.115`、headless
+- レンダラー: WebGPU、`renderer=webgl`による強制WebGL2
+- ビューポート: `1440 x 900`、`1600 x 900`、`2560 x 1080`、
+  `3840 x 2160`
+- 4K DPR: `1`
+- Codex内蔵Browserは接続不可だったため、同じマシンのChromeをPlaywrightで
+  起動して代替した
+
+結果:
+
+- 通常`patternRegistry`はChapter 1だけを保持し、`chapters=preview`でのみ
+  Chapter 2の前後移動ボタンと`PREVIEW`表示が現れた
+- Chapter 1からChapter 2への再生中切替で旧AudioContextを1個閉じ、
+  新AudioContextを1個生成した
+- Chapter 2を一時停止してChapter 1へ戻す切替では旧AudioContextを閉じ、
+  新しい章を再生するまでAudioContextを生成しなかった
+- 章切替直後のtransportは`00:00`へ戻り、再生中なら新章で進行した
+- 2往復後もscene canvasは常に1枚で、volume `42%`とlocalStorage値`0.42`を
+  新AudioEngineへ引き継いだ
+- React StrictModeの開発用effect再実行で初期AudioEngineが破棄される問題を検出し、
+  実unmountだけを遅延判定する`DeferredDisposer`と回帰テストを追加した
+- 閉じた詳細パネルが`.app`のscrollable overflowを作り、`scrollIntoView`で
+  構図が横へ移動する問題を検出した。`.app`を`overflow: clip`へ変更し、
+  章移動、詳細、フォーカス移動後も`scrollLeft=0`を維持した
+- Chapter 2詳細パネルは固有値の線形軸、符号付き係数、相対エネルギー指標、
+  12モード表を表示し、パネル内の横overflowは0だった
+- `1440 x 900`、`1600 x 900`、`2560 x 1080`でroot overflowは0、
+  scene canvasは1枚、`.app`の横移動は0だった
+- WebGPU 4K highは60秒・30標本で平均`60.0 fps`、最小`59.9 fps`、
+  最大`60.1 fps`だった
+- 4Kで追加30秒を実行したGC後heap差分はJS `+31,784 bytes`、
+  embedder `+231,712 bytes`、backing storage `0 bytes`だった。
+  短時間の小さい変動であり、単調増加は確認していない
+- 強制WebGL2 highは`1600 x 900`でsettle後`60.0 fps`だった
+- Chrome Fullscreen APIの開始と解除に成功した
+- 未指定faviconの404を検出し、セルフホストSVG faviconを追加した
+- 最終WebGPU、WebGL2ともconsole warning、error、未処理例外、HTTP 4xxは0件だった
+
+Chrome headless上ではAudioContext、AudioWorklet、章別program、seek、active、
+pause、disposeが動作した。ただし自動実行では実際の聴感を確認できない。
+`Page.setWebLifecycleState`では復帰後に`visibilityState=visible`へ戻ったが、
+実ウィンドウのタブ切替と同じ条件とはみなさない。
+
+## Spectral Cathedral通常公開QA
+
+実施日: 2026年6月19日
+
+条件:
+
+- Codex内蔵ブラウザ、`1600 x 900`
+- 通常URL: `http://127.0.0.1:5173/`
+- 固定QA URL: `?seed=qa&quality=high`
+- 強制WebGL2 URL: `?renderer=webgl&seed=qa&quality=high`
+
+結果:
+
+- クエリなしの通常URLでentry後に`CHAPTER 01 / 02`と次章ボタンを表示した
+- 通常URLからChapter 2へ移動し、`CHAPTER 02 / 02`、`Spectral Cathedral`、
+  `スペクトルの聖堂`を表示した
+- Chapter 2の`PREVIEW`表示は0件だった
+- WebGPU経路はcanvas datasetに`three.js r184 webgpu`を記録し、固定QA URLで
+  `60.0 fps`、scene canvas 1枚を維持した
+- Chapter 2の詳細パネルを開き、数学の詳細タブで固有値の線形軸、符号付き係数、
+  相対エネルギー指標、12行のモード表を確認した
+- WebGPUでChapter 1からChapter 2へ移動し、Chapter 1へ戻った後もscene canvasは
+  1枚、transport表示は`00:00`だった
+- 強制WebGL2経路はcanvas datasetに`three.js r184`を記録し、Chapter 1と
+  Chapter 2を往復した後もscene canvas 1枚を維持した
+- 通常URL、WebGPU固定QA、強制WebGL2のconsole warning、errorは0件だった
+
+内蔵ブラウザではAudioContextの再生状態遷移とFullscreen APIが完了しなかったため、
+同じ通常URLを開いていた実Chromeタブでも確認した。実Chromeでは音声開始後に
+transportが進行し、`Space`による一時停止・再開、再生中のChapter 2切替、
+一時停止中のChapter 1復帰、各切替後の`00:00`リセット、scene canvas 1枚、
+音声エラー表示0件を確認した。操作中にChrome拡張の通信エラー
+`Could not establish connection. Receiving end does not exist.`を1件記録したが、
+アプリのsceneまたは音声エラーではなく、キーボード操作後も再生と章切替は継続した。
+
+Fullscreen APIは自動操作では開始できなかった。実機試聴、実hidden復帰、
+ネイティブ全画面の見た目、長時間実機メモリは未確認事項として残す。
+
+## Spectral Cathedral 5幕再設計QA
+
+実施日: 2026年6月20日
+
+条件:
+
+- 通常アプリ: `?seed=qa&quality=high`
+- 開発QAページ: `spectral-cathedral-qa.html?seed=qa&quality=high`
+- 固定数学時刻: `1`、`18`、`36`、`50`、`69`秒
+- レンダラー: WebGPU、`renderer=webgl`による強制WebGL2
+- ビューポート: `1280 x 720`、`1440 x 900`、`1920 x 800`
+- スコア: 72 BPM、5/4拍子、18小節、75秒、5幕、95イベント
+
+結果:
+
+- 通常アプリでChapter 1からChapter 2へ移動し、`CHAPTER 02 / 02`、
+  `Spectral Cathedral`、`スペクトルの聖堂`を表示した
+- 5つの固定時刻で、数学面の係数、固有値、位相規約を変えずに、カメラ距離、
+  柱の局所高さ、アーチの伝播、粒子密度、残光の構図が明確に変化した
+- 全柱を同じ強度で点灯せず、イベントのモード集合から解析的に求めた局所影響が
+  異なる柱高とアーチの順次応答として現れた
+- `50`秒の共鳴幕ではアーチと残光が最大化し、`69`秒の余韻幕では密度と運動が
+  減衰するため、単一の定常状態へ退行していないことを確認した
+- WebGPUと強制WebGL2の両方で厳密数学面、境界、節線、局所柱、アーチ、粒子を
+  描画した。WebGL2でもChapter 2の主要構図と局所応答を維持した
+- 16:9、16:10、ウルトラワイドで主焦点、数式、章操作UIが画面内に収まり、
+  構図の破綻や水平移動を認めなかった
+- `D`で詳細パネルを開き、やさしい説明と数学の詳細タブを表示した。
+  数学詳細ではDirichlet固有値問題、解析係数、絶対transport時刻を維持した
+- 音量を`42%`へ変更し、再読み込み後の再入場で`42%`へ復元されることを確認した
+- WebGPU、WebGL2、通常アプリ、画面比率変更、詳細パネル操作の取得範囲で、
+  console warning、errorは0件だった
+- `npm run check`で34テストファイル・239テスト、format、lint、型検査、
+  本番ビルドが成功した
+
+内蔵ブラウザではAudioContextの再生状態へ遷移できなかったため、5種類の発音、
+95イベントの密度変化、左右出力、帯域制限、減衰、ピーク、TypeScriptと
+AudioWorkletの一致は自動テストで検証した。ヘッドホンとMac内蔵スピーカーによる
+10分以上の実機試聴は未完了であり、音響の最終的な快適性は手動QA事項とする。
+
+## ドキュメント整合性監査
+
+実施日: 2026年6月20日
+
+- `README.md`、`AGENTS.md`、数理正本、Chapter Atlas、設計QAを現行コード、
+  `package.json`、章レジストリ、Chapter 1・2のスコアと照合した
+- Chapter 2の72 BPM、5/4、18小節、75秒、95イベント、5幕、5 gesture、
+  12数学モード、7光柱、6アーチ、WebGPU/WebGL2の記述が実装と一致した
+- Node.js `24.16.0`、npm `11.17.0`と`package.json`のVolta固定値が一致した
+- `docs/superpowers/`の全設計・計画文書について、現行仕様または履歴資料の状態と、
+  後続文書による置換関係を冒頭へ明記した
+- リポジトリ内のMarkdown 28ファイルを走査し、相対リンク切れが0件であることを
+  確認した
+- Chapter 2を完了済み、Chapter 3 `Möbius Choir`を次の個別仕様作成対象として
+  README、Chapter Atlas、分割開発設計で一致させた
+- 実機試聴、実hidden復帰、ネイティブ全画面、長時間実機メモリの未確認状態は
+  削除せず、手動QA事項として維持した
+
 ## 現在の性能記録
 
 | 条件 | 時間・標本 | 平均 | 最小 | 最大 |
@@ -196,25 +433,28 @@
 | 内蔵ブラウザ、WebGPU、3840 x 2160、固定ブルーム | 60秒・30標本 | 60.0 fps | 60.0 fps | 60.0 fps |
 | 内蔵Chrome実行環境、WebGPU、3840 x 2160、視覚連動後 | 60秒・30標本 | 59.95 fps | 58.5 fps | 60.0 fps |
 | WebGPU、1563 x 843、DPR 2、数学的整合性是正後 | 60秒・30標本 | 60.0 fps | 60.0 fps | 60.0 fps |
+| Chrome 149 headless、WebGPU、1600 x 900、Spectral Cathedral段階4 | 約6.6秒・3標本 | 60.0 fps | 60.0 fps | 60.0 fps |
+| Chrome 149 headless、WebGPU、3840 x 2160、Spectral Cathedral段階5 | 60秒・30標本 | 60.0 fps | 60.0 fps | 60.0 fps |
+| Chrome 149 headless、WebGPU、3840 x 2160、統合preview | 60秒・30標本 | 60.0 fps | 59.9 fps | 60.1 fps |
 
-4K計測ではJS heapとGPUメモリの長時間増加を測定していない。
+Spectral Cathedral段階5の4K計測ではJS heapとbuffer backing storageの
+継続増加を認めなかった。GPUメモリは直接計測していない。
 本番ビルドは成功しているが、Viteは`residueBloomScene`のminify後チャンクが
 500 kBを超えるという警告を出している。遅延ロードは維持されており、
 今回の文書変更による増加ではない。
 
 ## 未確認事項
 
-- 最新変更後の実Chromeによる音声開始、再生、一時停止、再開
 - ヘッドホンによる10分以上の連続試聴
 - Mac内蔵スピーカーによる10分以上の連続試聴
 - 実際のhidden状態を伴うタブ非表示と復帰
-- ネイティブ全画面への遷移と解除
-- 長時間実行時のJS heap、GPUメモリ、AudioNode残留
+- 実ウィンドウでのネイティブ全画面の見た目
+- 10分以上の実音声を伴うAudioNode、JS heap、GPUメモリ残留
 - 基準機MacBook Air M2での4K性能再計測
 
 ## 現在の判定
 
-数学、スコア、DSP契約、スペクトル、レンダラー、レイアウト、操作UIの
-自動検証と取得可能なブラウザQAは成功している。音響品質、hidden復帰、
-全画面、長時間メモリは手動QAが残っているため、作品全体の最終QA完了とは
-判定しない。
+数学、スコア、DSP契約、レンダラー、章切替、詳細表示、レイアウト、
+AudioContext破棄、取得可能なChrome QAは成功している。この節のpreview限定という
+公開状態は当時の履歴であり、2026年6月19日に通常公開へ移行した。音響品質、
+実hidden復帰、実ウィンドウ全画面、長時間実機メモリは引き続き手動QA事項とする。

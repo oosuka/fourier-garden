@@ -1,5 +1,11 @@
 # Fourier Garden 数理モデル
 
+## 文書の位置付け
+
+この文書は通常公開済みのChapter 1 `Residue Bloom`とChapter 2
+`Spectral Cathedral`の数学、時間、解析表示、ソニフィケーション規約の正本である。
+Chapter 3以降のAtlas案は、個別数理仕様の承認と実装が完了するまで本書へ追加しない。
+
 ## プロダクトの定義
 
 Fourier Gardenは、有限フーリエ級数の合成、複素指数関数・フェーザによる
@@ -306,3 +312,285 @@ y(u)=s\,f\left(0.31(t-8.6u)\right)+y_0
 - 調波コロナの13個の正規化重みと単調減少
 - 履歴パルスの各点と主波形射影式の一致
 - 厳密な主波形に詩的なYオフセットがないこと
+
+## Chapter 2: Spectral Cathedral（通常公開）
+
+Chapter 2は長方形領域
+
+\[
+\Omega=(0,\pi)\times(0,\pi/\sqrt2)
+\]
+
+のDirichlet Laplacian固有モードを扱う。純粋数学モデル、ソニフィケーション、
+厳密数学描画、詩的造形、通常アプリの章切替、詳細パネルを実装している。
+通常URLでChapter 1と往復でき、`patternRegistry`へ公開済み章として登録する。
+ヘッドホンとMac内蔵スピーカーの最終試聴は、公開状態と分けた手動QA事項として残す。
+段階1の完全な仕様は
+[`docs/superpowers/specs/2026-06-13-spectral-cathedral-mathematical-specification-design.md`](superpowers/specs/2026-06-13-spectral-cathedral-mathematical-specification-design.md)
+を、音響実装の完全な仕様は
+[`docs/superpowers/specs/2026-06-13-spectral-cathedral-audio-design.md`](superpowers/specs/2026-06-13-spectral-cathedral-audio-design.md)
+を、厳密描画の実装仕様は
+[`docs/superpowers/specs/2026-06-13-spectral-cathedral-strict-rendering-design.md`](superpowers/specs/2026-06-13-spectral-cathedral-strict-rendering-design.md)
+を、作品化の実装仕様は
+[`docs/superpowers/specs/2026-06-14-spectral-cathedral-poetic-production-design.md`](superpowers/specs/2026-06-14-spectral-cathedral-poetic-production-design.md)
+を、統合preview時点の公開保留条件は履歴資料
+[`docs/superpowers/specs/2026-06-14-spectral-cathedral-integration-publication-design.md`](superpowers/specs/2026-06-14-spectral-cathedral-integration-publication-design.md)
+を、通常公開条件は
+[`docs/superpowers/specs/2026-06-18-spectral-cathedral-publication-design.md`](superpowers/specs/2026-06-18-spectral-cathedral-publication-design.md)
+を参照する。音響、詩的造形、総合演出の現行仕様は
+[`docs/superpowers/specs/2026-06-20-spectral-cathedral-dramaturgy-redesign-design.md`](superpowers/specs/2026-06-20-spectral-cathedral-dramaturgy-redesign-design.md)
+を正本とし、2026年6月13日・14日の疎な20イベント構成を置き換える。
+以下の厳密数学定義は再設計でも変更しない。
+
+正規直交固有関数と固有値を
+
+\[
+\phi_{mn}(x,y)=\frac{2}{\sqrt{L_xL_y}}
+\sin\left(\frac{m\pi x}{L_x}\right)
+\sin\left(\frac{n\pi y}{L_y}\right),
+\qquad
+\lambda_{mn}=m^2+2n^2
+\]
+
+とする。有限集合は\(\lambda_{mn}\le30\)の12モードであり、
+\(\lambda=27\)の\((3,3)\)と\((5,1)\)を固定した解析的正弦基底として
+別々に保持する。
+
+係数を
+
+\[
+\widetilde a_{mn}=e^{-0.08\lambda_{mn}}\phi_{mn}(q_0),
+\qquad
+q_0=(L_x/\sqrt2,L_y/\sqrt3),
+\qquad
+a_{mn}=
+\frac{\widetilde a_{mn}}{\sum_{\mathcal K_C}|\widetilde a_{pq}|}
+\]
+
+とし、\(\sum|a_{mn}|=1\)を満たす。波動場は
+
+\[
+u_C(x,y,t)=
+\sum_{\mathcal K_C}
+a_{mn}\cos(c_C\sqrt{\lambda_{mn}}t)\phi_{mn}(x,y),
+\qquad
+c_C=\frac{0.22}{\sqrt3}
+\]
+
+である。数学時刻\(t\)は絶対transport時刻であり、後続する音楽スコアの
+周期ではリセットしない。
+
+振幅上限と表示写像を
+
+\[
+B_C=\frac{2}{\sqrt{L_xL_y}},
+\qquad
+U_C=\frac{u_C}{B_C},
+\]
+
+\[
+X=\frac{2x}{L_x}-1,
+\qquad
+Y=\frac{2y}{L_x}-\frac{L_y}{L_x},
+\qquad
+Z=0.60U_C
+\]
+
+とする。解析表示は線形固有値軸、符号付き係数\(a_{mn}\)、
+相対エネルギー指標\(a_{mn}^2\lambda_{mn}\)を用いる。
+この指標を物理的な波動エネルギーやHzスペクトルとは呼ばない。
+
+固有値、固有関数、係数、波動場は解析式から直接評価し、DFT、FFT、
+数値固有値問題を使用しない。
+
+### Chapter 2の厳密数学描画
+
+数学面は境界を含む\(192\times128\)固定格子で解析式を評価し、
+24,576頂点、48,514三角形の区分線形面として描く。格子座標、三角形
+インデックス、12モードの空間基底、曖昧セル用の中心基底は初期化時に生成し、
+毎フレーム再生成しない。
+
+WebGPUとWebGL2には、CPUで評価した同じ正規化場、頂点位置、頂点色、
+節線座標を渡す。バックエンドごとに波動式や色式を再実装しない。
+数学面の色は\(U_C\)の符号と絶対値だけから決め、正値をシアンから白銀、
+負値を青紫から白銀へ写す。\(|U_C|\le10^{-10}\)は低輝度の数学的零として
+扱う。照明、音楽イベント、品質、seed、rendererを色入力へ使わない。
+
+節線は同じ格子標本からmarching squaresで抽出する。辺交点は隣接標本値の
+線形補間で求め、4辺が交差する曖昧セルは解析式から得たセル中心値で接続を決める。
+中心値も零なら4交点を中心へ接続し、任意の二方向へ分解しない。外周の
+Dirichlet零集合は独立した長方形境界へ一本化し、同じ外周辺上に重なる
+節線線分だけを除外する。内部節線が境界へ到達する線分は保持する。
+
+この面は解析式の固定格子標本を三角形で結ぶ数値描画であり、連続解析曲面
+そのものではない。節線も同じ標本に基づく補間近似であり、解析的零点集合
+そのものとは呼ばない。
+
+解析表示は12モード表、線形固有値軸\([0,30]\)、符号付き係数、
+相対エネルギー指標、絶対数学時刻を別々に示す。\(\lambda=27\)の
+\((3,3)\)と\((5,1)\)は同じ横軸位置に別IDで保持する。軸はHzまたは
+FFTスペクトルではない。
+
+品質レベル`low`、`medium`、`high`、`ultra`は、数学面、境界、節線、
+解析表示、文字、頂点数、三角形数を変更しない。
+
+### Chapter 2の詩的造形
+
+光柱アンカーは、時刻0の正規化場\(|U_C(x,y,0)|\)を厳密描画と同じ
+`192 x 128`格子で評価し、境界を除く8近傍局所極大から最大8点まで選ぶ。
+候補は絶対値の降順、同値なら元領域のX、Y昇順とし、既選択点との距離が
+`0.12L_x`未満の候補を除外する。正準定義では局所極大が7点あり、
+距離選別後も7点すべてを保持する。局所極大でない8点目を補充しない。
+
+この7座標へ垂直な光柱芯を置き、表示X、Y順に隣接する点を6本のアーチ芯で結ぶ。
+光柱の高さ、幅、体積ハロー、アーチ曲率、塵状粒子、短い残光は
+詩的な量である。光柱を反節点、固有関数、固有値、係数とは呼ばず、
+アーチを節線接続、領域の位相、測地線とは呼ばない。
+
+柱芯の基礎座標とアーチ中心曲線は固定する。各モードと柱の局所影響を
+
+\[
+M_{i,mn}=\frac{|a_{mn}\phi_{mn}(x_i,y_i)|}
+{\max_j|a_{mn}\phi_{mn}(x_j,y_j)|}
+\]
+
+で定義する。発音イベントのモード集合だけを使って7本の柱ごとの励起を計算し、
+柱の詩的な高さ、輝度、ハローへ写す。6本のアーチは隣接柱の励起を
+80 msから220 ms遅延させ、アーチ上の光点と残光へ写す。全柱と全アーチへ
+同じ発音包絡を一律適用しない。
+
+視覚包絡は`gesture`ごとに異なり、`pulse`の0.54秒から`choir`の2.8秒まで
+短く閉じる。反復スコアは75秒で循環し、周期境界では前周期の余韻も絶対イベント
+時刻から評価する。数学面の頂点位置、頂点色、境界、節線、係数表示は局所影響、
+幕、カメラ、seedから変更しない。数学時刻は75秒のスコア周期で折り返さない。
+
+カメラはfit計算で得た基準構図に対して、75秒周期の連続軌道を加える。水平orbitは
+最大4度、dollyは基準距離の最大6%、注視点移動は正規化画面幅の最大4%とし、
+rollと発音ごとの振動は使用しない。カメラは観察位置を変えるだけで、数学面の
+頂点、値、投影規約を変更しない。
+
+seedが変更してよいのは、粒子の基礎位置、速度、位相、色カテゴリ、
+柱の呼吸位相、装飾色の小さい輝度差だけである。seedは7アンカーの座標、
+6アーチの中心曲線、数学面、境界、節線、モード、係数、固有値、
+数学時刻、スコアイベント時刻へ影響しない。
+
+詩的粒子は最大35,000点の固定容量を初期化時に作り、各粒子を最寄りの正準柱へ
+決定的に割り当てる。割当柱の局所energyで上昇速度、螺旋半径、位相速度を変える。
+品質変更ではdraw rangeだけを`6,000`、`14,000`、`26,000`、`35,000`へ変える。
+品質低下は粒子、体積ハロー、アーチ残光の順に適用する。
+正準7本の柱芯、6本のアーチ芯、数学面、境界、節線、解析表示は削減しない。
+
+WebGPUとWebGL2は全画面ポストプロセスを使わず、柱芯、透明ハロー平面、
+アーチ残光、粒子の局所加算合成で発光中心と周辺光を分ける。
+WebGL2の粒子は同じ個数と基礎配列を維持しつつ、実ブラウザQAで面と節線を
+覆わないようWebGPUより細く低不透明度にする。両backendは同じアンカー、
+アーチ中心曲線、seed由来粒子基礎配列を使う。
+
+### Chapter 2の反復スコア
+
+音楽スコアは72 BPM、5/4拍子、18小節であり、1拍は\(5/6\)秒、
+1小節は\(25/6\)秒、周期は75秒である。1拍を2分割した8分音符格子を使い、
+5幕を
+
+```text
+illumination: 0-2小節
+procession:   3-6小節
+ascent:       7-10小節
+resonance:   11-14小節
+afterglow:   15-17小節
+```
+
+とする。小節ごとのイベント数は
+
+```text
+2, 3, 3, 4, 5, 4, 5, 6, 6, 7, 7, 8, 9, 8, 9, 4, 3, 2
+```
+
+であり、周期内に95イベントを置く。最密幕の小節平均イベント数は最疎幕の
+2.5倍以上である。発音gestureは`toll`、`answer`、`cascade`、`pulse`、
+`choir`の5種類であり、同じgestureを5イベント以上連続させない。
+
+イベント表は周期内時刻、幕、gesture、モードID、基礎ゲイン、基礎brightness、
+wet send、stereo spread、全モード共通register倍率だけを保持する。
+絶対イベント時刻、モード変位、モード速度、数学位相、場の値、描画座標は保存しない。
+周回\(q\)、周期内イベント時刻\(t_e\)に対して
+
+\[
+t_e^{\mathrm{abs}}=75q+t_e
+\]
+
+を発音時に評価する。数学時刻はスコア周期でリセットしない。
+
+### Chapter 2のソニフィケーション
+
+各数学モードを鐘音へ写す基礎周波数、利得、開始位相を
+
+\[
+f_{mn}=176\sqrt{\lambda_{mn}/3},
+\qquad
+g_{mn}=\frac{|a_{mn}|}{\max|a|},
+\]
+
+\[
+\varphi_{mn}(t_e^{\mathrm{abs}})
+=c_C\sqrt{\lambda_{mn}}\,t_e^{\mathrm{abs}}
++\begin{cases}
+0,&a_{mn}\ge0,\\
+\pi,&a_{mn}<0
+\end{cases}
+\]
+
+とする。第\(r\)部分音は\(r=1,\ldots,8\)、重みは\(r^{-1.65}\)である。
+イベントは全モード共通のregister倍率\(R\in\{1/2,1,2\}\)を持つ。
+左右デチューン比を\(d=0.00125\)とし、
+
+\[
+\max\left(Rrf_{mn}(1-d),Rrf_{mn}(1+d)\right)<0.45F_s
+\]
+
+を満たさない部分音は左右とも除外する。イベントごとには再正規化せず、95イベントで
+最大の係数利得和、基礎ゲイン、部分音重み積を全イベント共通の正規化定数として使う。
+1音は中央、複数音はイベントの`stereoSpread`内へ等間隔に置き、
+
+\[
+P^L=\sqrt{(1-p)/2},
+\qquad
+P^R=\sqrt{(1+p)/2}
+\]
+
+で定位する。
+
+絶対イベント時刻のモード変位とモード速度を
+
+\[
+d_{mn}(t_e)=|\cos(c_C\sqrt{\lambda_{mn}}t_e)|,
+\qquad
+v_{mn}(t_e)=|\sin(c_C\sqrt{\lambda_{mn}}t_e)|
+\]
+
+とする。\(d_{mn}\)は減衰時間とwet send、\(v_{mn}\)は部分音brightnessと
+木質アタックへ有界に写す。基礎周波数、係数比、符号位相は変更しない。
+
+鐘包絡はgestureごとに異なる。
+
+| gesture | attack | 主減衰 | 終了 |
+| --- | ---: | ---: | ---: |
+| toll | 3 ms | 420 ms | 2.2秒 |
+| answer | 2.5 ms | 240 ms | 1.1秒 |
+| cascade | 2 ms | 125 ms | 0.62秒 |
+| pulse | 1.5 ms | 85 ms | 0.42秒 |
+| choir | 5 ms | 520 ms | 2.6秒 |
+
+各包絡は終了30 ms前から余弦fadeし、終了時刻以後は厳密に0を返す。
+
+発音開始にはgestureごとに強さの異なる20 msの決定的な木質アタックを加える。絶対イベント番号、
+モードID、8成分の番号から32 bit整数ハッシュで700 Hz以上2,800 Hz以下の
+周波数と開始位相を作る。同じseekでは再現し、別周回では変奏する。
+これは数学モードを表す追加固有成分ではなく、ソニフィケーション層の音色処理である。
+
+Chapter 2のWeb Audioグラフはdry high-pass 90 Hz、high-shelf 4,200 Hz /
+-1 dB、low-pass 8,500 Hz、wet high-pass 160 Hz、1.6秒の残響、
+threshold -14 dBのコンプレッサーを使う。コンプレッサー後には
+4倍oversamplingのhard-clampを置き、出力を原則として\(-1\) dBFS以下へ保護する。
+この音声は波動場の無加工再生ではなく、固有値、係数比、符号位相、
+絶対数学時刻を保った音楽的ソニフィケーションである。
