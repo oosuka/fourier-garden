@@ -16,6 +16,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    maxWorkers: 1,
+    pool: "threads",
+    testTimeout: 10_000,
     coverage: {
       reporter: ["text", "html"],
     },

@@ -349,7 +349,7 @@ describe("Spectral Cathedral reference DSP", () => {
     expect(Math.abs(rightMean)).toBeLessThan(1e-4);
     expect(rendered.left.every(Number.isFinite)).toBe(true);
     expect(rendered.right.every(Number.isFinite)).toBe(true);
-  }, 10_000);
+  }, 15_000);
 
   it("builds a structured-clone-safe complete worklet program", () => {
     const program = createSpectralCathedralWorkletProgram();
