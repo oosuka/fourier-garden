@@ -704,6 +704,7 @@ Spectral Cathedral段階5の4K計測ではJS heapとbuffer backing storageの
 
 ## 全章横断の未確認事項
 
+- Chapter 2のヘッドホンとMac内蔵スピーカーによる各10分以上の最終比較試聴
 - 実際のhidden状態を伴うタブ非表示と復帰
 - 実ウィンドウでのネイティブ全画面の見た目
 - 10分以上の実音声を伴うAudioNode、JS heap、GPUメモリ残留

@@ -6,16 +6,17 @@
 - 対象: Chapter 3 `Möbius Choir / メビウスの合唱`
 - 状態: 数学・投影・時間は現行。詩的造形とカメラは
   `2026-06-21-mobius-choir-realtime-panorama-redesign-design.md`、音響時間写像と幕対比は
-  `2026-06-21-mobius-choir-continuous-modal-flow-design.md`に置き換えられた履歴仕様
+  `2026-06-21-mobius-choir-continuous-modal-flow-design.md`に置き換えられた履歴仕様。
+  本文のpreview限定条件も履歴であり、Chapter 3は2026年6月21日に通常公開済み
 - 優先順位: `AGENTS.md`、`docs/mathematical-model.md`、本書、
   `docs/chapter-atlas.md`の順とする
-- 公開方針: 承認後も実装途中は`patternRegistry`へ追加せず、統合段階では
+- 当時の公開方針: 承認後も実装途中は`patternRegistry`へ追加せず、統合段階では
   `patternPreviewRegistry`だけへ追加する
 
 本書はChapter Atlasの候補をそのまま採用せず、flat Möbius帯の数学、3次元表示、
 時間規約、ソニフィケーション、演出構成を独立に再検証して一意に固定する。
-本書は承認済みであり、実装は本仕様を正本として進める。通常公開は実機試聴と
-ブラウザQAの完了まで保留し、統合確認はpreview入口だけで行う。
+本書の承認時点では、通常公開を実機試聴とブラウザQAの完了まで保留し、統合確認を
+preview入口だけで行う方針だった。現在は両条件を完了し、通常公開している。
 
 ## 1. 採用案と棄却案
 
