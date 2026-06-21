@@ -1,17 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  RESIDUE_BLOOM_SERIES,
-  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
-  evaluateEpicycle,
-} from "../math/fourier";
+import { evaluateEpicycle } from "../../../math/fourierSeries";
+import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/model";
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   buildMusicalScoreProgram,
   evaluateScoreEvent,
   evaluateMusicalScore,
   type MusicalScoreEvent,
-} from "./musicalScore";
+} from "./score";
 
 function createProgram() {
   return buildMusicalScoreProgram(

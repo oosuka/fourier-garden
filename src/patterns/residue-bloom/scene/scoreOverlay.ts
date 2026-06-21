@@ -1,9 +1,6 @@
-import { RESIDUE_BLOOM_SCORE_DEFINITION } from "../audio/musicalScore";
-import {
-  RESIDUE_BLOOM_SERIES,
-  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
-  projectSeriesToVerticalAxis,
-} from "../math/fourier";
+import { projectSeriesToVerticalAxis } from "../../../math/fourierSeries";
+import { RESIDUE_BLOOM_SCORE_DEFINITION } from "../audio/score";
+import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/model";
 
 const PHRASE_COLORS = [0xffc782, 0x78f3ff, 0xa798ff, 0xd5c5c0] as const;
 const HISTORY_PULSE_HALF_WIDTH = 0.045;

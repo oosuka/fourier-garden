@@ -1,4 +1,4 @@
-import type { MusicalScoreProgram } from "./musicalScore";
+import type { MusicalScoreProgram } from "../patterns/residue-bloom/audio/score";
 import type {
   MobiusChoirGesture,
   MobiusChoirScoreProgram,

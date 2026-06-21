@@ -16,18 +16,11 @@ import {
 } from "three/tsl";
 import { bloom } from "three/addons/tsl/display/BloomNode.js";
 
-import { createSeededRandom } from "../core/seed";
-import { selectRendererBackend, type RendererBackend } from "../core/rendererBackend";
-import {
-  RESIDUE_BLOOM_SERIES,
-  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
-  getEpicycleSteps,
-  projectSeriesToVerticalAxis,
-} from "../math/fourier";
-import {
-  getResidueBloomVisualResponse,
-  type ResidueBloomVisualResponse,
-} from "./residueBloomVisualResponse";
+import { selectRendererBackend, type RendererBackend } from "../../../core/rendererBackend";
+import { createSeededRandom } from "../../../core/seed";
+import { getEpicycleSteps, projectSeriesToVerticalAxis } from "../../../math/fourierSeries";
+import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/model";
+import { getResidueBloomVisualResponse, type ResidueBloomVisualResponse } from "./visualResponse";
 import {
   RESIDUE_BLOOM_HISTORY_PULSE_POINTS,
   getCoronaPresentation,
@@ -36,14 +29,14 @@ import {
   getPhraseColorHex,
   getRendererVisibilityScale,
   getWaveTrailVerticalDrift,
-} from "./residueBloomScoreOverlay";
+} from "./scoreOverlay";
 import type {
   PatternSceneOptions,
   QualityLevel,
   ResidueBloomFrameContext,
   ResidueBloomSceneInstance,
   Viewport,
-} from "./types";
+} from "../../types";
 
 const PALETTE = [0x78f3ff, 0x8ac8ff, 0xa798ff, 0xe59aff, 0xffc782, 0xc8fff3] as const;
 const TWO_PI = Math.PI * 2;

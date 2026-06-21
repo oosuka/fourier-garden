@@ -1,16 +1,17 @@
-import { RESIDUE_BLOOM_SERIES, getAnalyticSpectrum } from "../math/fourier";
+import { getAnalyticSpectrum } from "../../../math/fourierSeries";
 import type {
   AudioEngineProgram,
   AudioGraphPreset,
   ResidueBloomAudioPartial,
   WorkletConfigureMessage,
-} from "./audioProgram";
+} from "../../../audio/audioProgram";
+import { RESIDUE_BLOOM_SERIES } from "../math/model";
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   evaluateMusicalScore,
   type MusicalScoreDefinition,
   type MusicalScoreProgram,
-} from "./musicalScore";
+} from "./score";
 
 export type AudioPartial = ResidueBloomAudioPartial;
 

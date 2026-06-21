@@ -1,8 +1,8 @@
 import type { AudioEngineProgram } from "../audio/audioProgram";
 import type { MobiusChoirScoreProgram } from "../audio/mobiusChoirScore";
-import type { MusicalScoreFrame, MusicalScoreProgram } from "../audio/musicalScore";
+import type { MusicalScoreFrame, MusicalScoreProgram } from "./residue-bloom/audio/score";
 import type { SpectralCathedralScoreProgram } from "../audio/spectralCathedralScore";
-import type { FourierSeriesDefinition, FourierTerm } from "../math/fourier";
+import type { FourierSeriesDefinition, FourierTerm } from "../math/fourierSeries";
 import type { MobiusChoirDefinition } from "../math/mobiusChoir";
 import type { SpectralCathedralDefinition } from "../math/spectralCathedral";
 

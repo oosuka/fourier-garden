@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  RESIDUE_BLOOM_SERIES,
-  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
-  projectSeriesToVerticalAxis,
-} from "../math/fourier";
+import { projectSeriesToVerticalAxis } from "../../../math/fourierSeries";
+import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/model";
 import {
   RESIDUE_BLOOM_CORONA_WEIGHTS,
   getCoronaOpacity,
@@ -14,7 +11,7 @@ import {
   getPhraseColorHex,
   getRendererVisibilityScale,
   getWaveTrailVerticalDrift,
-} from "./residueBloomScoreOverlay";
+} from "./scoreOverlay";
 
 describe("Residue Bloom score overlay", () => {
   it("keeps thirteen normalized perceptual harmonic weights", () => {

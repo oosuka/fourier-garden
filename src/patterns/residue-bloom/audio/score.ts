@@ -1,4 +1,4 @@
-import type { FourierSeriesDefinition } from "../math/fourier";
+import type { FourierSeriesDefinition } from "../../../math/fourierSeries";
 
 export type MusicalSectionId = "intro" | "growth" | "bloom" | "hush" | "return";
 

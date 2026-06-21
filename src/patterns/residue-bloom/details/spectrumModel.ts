@@ -1,4 +1,4 @@
-import { getAnalyticSpectrum, type FourierSeriesDefinition } from "../math/fourier";
+import { getAnalyticSpectrum, type FourierSeriesDefinition } from "../../../math/fourierSeries";
 
 export function getLogFrequencyProgress(
   frequencyHz: number,

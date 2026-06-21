@@ -2,10 +2,10 @@ import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   buildMusicalScoreProgram,
   evaluateMusicalScore,
-} from "../audio/musicalScore";
-import { createResidueBloomAudioProgram } from "../audio/synthesis";
-import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
-import type { PatternScene, ResidueBloomPatternDefinition } from "./types";
+} from "./audio/score";
+import { createResidueBloomAudioProgram } from "./audio/synthesis";
+import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "./math/model";
+import type { PatternScene, ResidueBloomPatternDefinition } from "../types";
 
 const residueBloomScore = buildMusicalScoreProgram(
   RESIDUE_BLOOM_SCORE_DEFINITION,
@@ -150,7 +150,7 @@ export const residueBloomPattern = {
       "粒子、光の膜、星雲、ブルーム、二次トレイルに加え、発音時の調波コロナと履歴パルスも共有イベントスコアへ反応する詩的な造形です。コロナとパルスは厳密な円・主波形と同じ点へ重なる別オブジェクトで、係数、位相、半径、終点、主波形の座標を変形しません。",
   },
   async loadScene() {
-    const module = await import("./residueBloomScene");
+    const module = await import("./scene/scene");
     return async (options) => {
       const scene = await module.createResidueBloomScene(options);
       const adapter: PatternScene = {

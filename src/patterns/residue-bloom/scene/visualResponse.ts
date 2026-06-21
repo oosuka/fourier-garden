@@ -1,4 +1,4 @@
-import type { MusicalScoreFrame, MusicalSectionId } from "../audio/musicalScore";
+import type { MusicalScoreFrame, MusicalSectionId } from "../audio/score";
 
 export interface ResidueBloomVisualResponse {
   haloScale: number;

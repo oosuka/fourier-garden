@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { RESIDUE_BLOOM_SERIES } from "../math/fourier";
+import { RESIDUE_BLOOM_SERIES } from "../math/model";
 import {
   createSpectrumLayout,
   getAudioWaveformMode,
   getLogFrequencyProgress,
-} from "./dataCanvasModel";
+} from "./spectrumModel";
 
 describe("data canvas model", () => {
   it("places bars and ticks with the same logarithmic function", () => {

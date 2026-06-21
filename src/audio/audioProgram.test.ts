@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
-import { RESIDUE_BLOOM_SCORE_DEFINITION, buildMusicalScoreProgram } from "./musicalScore";
+import {
+  RESIDUE_BLOOM_SCORE_DEFINITION,
+  buildMusicalScoreProgram,
+} from "../patterns/residue-bloom/audio/score";
+import {
+  RESIDUE_BLOOM_AUDIO_GRAPH,
+  createResidueBloomAudioProgram,
+} from "../patterns/residue-bloom/audio/synthesis";
+import {
+  RESIDUE_BLOOM_SERIES,
+  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+} from "../patterns/residue-bloom/math/model";
 import { createWorkletConfigureMessage } from "./audioProgram";
 import { MOBIUS_CHOIR_AUDIO_GRAPH, createMobiusChoirAudioProgram } from "./mobiusChoirSynthesis";
-import { RESIDUE_BLOOM_AUDIO_GRAPH, createResidueBloomAudioProgram } from "./synthesis";
 
 const score = buildMusicalScoreProgram(
   RESIDUE_BLOOM_SCORE_DEFINITION,

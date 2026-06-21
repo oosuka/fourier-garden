@@ -4,14 +4,20 @@ import vm from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 
 import workletSource from "../../public/audio/fourier-worklet.js?raw";
-import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
-import { RESIDUE_BLOOM_SCORE_DEFINITION, buildMusicalScoreProgram } from "./musicalScore";
+import {
+  RESIDUE_BLOOM_SCORE_DEFINITION,
+  buildMusicalScoreProgram,
+} from "../patterns/residue-bloom/audio/score";
+import { createResidueBloomAudioProgram } from "../patterns/residue-bloom/audio/synthesis";
+import {
+  RESIDUE_BLOOM_SERIES,
+  RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+} from "../patterns/residue-bloom/math/model";
 import { createMobiusChoirWorkletProgram, renderMobiusChoirSample } from "./mobiusChoirSynthesis";
 import {
   createSpectralCathedralWorkletProgram,
   renderSpectralCathedralSample,
 } from "./spectralCathedralSynthesis";
-import { createResidueBloomAudioProgram } from "./synthesis";
 
 interface WorkletPortStub {
   onmessage: ((event: { data: unknown }) => void) | null;

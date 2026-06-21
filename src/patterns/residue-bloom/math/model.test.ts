@@ -1,15 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  RESIDUE_BLOOM_SERIES,
-  buildResidueBloomTerms,
   evaluateEpicycle,
   evaluateSeries,
   getAnalyticSpectrum,
   getComplexFourierCoefficients,
   getEpicycleSteps,
   projectSeriesToVerticalAxis,
-} from "./fourier";
+} from "../../../math/fourierSeries";
+import { RESIDUE_BLOOM_SERIES, buildResidueBloomTerms } from "./model";
 
 describe("Residue Bloom Fourier series", () => {
   it("builds the exact thirteen 4k + 1 harmonics", () => {

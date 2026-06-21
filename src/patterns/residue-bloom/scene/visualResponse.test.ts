@@ -4,9 +4,9 @@ import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   buildMusicalScoreProgram,
   evaluateMusicalScore,
-} from "../audio/musicalScore";
-import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
-import { getResidueBloomVisualResponse } from "./residueBloomVisualResponse";
+} from "../audio/score";
+import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/model";
+import { getResidueBloomVisualResponse } from "./visualResponse";
 
 const score = buildMusicalScoreProgram(
   RESIDUE_BLOOM_SCORE_DEFINITION,
