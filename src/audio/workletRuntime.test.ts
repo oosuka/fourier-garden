@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import workletSource from "../../public/audio/fourier-worklet.js?raw";
 import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
 import { RESIDUE_BLOOM_SCORE_DEFINITION, buildMusicalScoreProgram } from "./musicalScore";
+import { createMobiusChoirWorkletProgram, renderMobiusChoirSample } from "./mobiusChoirSynthesis";
 import {
   createSpectralCathedralWorkletProgram,
   renderSpectralCathedralSample,
@@ -61,6 +62,37 @@ function createOutputs(frameCount: number): Float32Array[][] {
 }
 
 describe("AudioWorklet runtime", () => {
+  it.each(
+    [44_100, 48_000, 96_000].flatMap((sampleRate) =>
+      [0.01, 10.7, 28.3, 42.4, 56.46, 56.52].map(
+        (startTimeSeconds) => [sampleRate, startTimeSeconds] as const,
+      ),
+    ),
+  )("matches the Möbius Choir renderer at %i Hz and %s seconds", (sampleRate, startTimeSeconds) => {
+    const frameCount = 64;
+    const program = createMobiusChoirWorkletProgram();
+    const processor = loadProcessor(sampleRate);
+    const outputs = createOutputs(frameCount);
+
+    send(processor, { type: "configure", program });
+    send(processor, { type: "seek", seconds: startTimeSeconds });
+    send(processor, { type: "active", value: true });
+    processor.fade = 1;
+    processor.process([], outputs);
+
+    for (let frame = 0; frame < frameCount; frame += 1) {
+      const expected = renderMobiusChoirSample(
+        program,
+        startTimeSeconds + frame / sampleRate,
+        sampleRate,
+      );
+      expect(Math.abs(outputs[0]![0]![frame]! - expected.dryLeft)).toBeLessThanOrEqual(1e-7);
+      expect(Math.abs(outputs[0]![1]![frame]! - expected.dryRight)).toBeLessThanOrEqual(1e-7);
+      expect(Math.abs(outputs[1]![0]![frame]! - expected.wetLeft)).toBeLessThanOrEqual(1e-7);
+      expect(Math.abs(outputs[1]![1]![frame]! - expected.wetRight)).toBeLessThanOrEqual(1e-7);
+    }
+  });
+
   it.each([
     0.07, 14.2, 33.4, 51.1, 69.8, 75.04,
   ])("matches the five-act Spectral Cathedral renderer at %s seconds", (startTimeSeconds) => {
@@ -170,6 +202,26 @@ describe("AudioWorklet runtime", () => {
       },
     });
     expect(() => processor.process([], createOutputs(16))).not.toThrow();
+
+    expect(processor.port.postMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects a dissonant Chapter 3 mode set before processing", () => {
+    const processor = loadProcessor(48_000);
+    const program = createMobiusChoirWorkletProgram();
+    const events = [...program.score.events];
+    events[0] = { ...events[0]!, modeIds: [2, 4] };
+    send(processor, {
+      type: "configure",
+      program: {
+        ...program,
+        score: {
+          ...program.score,
+          events,
+        },
+      },
+    });
+    processor.process([], createOutputs(16));
 
     expect(processor.port.postMessage).toHaveBeenCalledTimes(1);
   });

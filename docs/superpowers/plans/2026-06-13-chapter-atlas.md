@@ -1,8 +1,8 @@
 # Chapter Atlas 作成実装計画
 
-> **状態:** Chapter Atlasの作成、README同期、標準検証まで完了した実施記録。
-> Chapter 2は2026年6月20日までに通常公開と5幕再設計を完了した。
-> 次の実装対象はChapter 3であり、現行Atlasは`docs/chapter-atlas.md`を参照する。
+> **状態:** Chapter Atlasの作成、README同期、標準検証まで完了した履歴記録。
+> Chapter 2とChapter 3は通常公開済みである。
+> 現行状態と次候補Chapter 4は`docs/chapter-atlas.md`を参照する。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. リポジトリ方針に従い、サブエージェントは使用しない。
 

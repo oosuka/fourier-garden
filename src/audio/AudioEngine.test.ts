@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { patternRegistry } from "../patterns/registry";
 import { AudioEngine, createLimiterCurve } from "./AudioEngine";
+import { createMobiusChoirAudioProgram } from "./mobiusChoirSynthesis";
 import { createSpectralCathedralAudioProgram } from "./spectralCathedralSynthesis";
 
 interface Deferred {
@@ -268,7 +269,7 @@ describe("AudioEngine initialization", () => {
 
     await audio.initialize();
 
-    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=6"]);
+    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=10"]);
     expect(records.workletMessages).toEqual([
       expect.objectContaining({
         type: "configure",
@@ -353,6 +354,41 @@ describe("AudioEngine initialization", () => {
       output: undefined,
       input: undefined,
     });
+  });
+
+  it("builds the Möbius Choir graph with its choral filters and limiter", async () => {
+    const records = installAudioGraphStubs();
+    const audio = new AudioEngine(createMobiusChoirAudioProgram());
+
+    await audio.initialize();
+
+    expect(records.workletMessages).toEqual([
+      expect.objectContaining({
+        type: "configure",
+        program: expect.objectContaining({ kind: "mobius-choir" }),
+      }),
+    ]);
+    expect(
+      records.nodes.filter((node) => node.kind.startsWith("biquad:")).map((node) => node.options),
+    ).toEqual([
+      { type: "highpass", frequency: 95, Q: 0.45 },
+      { type: "highshelf", frequency: 4_800, gain: -3 },
+      { type: "lowpass", frequency: 8_200, Q: 0.3 },
+      { type: "highpass", frequency: 180, Q: 0.45 },
+    ]);
+    expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
+      { kind: "gain", options: { gain: 0.9 } },
+      { kind: "gain", options: { gain: 0.2 } },
+    ]);
+    expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
+      threshold: -16,
+      knee: 12,
+      ratio: 3,
+      attack: 0.008,
+      release: 0.26,
+    });
+    expect(records.nodes.find((node) => node.kind === "waveshaper")?.options.oversample).toBe("4x");
+    expect(records.bufferLengths).toEqual([2_600]);
   });
 });
 

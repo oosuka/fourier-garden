@@ -32,8 +32,23 @@ describe("AudioWorklet mathematical contract", () => {
   it("dispatches discriminated chapter programs without random state", () => {
     expect(workletSource).toContain('program.kind === "residue-bloom"');
     expect(workletSource).toContain('program.kind === "spectral-cathedral"');
+    expect(workletSource).toContain('program.kind === "mobius-choir"');
     expect(workletSource).toContain("renderResidueBloomSample");
     expect(workletSource).toContain("renderSpectralCathedralSample");
+    expect(workletSource).toContain("renderMobiusChoirSample");
     expect(workletSource).not.toContain("Math.random");
+  });
+
+  it("renders Möbius Choir from precomputed runtime data without score-table allocation", () => {
+    expect(workletSource).toContain("createMobiusChoirRuntime(program)");
+    expect(workletSource).toContain("findLatestMobiusChoirEventIndex");
+    const renderStart = workletSource.indexOf("function accumulateMobiusChoirEvent");
+    const renderEnd = workletSource.indexOf("function validateResidueBloomProgram");
+    const renderSource = workletSource.slice(renderStart, renderEnd);
+    expect(renderSource).not.toContain(".find(");
+    expect(renderSource).not.toContain(".map(");
+    expect(renderSource).not.toContain(".entries(");
+    expect(renderSource).not.toContain("toSorted(");
+    expect(renderSource).not.toContain("evaluateMobiusChoirEvents");
   });
 });

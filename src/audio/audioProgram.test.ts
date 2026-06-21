@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/fourier";
 import { RESIDUE_BLOOM_SCORE_DEFINITION, buildMusicalScoreProgram } from "./musicalScore";
 import { createWorkletConfigureMessage } from "./audioProgram";
+import { MOBIUS_CHOIR_AUDIO_GRAPH, createMobiusChoirAudioProgram } from "./mobiusChoirSynthesis";
 import { RESIDUE_BLOOM_AUDIO_GRAPH, createResidueBloomAudioProgram } from "./synthesis";
 
 const score = buildMusicalScoreProgram(
@@ -43,6 +44,18 @@ describe("Residue Bloom audio program", () => {
 
     expect(program.worklet.kind).toBe("residue-bloom");
     expect(program.graph).toEqual(RESIDUE_BLOOM_AUDIO_GRAPH);
+    expect(createWorkletConfigureMessage(program.worklet)).toEqual({
+      type: "configure",
+      program: program.worklet,
+    });
+  });
+});
+
+describe("Möbius Choir audio program", () => {
+  it("wraps the six-mode score in the chapter-specific graph", () => {
+    const program = createMobiusChoirAudioProgram();
+    expect(program.worklet.kind).toBe("mobius-choir");
+    expect(program.graph).toEqual(MOBIUS_CHOIR_AUDIO_GRAPH);
     expect(createWorkletConfigureMessage(program.worklet)).toEqual({
       type: "configure",
       program: program.worklet,

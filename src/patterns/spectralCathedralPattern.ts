@@ -25,6 +25,13 @@ export const spectralCathedralPattern = {
     cycleSeconds: 75,
     expressiveAxes: ["density", "dynamics", "register", "timbre", "space", "motion", "color"],
     localMathMapping: true,
+    qualityContract: {
+      comparableLoudness: true,
+      decayingSonicContinuity: true,
+      nonuniformVisualField: true,
+      localVisualMotion: true,
+      humanReviewRequired: true,
+    },
     sections: [
       {
         id: "illumination",

@@ -13,14 +13,16 @@ describe("App entry gate", () => {
     expect(playbackControl === null || playbackControl.closest("[inert]") !== null).toBe(true);
   });
 
-  it("exposes Chapter 2 without a preview query", () => {
+  it("exposes Chapters 2 and 3 without a preview query", () => {
     expect(getPatternRegistry("").map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
+      "mobius-choir",
     ]);
     expect(getPatternRegistry("?chapters=preview").map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
+      "mobius-choir",
     ]);
   });
 });

@@ -1,3 +1,4 @@
+import { mobiusChoirPattern } from "./mobiusChoirPattern";
 import { residueBloomPattern } from "./residueBloomPattern";
 import { spectralCathedralPattern } from "./spectralCathedralPattern";
 import type { PatternDefinition } from "./types";
@@ -5,10 +6,12 @@ import { validatePatternDefinition } from "./validatePatternDefinition";
 
 validatePatternDefinition(residueBloomPattern);
 validatePatternDefinition(spectralCathedralPattern);
+validatePatternDefinition(mobiusChoirPattern);
 
 export const patternRegistry: readonly PatternDefinition[] = Object.freeze([
   residueBloomPattern,
   spectralCathedralPattern,
+  mobiusChoirPattern,
 ]);
 
 export const patternPreviewRegistry: readonly PatternDefinition[] = Object.freeze([

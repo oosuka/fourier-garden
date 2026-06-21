@@ -3,22 +3,48 @@ import { describe, expect, it } from "vitest";
 import { getPatternRegistry, patternPreviewRegistry, patternRegistry } from "./registry";
 
 describe("pattern mathematical provenance", () => {
-  it("publishes Residue Bloom and Spectral Cathedral in chapter order", () => {
+  it("publishes the first three chapters in chapter order", () => {
     expect(patternRegistry.map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
+      "mobius-choir",
     ]);
     expect(getPatternRegistry("")).toBe(patternRegistry);
     expect(getPatternRegistry("?seed=qa")).toBe(patternRegistry);
   });
 
-  it("keeps the preview query compatible with the current published chapters", () => {
+  it("keeps the preview registry compatible after Möbius Choir publication", () => {
     expect(patternPreviewRegistry.map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
+      "mobius-choir",
     ]);
     expect(getPatternRegistry("?chapters=preview")).toBe(patternPreviewRegistry);
     expect(getPatternRegistry("?chapters=PREVIEW")).toBe(patternRegistry);
+  });
+
+  it("defines Möbius Choir as an analytic published flat quotient", () => {
+    const pattern = patternRegistry[2];
+    expect(pattern?.kind).toBe("mobius-choir");
+    if (pattern?.kind !== "mobius-choir") throw new Error("Möbius Choir is missing");
+    expect(pattern.publication).toBe("published");
+    expect(pattern.order).toBe(3);
+    expect(pattern.definition.modes).toHaveLength(6);
+    expect(pattern.audio.score.events).toHaveLength(63);
+    expect(pattern.audio.score.cycleSeconds).toBeCloseTo(960 / 17, 12);
+    expect(pattern.audio.sonificationLatex).toContain("\\psi_{mn,r,q}^{L/R}(t)");
+    expect(pattern.education.gentleBody).toContain("63イベント");
+    expect(pattern.education.sonificationBody).toContain("carrierを絶対transport時刻");
+    expect(pattern.education.sonificationBody).toContain("振幅、部分音の明度、定位");
+    expect(pattern.education.poeticLayerBody).toContain("同じモード速度");
+    expect(pattern.dramaturgy.sections).toHaveLength(5);
+    expect(pattern.mathematics).toMatchObject({
+      fftUsed: false,
+      numericalEigenanalysisUsed: false,
+      quotient: { allowedParity: "m+n-odd" },
+      rendering: { sourceMetric: "flat-quotient", displayEmbedding: "non-isometric" },
+    });
+    expect(pattern.audio.createProgram().worklet.kind).toBe("mobius-choir");
   });
 
   it("defines Residue Bloom as analytic finite-series synthesis rather than FFT analysis", () => {

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -6,7 +7,14 @@ import { patternPreviewRegistry, patternRegistry } from "../patterns/registry";
 import { DetailsPanel } from "./DetailsPanel";
 import { SpectralCathedralDetails } from "./SpectralCathedralDetails";
 
+const applicationStyles = readFileSync("src/styles.css", "utf8");
+
 describe("DetailsPanel visibility", () => {
+  it("fits the long Möbius Choir equations inside the desktop detail panel", () => {
+    expect(applicationStyles).toContain(".app--mobius-choir .detailsPanel .detailsFormula .katex");
+    expect(applicationStyles).toContain(".app--mobius-choir .detailsPanel .mathIdentity .katex");
+  });
+
   it("removes closed panel controls from interaction and the accessibility tree", () => {
     const pattern = patternRegistry[0]!;
     const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);

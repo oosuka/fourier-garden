@@ -50,6 +50,20 @@ describe("ControlBar chapter navigation", () => {
     expect(container.textContent).toContain("Spectral Cathedral");
   });
 
+  it("shows published Möbius Choir without a preview label", () => {
+    const container = document.createElement("div");
+    container.innerHTML = renderControlBar(2, 3);
+
+    expect(container.querySelector<HTMLButtonElement>("[aria-label='前の章']")?.disabled).toBe(
+      false,
+    );
+    expect(container.querySelector<HTMLButtonElement>("[aria-label='次の章']")?.disabled).toBe(
+      true,
+    );
+    expect(container.textContent).not.toContain("PREVIEW");
+    expect(container.textContent).toContain("Möbius Choir");
+  });
+
   it("disables both directions while switching chapters", () => {
     const container = document.createElement("div");
     container.innerHTML = renderControlBar(0, 2, true);

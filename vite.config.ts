@@ -6,6 +6,13 @@ export default defineConfig({
   build: {
     target: "es2023",
     sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        spectralCathedralQa: "spectral-cathedral-qa.html",
+        mobiusChoirQa: "mobius-choir-qa.html",
+      },
+    },
   },
   test: {
     environment: "jsdom",

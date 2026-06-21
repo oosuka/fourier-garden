@@ -6,6 +6,7 @@ import type { AudioEngine } from "../audio/AudioEngine";
 import { getAnalyticSpectrum } from "../math/fourier";
 import type { PatternDefinition, ResidueBloomPatternDefinition } from "../patterns/types";
 import { SpectrumAxis, SpectrumCanvas, WaveformCanvas } from "./DataCanvas";
+import { MobiusChoirDetails } from "./MobiusChoirDetails";
 import { SpectralCathedralDetails } from "./SpectralCathedralDetails";
 
 interface DetailsPanelProps {
@@ -211,8 +212,10 @@ export function DetailsPanel({ open, pattern, audio, onClose }: DetailsPanelProp
           </section>
         ) : pattern.kind === "residue-bloom" ? (
           <ResidueBloomDetails pattern={pattern} />
-        ) : (
+        ) : pattern.kind === "spectral-cathedral" ? (
           <SpectralCathedralDetails pattern={pattern} />
+        ) : (
+          <MobiusChoirDetails pattern={pattern} />
         )}
 
         <section className="dataSection">

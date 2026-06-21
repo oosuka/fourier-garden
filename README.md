@@ -1,101 +1,115 @@
 # Fourier Garden
 
-Fourier Gardenは、**有限フーリエ級数の合成**と、**複素指数関数・フェーザによるフーリエ級数の幾何学的可視化**を中核に、そこから導いた映像と音楽的ソニフィケーションを奏でるデスクトップ向けWeb作品です。
+Fourier Gardenは、有限Fourier展開とその周辺の数学的構造から、厳密な可視化、
+音楽的ソニフィケーション、没入型の詩的造形を生成するデスクトップ向けWeb作品です。
+章ごとに異なる数学的対象を扱いながら、同じtransport、品質制御、章切替、詳細表示、
+WebGPU／WebGL2描画基盤を共有します。
 
-これはFFT（高速フーリエ変換）の計算過程を可視化する作品ではありません。`Residue Bloom`では係数が解析的に既知であり、未知の標本列からDFT係数を推定していません。
+本作品はFFT（高速フーリエ変換）の計算過程を可視化するものではありません。
+各章がDFT、FFT、数値固有値解析を使うかどうかは章別に明記し、解析的に与えた係数を
+標本から推定した結果のようには説明しません。
 
-初期章は **Residue Bloom / 剰余の花**。厳密な数学層は次の有限フーリエ級数からリアルタイム生成されます。
+## 現在の章
 
-```math
-f(x)=5\sum_{k=0}^{12}\frac{1}{k+1}\sin((4k+1)x)
-```
+公開状態と表示順の正本は[`src/patterns/registry.ts`](src/patterns/registry.ts)です。
 
-複素フェーザを
+| Chapter | 状態 | 数学的対象 | 時間構成 | 主な音響・造形 |
+| --- | --- | --- | --- | --- |
+| 1 `Residue Bloom / 剰余の花` | 通常公開 | `n=4k+1`の13項からなる解析的有限Fourier級数と複素フェーザ | 80 BPM、48小節、144秒、5状態 | 短い調波発音、円鎖、主履歴波形、粒子庭園 |
+| 2 `Spectral Cathedral / スペクトルの聖堂` | 通常公開 | 長方形領域上の12個の解析的Dirichlet固有モード | 72 BPM、5/4、18小節、75秒、5幕 | ガラス鐘、木質アタック、波動面、7光柱、6アーチ |
+| 3 `Möbius Choir / メビウスの合唱` | 通常公開 | flat Möbius quotient上の6個の解析的進行波モード | 68 BPM、16小節、56.470588秒、63イベント、5幕 | 絶対時刻carrier、母音状の声、単一Möbius帯、24,000粒子 |
 
-```math
-z(x)=\sum_{k=0}^{12}A_k e^{in_kx},
-\qquad
-A_k=\frac{5}{k+1},
-\quad
-n_k=4k+1
-```
+通常URLではChapter 1から3を選択できます。Chapter 3はWebGPU／WebGL2のブラウザQAと
+ユーザーによる実機試聴を完了し、通常公開済みです。
 
-と置くと、円の連鎖の終点は`z(x)`であり、主波形はその虚部
-`f(x) = Im z(x)`です。詳細な規約は
-[`docs/mathematical-model.md`](docs/mathematical-model.md)に記載しています。
+章固有の数式、係数、位相、投影、スコア、音響写像は
+[`docs/mathematical-model.md`](docs/mathematical-model.md)を参照してください。
+未実装章の候補、隣接章とのコントラスト、入口条件、実装順は
+[`docs/chapter-atlas.md`](docs/chapter-atlas.md)で管理します。READMEには将来章を固定列挙せず、
+Chapter 10・20・30へ増えても現行章一覧と共通契約だけを更新します。
 
-画面上の運動は構造を目で追えるよう`x(t) = 0.31t`へ減速しています。画面の55Hz表記は解析的スペクトルを音響周波数へ対応させた値であり、円が実時間で毎秒55回転するという意味ではありません。
-スペクトルの棒高は片側正弦振幅`A_k`であり、複素係数の絶対値
-`|c_{±n_k}| = A_k/2`ではありません。円と主波形の線は、解析式から得た
-厳密な標本点を結ぶ数値描画です。
+## 全章共通の表現レイヤー
 
-## 表現レイヤー
+- **厳密な数学層**: 章別に定義した解析式、係数、境界、節線、フェーザ、波形、解析表示。
+  装飾ノイズや演出用変形を混入させません。
+- **ソニフィケーション層**: 数学的な比、符号、位相関係などを保持しながら、移調、
+  知覚補正、帯域制限、有限包絡、定位、EQ、圧縮、残響を加えた音楽的表現です。
+- **詩的な造形層**: 粒子、膜、流線、星雲、ブルーム、残光、ハローなどです。
+  数学と時刻や局所応答を共有しても、数学値そのものとしては説明しません。
 
-- **厳密な数学層**: エピサイクル、接続ベクトル、主履歴波形、解析的係数スペクトル
-- **ソニフィケーション層**: 同じ調波指数を、移調、知覚補正、帯域制限、エンベロープを伴って音楽的に発音
-- **詩的な造形層**: 粒子、光の膜、星雲、ブルーム、二次トレイル、調波コロナ、履歴パルス。音声と共有スコアへ反応するが、級数そのもののグラフではない
+数学表示の時刻と反復する音楽スコアは分離します。数学時刻は絶対transport時刻を使い、
+音楽周期でリセットしません。30秒を超える章は3幕以上、3表現軸以上の認識可能な変化と、
+数学要素から局所的な音響・造形への説明可能な因果を必要とします。
 
-円、フェーザ終点、接続線、主波形は常に`x(t) = 0.31t`の厳密な級数だけから
-計算されます。発音イベントはこれらの座標、半径、線幅を変形しません。
-発音時の調波コロナは13個の円と同じ位置・倍率へ別ラインを重ね、履歴パルスは
-主波形と同じ射影点へ短い別ラインと光点を重ねます。変化するのは色、不透明度、
-光点サイズだけです。
+## 操作
 
-## 映像と音楽の共有スコア
+- `Space`: 再生／一時停止
+- `D`: 詳細パネル
+- `F`: 全画面
+- UI: 再生、音量、章移動、詳細、全画面
 
-音声と詩的な造形は、80 BPM、4/4、48小節、合計144秒の決定的なイベント表を
-共有します。構成は`導入 → 成長 → 開花 → 静寂 → 再開`で、最後の小節から
-導入へ連続的に戻ります。
+音声はブラウザの自動再生制限に従い、`ENTER FOURIER GARDEN`を押した後に開始します。
+初期音量は35%で、変更値はローカル保存されます。章を切り替えると旧sceneと
+旧AudioContextを破棄し、transportを0秒へ戻します。
 
-48小節で反復するのは音楽形式だけです。数学表示は絶対トランスポート時刻の
-`x(t)=0.31t`を継続し、各周回の発音制御もその絶対イベント時刻の
-フェーザから再評価します。
-
-イベント表はアプリ起動時に一度だけ生成され、区間、発音、キャリア、
-基礎プロファイルだけを保持します。フェーザ座標、半径、フェーザ由来の
-明るさ・アクセントは保存しません。AudioWorkletは渡されたイベント表と
-フェーザ写像をサンプル精度で評価し、区間、発音マスク、キャリア列を
-独自に再定義しません。
-
-各発音の絶対イベント時刻`tₑ`では`z(0.31tₑ)`を`ΣAₖ`で正規化し、実部を定位、
-虚部を後段ローパスの明るさ、絶対値をアクセントと減衰へ有界に写像します。
-残響送出は区間プロファイルから決まります。粒子のバーストはその履歴終点を
-起点にしますが、現在の厳密な終点座標は変更しません。
-同じイベントの直近4件は、左側の調波コロナと14節点、右側の履歴パルスにも
-使われます。コロナの調波別強度は音響と同じ基礎知覚重み
-`Aₖ/(k+1)^1.4`を正規化した値から得ます。
-
-## 動作要件
-
-- macOS最新版
-- Chrome最新版
-- [Volta](https://volta.sh/)
-- Node.js `24.16.0`
-- npm `11.17.0`
-
-Node.jsとnpmは `package.json` の `volta` フィールドでプロジェクト単位に固定しています。
-Voltaを導入した状態でこのディレクトリへ移動すると、固定バージョンが使用されます。
-
-## 開発
+## 実行とQA入口
 
 ```bash
-node --version
-npm --version
 npm install
 npm run dev
 ```
 
-依存パッケージのinstall scriptはバージョン単位で審査し、未審査のものは
-インストール時に拒否します。審査が必要な場合は
-`npm approve-scripts --allow-scripts-pending` で対象を確認してください。
+通常公開章:
 
-すべての品質検証:
+```text
+http://localhost:5173/?seed=qa&quality=high
+```
+
+将来の検証中章と過去QA URLに対する互換preview入口:
+
+```text
+http://localhost:5173/?chapters=preview&seed=qa&quality=high
+```
+
+Chapter 3固定時刻QA:
+
+```text
+http://localhost:5173/mobius-choir-qa.html?seed=qa&quality=high&time=28.235
+```
+
+主なクエリ:
+
+- `renderer=webgl`: WebGL2経路を強制
+- `seed=qa`: 固定シード
+- `quality=low|medium|high|ultra`: 品質を固定
+- `chapters=preview`: preview章を含むレジストリを使用。現在は通常URLと同じ3章
+
+`quality`を省略した場合は`high`から適応品質制御を開始します。描画、音響、UIを変更した
+場合は単体テストだけで完了扱いにせず、WebGPUとWebGL2、16:10・16:9・21:9、
+pause／resume、章切替、console、実機試聴を確認します。
+
+## 対象環境と描画基盤
+
+- OS: 最新版macOS
+- ブラウザ: 最新版Google Chrome
+- 基準機: MacBook Air M2、10-core GPU、16 GB RAM
+- Node.js: `24.16.0`
+- npm: `11.17.0`
+- 通常描画: Three.js `WebGPURenderer`、TSL、Bloom
+- フォールバック: Three.js `WebGLRenderer`によるWebGL2
+
+Node.jsとnpmは`package.json`の`volta`フィールドで固定します。実行時に外部音源、
+外部画像、外部CDN、分析通信を使用せず、音声、残響インパルス、映像を生成します。
+
+## 開発と検証
 
 ```bash
+node --version
+npm --version
 npm run check
 ```
 
-個別のコマンド:
+個別コマンド:
 
 ```bash
 npm run format
@@ -107,102 +121,36 @@ npm test
 npm run build
 ```
 
-コード整形はBiome、静的解析はOxlint、型検査はTypeScriptが担当します。
-Biomeのlinterは無効化し、規則の二重管理を避けています。
+コード整形はBiome、静的解析はOxlint、型検査はTypeScriptが担当します。依存パッケージの
+install scriptはバージョン単位で審査し、未審査のものはインストール時に拒否します。
 
-## 操作
+## 章アーキテクチャ
 
-- `Space`: 再生 / 一時停止
-- `D`: 詳細パネル
-- `F`: 全画面
-- UI: 再生、音量、章移動、詳細、全画面
+`src/patterns/registry.ts`が章レジストリです。各`PatternDefinition`は表示メタデータ、
+数学的来歴、`PatternDramaturgy`、音響program factory、教育コンテンツ、遅延ロードする
+scene factoryをまとめます。`patternRegistry`には通常公開済み章だけを置き、
+`patternPreviewRegistry`へ検証中の章を追加します。
 
-音声はブラウザの自動再生制限に従い、`ENTER FOURIER GARDEN`を押した後に開始します。
-再生コントロール、詳細パネル、キーボードショートカットも開始後に有効になります。
-初期音量は35%で、変更値はローカル保存されます。
+数学は`src/math/`の純粋関数、音響は`src/audio/`と`public/audio/`、描画sceneは
+`src/patterns/`、UIは`src/components/`へ分離します。CanvasとAudioEngineは章固有の数学を
+再定義せず、共通transportを渡します。sceneの`dispose()`はGPU資源、イベント、タイマーを、
+AudioEngineはAudioNodeとAudioContextを完全に解放します。
 
-Chapter 2 `Spectral Cathedral / スペクトルの聖堂`は通常公開済みで、
-クエリなしのURLからChapter 1と往復できます。72 BPM、5/4、18小節、75秒の
-5幕構成で、ガラス鐘と木質アタックをtoll、answer、cascade、pulse、choirへ展開します。
-発音モードは固有関数値により7本の光柱へ局所対応し、6本のアーチ、粒子帯、
-緩やかなカメラ軌道へ伝播します。厳密な波面、境界、節線、係数は演出で変形しません。
-ヘッドホンとMac内蔵スピーカーでの最終試聴は、公開状態と分けた手動QA事項です。
+新章は名称だけから実装せず、次の順序で追加します。
 
-```text
-http://localhost:5173/?seed=qa&quality=high
-```
+1. 独立した段階1数理・演出仕様を承認する
+2. 純粋数学、決定的スコア、DSP、厳密描画、詩的造形、UIを章単位で実装する
+3. TypeScript参照DSPとAudioWorklet、WebGPUとWebGL2を一致させる
+4. previewで人間確認し、実機試聴後に通常公開を判断する
 
-章を切り替えると旧シーンと旧AudioContextを破棄し、transportを0秒へ戻します。
-再生中の切替では新章を0秒から再生し、一時停止中は音声を初期化せず時刻0の
-シーンだけを表示します。
+将来の想像だけを理由に大規模な汎用化は行いません。具体的な複数章で共通性を確認した
+範囲だけを共有基盤へ移します。
 
-音響は共有スコアの有効イベントで短く発音します。発音中心は基準周波数
-`f₀ = 55 Hz`の8倍・9倍（440 / 495 Hz）です。同じ調波指数
-`nₖ = 4k+1`を使いますが、高次成分には`(k+1)^-1.4`の知覚補正を加え、
-左右デチューン後の実生成周波数が`0.45Fₛ`以上になる成分を除外します。
-したがって、音声は表示級数の無加工再生ではなく、明示的に定義された
-ソニフィケーションです。
-外部音源ファイルは使用せず、音声、残響インパルス、映像を実行時に生成します。
+## 文書
 
-## 描画
-
-- 通常: Three.js `WebGPURenderer`、TSL、Bloom
-- WebGPU非対応時: Three.js `WebGLRenderer`
-- WebGL2強制確認: `?renderer=webgl`
-- 固定QAシード: `?seed=qa`
-- 品質固定: `?quality=high`（指定値: `low` / `medium` / `high` / `ultra`）
-- 未公開章を含む互換preview入口: `?chapters=preview`
-
-`quality`を指定しない場合は`high`から適応品質制御を開始します。明示した場合は
-その品質へ固定し、性能計測中に自動変更しません。
-
-例:
-
-```text
-http://localhost:5173/?seed=qa&quality=high
-```
-
-## アーキテクチャ
-
-`src/patterns/registry.ts`が章レジストリです。各章は共通の表示メタデータ、
-数学的来歴、音響program factory、解説、遅延ロードされるscene factoryを
-まとめて登録します。数学定義は判別可能な章別型で保持し、有限フーリエ級数と
-Dirichlet固有モードを同じ汎用スペクトル型へ混同しません。
-通常`patternRegistry`には公開済みのChapter 1とChapter 2を置きます。
-`chapters=preview`は過去のQA URLとの互換性と、将来の未公開候補を統合確認する
-入口として維持します。
-
-`src/audio/musicalScore.ts`は48小節のイベント表を構築し、
-Chapter 1のscene adapterとAudioEngineが同一プログラムを参照します。
-`CanvasStage`は章固有のscoreを知らず、絶対transport時刻、frame delta、
-再生状態だけをsceneへ渡します。映像とAudioWorkletは共通の`Transport`を使い、
-音声開始後は`AudioContext.currentTime`へ同期します。
-AudioWorkletは受け取ったイベントをサンプル精度で評価し、描画側は同じ時刻の
-ハロー、粒子バースト、膜、流線、ブルーム、調波コロナ、履歴パルスを
-決定的に再構成します。
-
-Chapter 2以降の名称と表示順は維持します。各章の数学的対象、厳密表示、
-ソニフィケーション、詩的造形、実装順は
-[`docs/chapter-atlas.md`](docs/chapter-atlas.md)で検討します。
-Atlasの内容は実装済み仕様ではありません。Chapter 2は個別仕様、実装、統合QAを
-完了して通常公開済みです。Chapter 3以降は個別仕様が承認されるまで
-通常`patternRegistry`へ登録せず、未実装・未公開とします。
-次の実装対象はChapter 3 `Möbius Choir / メビウスの合唱`であり、Atlasの定義を
-そのまま実装せず、最初に独立した数理仕様として再検証・承認します。
-
-30秒を超える各章は3幕以上と3軸以上の表現変化を持ち、数学要素から局所的な音響・
-造形への対応を説明できなければなりません。数学的正確性を死守しつつ、数学層の外側で
-単調さを排除することを全章共通の品質条件とします。
-
-## 将来の章
-
-1. Residue Bloom / 剰余の花
-2. Spectral Cathedral / スペクトルの聖堂
-3. Möbius Choir / メビウスの合唱
-4. Prime Constellation / 素数星座
-5. Bessel Tide / ベッセルの潮
-6. Lissajous Orchard / リサージュの果樹園
-7. Dirichlet Lanterns / ディリクレの灯
-8. Wavelet Rain / ウェーブレットの雨
-9. Riemann Veil / リーマンの帳
-10. Phase Torus / 位相トーラス
+- [`AGENTS.md`](AGENTS.md): 開発時の数学・音響・描画・QA不変条件
+- [`docs/mathematical-model.md`](docs/mathematical-model.md): 実装済み章の数理・音響正本
+- [`docs/chapter-atlas.md`](docs/chapter-atlas.md): 候補章、比較、依存関係、入口条件
+- [`design-qa.md`](design-qa.md): 実測QA、履歴、未確認事項
+- [`docs/superpowers/specs/`](docs/superpowers/specs/): 承認済み設計と履歴仕様
+- [`docs/superpowers/plans/`](docs/superpowers/plans/): 実装計画と実施記録

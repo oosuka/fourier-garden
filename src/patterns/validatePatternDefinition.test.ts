@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { MOBIUS_CHOIR_SCORE } from "../audio/mobiusChoirScore";
+import { createMobiusChoirAudioProgram } from "../audio/mobiusChoirSynthesis";
+import { MOBIUS_CHOIR_DEFINITION } from "../math/mobiusChoir";
+import { MOBIUS_CHOIR_DRAMATURGY_SECTIONS } from "./mobiusChoirDramaturgy";
 import { patternPreviewRegistry, patternRegistry } from "./registry";
-import type { ResidueBloomPatternDefinition } from "./types";
+import type { MobiusChoirPatternDefinition, ResidueBloomPatternDefinition } from "./types";
 import { validatePatternDefinition } from "./validatePatternDefinition";
 
 function mutatePattern(
@@ -18,6 +22,98 @@ function getResidueBloomPattern(): ResidueBloomPatternDefinition {
   return pattern;
 }
 
+function getMobiusChoirPattern(): MobiusChoirPatternDefinition {
+  return {
+    kind: "mobius-choir",
+    id: "mobius-choir",
+    order: 3,
+    publication: "preview",
+    title: { en: "Möbius Choir", ja: "メビウスの合唱" },
+    subtitle: { en: "A traveling wave on a flat quotient", ja: "平坦な商空間を巡る進行波" },
+    formulaLatex: "u_M(x,y,t)",
+    dramaturgy: {
+      cycleSeconds: MOBIUS_CHOIR_SCORE.cycleSeconds,
+      sections: MOBIUS_CHOIR_DRAMATURGY_SECTIONS,
+      expressiveAxes: ["density", "register", "timbre", "space", "motion", "color"],
+      localMathMapping: true,
+      qualityContract: {
+        comparableLoudness: true,
+        decayingSonicContinuity: true,
+        nonuniformVisualField: true,
+        localVisualMotion: true,
+        humanReviewRequired: true,
+      },
+    },
+    presentation: {
+      observatoryLabel: "MOBIUS CHOIR OBSERVATORY",
+      formulaEyebrow: "FLAT QUOTIENT / 平坦商空間",
+      formulaSummary: "Analytic traveling-wave synthesis.",
+      annotationContext: "ALLOWED MODES / 許容モード",
+      annotations: [
+        { label: "λ = 1", value: "(1, 0)" },
+        { label: "λ = 5", value: "(1, 2)" },
+        { label: "λ = 9", value: "(3, 0)" },
+        { label: "λ = 13", value: "(2, 3)" },
+      ],
+      poeticEyebrow: "SEAM / VOICE / TURN",
+      poeticLines: ["ひとつの面を声が巡る。"],
+      canvasAriaLabel: "メビウス帯を巡る進行波と節線",
+    },
+    definition: MOBIUS_CHOIR_DEFINITION,
+    mathematics: {
+      operation: "finite-flat-mobius-dirichlet-traveling-wave-synthesis",
+      coefficientSource: "analytic-normalized-eigenvalue-weight",
+      fftUsed: false,
+      numericalEigenanalysisUsed: false,
+      mathematicalTime: {
+        mode: "absolute-transport",
+        wrapsWithScore: false,
+        waveTimeScale: MOBIUS_CHOIR_DEFINITION.waveTimeScale,
+      },
+      quotient: {
+        identification: "(x,0)~(pi-x,pi)",
+        boundary: "dirichlet-x-0-pi",
+        allowedParity: "m+n-odd",
+      },
+      rendering: {
+        sourceMetric: "flat-quotient",
+        displayEmbedding: "non-isometric",
+        method: "analytic-fixed-grid-samples",
+        interpolation: "piecewise-linear",
+      },
+      eigenfunctionLatex: "sin(mx)cos(ny)",
+      coefficientLatex: "b_mn=C_M/(1+lambda_mn)",
+      embeddingLatex: "F(x,y)",
+    },
+    audio: {
+      mode: "sonification",
+      baseFrequencyHz: 196,
+      initialVolume: 0.35,
+      roomSeconds: 2.6,
+      sonificationLatex: "f_mn=196sqrt(lambda_mn)",
+      score: MOBIUS_CHOIR_SCORE,
+      createProgram: createMobiusChoirAudioProgram,
+    },
+    education: {
+      gentleTitle: "ひとつながりの帯を声が巡る。",
+      gentleBody: "継ぎ目で向きを変えながら波が進みます。",
+      mathematicalTitle: "Flat Möbius quotient",
+      mathematicalBody: "解析的な有限固有モード和です。",
+      scopeNotice: "表示埋め込みの誘導計量の固有モードではありません。",
+      sonificationBody: "固有振動数比を保つソニフィケーションです。",
+      poeticLayerBody: "粒子と残光は詩的造形です。",
+    },
+    async loadScene() {
+      return async () => ({
+        update() {},
+        resize() {},
+        setQuality() {},
+        dispose() {},
+      });
+    },
+  };
+}
+
 describe("pattern mathematical provenance", () => {
   it("rejects a published pattern without three continuous dramaturgy sections", () => {
     const pattern = getResidueBloomPattern();
@@ -27,6 +123,7 @@ describe("pattern mathematical provenance", () => {
         cycleSeconds: pattern.dramaturgy.cycleSeconds,
         expressiveAxes: ["density", "dynamics", "motion"],
         localMathMapping: true,
+        qualityContract: pattern.dramaturgy.qualityContract,
         sections: [
           {
             id: "only",
@@ -56,6 +153,7 @@ describe("pattern mathematical provenance", () => {
         cycleSeconds: pattern.dramaturgy.cycleSeconds,
         expressiveAxes: ["density", "dynamics", "motion"],
         localMathMapping: true,
+        qualityContract: pattern.dramaturgy.qualityContract,
         sections: [
           { id: "a", startRatio: 0, endRatio: 0.3, ...section },
           { id: "b", startRatio: 0.3, endRatio: 0.7, ...section },
@@ -99,8 +197,62 @@ describe("pattern mathematical provenance", () => {
     expect(() => validatePatternDefinition(patternRegistry[0]!)).not.toThrow();
   });
 
+  it("rejects a pattern that omits a required experience quality guarantee", () => {
+    const pattern = getResidueBloomPattern();
+    const invalid = {
+      ...pattern,
+      dramaturgy: {
+        ...pattern.dramaturgy,
+        qualityContract: {
+          ...pattern.dramaturgy.qualityContract,
+          comparableLoudness: false,
+        },
+      },
+    } as unknown as ResidueBloomPatternDefinition;
+
+    expect(() => validatePatternDefinition(invalid)).toThrow(/experience quality/i);
+  });
+
   it("accepts the Spectral Cathedral preview definition", () => {
     expect(() => validatePatternDefinition(patternPreviewRegistry[1]!)).not.toThrow();
+  });
+
+  it("accepts the approved Möbius Choir contract", () => {
+    expect(() => validatePatternDefinition(getMobiusChoirPattern())).not.toThrow();
+  });
+
+  it("rejects score-wrapped Möbius Choir mathematical time", () => {
+    const pattern = getMobiusChoirPattern();
+    const invalid = {
+      ...pattern,
+      mathematics: {
+        ...pattern.mathematics,
+        mathematicalTime: {
+          ...pattern.mathematics.mathematicalTime,
+          wrapsWithScore: true,
+        },
+      },
+    } as unknown as MobiusChoirPatternDefinition;
+
+    expect(() => validatePatternDefinition(invalid)).toThrow(/mathematical time must not wrap/i);
+  });
+
+  it("rejects a Möbius Choir score that references an unknown mode", () => {
+    const pattern = getMobiusChoirPattern();
+    const invalid = {
+      ...pattern,
+      audio: {
+        ...pattern.audio,
+        score: {
+          ...pattern.audio.score,
+          events: pattern.audio.score.events.map((event, index) =>
+            index === 0 ? Object.assign({}, event, { modeIds: [99] }) : event,
+          ),
+        },
+      },
+    } as MobiusChoirPatternDefinition;
+
+    expect(() => validatePatternDefinition(invalid)).toThrow(/unknown mode/i);
   });
 
   it("rejects score-wrapped mathematical time", () => {

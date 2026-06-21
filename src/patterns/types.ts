@@ -1,7 +1,9 @@
 import type { AudioEngineProgram } from "../audio/audioProgram";
+import type { MobiusChoirScoreProgram } from "../audio/mobiusChoirScore";
 import type { MusicalScoreFrame, MusicalScoreProgram } from "../audio/musicalScore";
 import type { SpectralCathedralScoreProgram } from "../audio/spectralCathedralScore";
 import type { FourierSeriesDefinition, FourierTerm } from "../math/fourier";
+import type { MobiusChoirDefinition } from "../math/mobiusChoir";
 import type { SpectralCathedralDefinition } from "../math/spectralCathedral";
 
 export interface LocalizedText {
@@ -48,6 +50,13 @@ export interface PatternDramaturgy {
   sections: readonly PatternDramaturgySection[];
   expressiveAxes: readonly PatternExpressiveAxis[];
   localMathMapping: boolean;
+  qualityContract: {
+    comparableLoudness: true;
+    decayingSonicContinuity: true;
+    nonuniformVisualField: true;
+    localVisualMotion: true;
+    humanReviewRequired: true;
+  };
 }
 
 export interface PatternAudioPreset {
@@ -66,6 +75,11 @@ export interface ResidueBloomAudioPreset extends PatternAudioPreset {
 export interface SpectralCathedralAudioPreset extends PatternAudioPreset {
   baseFrequencyHz: number;
   score: SpectralCathedralScoreProgram;
+}
+
+export interface MobiusChoirAudioPreset extends PatternAudioPreset {
+  baseFrequencyHz: number;
+  score: MobiusChoirScoreProgram;
 }
 
 export interface ResidueBloomMathematicalProvenance {
@@ -110,6 +124,32 @@ export interface SpectralCathedralMathematicalProvenance {
   eigenproblemLatex: string;
   eigenfunctionLatex: string;
   coefficientLatex: string;
+}
+
+export interface MobiusChoirMathematicalProvenance {
+  operation: "finite-flat-mobius-dirichlet-traveling-wave-synthesis";
+  coefficientSource: "analytic-normalized-eigenvalue-weight";
+  fftUsed: false;
+  numericalEigenanalysisUsed: false;
+  mathematicalTime: {
+    mode: "absolute-transport";
+    wrapsWithScore: false;
+    waveTimeScale: number;
+  };
+  quotient: {
+    identification: "(x,0)~(pi-x,pi)";
+    boundary: "dirichlet-x-0-pi";
+    allowedParity: "m+n-odd";
+  };
+  rendering: {
+    sourceMetric: "flat-quotient";
+    displayEmbedding: "non-isometric";
+    method: "analytic-fixed-grid-samples";
+    interpolation: "piecewise-linear";
+  };
+  eigenfunctionLatex: string;
+  coefficientLatex: string;
+  embeddingLatex: string;
 }
 
 export interface EducationContent {
@@ -190,4 +230,14 @@ export interface SpectralCathedralPatternDefinition extends PatternDefinitionBas
   audio: SpectralCathedralAudioPreset;
 }
 
-export type PatternDefinition = ResidueBloomPatternDefinition | SpectralCathedralPatternDefinition;
+export interface MobiusChoirPatternDefinition extends PatternDefinitionBase {
+  kind: "mobius-choir";
+  definition: MobiusChoirDefinition;
+  mathematics: MobiusChoirMathematicalProvenance;
+  audio: MobiusChoirAudioPreset;
+}
+
+export type PatternDefinition =
+  | ResidueBloomPatternDefinition
+  | SpectralCathedralPatternDefinition
+  | MobiusChoirPatternDefinition;

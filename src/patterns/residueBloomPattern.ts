@@ -32,6 +32,13 @@ export const residueBloomPattern = {
     cycleSeconds: 144,
     expressiveAxes: ["density", "dynamics", "timbre", "space", "motion", "color"],
     localMathMapping: true,
+    qualityContract: {
+      comparableLoudness: true,
+      decayingSonicContinuity: true,
+      nonuniformVisualField: true,
+      localVisualMotion: true,
+      humanReviewRequired: true,
+    },
     sections: [
       {
         id: "intro",

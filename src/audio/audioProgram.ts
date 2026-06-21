@@ -1,5 +1,10 @@
 import type { MusicalScoreProgram } from "./musicalScore";
 import type {
+  MobiusChoirGesture,
+  MobiusChoirScoreProgram,
+  MobiusChoirVowel,
+} from "./mobiusChoirScore";
+import type {
   SpectralCathedralGesture,
   SpectralCathedralScoreProgram,
 } from "./spectralCathedralScore";
@@ -57,7 +62,60 @@ export interface SpectralCathedralWorkletProgram {
   normalization: number;
 }
 
-export type AudioWorkletProgram = ResidueBloomWorkletProgram | SpectralCathedralWorkletProgram;
+export interface MobiusChoirAudioMode {
+  id: number;
+  m: number;
+  n: number;
+  eigenvalue: number;
+  coefficient: number;
+  baseFrequencyHz: number;
+  normalizedGain: number;
+  modalAngularFrequency: number;
+  voiceKind: "single" | "quadrature-pair";
+}
+
+export interface MobiusChoirArticulationPreset {
+  attackSeconds: number;
+  decaySeconds: number;
+  fadeStartSeconds: number;
+  endSeconds: number;
+  breathGain: number;
+}
+
+export interface MobiusChoirFormantBand {
+  frequencyHz: number;
+  bandwidthHz: number;
+  amplitude: number;
+}
+
+export interface MobiusChoirSynthesisPreset {
+  maximumPartials: number;
+  partialDamping: number;
+  articulations: Readonly<Record<MobiusChoirGesture, MobiusChoirArticulationPreset>>;
+  formants: Readonly<Record<MobiusChoirVowel, readonly MobiusChoirFormantBand[]>>;
+  formantFloor: number;
+  maximumEventSeconds: number;
+  breathSeconds: number;
+  breathMinimumHz: number;
+  breathMaximumHz: number;
+  breathComponentCount: number;
+  stereoDetuneRatio: number;
+  antiAliasRatio: number;
+  outputGain: number;
+}
+
+export interface MobiusChoirWorkletProgram {
+  kind: "mobius-choir";
+  score: MobiusChoirScoreProgram;
+  modes: readonly MobiusChoirAudioMode[];
+  synthesis: MobiusChoirSynthesisPreset;
+  normalization: number;
+}
+
+export type AudioWorkletProgram =
+  | ResidueBloomWorkletProgram
+  | SpectralCathedralWorkletProgram
+  | MobiusChoirWorkletProgram;
 
 export interface AudioGraphPreset {
   dryHighPassHz: number;

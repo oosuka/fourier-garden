@@ -1,0 +1,197 @@
+:root {
+  color: rgba(235, 231, 255, 0.92);
+  background: #010107;
+  font-family: "Inter", sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#mobius-choir-qa-root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: radial-gradient(circle at 42% 46%, rgba(82, 43, 135, 0.13), transparent 40%), #010107;
+}
+
+.mobiusQaShell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 31vw, 520px);
+  width: 100%;
+  height: 100%;
+  min-width: 1100px;
+}
+
+.mobiusQaStage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid rgba(173, 146, 232, 0.14);
+}
+
+.mobiusQaCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mobiusQaTelemetry {
+  position: absolute;
+  top: 20px;
+  left: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  max-width: min(960px, calc(100% - 44px));
+  padding: 9px 12px;
+  border: 1px solid rgba(158, 219, 239, 0.15);
+  border-radius: 3px;
+  color: rgba(188, 190, 223, 0.7);
+  background: rgba(2, 2, 10, 0.74);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.mobiusQaTelemetry output,
+.mobiusQaTelemetry strong {
+  color: rgba(228, 246, 255, 0.96);
+  font-weight: 400;
+}
+
+.mobiusQaAnalysis {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: rgba(5, 3, 14, 0.95);
+}
+
+.spectralAnalysis {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+  padding: 28px 26px 24px;
+}
+.spectralAnalysisHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(170, 151, 226, 0.16);
+}
+.spectralAnalysisHeader h1 {
+  margin: 2px 0 0;
+  color: #f0ecff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(28px, 2.2vw, 38px);
+  font-weight: 400;
+  line-height: 0.96;
+}
+.spectralAnalysisHeader p {
+  margin: 5px 0 0;
+  color: rgba(206, 198, 231, 0.65);
+  font-family: "Noto Serif JP", serif;
+  font-size: 10px;
+}
+.spectralAnalysisHeader .spectralAnalysisEyebrow {
+  margin: 0;
+  color: rgba(127, 226, 244, 0.76);
+  font-family: "Inter", sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+}
+.spectralTime {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  color: rgba(189, 188, 219, 0.6);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+.spectralTime output {
+  color: #a8efff;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+.spectralPlot {
+  display: grid;
+  grid-template-rows: auto 150px auto;
+  gap: 5px;
+}
+.spectralPlotHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(232, 227, 249, 0.84);
+  font-size: 10px;
+}
+.spectralPlotHeader small {
+  color: rgba(183, 178, 209, 0.56);
+  font-size: 8px;
+}
+.spectralPlot canvas {
+  display: block;
+  width: 100%;
+  height: 150px;
+  border: 1px solid rgba(154, 207, 232, 0.11);
+  background: rgba(3, 3, 15, 0.7);
+}
+.quietNote {
+  margin: 2px 0 0;
+  color: rgba(188, 190, 215, 0.58);
+  font-size: 8px;
+  line-height: 1.6;
+}
+.spectralModeTable {
+  width: 100%;
+  border-collapse: collapse;
+  color: rgba(218, 211, 239, 0.82);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.spectralModeTable th,
+.spectralModeTable td {
+  padding: 5px;
+  border-bottom: 1px solid rgba(159, 143, 215, 0.1);
+  text-align: right;
+  white-space: nowrap;
+}
+.spectralModeTable th {
+  color: rgba(176, 193, 222, 0.62);
+  font-size: 8px;
+  font-weight: 400;
+}
+.spectralModeTable th:nth-child(2),
+.spectralModeTable td:nth-child(2) {
+  text-align: center;
+}
+
+@media (max-aspect-ratio: 8 / 5) {
+  .mobiusQaShell {
+    grid-template-columns: minmax(0, 1fr) 390px;
+  }
+  .spectralAnalysis {
+    padding-inline: 20px;
+  }
+}
+
+@media (min-aspect-ratio: 21 / 9) {
+  .mobiusQaShell {
+    grid-template-columns: minmax(0, 1fr) 470px;
+  }
+  .spectralAnalysis {
+    padding-inline: 32px;
+  }
+}
