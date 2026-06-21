@@ -3,7 +3,7 @@ import type {
   MobiusChoirGesture,
   MobiusChoirScoreProgram,
   MobiusChoirVowel,
-} from "./mobiusChoirScore";
+} from "../patterns/mobius-choir/audio/score";
 import type {
   SpectralCathedralGesture,
   SpectralCathedralScoreProgram,

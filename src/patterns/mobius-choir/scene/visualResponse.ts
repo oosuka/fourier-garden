@@ -1,7 +1,7 @@
-import { MOBIUS_CHOIR_SCORE, evaluateMobiusChoirEvents } from "../audio/mobiusChoirScore";
-import { MOBIUS_CHOIR_SYNTHESIS, getMobiusChoirEnvelope } from "../audio/mobiusChoirSynthesis";
-import { MOBIUS_CHOIR_DEFINITION, evaluateMobiusChoirModeKinematics } from "../math/mobiusChoir";
-import { evaluateMobiusChoirDramaturgy } from "./mobiusChoirDramaturgy";
+import { MOBIUS_CHOIR_SCORE, evaluateMobiusChoirEvents } from "../audio/score";
+import { MOBIUS_CHOIR_SYNTHESIS, getMobiusChoirEnvelope } from "../audio/synthesis";
+import { MOBIUS_CHOIR_DEFINITION, evaluateMobiusChoirModeKinematics } from "../math/model";
+import { evaluateMobiusChoirDramaturgy } from "./dramaturgy";
 
 export interface MobiusChoirModeVisualResponse {
   acousticEnergy: number;

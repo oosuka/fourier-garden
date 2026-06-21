@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { patternRegistry } from "../patterns/registry";
+import { createMobiusChoirAudioProgram } from "../patterns/mobius-choir/audio/synthesis";
 import { createSpectralCathedralAudioProgram } from "../patterns/spectral-cathedral/audio/synthesis";
 import { AudioEngine, createLimiterCurve } from "./AudioEngine";
-import { createMobiusChoirAudioProgram } from "./mobiusChoirSynthesis";
 
 interface Deferred {
   promise: Promise<void>;

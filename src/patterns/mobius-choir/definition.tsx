@@ -1,8 +1,8 @@
-import { MOBIUS_CHOIR_SCORE } from "../audio/mobiusChoirScore";
-import { createMobiusChoirAudioProgram } from "../audio/mobiusChoirSynthesis";
-import { MOBIUS_CHOIR_DEFINITION } from "../math/mobiusChoir";
-import { MOBIUS_CHOIR_DRAMATURGY_SECTIONS } from "./mobiusChoirDramaturgy";
-import type { MobiusChoirPatternDefinition, PatternScene } from "./types";
+import { MOBIUS_CHOIR_SCORE } from "./audio/score";
+import { createMobiusChoirAudioProgram } from "./audio/synthesis";
+import { MOBIUS_CHOIR_DEFINITION } from "./math/model";
+import { MOBIUS_CHOIR_DRAMATURGY_SECTIONS } from "./scene/dramaturgy";
+import type { MobiusChoirPatternDefinition, PatternScene } from "../types";
 
 export const mobiusChoirPattern = {
   kind: "mobius-choir",
@@ -94,7 +94,7 @@ export const mobiusChoirPattern = {
       "息の粒子、六本の声部リボン、継ぎ目の淡いシアン残光は詩的造形です。音響と同じモード速度を粒子流へ渡し、局所変位・速度と継ぎ目通過から個別に応答します。厳密曲面、符号値、節線、境界の頂点は変形しません。",
   },
   async loadScene() {
-    const module = await import("./mobiusChoirScene");
+    const module = await import("./scene/scene");
     return async (options) => {
       const scene = await module.createMobiusChoirScene(options);
       const adapter: PatternScene = {

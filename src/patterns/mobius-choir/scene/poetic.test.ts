@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MOBIUS_CHOIR_DEFINITION } from "../math/mobiusChoir";
+import { MOBIUS_CHOIR_DEFINITION } from "../math/model";
 import {
   MOBIUS_CHOIR_MAX_PARTICLES,
   MOBIUS_CHOIR_ATMOSPHERE_PARTICLES,
@@ -10,7 +10,7 @@ import {
   getMobiusChoirPoeticQuality,
   mapMobiusChoirLiftedPath,
   updateMobiusChoirParticles,
-} from "./mobiusChoirPoetic";
+} from "./poetic";
 
 describe("Möbius Choir two-lap poetic topology", () => {
   it("turns the transverse coordinate after one lap and returns after two", () => {

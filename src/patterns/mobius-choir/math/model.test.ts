@@ -16,7 +16,7 @@ import {
   mapMobiusChoirEmbedding,
   resolveMobiusChoirMathematicalTime,
   validateMobiusChoirDefinition,
-} from "./mobiusChoir";
+} from "./model";
 
 describe("Möbius Choir mathematical definition", () => {
   it("builds the six canonical odd-parity modes and normalized coefficients", () => {

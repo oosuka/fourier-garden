@@ -7,15 +7,15 @@ import {
   MOBIUS_CHOIR_GRID_TRIANGLE_COUNT,
   MOBIUS_CHOIR_GRID_VERTEX_COUNT,
   evaluateMobiusChoirField,
-} from "../math/mobiusChoir";
-import type { QualityLevel } from "./types";
+} from "../math/model";
+import type { QualityLevel } from "../../types";
 import {
   MOBIUS_CHOIR_MAX_NODAL_SEGMENTS,
   createMobiusChoirDrawingModel,
   getMobiusChoirStrictDrawingStats,
   getMobiusChoirSurfaceColor,
   updateMobiusChoirDrawingModel,
-} from "./mobiusChoirDrawing";
+} from "./drawing";
 
 describe("Möbius Choir strict drawing model", () => {
   it("creates the fixed twisted mesh contract", () => {

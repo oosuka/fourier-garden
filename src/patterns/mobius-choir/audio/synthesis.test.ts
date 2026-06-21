@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createSpectralCathedralWorkletProgram,
   renderSpectralCathedralStereo,
-} from "../patterns/spectral-cathedral/audio/synthesis";
+} from "../../spectral-cathedral/audio/synthesis";
 import {
   MOBIUS_CHOIR_SYNTHESIS,
   createMobiusChoirAudioModes,
@@ -18,7 +18,7 @@ import {
   renderMobiusChoirSample,
   renderMobiusChoirStereo,
   validateMobiusChoirWorkletProgram,
-} from "./mobiusChoirSynthesis";
+} from "./synthesis";
 
 function getStereoMetrics(left: Float32Array, right: Float32Array) {
   let sumOfSquares = 0;

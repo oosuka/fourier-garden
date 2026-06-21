@@ -1,10 +1,10 @@
 import { useEffect, useRef, type RefObject } from "react";
 
-import { MOBIUS_CHOIR_DEFINITION } from "../math/mobiusChoir";
+import { MOBIUS_CHOIR_DEFINITION } from "../math/model";
 import {
   createMobiusChoirAnalysisLayout,
   getMobiusChoirCandidateLaneOffset,
-} from "./mobiusChoirAnalysisModel";
+} from "./analysisModel";
 
 interface MobiusChoirAnalysisProps {
   timeOutputRef: RefObject<HTMLOutputElement | null>;

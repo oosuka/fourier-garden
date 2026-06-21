@@ -1,16 +1,16 @@
 import * as THREE from "three";
 
-import type { RendererBackend } from "../core/rendererBackend";
-import { MOBIUS_CHOIR_DEFINITION, mapMobiusChoirEmbedding } from "../math/mobiusChoir";
+import type { RendererBackend } from "../../../core/rendererBackend";
+import { MOBIUS_CHOIR_DEFINITION, mapMobiusChoirEmbedding } from "../math/model";
 import {
   MOBIUS_CHOIR_ATMOSPHERE_PARTICLES,
   MOBIUS_CHOIR_SURFACE_PARTICLES,
   type MobiusChoirPoeticModel,
   getMobiusChoirPoeticQuality,
   updateMobiusChoirParticles,
-} from "./mobiusChoirPoetic";
-import { evaluateMobiusChoirVisualFrame } from "./mobiusChoirVisualResponse";
-import type { QualityLevel } from "./types";
+} from "./poetic";
+import { evaluateMobiusChoirVisualFrame } from "./visualResponse";
+import type { QualityLevel } from "../../types";
 
 export interface MobiusChoirPoeticLayerStats {
   particles: number;

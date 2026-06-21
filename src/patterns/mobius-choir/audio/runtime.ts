@@ -2,8 +2,8 @@ import type {
   MobiusChoirAudioMode,
   MobiusChoirFormantBand,
   MobiusChoirWorkletProgram,
-} from "./audioProgram";
-import type { MobiusChoirGesture, MobiusChoirScoreEvent } from "./mobiusChoirScore";
+} from "../../../audio/audioProgram";
+import type { MobiusChoirGesture, MobiusChoirScoreEvent } from "./score";
 
 export interface MobiusChoirRuntimePartial {
   partial: number;

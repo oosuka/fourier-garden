@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createMobiusChoirPoeticModel } from "./mobiusChoirPoetic";
-import { MobiusChoirPoeticLayer, getMobiusChoirParticleStyle } from "./mobiusChoirPoeticLayer";
+import { createMobiusChoirPoeticModel } from "./poetic";
+import { MobiusChoirPoeticLayer, getMobiusChoirParticleStyle } from "./poeticLayer";
 
 describe("Möbius Choir poetic layer", () => {
   it("keeps WebGL breath particles finer and dimmer", () => {

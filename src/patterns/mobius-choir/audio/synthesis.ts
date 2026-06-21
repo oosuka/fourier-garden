@@ -1,22 +1,18 @@
-import { MOBIUS_CHOIR_DEFINITION } from "../math/mobiusChoir";
+import { MOBIUS_CHOIR_DEFINITION } from "../math/model";
 import type {
   AudioEngineProgram,
   AudioGraphPreset,
   MobiusChoirAudioMode,
   MobiusChoirSynthesisPreset,
   MobiusChoirWorkletProgram,
-} from "./audioProgram";
-import {
-  MOBIUS_CHOIR_SCORE,
-  type MobiusChoirGesture,
-  type MobiusChoirVowel,
-} from "./mobiusChoirScore";
+} from "../../../audio/audioProgram";
+import { MOBIUS_CHOIR_SCORE, type MobiusChoirGesture, type MobiusChoirVowel } from "./score";
 import {
   createMobiusChoirRuntime,
   type MobiusChoirRuntime,
   type MobiusChoirRuntimeEvent,
   type MobiusChoirRuntimeVoice,
-} from "./mobiusChoirRuntime";
+} from "./runtime";
 
 export interface MobiusChoirPartial {
   partial: number;

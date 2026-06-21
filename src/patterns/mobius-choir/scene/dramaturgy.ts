@@ -1,4 +1,4 @@
-import { MOBIUS_CHOIR_SCORE, type MobiusChoirSectionId } from "../audio/mobiusChoirScore";
+import { MOBIUS_CHOIR_SCORE, type MobiusChoirSectionId } from "../audio/score";
 
 export interface MobiusChoirDramaturgySection {
   id: MobiusChoirSectionId;

@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createMobiusChoirWorkletProgram } from "./mobiusChoirSynthesis";
-import {
-  createMobiusChoirRuntime,
-  getMobiusChoirMaximumOscillatorCount,
-} from "./mobiusChoirRuntime";
+import { createMobiusChoirWorkletProgram } from "./synthesis";
+import { createMobiusChoirRuntime, getMobiusChoirMaximumOscillatorCount } from "./runtime";
 
 describe("Möbius Choir realtime runtime", () => {
   it("precomputes mode, voice, pan, partial, and formant data", () => {

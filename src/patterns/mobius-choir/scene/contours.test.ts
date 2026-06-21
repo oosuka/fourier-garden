@@ -4,7 +4,7 @@ import {
   extractMobiusChoirCellContours,
   type MobiusChoirContourCell,
   type MobiusChoirContourPoint,
-} from "./mobiusChoirContours";
+} from "./contours";
 
 function point(sourceX: number, sourceY: number, z = 0): MobiusChoirContourPoint {
   return { sourceX, sourceY, x: sourceX, y: sourceY, z };

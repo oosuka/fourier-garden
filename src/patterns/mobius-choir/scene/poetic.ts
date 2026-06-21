@@ -1,10 +1,10 @@
-import { createSeededRandom } from "../core/seed";
+import { createSeededRandom } from "../../../core/seed";
 import {
   MOBIUS_CHOIR_DEFINITION,
   getMobiusChoirTravelSpeed,
   mapMobiusChoirEmbedding,
-} from "../math/mobiusChoir";
-import type { QualityLevel } from "./types";
+} from "../math/model";
+import type { QualityLevel } from "../../types";
 
 export const MOBIUS_CHOIR_MAX_PARTICLES = 24_000;
 export const MOBIUS_CHOIR_SURFACE_PARTICLES = 13_000;

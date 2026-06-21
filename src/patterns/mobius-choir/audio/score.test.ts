@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  MOBIUS_CHOIR_SCORE,
-  evaluateMobiusChoirEvents,
-  type MobiusChoirScoreEvent,
-} from "./mobiusChoirScore";
+import { MOBIUS_CHOIR_SCORE, evaluateMobiusChoirEvents, type MobiusChoirScoreEvent } from "./score";
 
 function getMaximumRun(events: readonly MobiusChoirScoreEvent[]): number {
   let run = 0;

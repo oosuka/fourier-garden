@@ -1,9 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { MOBIUS_CHOIR_SCORE } from "../audio/mobiusChoirScore";
-import { MOBIUS_CHOIR_DEFINITION } from "../math/mobiusChoir";
-import type { MobiusChoirPatternDefinition } from "../patterns/types";
+import { MOBIUS_CHOIR_SCORE } from "../audio/score";
+import { MOBIUS_CHOIR_DEFINITION } from "../math/model";
+import type { MobiusChoirPatternDefinition } from "../../types";
 import { MobiusChoirDetails } from "./MobiusChoirDetails";
 
 const pattern = {

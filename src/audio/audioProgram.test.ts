@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  MOBIUS_CHOIR_AUDIO_GRAPH,
+  createMobiusChoirAudioProgram,
+} from "../patterns/mobius-choir/audio/synthesis";
+import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   buildMusicalScoreProgram,
 } from "../patterns/residue-bloom/audio/score";
@@ -13,7 +17,6 @@ import {
   RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
 } from "../patterns/residue-bloom/math/model";
 import { createWorkletConfigureMessage } from "./audioProgram";
-import { MOBIUS_CHOIR_AUDIO_GRAPH, createMobiusChoirAudioProgram } from "./mobiusChoirSynthesis";
 
 const score = buildMusicalScoreProgram(
   RESIDUE_BLOOM_SCORE_DEFINITION,

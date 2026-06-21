@@ -7,7 +7,7 @@ import {
   createMobiusChoirGrid,
   mapMobiusChoirEmbedding,
   validateMobiusChoirDefinition,
-} from "../math/mobiusChoir";
+} from "../math/model";
 import {
   MOBIUS_CHOIR_ZERO_EPSILON,
   createMobiusChoirContourScratch,
@@ -15,8 +15,8 @@ import {
   type MobiusChoirContourPoint,
   type MobiusChoirContourScratch,
   writeMobiusChoirCellContours,
-} from "./mobiusChoirContours";
-import type { QualityLevel } from "./types";
+} from "./contours";
+import type { QualityLevel } from "../../types";
 
 const CELL_ROW_COUNT = MOBIUS_CHOIR_GRID_ROWS - 1;
 const CELL_COUNT = MOBIUS_CHOIR_GRID_COLUMNS * CELL_ROW_COUNT;

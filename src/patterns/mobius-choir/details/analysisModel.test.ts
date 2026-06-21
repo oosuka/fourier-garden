@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { MOBIUS_CHOIR_DEFINITION } from "../math/mobiusChoir";
+import { MOBIUS_CHOIR_DEFINITION } from "../math/model";
 import {
   createMobiusChoirAnalysisLayout,
   getMobiusChoirCandidateLaneOffset,
   getMobiusChoirEigenvalueProgress,
-} from "./mobiusChoirAnalysisModel";
+} from "./analysisModel";
 
 describe("Möbius Choir analysis layout", () => {
   it("uses one linear eigenvalue coordinate from zero through thirteen", () => {

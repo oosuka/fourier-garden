@@ -1,23 +1,23 @@
 import type { WebGLRenderer, WebGLRendererParameters } from "three";
 import * as THREE from "three/webgpu";
 
-import { selectRendererBackend, type RendererBackend } from "../core/rendererBackend";
+import { selectRendererBackend, type RendererBackend } from "../../../core/rendererBackend";
 import {
   MOBIUS_CHOIR_DEFINITION,
   MOBIUS_CHOIR_GRID_TRIANGLE_COUNT,
   MOBIUS_CHOIR_GRID_VERTEX_COUNT,
   mapMobiusChoirEmbedding,
-} from "../math/mobiusChoir";
+} from "../math/model";
 import {
   MOBIUS_CHOIR_PARAMETER_GRID_SEGMENT_COUNT,
   createMobiusChoirDrawingModel,
   updateMobiusChoirDrawingModel,
   type MobiusChoirDrawingModel,
-} from "./mobiusChoirDrawing";
-import { evaluateMobiusChoirDramaturgy } from "./mobiusChoirDramaturgy";
-import { createMobiusChoirPoeticModel, getMobiusChoirPoeticQuality } from "./mobiusChoirPoetic";
-import { MobiusChoirPoeticLayer, type MobiusChoirPoeticLayerStats } from "./mobiusChoirPoeticLayer";
-import type { QualityLevel, Viewport } from "./types";
+} from "./drawing";
+import { evaluateMobiusChoirDramaturgy } from "./dramaturgy";
+import { createMobiusChoirPoeticModel, getMobiusChoirPoeticQuality } from "./poetic";
+import { MobiusChoirPoeticLayer, type MobiusChoirPoeticLayerStats } from "./poeticLayer";
+import type { QualityLevel, Viewport } from "../../types";
 
 const CAMERA_FOV_DEGREES = 36;
 const MATHEMATICAL_BOUND_RADIUS = 4.35;

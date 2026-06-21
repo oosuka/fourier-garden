@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseMobiusChoirQaOptions } from "./mobiusChoirQaOptions";
+import { parseMobiusChoirQaOptions } from "./options";
 
 describe("Möbius Choir QA options", () => {
   it("accepts forced WebGL, fixed time, fixed seed, quality, and strict-only mode", () => {

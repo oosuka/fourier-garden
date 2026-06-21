@@ -3,11 +3,11 @@ import { useMemo, useState } from "react";
 import { renderToString } from "katex";
 
 import type { AudioEngine } from "../audio/AudioEngine";
+import { MobiusChoirDetails } from "../patterns/mobius-choir/details/MobiusChoirDetails";
 import { ResidueBloomDetails } from "../patterns/residue-bloom/details/ResidueBloomDetails";
 import { SpectralCathedralDetails } from "../patterns/spectral-cathedral/details/SpectralCathedralDetails";
 import type { PatternDefinition } from "../patterns/types";
 import { WaveformCanvas } from "./DataCanvas";
-import { MobiusChoirDetails } from "./MobiusChoirDetails";
 
 interface DetailsPanelProps {
   open: boolean;

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { MOBIUS_CHOIR_SCORE } from "../audio/mobiusChoirScore";
-import { MOBIUS_CHOIR_SYNTHESIS, getMobiusChoirEnvelope } from "../audio/mobiusChoirSynthesis";
-import { MOBIUS_CHOIR_DEFINITION, evaluateMobiusChoirModeKinematics } from "../math/mobiusChoir";
-import { evaluateMobiusChoirVisualFrame } from "./mobiusChoirVisualResponse";
+import { MOBIUS_CHOIR_SCORE } from "../audio/score";
+import { MOBIUS_CHOIR_SYNTHESIS, getMobiusChoirEnvelope } from "../audio/synthesis";
+import { MOBIUS_CHOIR_DEFINITION, evaluateMobiusChoirModeKinematics } from "../math/model";
+import { evaluateMobiusChoirVisualFrame } from "./visualResponse";
 
 describe("Möbius Choir local visual response", () => {
   it("excites referenced modes without giving every voice the same maximum", () => {

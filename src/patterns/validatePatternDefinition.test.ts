@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { MOBIUS_CHOIR_SCORE } from "../audio/mobiusChoirScore";
-import { createMobiusChoirAudioProgram } from "../audio/mobiusChoirSynthesis";
-import { MOBIUS_CHOIR_DEFINITION } from "../math/mobiusChoir";
-import { MOBIUS_CHOIR_DRAMATURGY_SECTIONS } from "./mobiusChoirDramaturgy";
+import { MOBIUS_CHOIR_SCORE } from "./mobius-choir/audio/score";
+import { createMobiusChoirAudioProgram } from "./mobius-choir/audio/synthesis";
+import { MOBIUS_CHOIR_DEFINITION } from "./mobius-choir/math/model";
+import { MOBIUS_CHOIR_DRAMATURGY_SECTIONS } from "./mobius-choir/scene/dramaturgy";
 import { patternPreviewRegistry, patternRegistry } from "./registry";
 import type { MobiusChoirPatternDefinition, ResidueBloomPatternDefinition } from "./types";
 import { validatePatternDefinition } from "./validatePatternDefinition";

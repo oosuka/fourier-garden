@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  MOBIUS_CHOIR_DRAMATURGY_SECTIONS,
-  evaluateMobiusChoirDramaturgy,
-} from "./mobiusChoirDramaturgy";
+import { MOBIUS_CHOIR_DRAMATURGY_SECTIONS, evaluateMobiusChoirDramaturgy } from "./dramaturgy";
 
 describe("Möbius Choir dramaturgy", () => {
   it("uses the approved five continuous section ranges", () => {

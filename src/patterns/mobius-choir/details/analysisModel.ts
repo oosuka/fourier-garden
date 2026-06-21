@@ -1,4 +1,4 @@
-import { getMobiusChoirCandidates, type MobiusChoirDefinition } from "../math/mobiusChoir";
+import { getMobiusChoirCandidates, type MobiusChoirDefinition } from "../math/model";
 
 export const MOBIUS_CHOIR_EIGENVALUE_AXIS_MAX = 13;
 

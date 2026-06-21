@@ -4,18 +4,18 @@ import "@fontsource/inter/500.css";
 import "@fontsource/cormorant-garamond/400.css";
 import "@fontsource/cormorant-garamond/500.css";
 import "@fontsource/noto-serif-jp/400.css";
-import "./mobiusChoirQa.css";
+import "./qa.css";
 
 import { StrictMode, useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
-import { MobiusChoirAnalysis } from "../components/MobiusChoirAnalysis";
+import { MobiusChoirAnalysis } from "../details/MobiusChoirAnalysis";
 import {
   createMobiusChoirScene,
   type MobiusChoirScene,
   type MobiusChoirSceneStats,
-} from "../patterns/mobiusChoirScene";
-import { parseMobiusChoirQaOptions } from "./mobiusChoirQaOptions";
+} from "../scene/scene";
+import { parseMobiusChoirQaOptions } from "./options";
 
 const QA_OPTIONS = parseMobiusChoirQaOptions(window.location.search);
 

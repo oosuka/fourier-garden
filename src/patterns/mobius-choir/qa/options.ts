@@ -1,5 +1,5 @@
-import { dateSeed } from "../core/seed";
-import type { QualityLevel } from "../patterns/types";
+import { dateSeed } from "../../../core/seed";
+import type { QualityLevel } from "../../types";
 
 export interface MobiusChoirQaOptions {
   forceWebGL: boolean;

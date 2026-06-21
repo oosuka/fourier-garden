@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
-import { mapMobiusChoirEmbedding } from "../math/mobiusChoir";
+import { mapMobiusChoirEmbedding } from "../math/model";
 import {
   MOBIUS_CHOIR_STRICT_LAYER_COUNTS,
   getMobiusChoirCameraPlacement,
@@ -10,7 +10,7 @@ import {
   getMobiusChoirSceneLayerCounts,
   getMobiusChoirStrictQuality,
   getMobiusChoirWebGLRendererParameters,
-} from "./mobiusChoirScene";
+} from "./scene";
 
 describe("Möbius Choir strict scene contracts", () => {
   it("skips a zero-vertex nodal draw while preserving nonempty contours", () => {
