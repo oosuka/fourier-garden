@@ -69,6 +69,12 @@
       }
     },
     {
+      "files": ["src/audio/workletContract.test.ts", "src/audio/workletRuntime.test.ts"],
+      "rules": {
+        "import/default": "off"
+      }
+    },
+    {
       "files": ["vite.config.ts"],
       "env": {
         "browser": false,

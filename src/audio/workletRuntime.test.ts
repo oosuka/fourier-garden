@@ -3,6 +3,10 @@
 import vm from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 
+import mobiusChoirSource from "../../public/audio/chapters/mobius-choir.js?raw";
+import residueBloomSource from "../../public/audio/chapters/residue-bloom.js?raw";
+import sharedSource from "../../public/audio/chapters/shared.js?raw";
+import spectralCathedralSource from "../../public/audio/chapters/spectral-cathedral.js?raw";
 import workletSource from "../../public/audio/fourier-worklet.js?raw";
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
@@ -33,6 +37,21 @@ interface WorkletProcessorStub {
   process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean;
 }
 
+function composeWorkletSource(...sources: readonly string[]): string {
+  return sources
+    .join("\n")
+    .replace(/import\s+[\s\S]*?\s+from\s+["'][^"']+["'];/g, "")
+    .replace(/^export\s+/gm, "");
+}
+
+const executableWorkletSource = composeWorkletSource(
+  sharedSource,
+  residueBloomSource,
+  spectralCathedralSource,
+  mobiusChoirSource,
+  workletSource,
+);
+
 function loadProcessor(sampleRate: number): WorkletProcessorStub {
   let Processor: (new () => WorkletProcessorStub) | undefined;
 
@@ -51,7 +70,7 @@ function loadProcessor(sampleRate: number): WorkletProcessorStub {
     },
     sampleRate,
   });
-  vm.runInContext(workletSource, context);
+  vm.runInContext(executableWorkletSource, context);
 
   if (!Processor) {
     throw new Error("The worklet did not register its processor");

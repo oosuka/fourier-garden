@@ -63,7 +63,7 @@ export class AudioEngine {
   private async initializeContext(): Promise<void> {
     const context = new AudioContext({ latencyHint: "interactive" });
     try {
-      await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=10");
+      await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=11");
       if (this.disposed) {
         await context.close();
         return;

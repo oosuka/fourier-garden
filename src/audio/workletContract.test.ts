@@ -1,50 +1,64 @@
 import { describe, expect, it } from "vitest";
 
+import mobiusChoirSource from "../../public/audio/chapters/mobius-choir.js?raw";
+import residueBloomSource from "../../public/audio/chapters/residue-bloom.js?raw";
+import spectralCathedralSource from "../../public/audio/chapters/spectral-cathedral.js?raw";
 import workletSource from "../../public/audio/fourier-worklet.js?raw";
 
+const chapterSources = [residueBloomSource, spectralCathedralSource, mobiusChoirSource].join("\n");
+
 describe("AudioWorklet mathematical contract", () => {
+  it("keeps each chapter renderer in its own worklet module", () => {
+    expect(residueBloomSource).toContain("renderResidueBloomSample");
+    expect(spectralCathedralSource).toContain("renderSpectralCathedralSample");
+    expect(mobiusChoirSource).toContain("renderMobiusChoirSample");
+    expect(workletSource).not.toContain("function renderResidueBloomSample");
+    expect(workletSource).not.toContain("function renderSpectralCathedralSample");
+    expect(workletSource).not.toContain("function renderMobiusChoirSample");
+  });
+
   it("derives phasor controls from the serialized mapping instead of repeat events", () => {
-    expect(workletSource).toContain("evaluateSerializedPhasor");
-    expect(workletSource).toContain("const baseEvent = score.events[globalStep]");
-    expect(workletSource).toContain("evaluateEvent(score, baseEvent, cycleIndex)");
-    expect(workletSource).not.toContain("score.events[globalStep].normalizedPhasorX");
-    expect(workletSource).not.toContain("score.events[globalStep].normalizedPhasorRadius");
+    expect(residueBloomSource).toContain("evaluateSerializedPhasor");
+    expect(residueBloomSource).toContain("const baseEvent = score.events[globalStep]");
+    expect(residueBloomSource).toContain("evaluateEvent(score, baseEvent, cycleIndex)");
+    expect(residueBloomSource).not.toContain("score.events[globalStep].normalizedPhasorX");
+    expect(residueBloomSource).not.toContain("score.events[globalStep].normalizedPhasorRadius");
   });
 
   it("caches evaluated controls by cycle and global step", () => {
-    expect(workletSource).toContain("cachedEventKey");
-    expect(workletSource).toContain("`${cycleIndex}:${globalStep}`");
+    expect(residueBloomSource).toContain("cachedEventKey");
+    expect(residueBloomSource).toContain("`${cycleIndex}:${globalStep}`");
   });
 
   it("guards the maximum detuned frequency", () => {
-    expect(workletSource).toContain("Math.max(leftFrequency, rightFrequency) >= frequencyLimit");
-    expect(workletSource).not.toContain(
+    expect(residueBloomSource).toContain(
+      "Math.max(leftFrequency, rightFrequency) >= frequencyLimit",
+    );
+    expect(residueBloomSource).not.toContain(
       "frequency >= sampleRate * 0.5 * score.definition.antiAliasRatio",
     );
   });
 
   it("does not define musical masks or carrier sequences", () => {
-    expect(workletSource).not.toMatch(
+    expect(chapterSources).not.toMatch(
       /QUARTER_NOTES|EIGHTH_NOTES|TWELVE_NOTES|SIXTEENTH_NOTES|carrierMultipliers/,
     );
   });
 
-  it("dispatches discriminated chapter programs without random state", () => {
-    expect(workletSource).toContain('program.kind === "residue-bloom"');
-    expect(workletSource).toContain('program.kind === "spectral-cathedral"');
-    expect(workletSource).toContain('program.kind === "mobius-choir"');
-    expect(workletSource).toContain("renderResidueBloomSample");
-    expect(workletSource).toContain("renderSpectralCathedralSample");
-    expect(workletSource).toContain("renderMobiusChoirSample");
-    expect(workletSource).not.toContain("Math.random");
+  it("dispatches registered chapter processors without random state or chapter branches", () => {
+    expect(workletSource).toContain("const PROCESSORS = new Map");
+    expect(workletSource).toContain("PROCESSORS.get(program.kind)");
+    expect(workletSource).toContain("processor.render(program, state, absoluteTimeSeconds)");
+    expect(workletSource).not.toMatch(/program\.kind ===/);
+    expect(`${chapterSources}\n${workletSource}`).not.toContain("Math.random");
   });
 
   it("renders Möbius Choir from precomputed runtime data without score-table allocation", () => {
-    expect(workletSource).toContain("createMobiusChoirRuntime(program)");
-    expect(workletSource).toContain("findLatestMobiusChoirEventIndex");
-    const renderStart = workletSource.indexOf("function accumulateMobiusChoirEvent");
-    const renderEnd = workletSource.indexOf("function validateResidueBloomProgram");
-    const renderSource = workletSource.slice(renderStart, renderEnd);
+    expect(mobiusChoirSource).toContain("createMobiusChoirRuntime(program)");
+    expect(mobiusChoirSource).toContain("findLatestMobiusChoirEventIndex");
+    const renderStart = mobiusChoirSource.indexOf("function accumulateMobiusChoirEvent");
+    const renderEnd = mobiusChoirSource.indexOf("function validateMobiusChoirProgram");
+    const renderSource = mobiusChoirSource.slice(renderStart, renderEnd);
     expect(renderSource).not.toContain(".find(");
     expect(renderSource).not.toContain(".map(");
     expect(renderSource).not.toContain(".entries(");
