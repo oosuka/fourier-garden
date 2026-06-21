@@ -126,21 +126,27 @@ install scriptはバージョン単位で審査し、未審査のものはイン
 
 ## 章アーキテクチャ
 
-`src/patterns/registry.ts`が章レジストリです。各`PatternDefinition`は表示メタデータ、
-数学的来歴、`PatternDramaturgy`、音響program factory、教育コンテンツ、遅延ロードする
-scene factoryをまとめます。`patternRegistry`には通常公開済み章だけを置き、
-`patternPreviewRegistry`へ検証中の章を追加します。
+`src/patterns/registry.ts`がpublished/preview章の登録点、`src/patterns/contracts.ts`が
+全章共通契約です。各`PatternDefinition`は表示メタデータ、数学的来歴、
+`PatternDramaturgy`、音響program factory、教育コンテンツ、数学詳細コンポーネント、
+章固有validator、遅延ロードするscene factoryをまとめます。
 
-数学は`src/math/`の純粋関数、音響は`src/audio/`と`public/audio/`、描画sceneは
-`src/patterns/`、UIは`src/components/`へ分離します。CanvasとAudioEngineは章固有の数学を
-再定義せず、共通transportを渡します。sceneの`dispose()`はGPU資源、イベント、タイマーを、
-AudioEngineはAudioNodeとAudioContextを完全に解放します。
+章固有実装は`src/patterns/<chapter-id>/`へ縦割りで集約します。各章は`definition.tsx`、
+`types.ts`、`validate.ts`、`math/`、`audio/`、`scene/`、`details/`、必要な`qa/`とテストを
+所有します。`src/math/`は複数章で同じ意味を持つ純粋演算、`src/audio/`はAudioEngineと
+章非依存の契約、`src/components/`は共通UIだけを保持します。共有実装から章実装をimportせず、
+ある章から別の章をimportしません。
+
+AudioWorkletは`public/audio/fourier-worklet.js`を共通dispatcherとし、
+`public/audio/chapters/<chapter-id>.js`へ章別の検証、状態、標本生成を分離します。
+CanvasとAudioEngineは章固有の数学を再定義せず共通transportを渡します。sceneの`dispose()`は
+GPU資源、イベント、タイマーを、AudioEngineはAudioNodeとAudioContextを完全に解放します。
 
 新章は名称だけから実装せず、次の順序で追加します。
 
 1. 独立した段階1数理・演出仕様を承認する
-2. 純粋数学、決定的スコア、DSP、厳密描画、詩的造形、UIを章単位で実装する
-3. TypeScript参照DSPとAudioWorklet、WebGPUとWebGL2を一致させる
+2. `src/patterns/<chapter-id>/`へ純粋数学、決定的スコア、DSP、厳密描画、詩的造形、UIを実装する
+3. 章別Worklet processorを登録し、TypeScript参照DSPとAudioWorkletを一致させる
 4. previewで人間確認し、実機試聴後に通常公開を判断する
 
 将来の想像だけを理由に大規模な汎用化は行いません。具体的な複数章で共通性を確認した

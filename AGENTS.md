@@ -263,10 +263,12 @@ register倍率、左右デチューン、gesture別包絡、モード変位・�
 適用してよいが、デチューン後の各部分音は`0.45 F_s`未満に制限する。
 数学時刻は75秒周期でリセットせず、前周期の余韻は絶対イベント時刻から評価する。
 
-音響式またはDSPを変える場合は、`src/audio/synthesis.ts`、
-`src/audio/spectralCathedralScore.ts`、`src/audio/spectralCathedralSynthesis.ts`、
-`public/audio/fourier-worklet.js`、`src/audio/AudioEngine.ts`の責務を確認し、
-TypeScript参照実装とAudioWorkletの同じ定義が食い違わないようにすること。
+音響式またはDSPを変える場合は、
+`src/patterns/spectral-cathedral/audio/score.ts`、
+`src/patterns/spectral-cathedral/audio/synthesis.ts`、
+`public/audio/chapters/spectral-cathedral.js`、`public/audio/fourier-worklet.js`、
+`src/audio/AudioEngine.ts`の責務を確認し、TypeScript参照実装とAudioWorkletの同じ定義が
+食い違わないようにすること。
 
 ### 6.3 Möbius Choir
 
@@ -277,6 +279,12 @@ carrierはevent ageで再始動せず絶対transport時刻で評価し、flat qu
 個々の発音は有限包絡で閉じ、前周期の余韻は絶対イベント時刻から評価する。
 TypeScript参照DSPとAudioWorkletを標本単位で一致させ、左右デチューン後の
 全生成周波数を`0.45 F_s`未満に制限する。
+
+音響式またはDSPを変える場合は、`src/patterns/mobius-choir/audio/score.ts`、
+`src/patterns/mobius-choir/audio/runtime.ts`、
+`src/patterns/mobius-choir/audio/synthesis.ts`、
+`public/audio/chapters/mobius-choir.js`、`public/audio/fourier-worklet.js`、
+`src/audio/AudioEngine.ts`を同時に確認する。
 
 ## 7. 対象環境と技術スタック
 
@@ -322,13 +330,16 @@ Node.jsとnpmのバージョンは `package.json` の `volta` フィールドを
 
 主な責務は次のとおりである。
 
-- `src/math/`: 級数、係数、フェーザ、解析的スペクトルなどの純粋な数学
-- `src/audio/`: ソニフィケーション定義、AudioContext制御、DSP補助
-- `public/audio/`: AudioWorkletプロセッサ
+- `src/math/`: 複数章で意味が同じ級数、係数、フェーザなどの純粋数学演算
+- `src/audio/`: `AudioEngine`、章非依存のAudioGraphとWorklet program契約
+- `public/audio/fourier-worklet.js`: AudioWorkletの共通lifecycleと章processor dispatcher
+- `public/audio/chapters/`: AudioWorkletの章別検証、状態、標本processor
 - `src/core/`: トランスポート、品質制御、シード、レンダラーバックエンド
-- `src/patterns/`: 章レジストリ、章定義、シーン実装
-- `src/components/`: React UIと表示用キャンバス
-- `src/styles.css`: 全体レイアウト、タイポグラフィ、UI表現
+- `src/patterns/contracts.ts`: 全章共通のdefinition、scene、dramaturgy、表示契約
+- `src/patterns/registry.ts`: published/preview章の登録点
+- `src/patterns/<chapter-id>/`: 章固有のdefinition、数学、音響、scene、詳細UI、QA、テスト
+- `src/components/`: 章非依存のReact UIと表示用キャンバス
+- `src/styles.css`: 全体レイアウト、タイポグラフィ、共通UI表現
 - `.oxlintrc.json`: Oxlintの規則、環境、ファイル単位の例外
 - `biome.json`: Biomeのフォーマッター設定
 - `docs/mathematical-model.md`: 数学とソニフィケーションの正本
@@ -349,11 +360,15 @@ Node.jsとnpmのバージョンは `package.json` の `volta` フィールドを
 ```ts
 interface PatternDefinition {
   id: string;
+  kind: string;
   order: number;
+  publication: "published" | "preview";
   title: LocalizedText;
-  formula: FourierSeriesDefinition;
-  audio: AudioPreset;
+  dramaturgy: PatternDramaturgy;
+  audio: PatternAudioPreset;
   education: EducationContent;
+  MathematicalDetails: ComponentType;
+  validate(): void;
   loadScene(): Promise<PatternSceneFactory>;
 }
 
@@ -367,6 +382,9 @@ interface PatternScene {
 
 新しい章を追加するときは次を満たす。
 
+- `src/patterns/<chapter-id>/`へ`definition.tsx`、`types.ts`、`validate.ts`、`math/`、
+  `audio/`、`scene/`、`details/`、必要な`qa/`とテストを集約する
+- 共有実装から章実装をimportせず、ある章から別の章をimportしない
 - 数学的対象と操作を明記する
 - 係数が解析的か、DFT/FFT推定かを明記する
 - 投影軸と位相規約を明記する
@@ -379,6 +397,7 @@ interface PatternScene {
 - `dispose()` でGPUリソースとイベント購読を解放する
 - レジストリと数学のテストを追加する
 - デチューン後の実生成周波数に対する帯域制限テストを追加する
+- `public/audio/chapters/<chapter-id>.js`へWorklet processorを実装し、共通dispatcherへ登録する
 - `validatePatternDefinition()` の登録時検証を通す
 - やさしい説明と数学の詳細を両方用意する
 
