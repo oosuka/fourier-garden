@@ -7,7 +7,7 @@ import type {
 import type {
   SpectralCathedralGesture,
   SpectralCathedralScoreProgram,
-} from "./spectralCathedralScore";
+} from "../patterns/spectral-cathedral/audio/score";
 
 export interface ResidueBloomAudioPartial {
   harmonic: number;

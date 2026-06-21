@@ -1,6 +1,6 @@
 import { mobiusChoirPattern } from "./mobiusChoirPattern";
 import { residueBloomPattern } from "./residue-bloom/definition";
-import { spectralCathedralPattern } from "./spectralCathedralPattern";
+import { spectralCathedralPattern } from "./spectral-cathedral/definition";
 import type { PatternDefinition } from "./types";
 import { validatePatternDefinition } from "./validatePatternDefinition";
 

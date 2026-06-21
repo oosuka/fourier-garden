@@ -1,7 +1,4 @@
-import {
-  SPECTRAL_CATHEDRAL_SCORE,
-  type SpectralCathedralSectionId,
-} from "../audio/spectralCathedralScore";
+import { SPECTRAL_CATHEDRAL_SCORE, type SpectralCathedralSectionId } from "../audio/score";
 
 export interface SpectralCathedralCameraChoreography {
   orbitRadians: number;

@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   buildMusicalScoreProgram,
-} from "../patterns/residue-bloom/audio/score";
-import { renderRhythmicSeries } from "../patterns/residue-bloom/audio/synthesis";
+} from "../../residue-bloom/audio/score";
+import { renderRhythmicSeries } from "../../residue-bloom/audio/synthesis";
 import {
   RESIDUE_BLOOM_SERIES,
   RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
-} from "../patterns/residue-bloom/math/model";
-import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/spectralCathedral";
-import { SPECTRAL_CATHEDRAL_SCORE } from "./spectralCathedralScore";
+} from "../../residue-bloom/math/model";
+import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/model";
+import { SPECTRAL_CATHEDRAL_SCORE } from "./score";
 import {
   SPECTRAL_CATHEDRAL_SYNTHESIS,
   createSpectralCathedralWorkletProgram,
@@ -25,7 +25,7 @@ import {
   renderSpectralCathedralSample,
   renderSpectralCathedralStereo,
   validateSpectralCathedralWorkletProgram,
-} from "./spectralCathedralSynthesis";
+} from "./synthesis";
 
 type MetricValues = ArrayLike<number> & Iterable<number>;
 

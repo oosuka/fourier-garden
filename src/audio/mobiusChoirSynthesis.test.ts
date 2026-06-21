@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createSpectralCathedralWorkletProgram,
   renderSpectralCathedralStereo,
-} from "./spectralCathedralSynthesis";
+} from "../patterns/spectral-cathedral/audio/synthesis";
 import {
   MOBIUS_CHOIR_SYNTHESIS,
   createMobiusChoirAudioModes,

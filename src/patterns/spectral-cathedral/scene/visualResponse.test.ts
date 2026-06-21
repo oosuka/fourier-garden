@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { SPECTRAL_CATHEDRAL_SCORE } from "../audio/spectralCathedralScore";
-import { createSpectralCathedralLightAnchors } from "./spectralCathedralPoetic";
+import { SPECTRAL_CATHEDRAL_SCORE } from "../audio/score";
+import { createSpectralCathedralLightAnchors } from "./poetic";
 import {
   createSpectralCathedralModeInfluenceMatrix,
   evaluateSpectralCathedralVisualFrame,
-} from "./spectralCathedralVisualResponse";
+} from "./visualResponse";
 
 const anchors = createSpectralCathedralLightAnchors();
 const matrix = createSpectralCathedralModeInfluenceMatrix(anchors);

@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { AudioEngine } from "../audio/AudioEngine";
 import { patternPreviewRegistry, patternRegistry } from "../patterns/registry";
+import { SpectralCathedralDetails } from "../patterns/spectral-cathedral/details/SpectralCathedralDetails";
 import { DetailsPanel } from "./DetailsPanel";
-import { SpectralCathedralDetails } from "./SpectralCathedralDetails";
 
 const applicationStyles = readFileSync("src/styles.css", "utf8");
 

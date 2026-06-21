@@ -1,11 +1,8 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
-import { createSpectralCathedralPoeticModel } from "./spectralCathedralPoetic";
-import {
-  SpectralCathedralPoeticLayer,
-  getSpectralCathedralParticleStyle,
-} from "./spectralCathedralPoeticLayer";
+import { createSpectralCathedralPoeticModel } from "./poetic";
+import { SpectralCathedralPoeticLayer, getSpectralCathedralParticleStyle } from "./poeticLayer";
 
 describe("Spectral Cathedral poetic layer", () => {
   it("keeps WebGL dust finer and dimmer than the WebGPU particles", () => {

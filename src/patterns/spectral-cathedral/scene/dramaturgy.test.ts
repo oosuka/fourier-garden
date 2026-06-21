@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { evaluateSpectralCathedralDramaturgy } from "./spectralCathedralDramaturgy";
+import { evaluateSpectralCathedralDramaturgy } from "./dramaturgy";
 
 describe("Spectral Cathedral dramaturgy", () => {
   it("moves from a restrained illumination to a stronger resonance", () => {

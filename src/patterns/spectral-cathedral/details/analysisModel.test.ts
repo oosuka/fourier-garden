@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/spectralCathedral";
+import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/model";
 import {
   createSpectralCathedralAnalysisLayout,
   getSpectralCathedralEigenvalueProgress,
-} from "./spectralCathedralAnalysisModel";
+} from "./analysisModel";
 
 describe("Spectral Cathedral analysis layout", () => {
   it("uses a linear eigenvalue axis from zero through thirty", () => {

@@ -12,4 +12,15 @@ describe("chapter vertical slices", () => {
     expect(existsSync(`${chapterRoot}/scene/scene.ts`)).toBe(true);
     expect(existsSync(`${chapterRoot}/details/ResidueBloomDetails.tsx`)).toBe(true);
   });
+
+  it("co-locates the complete Spectral Cathedral implementation", () => {
+    const root = "src/patterns/spectral-cathedral";
+    expect(existsSync(`${root}/definition.tsx`)).toBe(true);
+    expect(existsSync(`${root}/math/model.ts`)).toBe(true);
+    expect(existsSync(`${root}/audio/score.ts`)).toBe(true);
+    expect(existsSync(`${root}/audio/synthesis.ts`)).toBe(true);
+    expect(existsSync(`${root}/scene/scene.ts`)).toBe(true);
+    expect(existsSync(`${root}/details/SpectralCathedralDetails.tsx`)).toBe(true);
+    expect(existsSync(`${root}/qa/SpectralCathedralQa.tsx`)).toBe(true);
+  });
 });

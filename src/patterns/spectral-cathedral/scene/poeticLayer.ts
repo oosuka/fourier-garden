@@ -1,19 +1,19 @@
 import * as THREE from "three/webgpu";
 
-import type { RendererBackend } from "../core/rendererBackend";
+import type { RendererBackend } from "../../../core/rendererBackend";
 import {
   evaluateSpectralCathedralAnchorMagnitudes,
   getSpectralCathedralPoeticQuality,
   updateSpectralCathedralParticles,
   type SpectralCathedralPoeticModel,
   type SpectralCathedralPoeticQuality,
-} from "./spectralCathedralPoetic";
+} from "./poetic";
 import {
   createSpectralCathedralModeInfluenceMatrix,
   evaluateSpectralCathedralVisualFrame,
   type SpectralCathedralModeInfluenceMatrix,
-} from "./spectralCathedralVisualResponse";
-import type { QualityLevel } from "./types";
+} from "./visualResponse";
+import type { QualityLevel } from "../../types";
 
 const PILLAR_BOTTOM_Z = 0.02;
 const PILLAR_TOP_Z = 1.62;

@@ -1,10 +1,10 @@
-import { SPECTRAL_CATHEDRAL_SCORE } from "../audio/spectralCathedralScore";
-import { createSpectralCathedralAudioProgram } from "../audio/spectralCathedralSynthesis";
+import { SPECTRAL_CATHEDRAL_SCORE } from "./audio/score";
+import { createSpectralCathedralAudioProgram } from "./audio/synthesis";
 import {
   SPECTRAL_CATHEDRAL_DEFINITION,
   SPECTRAL_CATHEDRAL_MATHEMATICAL_PROVENANCE,
-} from "../math/spectralCathedral";
-import type { PatternScene, SpectralCathedralPatternDefinition } from "./types";
+} from "./math/model";
+import type { PatternScene, SpectralCathedralPatternDefinition } from "../types";
 
 export const spectralCathedralPattern = {
   kind: "spectral-cathedral",
@@ -128,7 +128,7 @@ export const spectralCathedralPattern = {
       "7本の光柱、6本のアーチ、塵状粒子、透明ハロー、短い残光は詩的造形です。発音モードの固有関数値を柱ごとの局所励起へ写し、局所的な光柱とアーチ伝播、粒子帯、緩やかなカメラ軌道を作ります。固定格子面、境界、節線、固有値、係数は変形しません。",
   },
   async loadScene() {
-    const module = await import("./spectralCathedralScene");
+    const module = await import("./scene/scene");
     return async (options) => {
       const scene = await module.createSpectralCathedralScene(options);
       const adapter: PatternScene = {

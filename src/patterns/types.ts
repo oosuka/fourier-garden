@@ -1,10 +1,10 @@
 import type { AudioEngineProgram } from "../audio/audioProgram";
 import type { MobiusChoirScoreProgram } from "../audio/mobiusChoirScore";
 import type { MusicalScoreFrame, MusicalScoreProgram } from "./residue-bloom/audio/score";
-import type { SpectralCathedralScoreProgram } from "../audio/spectralCathedralScore";
+import type { SpectralCathedralScoreProgram } from "./spectral-cathedral/audio/score";
 import type { FourierSeriesDefinition, FourierTerm } from "../math/fourierSeries";
 import type { MobiusChoirDefinition } from "../math/mobiusChoir";
-import type { SpectralCathedralDefinition } from "../math/spectralCathedral";
+import type { SpectralCathedralDefinition } from "./spectral-cathedral/math/model";
 
 export interface LocalizedText {
   en: string;

@@ -3,13 +3,13 @@ import {
   evaluateSpectralCathedralEvents,
   type EvaluatedSpectralCathedralEvent,
   type SpectralCathedralGesture,
-} from "../audio/spectralCathedralScore";
+} from "../audio/score";
 import {
   SPECTRAL_CATHEDRAL_DEFINITION,
   evaluateSpectralCathedralEigenfunction,
-} from "../math/spectralCathedral";
-import { evaluateSpectralCathedralDramaturgy } from "./spectralCathedralDramaturgy";
-import type { SpectralCathedralLightAnchor } from "./spectralCathedralPoetic";
+} from "../math/model";
+import { evaluateSpectralCathedralDramaturgy } from "./dramaturgy";
+import type { SpectralCathedralLightAnchor } from "./poetic";
 
 export interface SpectralCathedralModeInfluenceMatrix {
   byModeId: ReadonlyMap<number, readonly number[]>;

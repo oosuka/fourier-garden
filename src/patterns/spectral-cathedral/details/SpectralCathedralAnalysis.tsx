@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 
-import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/spectralCathedral";
-import { createSpectralCathedralAnalysisLayout } from "./spectralCathedralAnalysisModel";
+import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/model";
+import { createSpectralCathedralAnalysisLayout } from "./analysisModel";
 
 interface SpectralCathedralAnalysisProps {
   timeOutputRef: RefObject<HTMLOutputElement | null>;

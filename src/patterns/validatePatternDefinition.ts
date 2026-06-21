@@ -1,5 +1,5 @@
 import { validateMobiusChoirDefinition } from "../math/mobiusChoir";
-import { validateSpectralCathedralDefinition } from "../math/spectralCathedral";
+import { validateSpectralCathedralDefinition } from "./spectral-cathedral/math/model";
 import type {
   MobiusChoirPatternDefinition,
   PatternDefinition,

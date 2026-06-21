@@ -4,18 +4,18 @@ import "@fontsource/inter/500.css";
 import "@fontsource/cormorant-garamond/400.css";
 import "@fontsource/cormorant-garamond/500.css";
 import "@fontsource/noto-serif-jp/400.css";
-import "./spectralCathedralQa.css";
+import "./modelQa.css";
 
 import { StrictMode, useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
-import { SpectralCathedralAnalysis } from "../components/SpectralCathedralAnalysis";
+import { SpectralCathedralAnalysis } from "../details/SpectralCathedralAnalysis";
 import {
   createSpectralCathedralScene,
   type SpectralCathedralScene,
   type SpectralCathedralSceneStats,
-} from "../patterns/spectralCathedralScene";
-import { parseSpectralCathedralQaOptions } from "./spectralCathedralQaOptions";
+} from "../scene/scene";
+import { parseSpectralCathedralQaOptions } from "./options";
 
 const QA_OPTIONS = parseSpectralCathedralQaOptions(window.location.search);
 

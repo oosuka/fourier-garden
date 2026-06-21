@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  SPECTRAL_CATHEDRAL_SCORE,
-  evaluateSpectralCathedralEvents,
-} from "./spectralCathedralScore";
+import { SPECTRAL_CATHEDRAL_SCORE, evaluateSpectralCathedralEvents } from "./score";
 
 describe("Spectral Cathedral musical score", () => {
   it("builds the five-act 75-second cathedral form", () => {

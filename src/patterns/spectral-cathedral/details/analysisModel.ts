@@ -1,7 +1,4 @@
-import {
-  getSpectralCathedralAnalysisBins,
-  type SpectralCathedralDefinition,
-} from "../math/spectralCathedral";
+import { getSpectralCathedralAnalysisBins, type SpectralCathedralDefinition } from "../math/model";
 
 export const SPECTRAL_CATHEDRAL_EIGENVALUE_AXIS_MAX = 30;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/spectralCathedral";
+import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/model";
 import {
   SPECTRAL_CATHEDRAL_ARCH_POINT_COUNT,
   SPECTRAL_CATHEDRAL_MAX_PARTICLES,
@@ -9,7 +9,7 @@ import {
   evaluateSpectralCathedralAnchorMagnitudes,
   getSpectralCathedralPoeticQuality,
   updateSpectralCathedralParticles,
-} from "./spectralCathedralPoetic";
+} from "./poetic";
 
 function withoutBreathingPhase(
   anchor: ReturnType<typeof createSpectralCathedralPoeticModel>["anchors"][number],

@@ -1,17 +1,17 @@
-import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/spectralCathedral";
+import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/model";
 import type {
   AudioEngineProgram,
   AudioGraphPreset,
   SpectralCathedralAudioMode,
   SpectralCathedralSynthesisPreset,
   SpectralCathedralWorkletProgram,
-} from "./audioProgram";
+} from "../../../audio/audioProgram";
 import {
   SPECTRAL_CATHEDRAL_SCORE,
   evaluateSpectralCathedralEvents,
   type EvaluatedSpectralCathedralEvent,
   type SpectralCathedralGesture,
-} from "./spectralCathedralScore";
+} from "./score";
 
 export interface SpectralCathedralPartial {
   partial: number;

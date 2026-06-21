@@ -8,13 +8,13 @@ import {
   SPECTRAL_CATHEDRAL_GRID_VERTEX_COUNT,
   evaluateSpectralCathedralField,
   normalizeSpectralCathedralField,
-} from "../math/spectralCathedral";
+} from "../math/model";
 import {
   SPECTRAL_CATHEDRAL_MAX_NODAL_SEGMENTS,
   createSpectralCathedralDrawingModel,
   getSpectralCathedralSurfaceColor,
   updateSpectralCathedralDrawingModel,
-} from "./spectralCathedralDrawing";
+} from "./drawing";
 
 describe("Spectral Cathedral drawing model", () => {
   it("creates the fixed grid and triangle index contract", () => {

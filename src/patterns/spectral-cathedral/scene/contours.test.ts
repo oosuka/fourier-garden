@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   extractSpectralCathedralCellContours,
   type SpectralCathedralContourCell,
-} from "./spectralCathedralContours";
+} from "./contours";
 
 const CELL: Omit<SpectralCathedralContourCell, "values" | "centerValue"> = {
   x0: 0,

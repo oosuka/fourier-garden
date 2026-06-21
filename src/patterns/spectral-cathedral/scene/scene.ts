@@ -1,28 +1,28 @@
 import type { WebGLRenderer, WebGLRendererParameters } from "three";
 import * as THREE from "three/webgpu";
 
-import { selectRendererBackend, type RendererBackend } from "../core/rendererBackend";
+import { selectRendererBackend, type RendererBackend } from "../../../core/rendererBackend";
 import {
   SPECTRAL_CATHEDRAL_DEFINITION,
   SPECTRAL_CATHEDRAL_GRID_TRIANGLE_COUNT,
   SPECTRAL_CATHEDRAL_GRID_VERTEX_COUNT,
-} from "../math/spectralCathedral";
+} from "../math/model";
 import {
   createSpectralCathedralDrawingModel,
   updateSpectralCathedralDrawingModel,
   type SpectralCathedralDrawingModel,
-} from "./spectralCathedralDrawing";
-import { evaluateSpectralCathedralDramaturgy } from "./spectralCathedralDramaturgy";
+} from "./drawing";
+import { evaluateSpectralCathedralDramaturgy } from "./dramaturgy";
 import {
   SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT,
   createSpectralCathedralPoeticModel,
   getSpectralCathedralPoeticQuality,
-} from "./spectralCathedralPoetic";
+} from "./poetic";
 import {
   SpectralCathedralPoeticLayer,
   type SpectralCathedralPoeticLayerStats,
-} from "./spectralCathedralPoeticLayer";
-import type { QualityLevel, Viewport } from "./types";
+} from "./poeticLayer";
+import type { QualityLevel, Viewport } from "../../types";
 
 const CAMERA_FOV_DEGREES = 38;
 const MATHEMATICAL_BOUND_RADIUS = Math.hypot(1, 1 / Math.sqrt(2), 0.6);

@@ -4,10 +4,10 @@ import { renderToString } from "katex";
 
 import type { AudioEngine } from "../audio/AudioEngine";
 import { ResidueBloomDetails } from "../patterns/residue-bloom/details/ResidueBloomDetails";
+import { SpectralCathedralDetails } from "../patterns/spectral-cathedral/details/SpectralCathedralDetails";
 import type { PatternDefinition } from "../patterns/types";
 import { WaveformCanvas } from "./DataCanvas";
 import { MobiusChoirDetails } from "./MobiusChoirDetails";
-import { SpectralCathedralDetails } from "./SpectralCathedralDetails";
 
 interface DetailsPanelProps {
   open: boolean;

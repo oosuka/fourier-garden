@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { SpectralCathedralDefinition, SpectralCathedralMode } from "./spectralCathedral";
+import type { SpectralCathedralDefinition, SpectralCathedralMode } from "./model";
 import {
   SPECTRAL_CATHEDRAL_AMPLITUDE_BOUND,
   SPECTRAL_CATHEDRAL_DEFINITION,
@@ -27,7 +27,7 @@ import {
   normalizeSpectralCathedralField,
   resolveSpectralCathedralMathematicalTime,
   validateSpectralCathedralDefinition,
-} from "./spectralCathedral";
+} from "./model";
 
 const EXPECTED_MODES = [
   [1, 1, 1, 3],

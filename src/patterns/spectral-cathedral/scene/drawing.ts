@@ -7,14 +7,14 @@ import {
   SPECTRAL_CATHEDRAL_GRID_VERTEX_COUNT,
   evaluateSpectralCathedralEigenfunction,
   validateSpectralCathedralDefinition,
-} from "../math/spectralCathedral";
+} from "../math/model";
 import {
   SPECTRAL_CATHEDRAL_ZERO_EPSILON,
   createSpectralCathedralContourScratch,
   type SpectralCathedralContourCell,
   type SpectralCathedralContourScratch,
   writeSpectralCathedralCellContours,
-} from "./spectralCathedralContours";
+} from "./contours";
 
 const CELL_COLUMN_COUNT = SPECTRAL_CATHEDRAL_GRID_COLUMNS - 1;
 const CELL_ROW_COUNT = SPECTRAL_CATHEDRAL_GRID_ROWS - 1;

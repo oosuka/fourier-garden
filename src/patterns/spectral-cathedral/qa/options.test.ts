@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseSpectralCathedralQaOptions } from "./spectralCathedralQaOptions";
+import { parseSpectralCathedralQaOptions } from "./options";
 
 describe("Spectral Cathedral QA options", () => {
   it("accepts forced WebGL, fixed time, fixed seed, and strict-only mode", () => {

@@ -8,7 +8,7 @@ import {
   getSpectralCathedralSceneLayerCounts,
   getSpectralCathedralStrictQuality,
   getSpectralCathedralWebGLRendererParameters,
-} from "./spectralCathedralScene";
+} from "./scene";
 
 describe("Spectral Cathedral strict scene contracts", () => {
   it("never reduces strict mathematical objects by quality", () => {

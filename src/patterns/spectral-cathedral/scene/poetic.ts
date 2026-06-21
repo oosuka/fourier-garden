@@ -1,14 +1,14 @@
-import { createSeededRandom } from "../core/seed";
-import type { RendererBackend } from "../core/rendererBackend";
+import { createSeededRandom } from "../../../core/seed";
+import type { RendererBackend } from "../../../core/rendererBackend";
 import {
   SPECTRAL_CATHEDRAL_DEFINITION,
   SPECTRAL_CATHEDRAL_GRID_COLUMNS,
   SPECTRAL_CATHEDRAL_GRID_ROWS,
   evaluateSpectralCathedralField,
   normalizeSpectralCathedralField,
-} from "../math/spectralCathedral";
-import { createSpectralCathedralDrawingModel } from "./spectralCathedralDrawing";
-import type { QualityLevel } from "./types";
+} from "../math/model";
+import { createSpectralCathedralDrawingModel } from "./drawing";
+import type { QualityLevel } from "../../types";
 
 export const SPECTRAL_CATHEDRAL_LIGHT_ANCHOR_LIMIT = 8;
 export const SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT = 7;

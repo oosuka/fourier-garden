@@ -13,11 +13,11 @@ import {
   RESIDUE_BLOOM_SERIES,
   RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
 } from "../patterns/residue-bloom/math/model";
-import { createMobiusChoirWorkletProgram, renderMobiusChoirSample } from "./mobiusChoirSynthesis";
 import {
   createSpectralCathedralWorkletProgram,
   renderSpectralCathedralSample,
-} from "./spectralCathedralSynthesis";
+} from "../patterns/spectral-cathedral/audio/synthesis";
+import { createMobiusChoirWorkletProgram, renderMobiusChoirSample } from "./mobiusChoirSynthesis";
 
 interface WorkletPortStub {
   onmessage: ((event: { data: unknown }) => void) | null;
