@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { RESIDUE_BLOOM_SERIES } from "../math/model";
-import {
-  createSpectrumLayout,
-  getAudioWaveformMode,
-  getLogFrequencyProgress,
-} from "./spectrumModel";
+import { createSpectrumLayout, getLogFrequencyProgress } from "./spectrumModel";
 
 describe("data canvas model", () => {
   it("places bars and ticks with the same logarithmic function", () => {
@@ -31,11 +27,6 @@ describe("data canvas model", () => {
     expect(layout.amplitudeConvention).toBe("analytic-one-sided-sine-amplitude");
     expect(layout.bars[0]?.heightRatio).toBeCloseTo(1, 12);
     expect(layout.bars[12]?.heightRatio).toBeCloseTo(1 / 13, 12);
-  });
-
-  it("shows only a waiting state before analyser initialization", () => {
-    expect(getAudioWaveformMode(false)).toBe("waiting");
-    expect(getAudioWaveformMode(true)).toBe("analyser");
   });
 
   it("uses precise public labels for the mathematical display", () => {

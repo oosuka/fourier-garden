@@ -1,3 +1,5 @@
+import "./details/details.css";
+
 import { SPECTRAL_CATHEDRAL_SCORE } from "./audio/score";
 import { createSpectralCathedralAudioProgram } from "./audio/synthesis";
 import { SpectralCathedralDetails } from "./details/SpectralCathedralDetails";

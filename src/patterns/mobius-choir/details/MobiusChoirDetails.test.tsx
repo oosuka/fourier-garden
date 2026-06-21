@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -21,6 +22,8 @@ const pattern = {
   },
 } as MobiusChoirPatternDefinition;
 
+const detailsStyles = readFileSync("src/patterns/mobius-choir/details/details.css", "utf8");
+
 describe("MobiusChoirDetails", () => {
   it("shows the quotient, parity analysis, mode table, and non-isometric scope", () => {
     const markup = renderToStaticMarkup(<MobiusChoirDetails pattern={pattern} />);
@@ -35,5 +38,10 @@ describe("MobiusChoirDetails", () => {
     expect(markup).toContain("63イベント");
     expect(markup).toContain("非等長埋め込み");
     expect(markup).not.toContain("FFT解析");
+  });
+
+  it("fits long equations inside the desktop detail panel", () => {
+    expect(detailsStyles).toContain(".app--mobius-choir .detailsPanel .detailsFormula .katex");
+    expect(detailsStyles).toContain(".app--mobius-choir .detailsPanel .mathIdentity .katex");
   });
 });

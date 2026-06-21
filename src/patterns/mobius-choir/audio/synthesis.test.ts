@@ -5,7 +5,9 @@ import {
   renderSpectralCathedralStereo,
 } from "../../spectral-cathedral/audio/synthesis";
 import {
+  MOBIUS_CHOIR_AUDIO_GRAPH,
   MOBIUS_CHOIR_SYNTHESIS,
+  createMobiusChoirAudioProgram,
   createMobiusChoirAudioModes,
   createMobiusChoirWorkletProgram,
   evaluateMobiusChoirVoicePhases,
@@ -19,6 +21,7 @@ import {
   renderMobiusChoirStereo,
   validateMobiusChoirWorkletProgram,
 } from "./synthesis";
+import { createWorkletConfigureMessage } from "../../../audio/audioProgram";
 
 function getStereoMetrics(left: Float32Array, right: Float32Array) {
   let sumOfSquares = 0;
@@ -61,6 +64,17 @@ function getMaximumLowRmsSeconds(
 }
 
 describe("Möbius Choir synthesis", () => {
+  it("wraps the six-mode score in the chapter-specific graph", () => {
+    const program = createMobiusChoirAudioProgram();
+
+    expect(program.worklet.kind).toBe("mobius-choir");
+    expect(program.graph).toEqual(MOBIUS_CHOIR_AUDIO_GRAPH);
+    expect(createWorkletConfigureMessage(program.worklet)).toEqual({
+      type: "configure",
+      program: program.worklet,
+    });
+  });
+
   it("preserves eigenfrequency and coefficient ratios with correct voice kinds", () => {
     const modes = createMobiusChoirAudioModes();
     expect(modes).toHaveLength(6);

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import type { AudioEngine } from "../audio/AudioEngine";
-import { getAudioWaveformMode } from "../patterns/residue-bloom/details/spectrumModel";
+import { getAudioWaveformMode } from "./dataCanvasModel";
 
 interface DataCanvasProps {
   audio: AudioEngine;

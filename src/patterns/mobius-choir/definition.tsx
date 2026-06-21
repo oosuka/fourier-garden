@@ -1,3 +1,5 @@
+import "./details/details.css";
+
 import { MOBIUS_CHOIR_SCORE } from "./audio/score";
 import { createMobiusChoirAudioProgram } from "./audio/synthesis";
 import { MobiusChoirDetails } from "./details/MobiusChoirDetails";
