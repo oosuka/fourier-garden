@@ -1,0 +1,26 @@
+import { describe, expect, it } from "vitest";
+
+import { mobiusChoirPattern } from "./definition";
+
+describe("Möbius Choir definition", () => {
+  it("defines an analytic published flat quotient", () => {
+    expect(mobiusChoirPattern.publication).toBe("published");
+    expect(mobiusChoirPattern.order).toBe(3);
+    expect(mobiusChoirPattern.definition.modes).toHaveLength(6);
+    expect(mobiusChoirPattern.audio.score.events).toHaveLength(63);
+    expect(mobiusChoirPattern.audio.score.cycleSeconds).toBeCloseTo(960 / 17, 12);
+    expect(mobiusChoirPattern.audio.sonificationLatex).toContain("\\psi_{mn,r,q}^{L/R}(t)");
+    expect(mobiusChoirPattern.education.gentleBody).toContain("63イベント");
+    expect(mobiusChoirPattern.education.sonificationBody).toContain("carrierを絶対transport時刻");
+    expect(mobiusChoirPattern.education.sonificationBody).toContain("振幅、部分音の明度、定位");
+    expect(mobiusChoirPattern.education.poeticLayerBody).toContain("同じモード速度");
+    expect(mobiusChoirPattern.dramaturgy.sections).toHaveLength(5);
+    expect(mobiusChoirPattern.mathematics).toMatchObject({
+      fftUsed: false,
+      numericalEigenanalysisUsed: false,
+      quotient: { allowedParity: "m+n-odd" },
+      rendering: { sourceMetric: "flat-quotient", displayEmbedding: "non-isometric" },
+    });
+    expect(mobiusChoirPattern.audio.createProgram().worklet.kind).toBe("mobius-choir");
+  });
+});
