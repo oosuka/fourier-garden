@@ -8,7 +8,7 @@ import {
   normalizeSpectralCathedralField,
 } from "../math/model";
 import { createSpectralCathedralDrawingModel } from "./drawing";
-import type { QualityLevel } from "../../types";
+import type { QualityLevel } from "../../contracts";
 
 export const SPECTRAL_CATHEDRAL_LIGHT_ANCHOR_LIMIT = 8;
 export const SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT = 7;

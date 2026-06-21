@@ -10,7 +10,7 @@ import {
   updateMobiusChoirParticles,
 } from "./poetic";
 import { evaluateMobiusChoirVisualFrame } from "./visualResponse";
-import type { QualityLevel } from "../../types";
+import type { QualityLevel } from "../../contracts";
 
 export interface MobiusChoirPoeticLayerStats {
   particles: number;

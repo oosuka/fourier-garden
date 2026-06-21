@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { renderToString } from "katex";
 
 import { getAnalyticSpectrum } from "../../../math/fourierSeries";
-import type { ResidueBloomPatternDefinition } from "../../types";
+import type { ResidueBloomPatternDefinition } from "../types";
 import { SpectrumAxis, SpectrumCanvas } from "./SpectrumCanvas";
 
 export function ResidueBloomDetails({ pattern }: { pattern: ResidueBloomPatternDefinition }) {

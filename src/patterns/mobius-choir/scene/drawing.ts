@@ -16,7 +16,7 @@ import {
   type MobiusChoirContourScratch,
   writeMobiusChoirCellContours,
 } from "./contours";
-import type { QualityLevel } from "../../types";
+import type { QualityLevel } from "../../contracts";
 
 const CELL_ROW_COUNT = MOBIUS_CHOIR_GRID_ROWS - 1;
 const CELL_COUNT = MOBIUS_CHOIR_GRID_COLUMNS * CELL_ROW_COUNT;

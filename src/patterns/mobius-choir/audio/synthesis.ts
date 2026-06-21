@@ -1,18 +1,67 @@
 import { MOBIUS_CHOIR_DEFINITION } from "../math/model";
-import type {
-  AudioEngineProgram,
-  AudioGraphPreset,
-  MobiusChoirAudioMode,
-  MobiusChoirSynthesisPreset,
-  MobiusChoirWorkletProgram,
-} from "../../../audio/audioProgram";
-import { MOBIUS_CHOIR_SCORE, type MobiusChoirGesture, type MobiusChoirVowel } from "./score";
+import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
+import {
+  MOBIUS_CHOIR_SCORE,
+  type MobiusChoirGesture,
+  type MobiusChoirScoreProgram,
+  type MobiusChoirVowel,
+} from "./score";
 import {
   createMobiusChoirRuntime,
   type MobiusChoirRuntime,
   type MobiusChoirRuntimeEvent,
   type MobiusChoirRuntimeVoice,
 } from "./runtime";
+
+export interface MobiusChoirAudioMode {
+  id: number;
+  m: number;
+  n: number;
+  eigenvalue: number;
+  coefficient: number;
+  baseFrequencyHz: number;
+  normalizedGain: number;
+  modalAngularFrequency: number;
+  voiceKind: "single" | "quadrature-pair";
+}
+
+export interface MobiusChoirArticulationPreset {
+  attackSeconds: number;
+  decaySeconds: number;
+  fadeStartSeconds: number;
+  endSeconds: number;
+  breathGain: number;
+}
+
+export interface MobiusChoirFormantBand {
+  frequencyHz: number;
+  bandwidthHz: number;
+  amplitude: number;
+}
+
+export interface MobiusChoirSynthesisPreset {
+  maximumPartials: number;
+  partialDamping: number;
+  articulations: Readonly<Record<MobiusChoirGesture, MobiusChoirArticulationPreset>>;
+  formants: Readonly<Record<MobiusChoirVowel, readonly MobiusChoirFormantBand[]>>;
+  formantFloor: number;
+  maximumEventSeconds: number;
+  breathSeconds: number;
+  breathMinimumHz: number;
+  breathMaximumHz: number;
+  breathComponentCount: number;
+  stereoDetuneRatio: number;
+  antiAliasRatio: number;
+  outputGain: number;
+}
+
+export interface MobiusChoirWorkletProgram {
+  kind: "mobius-choir";
+  score: MobiusChoirScoreProgram;
+  modes: readonly MobiusChoirAudioMode[];
+  synthesis: MobiusChoirSynthesisPreset;
+  normalization: number;
+}
 
 export interface MobiusChoirPartial {
   partial: number;
@@ -364,7 +413,7 @@ export function createMobiusChoirWorkletProgram(): MobiusChoirWorkletProgram {
   return program;
 }
 
-export function createMobiusChoirAudioProgram(): AudioEngineProgram {
+export function createMobiusChoirAudioProgram(): AudioEngineProgram<MobiusChoirWorkletProgram> {
   return { worklet: createMobiusChoirWorkletProgram(), graph: MOBIUS_CHOIR_AUDIO_GRAPH };
 }
 

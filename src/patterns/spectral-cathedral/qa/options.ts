@@ -1,5 +1,5 @@
 import { dateSeed } from "../../../core/seed";
-import type { QualityLevel } from "../../types";
+import type { QualityLevel } from "../../contracts";
 
 export interface SpectralCathedralQaOptions {
   forceWebGL: boolean;

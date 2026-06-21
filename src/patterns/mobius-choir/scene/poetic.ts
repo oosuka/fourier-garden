@@ -4,7 +4,7 @@ import {
   getMobiusChoirTravelSpeed,
   mapMobiusChoirEmbedding,
 } from "../math/model";
-import type { QualityLevel } from "../../types";
+import type { QualityLevel } from "../../contracts";
 
 export const MOBIUS_CHOIR_MAX_PARTICLES = 24_000;
 export const MOBIUS_CHOIR_SURFACE_PARTICLES = 13_000;

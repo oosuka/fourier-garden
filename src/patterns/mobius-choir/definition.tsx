@@ -1,10 +1,17 @@
 import { MOBIUS_CHOIR_SCORE } from "./audio/score";
 import { createMobiusChoirAudioProgram } from "./audio/synthesis";
+import { MobiusChoirDetails } from "./details/MobiusChoirDetails";
 import { MOBIUS_CHOIR_DEFINITION } from "./math/model";
 import { MOBIUS_CHOIR_DRAMATURGY_SECTIONS } from "./scene/dramaturgy";
-import type { MobiusChoirPatternDefinition, PatternScene } from "../types";
+import type { PatternScene } from "../contracts";
+import type { MobiusChoirPatternDefinition } from "./types";
+import { validateMobiusChoirPattern } from "./validate";
 
-export const mobiusChoirPattern = {
+function MobiusChoirMathematicalDetails() {
+  return <MobiusChoirDetails pattern={mobiusChoirPattern} />;
+}
+
+export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
   kind: "mobius-choir",
   id: "mobius-choir",
   order: 3,
@@ -93,6 +100,10 @@ export const mobiusChoirPattern = {
     poeticLayerBody:
       "息の粒子、六本の声部リボン、継ぎ目の淡いシアン残光は詩的造形です。音響と同じモード速度を粒子流へ渡し、局所変位・速度と継ぎ目通過から個別に応答します。厳密曲面、符号値、節線、境界の頂点は変形しません。",
   },
+  MathematicalDetails: MobiusChoirMathematicalDetails,
+  validate() {
+    validateMobiusChoirPattern(this);
+  },
   async loadScene() {
     const module = await import("./scene/scene");
     return async (options) => {
@@ -106,4 +117,4 @@ export const mobiusChoirPattern = {
       return adapter;
     };
   },
-} satisfies MobiusChoirPatternDefinition;
+};

@@ -13,7 +13,7 @@ import {
   evaluateSpectralCathedralVisualFrame,
   type SpectralCathedralModeInfluenceMatrix,
 } from "./visualResponse";
-import type { QualityLevel } from "../../types";
+import type { QualityLevel } from "../../contracts";
 
 const PILLAR_BOTTOM_Z = 0.02;
 const PILLAR_TOP_Z = 1.62;

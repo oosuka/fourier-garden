@@ -30,13 +30,8 @@ import {
   getRendererVisibilityScale,
   getWaveTrailVerticalDrift,
 } from "./scoreOverlay";
-import type {
-  PatternSceneOptions,
-  QualityLevel,
-  ResidueBloomFrameContext,
-  ResidueBloomSceneInstance,
-  Viewport,
-} from "../../types";
+import type { PatternSceneOptions, QualityLevel, Viewport } from "../../contracts";
+import type { ResidueBloomFrameContext, ResidueBloomSceneInstance } from "../types";
 
 const PALETTE = [0x78f3ff, 0x8ac8ff, 0xa798ff, 0xe59aff, 0xffc782, 0xc8fff3] as const;
 const TWO_PI = Math.PI * 2;

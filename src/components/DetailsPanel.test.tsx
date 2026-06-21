@@ -1,15 +1,42 @@
 import { readFileSync } from "node:fs";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { AudioEngine } from "../audio/AudioEngine";
-import { patternPreviewRegistry, patternRegistry } from "../patterns/registry";
+import { patternRegistry } from "../patterns/registry";
+import { spectralCathedralPattern } from "../patterns/spectral-cathedral/definition";
 import { SpectralCathedralDetails } from "../patterns/spectral-cathedral/details/SpectralCathedralDetails";
 import { DetailsPanel } from "./DetailsPanel";
 
 const applicationStyles = readFileSync("src/styles.css", "utf8");
 
 describe("DetailsPanel visibility", () => {
+  it("renders mathematical details supplied by the chapter definition", async () => {
+    const pattern = {
+      ...patternRegistry[0]!,
+      MathematicalDetails: () => <div>chapter-owned-details</div>,
+    };
+    const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <DetailsPanel open pattern={pattern} audio={audio} onClose={vi.fn<() => void>()} />,
+      );
+    });
+    const mathematicalTab = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "数学の詳細",
+    );
+    await act(async () => mathematicalTab?.click());
+
+    expect(container.innerHTML).toContain("chapter-owned-details");
+    await act(async () => root.unmount());
+    getContext.mockRestore();
+  });
+
   it("fits the long Möbius Choir equations inside the desktop detail panel", () => {
     expect(applicationStyles).toContain(".app--mobius-choir .detailsPanel .detailsFormula .katex");
     expect(applicationStyles).toContain(".app--mobius-choir .detailsPanel .mathIdentity .katex");
@@ -29,10 +56,7 @@ describe("DetailsPanel visibility", () => {
   });
 
   it("renders the Spectral Cathedral eigenvalue analysis without calling it a Hz spectrum", () => {
-    const pattern = patternPreviewRegistry[1];
-    if (pattern?.kind !== "spectral-cathedral") {
-      throw new Error("Spectral Cathedral preview is missing");
-    }
+    const pattern = spectralCathedralPattern;
     const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);
     const panelMarkup = renderToStaticMarkup(
       <DetailsPanel open pattern={pattern} audio={audio} onClose={vi.fn<() => void>()} />,

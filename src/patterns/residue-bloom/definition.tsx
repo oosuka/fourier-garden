@@ -4,8 +4,11 @@ import {
   evaluateMusicalScore,
 } from "./audio/score";
 import { createResidueBloomAudioProgram } from "./audio/synthesis";
+import { ResidueBloomDetails } from "./details/ResidueBloomDetails";
 import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "./math/model";
-import type { PatternScene, ResidueBloomPatternDefinition } from "../types";
+import type { PatternScene } from "../contracts";
+import type { ResidueBloomPatternDefinition } from "./types";
+import { validateResidueBloomPattern } from "./validate";
 
 const residueBloomScore = buildMusicalScoreProgram(
   RESIDUE_BLOOM_SCORE_DEFINITION,
@@ -14,7 +17,11 @@ const residueBloomScore = buildMusicalScoreProgram(
   RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
 );
 
-export const residueBloomPattern = {
+function ResidueBloomMathematicalDetails() {
+  return <ResidueBloomDetails pattern={residueBloomPattern} />;
+}
+
+export const residueBloomPattern: ResidueBloomPatternDefinition = {
   kind: "residue-bloom",
   id: "residue-bloom",
   order: 1,
@@ -149,6 +156,10 @@ export const residueBloomPattern = {
     poeticLayerBody:
       "粒子、光の膜、星雲、ブルーム、二次トレイルに加え、発音時の調波コロナと履歴パルスも共有イベントスコアへ反応する詩的な造形です。コロナとパルスは厳密な円・主波形と同じ点へ重なる別オブジェクトで、係数、位相、半径、終点、主波形の座標を変形しません。",
   },
+  MathematicalDetails: ResidueBloomMathematicalDetails,
+  validate() {
+    validateResidueBloomPattern(this);
+  },
   async loadScene() {
     const module = await import("./scene/scene");
     return async (options) => {
@@ -167,4 +178,4 @@ export const residueBloomPattern = {
       return adapter;
     };
   },
-} satisfies ResidueBloomPatternDefinition;
+};

@@ -2,7 +2,6 @@ import { getAnalyticSpectrum } from "../../../math/fourierSeries";
 import type {
   AudioEngineProgram,
   AudioGraphPreset,
-  ResidueBloomAudioPartial,
   WorkletConfigureMessage,
 } from "../../../audio/audioProgram";
 import { RESIDUE_BLOOM_SERIES } from "../math/model";
@@ -12,6 +11,19 @@ import {
   type MusicalScoreDefinition,
   type MusicalScoreProgram,
 } from "./score";
+
+export interface ResidueBloomAudioPartial {
+  harmonic: number;
+  sourceFrequencyHz: number;
+  sourceAmplitude: number;
+  sinePhase: number;
+}
+
+export interface ResidueBloomWorkletProgram {
+  kind: "residue-bloom";
+  partials: readonly ResidueBloomAudioPartial[];
+  score: MusicalScoreProgram;
+}
 
 export type AudioPartial = ResidueBloomAudioPartial;
 
@@ -50,7 +62,7 @@ export interface SonificationComponent extends AudioPartial {
   included: boolean;
 }
 
-export type WorkletConfigurationMessage = WorkletConfigureMessage;
+export type WorkletConfigurationMessage = WorkletConfigureMessage<ResidueBloomWorkletProgram>;
 
 export const RESIDUE_BLOOM_AUDIO_GRAPH: AudioGraphPreset = {
   dryHighPassHz: 125,
@@ -97,7 +109,9 @@ export function createWorkletConfiguration(
   };
 }
 
-export function createResidueBloomAudioProgram(score: MusicalScoreProgram): AudioEngineProgram {
+export function createResidueBloomAudioProgram(
+  score: MusicalScoreProgram,
+): AudioEngineProgram<ResidueBloomWorkletProgram> {
   return {
     worklet: createWorkletConfiguration(score).program,
     graph: RESIDUE_BLOOM_AUDIO_GRAPH,

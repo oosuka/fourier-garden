@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { renderToString } from "katex";
 
-import type { SpectralCathedralPatternDefinition } from "../../types";
+import type { SpectralCathedralPatternDefinition } from "../types";
 import { SpectralCathedralPlots } from "./SpectralCathedralAnalysis";
 
 interface SpectralCathedralDetailsProps {

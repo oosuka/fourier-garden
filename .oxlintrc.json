@@ -34,7 +34,11 @@
   },
   "overrides": [
     {
-      "files": ["src/main.tsx", "src/qa/spectralCathedralQa.tsx", "src/qa/mobiusChoirQa.tsx"],
+      "files": [
+        "src/main.tsx",
+        "src/patterns/spectral-cathedral/qa/SpectralCathedralQa.tsx",
+        "src/patterns/mobius-choir/qa/MobiusChoirQa.tsx"
+      ],
       "rules": {
         "import/no-unassigned-import": "off"
       }

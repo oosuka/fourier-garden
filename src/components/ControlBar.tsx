@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight, Expand, Info, Pause, Play, Volume2 } from "l
 import { useEffect, useState } from "react";
 
 import type { Transport } from "../core/transport";
-import type { PatternDefinition } from "../patterns/types";
+import type { PatternDefinition } from "../patterns/contracts";
 
 interface ControlBarProps {
   playing: boolean;

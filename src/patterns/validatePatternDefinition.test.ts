@@ -4,8 +4,11 @@ import { MOBIUS_CHOIR_SCORE } from "./mobius-choir/audio/score";
 import { createMobiusChoirAudioProgram } from "./mobius-choir/audio/synthesis";
 import { MOBIUS_CHOIR_DEFINITION } from "./mobius-choir/math/model";
 import { MOBIUS_CHOIR_DRAMATURGY_SECTIONS } from "./mobius-choir/scene/dramaturgy";
+import type { MobiusChoirPatternDefinition } from "./mobius-choir/types";
+import { validateMobiusChoirPattern } from "./mobius-choir/validate";
 import { patternPreviewRegistry, patternRegistry } from "./registry";
-import type { MobiusChoirPatternDefinition, ResidueBloomPatternDefinition } from "./types";
+import type { ResidueBloomPatternDefinition } from "./residue-bloom/types";
+import type { SpectralCathedralPatternDefinition } from "./spectral-cathedral/types";
 import { validatePatternDefinition } from "./validatePatternDefinition";
 
 function mutatePattern(
@@ -13,13 +16,21 @@ function mutatePattern(
 ): ResidueBloomPatternDefinition {
   const pattern = patternRegistry[0];
   if (pattern?.kind !== "residue-bloom") throw new Error("Residue Bloom is missing");
-  return mutate(pattern);
+  return mutate(pattern as ResidueBloomPatternDefinition);
 }
 
 function getResidueBloomPattern(): ResidueBloomPatternDefinition {
   const pattern = patternRegistry[0];
   if (pattern?.kind !== "residue-bloom") throw new Error("Residue Bloom is missing");
-  return pattern;
+  return pattern as ResidueBloomPatternDefinition;
+}
+
+function getSpectralCathedralPattern(): SpectralCathedralPatternDefinition {
+  const pattern = patternPreviewRegistry[1];
+  if (pattern?.kind !== "spectral-cathedral") {
+    throw new Error("Spectral Cathedral preview is missing");
+  }
+  return pattern as SpectralCathedralPatternDefinition;
 }
 
 function getMobiusChoirPattern(): MobiusChoirPatternDefinition {
@@ -102,6 +113,10 @@ function getMobiusChoirPattern(): MobiusChoirPatternDefinition {
       scopeNotice: "表示埋め込みの誘導計量の固有モードではありません。",
       sonificationBody: "固有振動数比を保つソニフィケーションです。",
       poeticLayerBody: "粒子と残光は詩的造形です。",
+    },
+    MathematicalDetails: () => null,
+    validate() {
+      validateMobiusChoirPattern(this);
     },
     async loadScene() {
       return async () => ({
@@ -352,8 +367,7 @@ describe("pattern mathematical provenance", () => {
   });
 
   it("rejects phasor results smuggled into repeating events", () => {
-    const pattern = patternRegistry[0];
-    if (pattern?.kind !== "residue-bloom") throw new Error("Residue Bloom is missing");
+    const pattern = getResidueBloomPattern();
     const invalid = mutatePattern(() => ({
       ...pattern,
       audio: {
@@ -377,10 +391,7 @@ describe("pattern mathematical provenance", () => {
   });
 
   it("rejects score-wrapped Spectral Cathedral mathematical time", () => {
-    const pattern = patternPreviewRegistry[1];
-    if (pattern?.kind !== "spectral-cathedral") {
-      throw new Error("Spectral Cathedral preview is missing");
-    }
+    const pattern = getSpectralCathedralPattern();
     const invalid = {
       ...pattern,
       mathematics: {
@@ -398,10 +409,7 @@ describe("pattern mathematical provenance", () => {
   });
 
   it("rejects a Spectral Cathedral score that references an unknown mode", () => {
-    const pattern = patternPreviewRegistry[1];
-    if (pattern?.kind !== "spectral-cathedral") {
-      throw new Error("Spectral Cathedral preview is missing");
-    }
+    const pattern = getSpectralCathedralPattern();
     const invalid = {
       ...pattern,
       audio: {

@@ -8,7 +8,7 @@ import {
   MOBIUS_CHOIR_GRID_VERTEX_COUNT,
   evaluateMobiusChoirField,
 } from "../math/model";
-import type { QualityLevel } from "../../types";
+import type { QualityLevel } from "../../contracts";
 import {
   MOBIUS_CHOIR_MAX_NODAL_SEGMENTS,
   createMobiusChoirDrawingModel,

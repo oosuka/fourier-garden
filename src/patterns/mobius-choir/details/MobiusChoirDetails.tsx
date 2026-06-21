@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { renderToString } from "katex";
 
-import type { MobiusChoirPatternDefinition } from "../../types";
+import type { MobiusChoirPatternDefinition } from "../types";
 import { MobiusChoirPlots } from "./MobiusChoirAnalysis";
 
 interface MobiusChoirDetailsProps {

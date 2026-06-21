@@ -3,10 +3,7 @@ import { useMemo, useState } from "react";
 import { renderToString } from "katex";
 
 import type { AudioEngine } from "../audio/AudioEngine";
-import { MobiusChoirDetails } from "../patterns/mobius-choir/details/MobiusChoirDetails";
-import { ResidueBloomDetails } from "../patterns/residue-bloom/details/ResidueBloomDetails";
-import { SpectralCathedralDetails } from "../patterns/spectral-cathedral/details/SpectralCathedralDetails";
-import type { PatternDefinition } from "../patterns/types";
+import type { PatternDefinition } from "../patterns/contracts";
 import { WaveformCanvas } from "./DataCanvas";
 
 interface DetailsPanelProps {
@@ -18,6 +15,7 @@ interface DetailsPanelProps {
 
 export function DetailsPanel({ open, pattern, audio, onClose }: DetailsPanelProps) {
   const [tab, setTab] = useState<"gentle" | "mathematical">("gentle");
+  const MathematicalDetails = pattern.MathematicalDetails;
   const sonification = useMemo(
     () =>
       renderToString(pattern.audio.sonificationLatex, {
@@ -71,12 +69,8 @@ export function DetailsPanel({ open, pattern, audio, onClose }: DetailsPanelProp
             <p className="quietNote">{pattern.education.poeticLayerBody}</p>
             <p className="scopeNotice">{pattern.education.scopeNotice}</p>
           </section>
-        ) : pattern.kind === "residue-bloom" ? (
-          <ResidueBloomDetails pattern={pattern} />
-        ) : pattern.kind === "spectral-cathedral" ? (
-          <SpectralCathedralDetails pattern={pattern} />
         ) : (
-          <MobiusChoirDetails pattern={pattern} />
+          <MathematicalDetails />
         )}
 
         <section className="dataSection">

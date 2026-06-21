@@ -3,8 +3,8 @@ import { useEffect, useRef } from "react";
 import { AdaptiveQuality } from "../core/adaptiveQuality";
 import { dateSeed } from "../core/seed";
 import type { Transport } from "../core/transport";
-import type { PatternDefinition } from "../patterns/types";
-import type { PatternScene, PatternSceneFactory, QualityLevel } from "../patterns/types";
+import type { PatternDefinition } from "../patterns/contracts";
+import type { PatternScene, PatternSceneFactory, QualityLevel } from "../patterns/contracts";
 
 interface CanvasStageProps {
   pattern: PatternDefinition;

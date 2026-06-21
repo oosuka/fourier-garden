@@ -22,7 +22,7 @@ import {
   SpectralCathedralPoeticLayer,
   type SpectralCathedralPoeticLayerStats,
 } from "./poeticLayer";
-import type { QualityLevel, Viewport } from "../../types";
+import type { QualityLevel, Viewport } from "../../contracts";
 
 const CAMERA_FOV_DEGREES = 38;
 const MATHEMATICAL_BOUND_RADIUS = Math.hypot(1, 1 / Math.sqrt(2), 0.6);

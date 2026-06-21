@@ -1,17 +1,52 @@
 import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/model";
-import type {
-  AudioEngineProgram,
-  AudioGraphPreset,
-  SpectralCathedralAudioMode,
-  SpectralCathedralSynthesisPreset,
-  SpectralCathedralWorkletProgram,
-} from "../../../audio/audioProgram";
+import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
 import {
   SPECTRAL_CATHEDRAL_SCORE,
   evaluateSpectralCathedralEvents,
   type EvaluatedSpectralCathedralEvent,
   type SpectralCathedralGesture,
+  type SpectralCathedralScoreProgram,
 } from "./score";
+
+export interface SpectralCathedralAudioMode {
+  id: number;
+  eigenvalue: number;
+  coefficient: number;
+  baseFrequencyHz: number;
+  normalizedGain: number;
+  modalAngularFrequency: number;
+  coefficientPhaseOffset: number;
+}
+
+export interface SpectralCathedralArticulationPreset {
+  attackSeconds: number;
+  decaySeconds: number;
+  fadeStartSeconds: number;
+  endSeconds: number;
+  woodAttackGain: number;
+}
+
+export interface SpectralCathedralSynthesisPreset {
+  maximumPartials: number;
+  partialDamping: number;
+  articulations: Readonly<Record<SpectralCathedralGesture, SpectralCathedralArticulationPreset>>;
+  maximumEventSeconds: number;
+  woodAttackSeconds: number;
+  woodMinimumHz: number;
+  woodMaximumHz: number;
+  woodComponentCount: number;
+  stereoDetuneRatio: number;
+  antiAliasRatio: number;
+  outputGain: number;
+}
+
+export interface SpectralCathedralWorkletProgram {
+  kind: "spectral-cathedral";
+  score: SpectralCathedralScoreProgram;
+  modes: readonly SpectralCathedralAudioMode[];
+  synthesis: SpectralCathedralSynthesisPreset;
+  normalization: number;
+}
 
 export interface SpectralCathedralPartial {
   partial: number;
@@ -296,7 +331,7 @@ export function createSpectralCathedralWorkletProgram(): SpectralCathedralWorkle
   return program;
 }
 
-export function createSpectralCathedralAudioProgram(): AudioEngineProgram {
+export function createSpectralCathedralAudioProgram(): AudioEngineProgram<SpectralCathedralWorkletProgram> {
   return {
     worklet: createSpectralCathedralWorkletProgram(),
     graph: SPECTRAL_CATHEDRAL_AUDIO_GRAPH,

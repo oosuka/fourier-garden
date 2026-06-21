@@ -2,7 +2,7 @@ import type {
   MobiusChoirAudioMode,
   MobiusChoirFormantBand,
   MobiusChoirWorkletProgram,
-} from "../../../audio/audioProgram";
+} from "./synthesis";
 import type { MobiusChoirGesture, MobiusChoirScoreEvent } from "./score";
 
 export interface MobiusChoirRuntimePartial {

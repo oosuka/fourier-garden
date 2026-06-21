@@ -1,4 +1,4 @@
-import type { QualityLevel } from "../patterns/types";
+import type { QualityLevel } from "../patterns/contracts";
 
 const LEVELS: readonly QualityLevel[] = ["low", "medium", "high", "ultra"];
 

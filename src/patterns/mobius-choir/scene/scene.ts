@@ -17,7 +17,7 @@ import {
 import { evaluateMobiusChoirDramaturgy } from "./dramaturgy";
 import { createMobiusChoirPoeticModel, getMobiusChoirPoeticQuality } from "./poetic";
 import { MobiusChoirPoeticLayer, type MobiusChoirPoeticLayerStats } from "./poeticLayer";
-import type { QualityLevel, Viewport } from "../../types";
+import type { QualityLevel, Viewport } from "../../contracts";
 
 const CAMERA_FOV_DEGREES = 36;
 const MATHEMATICAL_BOUND_RADIUS = 4.35;
