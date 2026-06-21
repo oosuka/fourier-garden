@@ -4,7 +4,7 @@ import "@fontsource/inter/500.css";
 import "@fontsource/cormorant-garamond/400.css";
 import "@fontsource/cormorant-garamond/500.css";
 import "@fontsource/noto-serif-jp/400.css";
-import "./modelQa.css";
+import "./qa.css";
 
 import { StrictMode, useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
