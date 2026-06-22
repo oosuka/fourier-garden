@@ -28,6 +28,21 @@ describe("Spectral Cathedral strict scene contracts", () => {
     expect(low.poetic?.anchors).toBe(7);
     expect(ultra.poetic?.anchors).toBe(7);
     expect(low.poetic?.particles).toBeLessThan(ultra.poetic?.particles ?? 0);
+    expect(low.poetic).toMatchObject({
+      particles: 6_000,
+      environmentParticles: 2_000,
+      totalParticles: 8_000,
+    });
+    expect(getSpectralCathedralSceneLayerCounts("high", "webgpu", true).poetic).toMatchObject({
+      particles: 26_000,
+      environmentParticles: 22_000,
+      totalParticles: 48_000,
+    });
+    expect(ultra.poetic).toMatchObject({
+      particles: 35_000,
+      environmentParticles: 29_000,
+      totalParticles: 64_000,
+    });
   });
 
   it("can disable every poetic layer without changing strict counts", () => {
@@ -85,8 +100,41 @@ describe("Spectral Cathedral strict scene contracts", () => {
     expect(resonance).not.toEqual(illumination);
     expect(loopEnd).toEqual(loopStart);
     expect(Math.hypot(resonance.positionX, resonance.positionY, resonance.positionZ)).toBeLessThan(
-      base.distance * 1.07,
+      base.distance * 1.11,
     );
+  });
+
+  it("keeps the strict mathematical bounds in frame throughout the enlarged choreography", () => {
+    for (const [width, height] of [
+      [1440, 900],
+      [1920, 1080],
+      [2560, 1080],
+    ] as const) {
+      const aspect = width / height;
+      const base = getSpectralCathedralCameraPlacement(aspect);
+      for (let time = 0; time <= 75; time += 0.5) {
+        const placement = getSpectralCathedralChoreographedCameraPlacement(base, time);
+        const camera = new THREE.PerspectiveCamera(
+          placement.fovDegrees,
+          aspect,
+          placement.near,
+          placement.far,
+        );
+        camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
+        camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
+        camera.updateProjectionMatrix();
+        camera.updateMatrixWorld();
+        for (const x of [-1, 1]) {
+          for (const y of [-1 / Math.sqrt(2), 1 / Math.sqrt(2)]) {
+            for (const z of [-0.6, 0.6]) {
+              const projected = new THREE.Vector3(x, y, z).project(camera);
+              expect(Math.abs(projected.x)).toBeLessThanOrEqual(1);
+              expect(Math.abs(projected.y)).toBeLessThanOrEqual(1);
+            }
+          }
+        }
+      }
+    }
   });
 
   it("preserves the WebGL drawing buffer only when deterministic capture requests it", () => {

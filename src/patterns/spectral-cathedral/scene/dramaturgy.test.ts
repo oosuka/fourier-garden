@@ -14,13 +14,20 @@ describe("Spectral Cathedral dramaturgy", () => {
   });
 
   it("keeps the camera bounded and continuous across the cycle", () => {
+    let maximumOrbit = 0;
+    let maximumDolly = 0;
     for (let time = 0; time <= 75; time += 0.25) {
       const camera = evaluateSpectralCathedralDramaturgy(time).camera;
-      expect(Math.abs(camera.orbitRadians)).toBeLessThanOrEqual((4 * Math.PI) / 180 + 1e-12);
-      expect(Math.abs(camera.dollyRatio - 1)).toBeLessThanOrEqual(0.06 + 1e-12);
-      expect(Math.abs(camera.targetX)).toBeLessThanOrEqual(0.04 + 1e-12);
-      expect(Math.abs(camera.targetY)).toBeLessThanOrEqual(0.025 + 1e-12);
+      maximumOrbit = Math.max(maximumOrbit, Math.abs(camera.orbitRadians));
+      maximumDolly = Math.max(maximumDolly, Math.abs(camera.dollyRatio - 1));
+      expect(Math.abs(camera.orbitRadians)).toBeLessThanOrEqual((8 * Math.PI) / 180 + 1e-12);
+      expect(Math.abs(camera.dollyRatio - 1)).toBeLessThanOrEqual(0.1 + 1e-12);
+      expect(Math.abs(camera.targetX)).toBeLessThanOrEqual(0.06 + 1e-12);
+      expect(Math.abs(camera.targetY)).toBeLessThanOrEqual(0.04 + 1e-12);
     }
+
+    expect(maximumOrbit).toBeGreaterThan((4 * Math.PI) / 180);
+    expect(maximumDolly).toBeGreaterThan(0.06);
 
     expect(evaluateSpectralCathedralDramaturgy(75)).toEqual(evaluateSpectralCathedralDramaturgy(0));
   });

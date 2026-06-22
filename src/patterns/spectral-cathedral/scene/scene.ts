@@ -2,6 +2,13 @@ import type { WebGLRenderer, WebGLRendererParameters } from "three";
 import * as THREE from "three/webgpu";
 
 import { selectRendererBackend, type RendererBackend } from "../../../core/rendererBackend";
+import { CinematicEnvironmentLayer } from "../../../rendering/cinematic/environmentLayer";
+import { getCinematicEnvironmentParticleCount } from "../../../rendering/cinematic/model";
+import {
+  createCinematicPostProcessor,
+  type CinematicPostMode,
+  type CinematicPostProcessor,
+} from "../../../rendering/cinematic/postProcessing";
 import {
   SPECTRAL_CATHEDRAL_DEFINITION,
   SPECTRAL_CATHEDRAL_GRID_TRIANGLE_COUNT,
@@ -57,10 +64,16 @@ export interface SpectralCathedralCameraPlacement {
 
 export interface SpectralCathedralSceneStats {
   backend: RendererBackend;
+  postMode: CinematicPostMode;
   vertices: number;
   triangles: number;
   nodalSegments: number;
-  poetic: SpectralCathedralPoeticLayerStats | null;
+  poetic: SpectralCathedralScenePoeticStats | null;
+}
+
+export interface SpectralCathedralScenePoeticStats extends SpectralCathedralPoeticLayerStats {
+  environmentParticles: number;
+  totalParticles: number;
 }
 
 export interface SpectralCathedralSceneOptions {
@@ -90,7 +103,7 @@ export function getSpectralCathedralSceneLayerCounts(
   poeticLayers: boolean,
 ): Readonly<{
   strict: typeof SPECTRAL_CATHEDRAL_STRICT_LAYER_COUNTS;
-  poetic: SpectralCathedralPoeticLayerStats | null;
+  poetic: SpectralCathedralScenePoeticStats | null;
 }> {
   if (!poeticLayers) {
     return {
@@ -101,6 +114,11 @@ export function getSpectralCathedralSceneLayerCounts(
   const quality = getSpectralCathedralPoeticQuality(level, backend);
   const architecture = getSpectralCathedralArchitectureLayerCounts(level);
   const archCount = SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT - 1;
+  const environmentParticles = getCinematicEnvironmentParticleCount(
+    "spectral-cathedral",
+    level,
+    quality.particleCount,
+  );
   return {
     strict: SPECTRAL_CATHEDRAL_STRICT_LAYER_COUNTS,
     poetic: {
@@ -113,6 +131,8 @@ export function getSpectralCathedralSceneLayerCounts(
       visibleVaultRepeats: archCount * architecture.vaultsPerArch,
       archMembranes: archCount,
       particles: quality.particleCount,
+      environmentParticles,
+      totalParticles: quality.particleCount + environmentParticles,
       volumetricHalos: quality.volumetricHaloCount,
       archTrailLayers: quality.archTrailLayers,
     },
@@ -273,7 +293,10 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
   private readonly nodalLines = createNodalLines(this.drawingModel);
   private readonly boundary = createBoundary();
   private readonly poeticLayer: SpectralCathedralPoeticLayer | null;
+  private readonly environmentLayer: CinematicEnvironmentLayer | null;
+  private postProcessor: CinematicPostProcessor | null = null;
   private cameraBasePlacement: SpectralCathedralCameraPlacement | null = null;
+  private quality: QualityLevel = "high";
   private disposed = false;
 
   constructor(
@@ -284,12 +307,38 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
   ) {
     this.renderer = renderer;
     this.backend = backend;
-    this.scene.background = new THREE.Color(0x010308);
+    this.scene.background = new THREE.Color(0x01030a);
+    this.environmentLayer = poeticLayers
+      ? new CinematicEnvironmentLayer({
+          backend,
+          chapter: "spectral-cathedral",
+          seed,
+          maximumParticleCount: getCinematicEnvironmentParticleCount(
+            "spectral-cathedral",
+            "ultra",
+            getSpectralCathedralPoeticQuality("ultra", backend).particleCount,
+          ),
+          palette: [0x62eaff, 0xb678ff, 0xffb56e],
+          extent: { x: 18, y: 13, z: 18 },
+        })
+      : null;
     this.poeticLayer = poeticLayers
       ? new SpectralCathedralPoeticLayer(createSpectralCathedralPoeticModel(seed), backend)
       : null;
+    if (this.environmentLayer) this.scene.add(this.environmentLayer.group);
     if (this.poeticLayer) this.scene.add(this.poeticLayer.group);
     this.scene.add(this.surface.mesh, this.nodalLines.lines, this.boundary);
+  }
+
+  async initializePostProcessor(): Promise<void> {
+    this.postProcessor = await createCinematicPostProcessor({
+      renderer: this.renderer,
+      backend: this.backend,
+      scene: this.scene,
+      camera: this.camera,
+      exposure: 1.08,
+    });
+    this.postProcessor.setQuality(this.quality);
   }
 
   update(absoluteTimeSeconds: number): void {
@@ -302,6 +351,12 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
     this.nodalLines.positionAttribute.needsUpdate = true;
     this.nodalLines.lines.geometry.setDrawRange(0, this.drawingModel.nodalSegmentCount * 2);
     this.poeticLayer?.update(absoluteTimeSeconds);
+    const dramaturgy = evaluateSpectralCathedralDramaturgy(absoluteTimeSeconds);
+    this.environmentLayer?.update(
+      absoluteTimeSeconds,
+      dramaturgy.visualEnergy,
+      dramaturgy.sectionId === "afterglow" ? 0.8 : dramaturgy.audioEnergy * 0.5,
+    );
     if (this.cameraBasePlacement) {
       const placement = getSpectralCathedralChoreographedCameraPlacement(
         this.cameraBasePlacement,
@@ -310,7 +365,9 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
       this.camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
       this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     }
-    this.renderer.render(this.scene, this.camera);
+    this.postProcessor?.setEnergy(dramaturgy.visualEnergy);
+    if (this.postProcessor) this.postProcessor.render();
+    else this.renderer.render(this.scene, this.camera);
   }
 
   resize(viewport: Viewport): void {
@@ -335,22 +392,42 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
     this.camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
     this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     this.camera.updateProjectionMatrix();
-    this.renderer.setPixelRatio(viewport.pixelRatio);
-    this.renderer.setSize(viewport.width, viewport.height, false);
+    this.environmentLayer?.resize(aspect);
+    if (this.postProcessor) {
+      this.postProcessor.resize(viewport.width, viewport.height, viewport.pixelRatio);
+    } else {
+      this.renderer.setPixelRatio(viewport.pixelRatio);
+      this.renderer.setSize(viewport.width, viewport.height, false);
+    }
   }
 
   setQuality(level: QualityLevel): void {
     getSpectralCathedralStrictQuality(level);
+    this.quality = level;
     this.poeticLayer?.setQuality(level);
+    const localParticles = getSpectralCathedralPoeticQuality(level, this.backend).particleCount;
+    this.environmentLayer?.setParticleCount(
+      getCinematicEnvironmentParticleCount("spectral-cathedral", level, localParticles),
+    );
+    this.postProcessor?.setQuality(level);
   }
 
   getStats(): SpectralCathedralSceneStats {
     return {
       backend: this.backend,
+      postMode: this.postProcessor?.mode ?? "direct",
       vertices: this.drawingModel.vertexCount,
       triangles: this.drawingModel.triangleCount,
       nodalSegments: this.drawingModel.nodalSegmentCount,
-      poetic: this.poeticLayer?.getStats() ?? null,
+      poetic:
+        this.poeticLayer && this.environmentLayer
+          ? {
+              ...this.poeticLayer.getStats(),
+              environmentParticles: this.environmentLayer.getStats().particles,
+              totalParticles:
+                this.poeticLayer.getStats().particles + this.environmentLayer.getStats().particles,
+            }
+          : null,
     };
   }
 
@@ -364,6 +441,9 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
     this.boundary.geometry.dispose();
     (this.boundary.material as THREE.Material).dispose();
     this.poeticLayer?.dispose();
+    this.environmentLayer?.dispose();
+    this.postProcessor?.dispose();
+    this.postProcessor = null;
     this.renderer.dispose();
   }
 }
@@ -386,9 +466,9 @@ export async function createSpectralCathedralScene({
         preserveDrawingBuffer,
       }),
     );
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.NoToneMapping;
-    return new SpectralCathedralStrictScene(renderer, backend, seed, poeticLayers);
+    const scene = new SpectralCathedralStrictScene(renderer, backend, seed, poeticLayers);
+    await scene.initializePostProcessor();
+    return scene;
   }
 
   const renderer = new THREE.WebGPURenderer({
@@ -401,8 +481,8 @@ export async function createSpectralCathedralScene({
     reportDeviceLost(info);
     onDeviceLost?.();
   };
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.NoToneMapping;
   await renderer.init();
-  return new SpectralCathedralStrictScene(renderer, backend, seed, poeticLayers);
+  const scene = new SpectralCathedralStrictScene(renderer, backend, seed, poeticLayers);
+  await scene.initializePostProcessor();
+  return scene;
 }

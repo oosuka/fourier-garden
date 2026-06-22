@@ -27,12 +27,15 @@ function updateStats(
   stats: SpectralCathedralSceneStats,
 ): void {
   canvas.dataset.backend = stats.backend;
+  canvas.dataset.postMode = stats.postMode;
   canvas.dataset.vertices = String(stats.vertices);
   canvas.dataset.triangles = String(stats.triangles);
   canvas.dataset.nodalSegments = String(stats.nodalSegments);
   canvas.dataset.poeticAnchors = String(stats.poetic?.anchors ?? 0);
   canvas.dataset.poeticArches = String(stats.poetic?.arches ?? 0);
   canvas.dataset.poeticParticles = String(stats.poetic?.particles ?? 0);
+  canvas.dataset.environmentParticles = String(stats.poetic?.environmentParticles ?? 0);
+  canvas.dataset.totalParticles = String(stats.poetic?.totalParticles ?? 0);
   canvas.dataset.poeticVolumetricHalos = String(stats.poetic?.volumetricHalos ?? 0);
   canvas.dataset.poeticArchTrailLayers = String(stats.poetic?.archTrailLayers ?? 0);
   if (backendOutput) backendOutput.value = stats.backend;
@@ -45,9 +48,9 @@ function updateStats(
   if (poeticOutput) {
     poeticOutput.value = stats.poetic
       ? `${stats.poetic.anchors} anchors / ${stats.poetic.arches} arches / ` +
-        `${stats.poetic.particles.toLocaleString()} particles / ` +
+        `${stats.poetic.totalParticles.toLocaleString()} total particles / ` +
         `${stats.poetic.volumetricHalos} halos / ` +
-        `${stats.poetic.archTrailLayers} trail layers`
+        `${stats.poetic.archTrailLayers} trail layers / ${stats.postMode}`
       : "off";
   }
 }

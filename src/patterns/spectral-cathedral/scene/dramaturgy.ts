@@ -118,10 +118,10 @@ export function evaluateSpectralCathedralDramaturgy(
     visualEnergy,
     motionEnergy,
     camera: {
-      orbitRadians: ((Math.sin(cycleAngle) * (4 * Math.PI)) / 180) * motionEnergy,
-      dollyRatio: 1 + Math.sin(cycleAngle - Math.PI / 2) * 0.06 * motionEnergy,
-      targetX: Math.sin(cycleAngle * 2) * 0.04 * motionEnergy,
-      targetY: Math.sin(cycleAngle) * 0.025 * motionEnergy,
+      orbitRadians: ((Math.sin(cycleAngle) * (8 * Math.PI)) / 180) * motionEnergy,
+      dollyRatio: 1 + Math.sin(cycleAngle - Math.PI / 2) * 0.1 * motionEnergy,
+      targetX: Math.sin(cycleAngle * 2) * 0.06 * motionEnergy,
+      targetY: Math.sin(cycleAngle) * 0.04 * motionEnergy,
     },
   };
 }
