@@ -9,6 +9,8 @@ import {
   getMobiusChoirPoeticQuality,
   updateMobiusChoirParticles,
 } from "./poetic";
+import type { MobiusChoirDrawingModel } from "./drawing";
+import { createMobiusChoirShellModel } from "./shell";
 import { evaluateMobiusChoirVisualFrame } from "./visualResponse";
 import type { QualityLevel } from "../../contracts";
 
@@ -21,6 +23,7 @@ export interface MobiusChoirPoeticLayerStats {
   trailLayers: number;
   halos: number;
   atmosphereLayers: number;
+  shellLayers: number;
 }
 
 export interface MobiusChoirParticleStyle {
@@ -29,6 +32,7 @@ export interface MobiusChoirParticleStyle {
 }
 
 const MAX_TRAIL_LAYERS = 3;
+const SHELL_OFFSET = 0.026;
 
 export function getMobiusChoirParticleStyle(backend: RendererBackend): MobiusChoirParticleStyle {
   return backend === "webgl" ? { size: 0.022, opacity: 0.56 } : { size: 0.028, opacity: 0.62 };
@@ -112,6 +116,9 @@ export class MobiusChoirPoeticLayer {
   private readonly panoramaMaterial: THREE.PointsMaterial;
   private readonly panoramaBaseSize: number;
   private readonly atmosphere = createAtmosphereShell();
+  private readonly shells = new THREE.Group();
+  private readonly shellMeshes: THREE.Mesh[] = [];
+  private readonly shellMaterials: THREE.MeshBasicMaterial[] = [];
   private readonly haloTexture = createHaloTexture();
   private readonly haloGeometry = new THREE.PlaneGeometry(1.15, 1.15);
   private readonly halos = new THREE.Group();
@@ -124,7 +131,11 @@ export class MobiusChoirPoeticLayer {
   private quality: QualityLevel = "high";
   private disposed = false;
 
-  constructor(model: MobiusChoirPoeticModel, backend: RendererBackend) {
+  constructor(
+    model: MobiusChoirPoeticModel,
+    backend: RendererBackend,
+    drawing: MobiusChoirDrawingModel,
+  ) {
     this.model = model;
     const style = getMobiusChoirParticleStyle(backend);
     const surfaceGeometry = new THREE.BufferGeometry();
@@ -221,6 +232,33 @@ export class MobiusChoirPoeticLayer {
     const particleRoot = new THREE.Group();
     particleRoot.add(this.panoramaParticles, this.atmosphereParticles, this.surfaceParticles);
 
+    const shellModel = createMobiusChoirShellModel(
+      drawing.positions,
+      drawing.indices,
+      SHELL_OFFSET,
+    );
+    for (const [index, positions] of [shellModel.outer, shellModel.inner].entries()) {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geometry.setIndex(new THREE.BufferAttribute(drawing.indices, 1));
+      geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 5.3);
+      const material = new THREE.MeshBasicMaterial({
+        color: index === 0 ? 0x78efff : 0xb274ff,
+        transparent: true,
+        opacity: index === 0 ? 0.075 : 0.055,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        toneMapped: false,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.frustumCulled = false;
+      mesh.renderOrder = 3 + index;
+      this.shellMeshes.push(mesh);
+      this.shellMaterials.push(material);
+      this.shells.add(mesh);
+    }
+
     for (const positions of model.ribbonPositions) {
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -285,7 +323,14 @@ export class MobiusChoirPoeticLayer {
       this.halos.add(group);
     }
 
-    this.group.add(particleRoot, this.ribbons, this.trails, this.atmosphere, this.halos);
+    this.group.add(
+      particleRoot,
+      this.shells,
+      this.ribbons,
+      this.trails,
+      this.atmosphere,
+      this.halos,
+    );
     this.setQuality(this.quality);
     this.update(0);
   }
@@ -305,6 +350,9 @@ export class MobiusChoirPoeticLayer {
     });
     this.haloGroups.forEach((halo, index) => {
       halo.visible = index < quality.haloCount;
+    });
+    this.shellMeshes.forEach((shell, index) => {
+      shell.visible = level !== "low" || index === 0;
     });
   }
 
@@ -336,6 +384,22 @@ export class MobiusChoirPoeticLayer {
       line.scale.setScalar(1 + response.ribbonWidth * 0.006);
     });
     const seamEnergy = Math.max(...frame.modes.map((mode) => mode.seamAfterglow));
+    const signedVelocity =
+      frame.modes.reduce((sum, mode) => sum + mode.mathematicalVelocity, 0) /
+      Math.max(1, frame.modes.length);
+    this.shellMaterials.forEach((material, index) => {
+      const direction = index === 0 ? 1 : -1;
+      const localResponse = Math.max(-1, Math.min(1, signedVelocity * direction * 0.025));
+      material.opacity =
+        (index === 0 ? 0.05 : 0.04) +
+        frame.collectiveEnergy * 0.085 +
+        Math.max(0, localResponse) * 0.045;
+      material.color.setRGB(
+        0.34 + frame.seamEnergy * 0.18,
+        0.62 + frame.collectiveEnergy * 0.34,
+        1.04 + (index === 0 ? 0.18 : 0.42),
+      );
+    });
     this.trailLines.forEach((line, index) => {
       (line.material as THREE.LineBasicMaterial).opacity =
         seamEnergy * (0.38 / Math.max(1, index + 1));
@@ -370,6 +434,7 @@ export class MobiusChoirPoeticLayer {
       trailLayers: quality.trailLayers,
       halos: quality.haloCount,
       atmosphereLayers: 1,
+      shellLayers: this.quality === "low" ? 1 : 2,
     };
   }
 
@@ -384,6 +449,8 @@ export class MobiusChoirPoeticLayer {
     this.panoramaMaterial.dispose();
     this.atmosphere.geometry.dispose();
     (this.atmosphere.material as THREE.Material).dispose();
+    for (const mesh of this.shellMeshes) mesh.geometry.dispose();
+    for (const material of this.shellMaterials) material.dispose();
     this.haloGeometry.dispose();
     this.haloTexture.dispose();
     for (const material of this.haloMaterials) material.dispose();

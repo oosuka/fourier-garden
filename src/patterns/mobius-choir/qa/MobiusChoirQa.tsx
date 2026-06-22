@@ -27,6 +27,7 @@ function updateStats(
   stats: MobiusChoirSceneStats,
 ): void {
   canvas.dataset.backend = stats.backend;
+  canvas.dataset.postMode = stats.postMode;
   canvas.dataset.vertices = String(stats.vertices);
   canvas.dataset.triangles = String(stats.triangles);
   canvas.dataset.nodalSegments = String(stats.nodalSegments);
@@ -39,7 +40,10 @@ function updateStats(
   canvas.dataset.poeticAtmosphereParticles = String(stats.poetic?.atmosphereParticles ?? 0);
   canvas.dataset.poeticHalos = String(stats.poetic?.halos ?? 0);
   canvas.dataset.poeticTrailLayers = String(stats.poetic?.trailLayers ?? 0);
-  if (backendOutput) backendOutput.value = stats.backend;
+  canvas.dataset.poeticShellLayers = String(stats.poetic?.shellLayers ?? 0);
+  canvas.dataset.poeticEnvironmentParticles = String(stats.poetic?.environmentParticles ?? 0);
+  canvas.dataset.poeticTotalParticles = String(stats.poetic?.totalParticles ?? 0);
+  if (backendOutput) backendOutput.value = `${stats.backend} / ${stats.postMode}`;
   if (geometryOutput) {
     geometryOutput.value =
       `${stats.vertices.toLocaleString()} vertices / ` +
@@ -52,6 +56,8 @@ function updateStats(
     poeticOutput.value = stats.poetic
       ? `${stats.poetic.ribbons} ribbons / ` +
         `${stats.poetic.particles.toLocaleString()} particles / ` +
+        `${stats.poetic.environmentParticles.toLocaleString()} environment / ` +
+        `${stats.poetic.shellLayers} shells / ` +
         `${stats.poetic.halos} halos / ` +
         `${stats.poetic.trailLayers} trail layers`
       : "off";

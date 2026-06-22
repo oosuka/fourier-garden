@@ -35,7 +35,7 @@ describe("Möbius Choir dramaturgy", () => {
     for (let time = 0; time <= 960 / 17; time += 0.125) {
       const camera = evaluateMobiusChoirDramaturgy(time).camera;
       maximumOrbit = Math.max(maximumOrbit, Math.abs(camera.orbitRadians));
-      expect(Math.abs(camera.orbitRadians)).toBeLessThanOrEqual((28 * Math.PI) / 180 + 1e-12);
+      expect(Math.abs(camera.orbitRadians)).toBeLessThanOrEqual((24 * Math.PI) / 180 + 1e-12);
       expect(Math.abs(camera.dollyRatio - 1)).toBeLessThanOrEqual(0.12 + 1e-12);
       expect(Math.abs(camera.targetX)).toBeLessThanOrEqual(0.1 + 1e-12);
       expect(Math.abs(camera.targetY)).toBeLessThanOrEqual(0.08 + 1e-12);

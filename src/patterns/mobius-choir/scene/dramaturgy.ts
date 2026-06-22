@@ -1,5 +1,7 @@
 import { MOBIUS_CHOIR_SCORE, type MobiusChoirSectionId } from "../audio/score";
 
+const ORBIT_WAVE_MAXIMUM = 0.892_547;
+
 export interface MobiusChoirDramaturgySection {
   id: MobiusChoirSectionId;
   startRatio: number;
@@ -106,6 +108,7 @@ export function evaluateMobiusChoirDramaturgy(
   const motionEnergy = lerp(section.motionEnergy, next.motionEnergy, transition);
   const angle = cycleProgress * Math.PI * 2;
   const orbitWave = Math.sin(angle * 3) * 0.78 + Math.sin(angle) * 0.22;
+  const normalizedOrbitWave = orbitWave / ORBIT_WAVE_MAXIMUM;
   const dollyWave =
     Math.sin(angle * 2 - Math.PI / 2) * 0.65 + Math.sin(angle * 4 + Math.PI / 2) * 0.35;
 
@@ -117,7 +120,7 @@ export function evaluateMobiusChoirDramaturgy(
     visualEnergy,
     motionEnergy,
     camera: {
-      orbitRadians: orbitWave * ((28 * Math.PI) / 180) * (0.84 + motionEnergy * 0.16),
+      orbitRadians: normalizedOrbitWave * ((24 * Math.PI) / 180),
       dollyRatio: 1 + dollyWave * 0.12 * (0.58 + motionEnergy * 0.42),
       targetX: Math.sin(angle * 2) * 0.1 * (0.62 + motionEnergy * 0.38),
       targetY: Math.sin(angle * 3) * 0.08 * (0.62 + motionEnergy * 0.38),

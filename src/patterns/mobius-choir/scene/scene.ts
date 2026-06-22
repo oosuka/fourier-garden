@@ -2,6 +2,13 @@ import type { WebGLRenderer, WebGLRendererParameters } from "three";
 import * as THREE from "three/webgpu";
 
 import { selectRendererBackend, type RendererBackend } from "../../../core/rendererBackend";
+import { CinematicEnvironmentLayer } from "../../../rendering/cinematic/environmentLayer";
+import { getCinematicEnvironmentParticleCount } from "../../../rendering/cinematic/model";
+import {
+  createCinematicPostProcessor,
+  type CinematicPostMode,
+  type CinematicPostProcessor,
+} from "../../../rendering/cinematic/postProcessing";
 import {
   MOBIUS_CHOIR_DEFINITION,
   MOBIUS_CHOIR_GRID_TRIANGLE_COUNT,
@@ -51,13 +58,19 @@ export interface MobiusChoirCameraPlacement {
 
 export interface MobiusChoirSceneStats {
   backend: RendererBackend;
+  postMode: CinematicPostMode;
   vertices: number;
   triangles: number;
   nodalSegments: number;
   boundaryComponents: number;
   seamSegments: number;
   parameterGridSegments: number;
-  poetic: MobiusChoirPoeticLayerStats | null;
+  poetic: MobiusChoirScenePoeticStats | null;
+}
+
+export interface MobiusChoirScenePoeticStats extends MobiusChoirPoeticLayerStats {
+  environmentParticles: number;
+  totalParticles: number;
 }
 
 export interface MobiusChoirSceneOptions {
@@ -94,9 +107,14 @@ export function getMobiusChoirSceneLayerCounts(
   poeticLayers: boolean,
 ): Readonly<{
   strict: typeof MOBIUS_CHOIR_STRICT_LAYER_COUNTS;
-  poetic: MobiusChoirPoeticLayerStats | null;
+  poetic: MobiusChoirScenePoeticStats | null;
 }> {
   const quality = getMobiusChoirPoeticQuality(level);
+  const environmentParticles = getCinematicEnvironmentParticleCount(
+    "mobius-choir",
+    level,
+    quality.particleCount,
+  );
   return {
     strict: MOBIUS_CHOIR_STRICT_LAYER_COUNTS,
     poetic: poeticLayers
@@ -109,6 +127,9 @@ export function getMobiusChoirSceneLayerCounts(
           trailLayers: quality.trailLayers,
           halos: quality.haloCount,
           atmosphereLayers: 1,
+          shellLayers: level === "low" ? 1 : 2,
+          environmentParticles,
+          totalParticles: quality.particleCount + environmentParticles,
         }
       : null,
   };
@@ -280,8 +301,11 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
   private readonly seam = createSeam();
   private readonly nodes = createNodalLines(this.drawing);
   private readonly poetic: MobiusChoirPoeticLayer | null;
+  private readonly environment: CinematicEnvironmentLayer | null;
   private readonly onContextLost: (event: Event) => void;
   private readonly onContextRestored: () => void;
+  private postProcessor: CinematicPostProcessor | null = null;
+  private quality: QualityLevel = "high";
   private basePlacement: MobiusChoirCameraPlacement | null = null;
   private disposed = false;
 
@@ -297,9 +321,24 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
     this.backend = backend;
     this.canvas = canvas;
     this.scene.background = new THREE.Color(0x010107);
-    this.poetic = poeticLayers
-      ? new MobiusChoirPoeticLayer(createMobiusChoirPoeticModel(seed), backend)
+    this.environment = poeticLayers
+      ? new CinematicEnvironmentLayer({
+          backend,
+          chapter: "mobius-choir",
+          seed,
+          maximumParticleCount: getCinematicEnvironmentParticleCount(
+            "mobius-choir",
+            "ultra",
+            getMobiusChoirPoeticQuality("ultra").particleCount,
+          ),
+          palette: [0x76efff, 0xa766ff, 0xffbd78],
+          extent: { x: 20, y: 14, z: 20 },
+        })
       : null;
+    this.poetic = poeticLayers
+      ? new MobiusChoirPoeticLayer(createMobiusChoirPoeticModel(seed), backend, this.drawing)
+      : null;
+    if (this.environment) this.scene.add(this.environment.group);
     if (this.poetic) this.scene.add(this.poetic.group);
     this.scene.add(
       this.surface.mesh,
@@ -318,6 +357,17 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
     }
   }
 
+  async initializePostProcessor(): Promise<void> {
+    this.postProcessor = await createCinematicPostProcessor({
+      renderer: this.renderer,
+      backend: this.backend,
+      scene: this.scene,
+      camera: this.camera,
+      exposure: 1.1,
+    });
+    this.postProcessor.setQuality(this.quality);
+  }
+
   update(absoluteTimeSeconds: number): void {
     if (this.disposed) throw new Error("Möbius Choir scene has been disposed");
     updateMobiusChoirDrawingModel(this.drawing, absoluteTimeSeconds);
@@ -326,6 +376,12 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
     this.nodes.lines.geometry.setDrawRange(0, this.drawing.nodalSegmentCount * 2);
     this.nodes.lines.visible = getMobiusChoirNodalVisibility(this.drawing.nodalSegmentCount);
     this.poetic?.update(absoluteTimeSeconds);
+    const dramaturgy = evaluateMobiusChoirDramaturgy(absoluteTimeSeconds);
+    this.environment?.update(
+      absoluteTimeSeconds,
+      dramaturgy.visualEnergy,
+      dramaturgy.sectionId === "confluence" ? 0.8 : dramaturgy.audioEnergy * 0.45,
+    );
     if (this.basePlacement) {
       const placement = getMobiusChoirChoreographedCameraPlacement(
         this.basePlacement,
@@ -334,7 +390,9 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
       this.camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
       this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     }
-    this.renderer.render(this.scene, this.camera);
+    this.postProcessor?.setEnergy(dramaturgy.visualEnergy);
+    if (this.postProcessor) this.postProcessor.render();
+    else this.renderer.render(this.scene, this.camera);
   }
 
   resize(viewport: Viewport): void {
@@ -358,25 +416,45 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
     this.camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
     this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     this.camera.updateProjectionMatrix();
-    this.renderer.setPixelRatio(viewport.pixelRatio);
-    this.renderer.setSize(viewport.width, viewport.height, false);
+    this.environment?.resize(aspect);
+    if (this.postProcessor) {
+      this.postProcessor.resize(viewport.width, viewport.height, viewport.pixelRatio);
+    } else {
+      this.renderer.setPixelRatio(viewport.pixelRatio);
+      this.renderer.setSize(viewport.width, viewport.height, false);
+    }
   }
 
   setQuality(level: QualityLevel): void {
     getMobiusChoirStrictQuality(level);
+    this.quality = level;
     this.poetic?.setQuality(level);
+    const localParticles = getMobiusChoirPoeticQuality(level).particleCount;
+    this.environment?.setParticleCount(
+      getCinematicEnvironmentParticleCount("mobius-choir", level, localParticles),
+    );
+    this.postProcessor?.setQuality(level);
   }
 
   getStats(): MobiusChoirSceneStats {
     return {
       backend: this.backend,
+      postMode: this.postProcessor?.mode ?? "direct",
       vertices: this.drawing.vertexCount,
       triangles: this.drawing.triangleCount,
       nodalSegments: this.drawing.nodalSegmentCount,
       boundaryComponents: 1,
       seamSegments: SEAM_POINT_COUNT - 1,
       parameterGridSegments: this.drawing.parameterGridSegmentCount,
-      poetic: this.poetic?.getStats() ?? null,
+      poetic:
+        this.poetic && this.environment
+          ? {
+              ...this.poetic.getStats(),
+              environmentParticles: this.environment.getStats().particles,
+              totalParticles:
+                this.poetic.getStats().particles + this.environment.getStats().particles,
+            }
+          : null,
     };
   }
 
@@ -390,6 +468,9 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
       (object.material as THREE.Material).dispose();
     }
     this.poetic?.dispose();
+    this.environment?.dispose();
+    this.postProcessor?.dispose();
+    this.postProcessor = null;
     this.canvas.removeEventListener("webglcontextlost", this.onContextLost);
     this.canvas.removeEventListener("webglcontextrestored", this.onContextRestored);
     this.renderer.dispose();
@@ -410,9 +491,7 @@ export async function createMobiusChoirScene({
     const renderer = new WebGLRenderer(
       getMobiusChoirWebGLRendererParameters({ canvas, preserveDrawingBuffer }),
     );
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.NoToneMapping;
-    return new MobiusChoirSceneImplementation(
+    const scene = new MobiusChoirSceneImplementation(
       renderer,
       backend,
       canvas,
@@ -420,6 +499,8 @@ export async function createMobiusChoirScene({
       poeticLayers,
       onDeviceLost,
     );
+    await scene.initializePostProcessor();
+    return scene;
   }
 
   const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, alpha: false });
@@ -428,10 +509,8 @@ export async function createMobiusChoirScene({
     reportDeviceLost(info);
     onDeviceLost?.();
   };
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.NoToneMapping;
   await renderer.init();
-  return new MobiusChoirSceneImplementation(
+  const scene = new MobiusChoirSceneImplementation(
     renderer,
     backend,
     canvas,
@@ -439,4 +518,6 @@ export async function createMobiusChoirScene({
     poeticLayers,
     onDeviceLost,
   );
+  await scene.initializePostProcessor();
+  return scene;
 }
