@@ -8,6 +8,13 @@ import workletSource from "../../public/audio/fourier-worklet.js?raw";
 const chapterSources = [residueBloomSource, spectralCathedralSource, mobiusChoirSource].join("\n");
 
 describe("AudioWorklet mathematical contract", () => {
+  it("cache-busts every module in the worklet dependency graph", () => {
+    expect(workletSource.match(/from ["'][^"']+\?v=11["']/g) ?? []).toHaveLength(4);
+    for (const chapterSource of [residueBloomSource, spectralCathedralSource, mobiusChoirSource]) {
+      expect(chapterSource).toMatch(/from ["']\.\/shared\.js\?v=11["']/);
+    }
+  });
+
   it("keeps each chapter renderer in its own worklet module", () => {
     expect(residueBloomSource).toContain("renderResidueBloomSample");
     expect(spectralCathedralSource).toContain("renderSpectralCathedralSample");

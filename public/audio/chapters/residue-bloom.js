@@ -1,4 +1,4 @@
-import { clamp, isFiniteNumber, isPositiveFinite } from "./shared.js";
+import { clamp, isFiniteNumber, isPositiveFinite } from "./shared.js?v=11";
 
 function evaluateSerializedPhasor(mapping, absoluteTimeSeconds) {
   const angle = absoluteTimeSeconds * mapping.visualAngularRate;

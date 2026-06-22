@@ -37,6 +37,10 @@ interface WorkletProcessorStub {
   process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean;
 }
 
+interface ChapterProcessorStub {
+  createState(program: unknown): unknown;
+}
+
 function composeWorkletSource(...sources: readonly string[]): string {
   return sources
     .join("\n")
@@ -78,6 +82,32 @@ function loadProcessor(sampleRate: number): WorkletProcessorStub {
   return new Processor();
 }
 
+function loadChapterProcessor(
+  source: string,
+  exportName: string,
+  sampleRate: number,
+): ChapterProcessorStub {
+  const context = vm.createContext({ sampleRate });
+  const executableSharedSource = sharedSource.replace(/^export\s+/gm, "");
+  context.sharedModule = vm.runInContext(
+    `(() => { ${executableSharedSource}\nreturn { clamp, getEqualPowerPanGains, hashUint32, isFiniteNumber, isPositiveFinite, isNonnegativeFinite }; })()`,
+    context,
+  );
+
+  const executableChapterSource = source
+    .replace(
+      /import\s+\{([^}]+)\}\s+from\s+["']\.\/shared\.js(?:\?v=\d+)?["'];/,
+      "const {$1} = sharedModule;",
+    )
+    .replace(/^export\s+/gm, "");
+  vm.runInContext(
+    `${executableChapterSource}\nglobalThis.chapterProcessor = ${exportName};`,
+    context,
+  );
+
+  return context.chapterProcessor as ChapterProcessorStub;
+}
+
 function send(processor: WorkletProcessorStub, data: unknown): void {
   processor.port.onmessage?.({ data });
 }
@@ -90,6 +120,12 @@ function createOutputs(frameCount: number): Float32Array[][] {
 }
 
 describe("AudioWorklet runtime", () => {
+  it("initializes the Möbius Choir processor from its declared module dependencies", () => {
+    const processor = loadChapterProcessor(mobiusChoirSource, "mobiusChoirProcessor", 48_000);
+
+    expect(() => processor.createState(createMobiusChoirWorkletProgram())).not.toThrow();
+  });
+
   it.each(
     [44_100, 48_000, 96_000].flatMap((sampleRate) =>
       [0.01, 10.7, 28.3, 42.4, 56.46, 56.52].map(

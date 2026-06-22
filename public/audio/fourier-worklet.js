@@ -1,7 +1,7 @@
-import { mobiusChoirProcessor } from "./chapters/mobius-choir.js";
-import { residueBloomProcessor } from "./chapters/residue-bloom.js";
-import { isFiniteNumber } from "./chapters/shared.js";
-import { spectralCathedralProcessor } from "./chapters/spectral-cathedral.js";
+import { mobiusChoirProcessor } from "./chapters/mobius-choir.js?v=11";
+import { residueBloomProcessor } from "./chapters/residue-bloom.js?v=11";
+import { isFiniteNumber } from "./chapters/shared.js?v=11";
+import { spectralCathedralProcessor } from "./chapters/spectral-cathedral.js?v=11";
 
 const PROCESSORS = new Map(
   [residueBloomProcessor, spectralCathedralProcessor, mobiusChoirProcessor].map((processor) => [

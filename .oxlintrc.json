@@ -58,6 +58,7 @@
         "audioworklet": true
       },
       "rules": {
+        "no-undef": "error",
         "unicorn/prefer-add-event-listener": "off",
         "unicorn/require-post-message-target-origin": "off"
       }

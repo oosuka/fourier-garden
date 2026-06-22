@@ -1,4 +1,9 @@
-import { isNonnegativeFinite, isPositiveFinite } from "./shared.js";
+import {
+  getEqualPowerPanGains,
+  hashUint32,
+  isNonnegativeFinite,
+  isPositiveFinite,
+} from "./shared.js?v=11";
 
 function getMobiusChoirEnvelope(ageSeconds, gesture, preset) {
   const articulation = preset.articulations[gesture];

@@ -1,4 +1,10 @@
-import { isFiniteNumber, isNonnegativeFinite, isPositiveFinite } from "./shared.js";
+import {
+  getEqualPowerPanGains,
+  hashUint32,
+  isFiniteNumber,
+  isNonnegativeFinite,
+  isPositiveFinite,
+} from "./shared.js?v=11";
 
 function evaluateSpectralCathedralEvents(score, absoluteTimeSeconds, maximumAgeSeconds) {
   if (
@@ -32,11 +38,6 @@ function evaluateSpectralCathedralEvents(score, absoluteTimeSeconds, maximumAgeS
   }
 
   return evaluated.toSorted((left, right) => left.absoluteTimeSeconds - right.absoluteTimeSeconds);
-}
-
-function getEqualPowerPanGains(pan) {
-  const clampedPan = Math.max(-1, Math.min(1, pan));
-  return [Math.sqrt((1 - clampedPan) / 2), Math.sqrt((1 + clampedPan) / 2)];
 }
 
 function getSpectralCathedralBellEnvelope(ageSeconds, gesture, preset, decayScale) {
@@ -85,13 +86,6 @@ function evaluateSpectralCathedralEventExpression(event, modes) {
     woodScale: 0.72 + velocity * 0.56,
     decayScale: 0.82 + displacement * 0.38,
   };
-}
-
-function hashUint32(value) {
-  let hash = value >>> 0;
-  hash = Math.imul(hash ^ (hash >>> 16), 0x45d9f3b);
-  hash = Math.imul(hash ^ (hash >>> 16), 0x45d9f3b);
-  return (hash ^ (hash >>> 16)) >>> 0;
 }
 
 function hashUnit(absoluteEventIndex, modeId, component, salt) {
