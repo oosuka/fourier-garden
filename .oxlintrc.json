@@ -38,6 +38,7 @@
         "src/main.tsx",
         "src/patterns/spectral-cathedral/definition.tsx",
         "src/patterns/mobius-choir/definition.tsx",
+        "src/patterns/residue-bloom/qa/ResidueBloomQa.tsx",
         "src/patterns/spectral-cathedral/qa/SpectralCathedralQa.tsx",
         "src/patterns/mobius-choir/qa/MobiusChoirQa.tsx"
       ],

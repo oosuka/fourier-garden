@@ -11,6 +11,7 @@ import {
 } from "../../../rendering/cinematic/model";
 import {
   createCinematicPostProcessor,
+  type CinematicPostMode,
   type CinematicPostProcessor,
 } from "../../../rendering/cinematic/postProcessing";
 import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/model";
@@ -48,6 +49,12 @@ type SceneRenderer = THREE.WebGPURenderer | WebGLRenderer;
 export interface ResidueBloomSceneOptions extends PatternSceneOptions {
   poeticLayers?: boolean;
   preserveDrawingBuffer?: boolean;
+}
+
+export interface ResidueBloomSceneStats {
+  backend: RendererBackend;
+  postMode: CinematicPostMode;
+  totalParticles: number;
 }
 
 const RESIDUE_BLOOM_LOCAL_PARTICLE_COUNTS: Readonly<Record<QualityLevel, number>> = Object.freeze({
@@ -448,6 +455,16 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       line.line.visible =
         this.poeticLayers && (level === "low" ? index < 5 : level === "medium" ? index < 8 : true);
     });
+  }
+
+  getStats(): ResidueBloomSceneStats {
+    return {
+      backend: this.backend,
+      postMode: this.postProcessor?.mode ?? "direct",
+      totalParticles: this.poeticLayers
+        ? getResidueBloomCinematicCounts(this.quality).totalParticles
+        : 0,
+    };
   }
 
   dispose(): void {
@@ -882,6 +899,6 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
 
 export async function createResidueBloomScene(
   options: ResidueBloomSceneOptions,
-): Promise<ResidueBloomSceneInstance> {
+): Promise<ResidueBloomSceneInstance & { getStats(): ResidueBloomSceneStats }> {
   return ResidueBloomScene.create(options);
 }

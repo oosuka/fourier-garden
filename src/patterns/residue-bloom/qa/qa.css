@@ -1,0 +1,60 @@
+:root {
+  color: rgba(225, 247, 255, 0.92);
+  background: #010308;
+  font-family: "Inter", sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#residue-bloom-qa-root,
+.residueQaStage {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #010308;
+}
+
+.residueQaStage {
+  position: relative;
+}
+
+.residueQaCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.residueQaTelemetry {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px 14px;
+  max-width: min(880px, calc(100% - 44px));
+  padding: 9px 12px;
+  border: 1px solid rgba(129, 226, 242, 0.16);
+  border-radius: 3px;
+  color: rgba(170, 208, 219, 0.7);
+  background: rgba(1, 5, 10, 0.72);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.residueQaTelemetry output,
+.residueQaTelemetry strong {
+  color: rgba(229, 250, 255, 0.96);
+  font-weight: 400;
+}

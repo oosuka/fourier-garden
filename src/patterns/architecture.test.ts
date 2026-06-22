@@ -24,6 +24,8 @@ describe("chapter vertical slices", () => {
     expect(existsSync(`${chapterRoot}/audio/synthesis.ts`)).toBe(true);
     expect(existsSync(`${chapterRoot}/scene/scene.ts`)).toBe(true);
     expect(existsSync(`${chapterRoot}/details/ResidueBloomDetails.tsx`)).toBe(true);
+    expect(existsSync(`${chapterRoot}/qa/ResidueBloomQa.tsx`)).toBe(true);
+    expect(existsSync(`${chapterRoot}/qa/options.ts`)).toBe(true);
   });
 
   it("co-locates the complete Spectral Cathedral implementation", () => {

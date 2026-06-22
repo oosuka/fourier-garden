@@ -9,6 +9,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: "index.html",
+        residueBloomQa: "residue-bloom-qa.html",
         spectralCathedralQa: "spectral-cathedral-qa.html",
         mobiusChoirQa: "mobius-choir-qa.html",
       },
