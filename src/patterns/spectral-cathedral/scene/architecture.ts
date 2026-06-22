@@ -2,6 +2,8 @@ import type { SpectralCathedralLightAnchor } from "./poetic";
 
 export const CATHEDRAL_ARCH_FILAMENTS = 5;
 export const CATHEDRAL_VAULT_REPEATS = 4;
+export const CATHEDRAL_GRAND_VAULT_RIBS = 9;
+const GRAND_VAULT_POINTS = 65;
 
 const FILAMENT_OFFSETS = [0, -0.018, -0.009, 0.009, 0.018] as const;
 const VAULT_DEPTHS = [-0.16, -0.32, -0.48, -0.64] as const;
@@ -19,6 +21,7 @@ export interface CathedralArchitectureModel {
   readonly pillars: readonly CathedralPillarModel[];
   readonly archFilaments: readonly Float32Array[];
   readonly vaultRepeats: readonly Float32Array[];
+  readonly grandVaultRibs: readonly Float32Array[];
 }
 
 function validateArchPositions(archPositions: readonly Float32Array[]): void {
@@ -66,6 +69,25 @@ function createVaultRepeat(positions: Float32Array, depth: number, scale: number
   return repeated;
 }
 
+function createGrandVaultRibs(): readonly Float32Array[] {
+  return Array.from({ length: CATHEDRAL_GRAND_VAULT_RIBS }, (_, ribIndex) => {
+    const positions = new Float32Array(GRAND_VAULT_POINTS * 3);
+    const depthProgress = ribIndex / (CATHEDRAL_GRAND_VAULT_RIBS - 1);
+    const y = -1.45 + depthProgress * 2.6;
+    const width = 1.58 - Math.abs(depthProgress - 0.5) * 0.12;
+    for (let pointIndex = 0; pointIndex < GRAND_VAULT_POINTS; pointIndex += 1) {
+      const progress = pointIndex / (GRAND_VAULT_POINTS - 1);
+      const normalizedX = progress * 2 - 1;
+      const arch = Math.max(0, 1 - Math.abs(normalizedX) ** 1.35) ** 0.72;
+      const offset = pointIndex * 3;
+      positions[offset] = normalizedX * width;
+      positions[offset + 1] = y;
+      positions[offset + 2] = 0.04 + arch * 1.98;
+    }
+    return positions;
+  });
+}
+
 export function createCathedralArchitectureModel(
   anchors: readonly SpectralCathedralLightAnchor[],
   archPositions: readonly Float32Array[],
@@ -87,5 +109,5 @@ export function createCathedralArchitectureModel(
   const vaultRepeats = archPositions.flatMap((positions) =>
     VAULT_DEPTHS.map((depth, index) => createVaultRepeat(positions, depth, VAULT_SCALES[index]!)),
   );
-  return { pillars, archFilaments, vaultRepeats };
+  return { pillars, archFilaments, vaultRepeats, grandVaultRibs: createGrandVaultRibs() };
 }

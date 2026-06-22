@@ -1,5 +1,5 @@
 import * as THREE from "three/webgpu";
-import { Fn, float, length, mix, sin, smoothstep, uniform, uv, vec2, vec3, vec4 } from "three/tsl";
+import { float, length, mix, sin, smoothstep, uniform, uv, vec2, vec3 } from "three/tsl";
 
 import type { RendererBackend } from "../../core/rendererBackend";
 import { createSeededRandom } from "../../core/seed";
@@ -21,6 +21,19 @@ export interface CinematicEnvironmentLayerOptions {
   maximumParticleCount: number;
   palette: readonly [number, number, number];
   extent: Readonly<{ x: number; y: number; z: number }>;
+}
+
+export function getCinematicEnvironmentParticleStyle(
+  backend: RendererBackend,
+  band: 0 | 1 | 2,
+): Readonly<{ size: number; opacity: number }> {
+  if (backend === "webgl") {
+    return {
+      size: [0.005, 0.008, 0.012][band]!,
+      opacity: [0.24, 0.18, 0.11][band]!,
+    };
+  }
+  return { size: BAND_POINT_SIZES[band], opacity: BAND_OPACITIES[band] };
 }
 
 interface NebulaLayer {
@@ -114,18 +127,15 @@ function createWebGpuNebulaMaterial(
     blending: THREE.AdditiveBlending,
     toneMapped: false,
   });
-  material.colorNode = Fn(() => {
-    const centered = uv().sub(vec2(0.5, 0.5));
-    const distance = length(centered.mul(vec2(1, 1.35)));
-    const rings = sin(distance.mul(36).sub(time.mul(0.12)).add(float(phase)))
-      .mul(0.5)
-      .add(0.5);
-    const cloud = float(1).sub(smoothstep(0.04, 0.7, distance));
-    const coolTone = mix(vec3(...first), vec3(...second), rings);
-    const tone = mix(coolTone, vec3(1, 0.62, 0.28), warmth.mul(0.2));
-    const alpha = cloud.mul(rings.mul(0.06).add(0.025).add(energy.mul(0.09)));
-    return vec4(tone, alpha);
-  })();
+  const centered = uv().sub(vec2(0.5, 0.5));
+  const distance = length(centered.mul(vec2(1, 1.35)));
+  const rings = sin(distance.mul(36).sub(time.mul(0.12)).add(float(phase)))
+    .mul(0.5)
+    .add(0.5);
+  const cloud = float(1).sub(smoothstep(0.04, 0.7, distance));
+  const coolTone = mix(vec3(...first), vec3(...second), rings);
+  material.colorNode = mix(coolTone, vec3(1, 0.62, 0.28), warmth.mul(0.2));
+  material.opacityNode = cloud.mul(rings.mul(0.006).add(0.003).add(energy.mul(0.008)));
   return material;
 }
 
@@ -147,6 +157,7 @@ export class CinematicEnvironmentLayer {
     THREE.PointsMaterial,
     THREE.PointsMaterial,
   ];
+  private readonly particleBaseOpacities: readonly [number, number, number];
   private readonly nebulaLayers: NebulaLayer[] = [];
   private readonly sceneTime = uniform(0);
   private readonly sceneEnergy = uniform(0);
@@ -159,6 +170,11 @@ export class CinematicEnvironmentLayer {
       throw new Error("Cinematic maximum particle count must be a nonnegative integer");
     }
     this.maximumParticleCount = options.maximumParticleCount;
+    this.particleBaseOpacities = [
+      getCinematicEnvironmentParticleStyle(options.backend, 0).opacity,
+      getCinematicEnvironmentParticleStyle(options.backend, 1).opacity,
+      getCinematicEnvironmentParticleStyle(options.backend, 2).opacity,
+    ];
     this.particleCount = options.maximumParticleCount;
     this.extent = options.extent;
     const field = createCinematicParticleField(
@@ -170,14 +186,15 @@ export class CinematicEnvironmentLayer {
     const colorBuffers = splitBand(field.colors, field.bands, 3);
     const createPointsForBand = (band: 0 | 1 | 2): THREE.Points => {
       const positions = this.particleBuffers[band];
+      const style = getCinematicEnvironmentParticleStyle(options.backend, band);
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       geometry.setAttribute("color", new THREE.BufferAttribute(colorBuffers[band]!, 3));
       const material = new THREE.PointsMaterial({
-        size: BAND_POINT_SIZES[band],
+        size: style.size,
         sizeAttenuation: true,
         transparent: true,
-        opacity: BAND_OPACITIES[band],
+        opacity: style.opacity,
         vertexColors: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -221,14 +238,14 @@ export class CinematicEnvironmentLayer {
           : new THREE.MeshBasicMaterial({
               map: texture,
               transparent: true,
-              opacity: 0.14 - index * 0.025,
+              opacity: 0.045 - index * 0.008,
               blending: THREE.AdditiveBlending,
               depthWrite: false,
               side: THREE.DoubleSide,
               toneMapped: false,
             });
       const mesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(options.extent.x * 1.45, options.extent.y * 1.35),
+        new THREE.PlaneGeometry(options.extent.x * 2.4, options.extent.y * 2.4),
         material,
       );
       mesh.position.set((index - 1) * options.extent.x * 0.12, (1 - index) * 0.5, -7 - index * 2);
@@ -238,7 +255,7 @@ export class CinematicEnvironmentLayer {
       this.nebulaLayers.push({
         mesh,
         material,
-        baseOpacity: 0.14 - index * 0.025,
+        baseOpacity: 0.045 - index * 0.008,
         texture,
       });
     }
@@ -246,7 +263,7 @@ export class CinematicEnvironmentLayer {
     this.resize(options.extent.x / options.extent.y);
   }
 
-  update(timeSeconds: number, energy: number, warmth: number): void {
+  update(timeSeconds: number, energy: number, warmth: number, camera?: THREE.Camera): void {
     if (this.disposed) throw new Error("Cinematic environment layer has been disposed");
     if (!Number.isFinite(timeSeconds) || timeSeconds < 0) {
       throw new Error("Cinematic environment time must be finite and nonnegative");
@@ -264,13 +281,22 @@ export class CinematicEnvironmentLayer {
         Math.cos(timeSeconds * (0.011 + index * 0.003) + index) * (0.08 + index * 0.05);
       this.particleMaterials[index].opacity = Math.min(
         0.72,
-        BAND_OPACITIES[index] * (0.86 + energy * 0.42),
+        this.particleBaseOpacities[index]! * (0.86 + energy * 0.42),
       );
     });
     this.nebulaLayers.forEach((layer, index) => {
-      layer.mesh.rotation.z = (index - 1) * 0.32 + Math.sin(timeSeconds * 0.018 + index) * 0.08;
+      const rotationZ = (index - 1) * 0.32 + Math.sin(timeSeconds * 0.018 + index) * 0.08;
+      if (camera) {
+        layer.mesh.quaternion.copy(camera.quaternion);
+        layer.mesh.rotateZ(rotationZ);
+      } else {
+        layer.mesh.rotation.set(0, 0, rotationZ);
+      }
       if (layer.material instanceof THREE.MeshBasicMaterial) {
-        layer.material.opacity = Math.min(0.38, layer.baseOpacity + energy * 0.09 + warmth * 0.025);
+        layer.material.opacity = Math.min(
+          0.13,
+          layer.baseOpacity + energy * 0.025 + warmth * 0.008,
+        );
       }
     });
   }

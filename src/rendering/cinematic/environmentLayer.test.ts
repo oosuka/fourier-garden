@@ -1,6 +1,10 @@
+import * as THREE from "three/webgpu";
 import { describe, expect, it } from "vitest";
 
-import { CinematicEnvironmentLayer } from "./environmentLayer";
+import {
+  CinematicEnvironmentLayer,
+  getCinematicEnvironmentParticleStyle,
+} from "./environmentLayer";
 import type { CinematicChapterId } from "./model";
 
 function makeLayer(
@@ -18,6 +22,15 @@ function makeLayer(
 }
 
 describe("CinematicEnvironmentLayer", () => {
+  it("uses finer and dimmer depth particles in WebGL2", () => {
+    for (const band of [0, 1, 2] as const) {
+      const webgpu = getCinematicEnvironmentParticleStyle("webgpu", band);
+      const webgl = getCinematicEnvironmentParticleStyle("webgl", band);
+      expect(webgl.size).toBeLessThan(webgpu.size);
+      expect(webgl.opacity).toBeLessThan(webgpu.opacity);
+    }
+  });
+
   it("creates three depth bands and three nebula veils", () => {
     const layer = makeLayer("residue-bloom", 40_416);
 
@@ -27,6 +40,17 @@ describe("CinematicEnvironmentLayer", () => {
       nebulaVeils: 3,
     });
     expect(layer.group.children).toHaveLength(6);
+    layer.dispose();
+  });
+
+  it("routes WebGPU nebula transparency through the material opacity node", () => {
+    const layer = makeLayer("residue-bloom", 2_000);
+    const veil = layer.group.children[3] as THREE.Mesh<
+      THREE.BufferGeometry,
+      THREE.MeshBasicNodeMaterial
+    >;
+
+    expect(veil.material.opacityNode).not.toBeNull();
     layer.dispose();
   });
 
@@ -51,6 +75,29 @@ describe("CinematicEnvironmentLayer", () => {
     expect(new Set(rotations.map((value) => value.toFixed(6))).size).toBe(3);
     expect(layer.group.scale.x).toBeGreaterThan(1);
     layer.dispose();
+  });
+
+  it("faces every nebula veil toward a perspective camera without moving the particles", () => {
+    const layer = makeLayer("mobius-choir", 2_000);
+    const reference = makeLayer("mobius-choir", 2_000);
+    const camera = new THREE.PerspectiveCamera();
+    camera.position.set(5, -8, 4);
+    camera.lookAt(0, 0, 0);
+
+    reference.update(12.5, 0.8, 0.3);
+    layer.update(12.5, 0.8, 0.3, camera);
+
+    const cameraDirection = camera.getWorldDirection(new THREE.Vector3());
+    for (const child of layer.group.children.slice(3)) {
+      const veilNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(child.quaternion);
+      expect(Math.abs(veilNormal.dot(cameraDirection))).toBeCloseTo(1, 5);
+    }
+    expect(layer.group.children[0]!.position).toEqual(reference.group.children[0]!.position);
+    layer.group.children[0]!.quaternion.toArray().forEach((value, index) =>
+      expect(value).toBeCloseTo(reference.group.children[0]!.quaternion.toArray()[index]!, 8),
+    );
+    layer.dispose();
+    reference.dispose();
   });
 
   it("validates updates and rejects use after disposal", () => {

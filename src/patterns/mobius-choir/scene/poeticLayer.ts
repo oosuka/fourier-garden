@@ -391,14 +391,22 @@ export class MobiusChoirPoeticLayer {
       const direction = index === 0 ? 1 : -1;
       const localResponse = Math.max(-1, Math.min(1, signedVelocity * direction * 0.025));
       material.opacity =
-        (index === 0 ? 0.05 : 0.04) +
-        frame.collectiveEnergy * 0.085 +
-        Math.max(0, localResponse) * 0.045;
-      material.color.setRGB(
-        0.34 + frame.seamEnergy * 0.18,
-        0.62 + frame.collectiveEnergy * 0.34,
-        1.04 + (index === 0 ? 0.18 : 0.42),
-      );
+        (index === 0 ? 0.022 : 0.018) +
+        frame.collectiveEnergy * 0.05 +
+        Math.max(0, localResponse) * 0.025;
+      if (index === 0) {
+        material.color.setRGB(
+          0.04 + frame.seamEnergy * 0.08,
+          0.58 + frame.collectiveEnergy * 0.22,
+          1.2,
+        );
+      } else {
+        material.color.setRGB(
+          0.42 + frame.seamEnergy * 0.18,
+          0.12 + frame.collectiveEnergy * 0.12,
+          1.28,
+        );
+      }
     });
     this.trailLines.forEach((line, index) => {
       (line.material as THREE.LineBasicMaterial).opacity =

@@ -8,6 +8,7 @@ import {
   getSpectralCathedralSceneLayerCounts,
   getSpectralCathedralStrictQuality,
   getSpectralCathedralWebGLRendererParameters,
+  orientSpectralCathedralCamera,
 } from "./scene";
 
 describe("Spectral Cathedral strict scene contracts", () => {
@@ -66,6 +67,7 @@ describe("Spectral Cathedral strict scene contracts", () => {
         placement.near,
         placement.far,
       );
+      orientSpectralCathedralCamera(camera);
       camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
       camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
       camera.updateProjectionMatrix();
@@ -83,6 +85,16 @@ describe("Spectral Cathedral strict scene contracts", () => {
         }
       }
     }
+  });
+
+  it("keeps the mathematical surface as the floor and its normal visually upright", () => {
+    const camera = new THREE.PerspectiveCamera();
+    const placement = getSpectralCathedralCameraPlacement(16 / 9);
+
+    orientSpectralCathedralCamera(camera);
+
+    expect(camera.up.toArray()).toEqual([0, 0, 1]);
+    expect(placement.targetZ).toBe(0.42);
   });
 
   it("rejects invalid viewport aspect ratios", () => {
@@ -120,6 +132,7 @@ describe("Spectral Cathedral strict scene contracts", () => {
           placement.near,
           placement.far,
         );
+        orientSpectralCathedralCamera(camera);
         camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
         camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
         camera.updateProjectionMatrix();

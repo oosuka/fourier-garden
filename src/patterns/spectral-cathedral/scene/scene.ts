@@ -19,7 +19,11 @@ import {
   updateSpectralCathedralDrawingModel,
   type SpectralCathedralDrawingModel,
 } from "./drawing";
-import { CATHEDRAL_ARCH_FILAMENTS, CATHEDRAL_VAULT_REPEATS } from "./architecture";
+import {
+  CATHEDRAL_ARCH_FILAMENTS,
+  CATHEDRAL_GRAND_VAULT_RIBS,
+  CATHEDRAL_VAULT_REPEATS,
+} from "./architecture";
 import { evaluateSpectralCathedralDramaturgy } from "./dramaturgy";
 import {
   SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT,
@@ -35,8 +39,9 @@ import type { QualityLevel, Viewport } from "../../contracts";
 
 const CAMERA_FOV_DEGREES = 38;
 const MATHEMATICAL_BOUND_RADIUS = Math.hypot(1, 1 / Math.sqrt(2), 0.6);
-const CAMERA_FIT_RADIUS = MATHEMATICAL_BOUND_RADIUS * 1.12;
+const CAMERA_FIT_RADIUS = MATHEMATICAL_BOUND_RADIUS * 1.18;
 const CAMERA_DIRECTION = new THREE.Vector3(1.9, -2.7, 1.8).normalize();
+const CAMERA_TARGET_Z = 0.42;
 const BOUNDARY_HALF_HEIGHT =
   SPECTRAL_CATHEDRAL_DEFINITION.height / SPECTRAL_CATHEDRAL_DEFINITION.width;
 
@@ -130,6 +135,8 @@ export function getSpectralCathedralSceneLayerCounts(
       vaultRepeats: archCount * CATHEDRAL_VAULT_REPEATS,
       visibleVaultRepeats: archCount * architecture.vaultsPerArch,
       archMembranes: archCount,
+      grandVaultRibs: CATHEDRAL_GRAND_VAULT_RIBS,
+      visibleGrandVaultRibs: architecture.grandVaults,
       particles: quality.particleCount,
       environmentParticles,
       totalParticles: quality.particleCount + environmentParticles,
@@ -176,11 +183,15 @@ export function getSpectralCathedralCameraPlacement(
     distance,
     positionX: CAMERA_DIRECTION.x * distance,
     positionY: CAMERA_DIRECTION.y * distance,
-    positionZ: CAMERA_DIRECTION.z * distance,
+    positionZ: CAMERA_TARGET_Z + CAMERA_DIRECTION.z * distance,
     targetX: 0,
     targetY: 0,
-    targetZ: 0,
+    targetZ: CAMERA_TARGET_Z,
   };
+}
+
+export function orientSpectralCathedralCamera(camera: THREE.PerspectiveCamera): void {
+  camera.up.set(0, 0, 1);
 }
 
 export function getSpectralCathedralChoreographedCameraPlacement(
@@ -221,7 +232,10 @@ function createSurface(model: SpectralCathedralDrawingModel): {
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), MATHEMATICAL_BOUND_RADIUS);
 
   const material = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(0.52, 0.72, 1),
     vertexColors: true,
+    transparent: true,
+    opacity: 0.68,
     side: THREE.DoubleSide,
     toneMapped: false,
     polygonOffset: true,
@@ -307,6 +321,7 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
   ) {
     this.renderer = renderer;
     this.backend = backend;
+    orientSpectralCathedralCamera(this.camera);
     this.scene.background = new THREE.Color(0x01030a);
     this.environmentLayer = poeticLayers
       ? new CinematicEnvironmentLayer({
@@ -352,11 +367,6 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
     this.nodalLines.lines.geometry.setDrawRange(0, this.drawingModel.nodalSegmentCount * 2);
     this.poeticLayer?.update(absoluteTimeSeconds);
     const dramaturgy = evaluateSpectralCathedralDramaturgy(absoluteTimeSeconds);
-    this.environmentLayer?.update(
-      absoluteTimeSeconds,
-      dramaturgy.visualEnergy,
-      dramaturgy.sectionId === "afterglow" ? 0.8 : dramaturgy.audioEnergy * 0.5,
-    );
     if (this.cameraBasePlacement) {
       const placement = getSpectralCathedralChoreographedCameraPlacement(
         this.cameraBasePlacement,
@@ -365,6 +375,12 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
       this.camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
       this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     }
+    this.environmentLayer?.update(
+      absoluteTimeSeconds,
+      dramaturgy.visualEnergy,
+      dramaturgy.sectionId === "afterglow" ? 0.8 : dramaturgy.audioEnergy * 0.5,
+      this.camera,
+    );
     this.postProcessor?.setEnergy(dramaturgy.visualEnergy);
     if (this.postProcessor) this.postProcessor.render();
     else this.renderer.render(this.scene, this.camera);

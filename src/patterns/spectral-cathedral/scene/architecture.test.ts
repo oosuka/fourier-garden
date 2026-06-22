@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CATHEDRAL_ARCH_FILAMENTS,
+  CATHEDRAL_GRAND_VAULT_RIBS,
   CATHEDRAL_VAULT_REPEATS,
   createCathedralArchitectureModel,
 } from "./architecture";
@@ -17,9 +18,22 @@ describe("Spectral Cathedral architecture model", () => {
     expect(architecture.pillars).toHaveLength(7);
     expect(architecture.archFilaments).toHaveLength(6 * CATHEDRAL_ARCH_FILAMENTS);
     expect(architecture.vaultRepeats).toHaveLength(6 * CATHEDRAL_VAULT_REPEATS);
+    expect(architecture.grandVaultRibs).toHaveLength(CATHEDRAL_GRAND_VAULT_RIBS);
     poetic.archPositions.forEach((positions, index) => {
       expect(positions).toEqual(original[index]);
     });
+  });
+
+  it("creates finite screen-filling vault ribs with grounded ends and elevated apexes", () => {
+    const poetic = createSpectralCathedralPoeticModel(41_041);
+    const architecture = createCathedralArchitectureModel(poetic.anchors, poetic.archPositions);
+
+    for (const rib of architecture.grandVaultRibs) {
+      expect(rib.every(Number.isFinite)).toBe(true);
+      expect(rib[2]).toBeLessThan(0.1);
+      expect(rib.at(-1)).toBeLessThan(0.1);
+      expect(rib[Math.floor(rib.length / 6) * 3 + 2]).toBeGreaterThan(1.9);
+    }
   });
 
   it("keeps every filament finite and attaches canonical filaments to their endpoints", () => {

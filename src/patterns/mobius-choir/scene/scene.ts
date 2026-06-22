@@ -202,7 +202,10 @@ function createSurface(model: MobiusChoirDrawingModel): {
   geometry.setIndex(new THREE.BufferAttribute(model.indices, 1));
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), MATHEMATICAL_BOUND_RADIUS);
   const material = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(0.58, 0.72, 1),
     vertexColors: true,
+    transparent: true,
+    opacity: 0.8,
     side: THREE.DoubleSide,
     toneMapped: false,
     polygonOffset: true,
@@ -377,11 +380,6 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
     this.nodes.lines.visible = getMobiusChoirNodalVisibility(this.drawing.nodalSegmentCount);
     this.poetic?.update(absoluteTimeSeconds);
     const dramaturgy = evaluateMobiusChoirDramaturgy(absoluteTimeSeconds);
-    this.environment?.update(
-      absoluteTimeSeconds,
-      dramaturgy.visualEnergy,
-      dramaturgy.sectionId === "confluence" ? 0.8 : dramaturgy.audioEnergy * 0.45,
-    );
     if (this.basePlacement) {
       const placement = getMobiusChoirChoreographedCameraPlacement(
         this.basePlacement,
@@ -390,6 +388,12 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
       this.camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
       this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     }
+    this.environment?.update(
+      absoluteTimeSeconds,
+      dramaturgy.visualEnergy,
+      dramaturgy.sectionId === "confluence" ? 0.8 : dramaturgy.audioEnergy * 0.45,
+      this.camera,
+    );
     this.postProcessor?.setEnergy(dramaturgy.visualEnergy);
     if (this.postProcessor) this.postProcessor.render();
     else this.renderer.render(this.scene, this.camera);

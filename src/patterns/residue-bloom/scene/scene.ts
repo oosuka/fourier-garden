@@ -414,6 +414,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       timeValue,
       Math.min(1, response.membraneDisplacement + response.flowEnergy * 0.35),
       response.warmth,
+      this.camera,
     );
 
     this.atmosphereGroup.rotation.z = Math.sin(timeValue * 0.027) * 0.025;
