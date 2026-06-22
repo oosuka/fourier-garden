@@ -1,0 +1,127 @@
+import { createSeededRandom } from "../../core/seed";
+import type { QualityLevel } from "../../patterns/contracts";
+
+export type CinematicChapterId = "residue-bloom" | "spectral-cathedral" | "mobius-choir";
+
+export const CINEMATIC_PARTICLE_BUDGETS: Readonly<
+  Record<CinematicChapterId, Readonly<Record<QualityLevel, number>>>
+> = Object.freeze({
+  "residue-bloom": Object.freeze({
+    low: 8_000,
+    medium: 18_000,
+    high: 32_000,
+    ultra: 48_000,
+  }),
+  "spectral-cathedral": Object.freeze({
+    low: 8_000,
+    medium: 24_000,
+    high: 48_000,
+    ultra: 64_000,
+  }),
+  "mobius-choir": Object.freeze({
+    low: 8_000,
+    medium: 22_000,
+    high: 44_000,
+    ultra: 60_000,
+  }),
+});
+
+const CHAPTER_PALETTES: Readonly<Record<CinematicChapterId, readonly [number, number, number]>> = {
+  "residue-bloom": [0x78f3ff, 0xa798ff, 0xffc782],
+  "spectral-cathedral": [0x62eaff, 0xb678ff, 0xffb56e],
+  "mobius-choir": [0x76efff, 0xa766ff, 0xffbd78],
+};
+
+const BAND_RANGES = [
+  { spanX: 36, spanY: 22, minimumZ: -18, maximumZ: -8, minimumSize: 0.35, maximumSize: 0.7 },
+  { spanX: 30, spanY: 18, minimumZ: -8, maximumZ: -2, minimumSize: 0.7, maximumSize: 1.2 },
+  { spanX: 24, spanY: 14, minimumZ: -2, maximumZ: 3, minimumSize: 1.2, maximumSize: 2.2 },
+] as const;
+
+export interface CinematicParticleField {
+  readonly positions: Float32Array;
+  readonly colors: Float32Array;
+  readonly sizes: Float32Array;
+  readonly phases: Float32Array;
+  readonly bands: Uint8Array;
+}
+
+function colorChannel(color: number, shift: number): number {
+  return ((color >>> shift) & 0xff) / 255;
+}
+
+function getBand(index: number, count: number): 0 | 1 | 2 {
+  const progress = index / Math.max(1, count);
+  if (progress < 0.52) return 0;
+  if (progress < 0.86) return 1;
+  return 2;
+}
+
+export function createCinematicParticleField(
+  seed: number,
+  chapter: CinematicChapterId,
+  count: number,
+): CinematicParticleField {
+  if (!Number.isInteger(count) || count < 0) {
+    throw new Error("Cinematic particle count must be a nonnegative integer");
+  }
+  const random = createSeededRandom(seed);
+  const palette = CHAPTER_PALETTES[chapter];
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const phases = new Float32Array(count);
+  const bands = new Uint8Array(count);
+
+  for (let index = 0; index < count; index += 1) {
+    const band = getBand(index, count);
+    const range = BAND_RANGES[band];
+    const positionOffset = index * 3;
+    const radialBias = 0.22 + 0.78 * random() ** 0.62;
+    positions[positionOffset] = (random() - 0.5) * range.spanX * radialBias;
+    positions[positionOffset + 1] = (random() - 0.5) * range.spanY;
+    positions[positionOffset + 2] = range.minimumZ + random() * (range.maximumZ - range.minimumZ);
+
+    const firstColorIndex = Math.floor(random() * palette.length);
+    const secondColorIndex = (firstColorIndex + 1) % palette.length;
+    const firstColor = palette[firstColorIndex]!;
+    const secondColor = palette[secondColorIndex]!;
+    const colorMix = random();
+    const brightness = 0.24 + random() * 0.76;
+    for (let channel = 0; channel < 3; channel += 1) {
+      const shift = (2 - channel) * 8;
+      const first = colorChannel(firstColor, shift);
+      const second = colorChannel(secondColor, shift);
+      colors[positionOffset + channel] = (first + (second - first) * colorMix) * brightness;
+    }
+
+    sizes[index] = range.minimumSize + random() * (range.maximumSize - range.minimumSize);
+    phases[index] = random() * Math.PI * 2;
+    bands[index] = band;
+  }
+
+  return { positions, colors, sizes, phases, bands };
+}
+
+export function getCinematicEnvironmentParticleCount(
+  chapter: CinematicChapterId,
+  quality: QualityLevel,
+  localPoeticParticles: number,
+): number {
+  const total = CINEMATIC_PARTICLE_BUDGETS[chapter][quality];
+  if (
+    !Number.isInteger(localPoeticParticles) ||
+    localPoeticParticles < 0 ||
+    localPoeticParticles > total
+  ) {
+    throw new Error("Local poetic particle count exceeds the cinematic budget");
+  }
+  return total - localPoeticParticles;
+}
+
+export function getCinematicViewportSpan(aspect: number): { x: number; y: number; z: number } {
+  if (!Number.isFinite(aspect) || aspect <= 0) {
+    throw new Error("Cinematic aspect must be positive and finite");
+  }
+  return { x: Math.max(18, 11.5 * aspect), y: 13, z: 18 };
+}
