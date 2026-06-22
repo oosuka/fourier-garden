@@ -681,6 +681,25 @@ Chrome QA:
 自動検証と取得可能なChrome QAは合格したが、上記手動項目と試聴が完了するまで
 Chapter 3を通常公開へ移さない。
 
+## 全章シネマティック描画再設計・自動検証
+
+> 状態: 2026年6月22日の全章3Dシーン・背景再設計。ブラウザ実測前の実装記録。
+
+- 3章へ共通の深度3帯環境粒子、3枚の星雲veil、WebGPU／WebGL2 bloom、品質予算を導入した
+- Chapter 1は厳密な主波形とエピサイクルを維持し、全粒子予算をhigh 32,000点とした
+- Chapter 2は正準7柱・6アーチを維持し、柱shell、30 filament、24遠景ヴォールト、
+  6透明膜を追加した。highの総粒子は48,000点である
+- Chapter 3は厳密面を変更せず、局所法線の正負方向に2枚の発光シェルを追加した。
+  highの総粒子は44,000点である
+- 固定QA URLを`residue-bloom-qa.html?seed=qa&quality=high&time=72`、
+  `spectral-cathedral-qa.html?seed=qa&quality=high&time=50`、
+  `mobius-choir-qa.html?seed=qa&quality=high&time=42.353`へ統一した
+- `renderer=webgl`と`poetic=off`を各QA入口で使用でき、厳密数学層との比較条件を固定した
+- 標準検証はformat、Oxlint、Vitest 65ファイル・404件、TypeScript、production buildが
+  すべて成功した
+- WebGPU／WebGL2の実画面、16:10／16:9／21:9、4K 60秒、console、証拠画像は
+  次のブラウザQAで記録する。現時点で過去計測を新描画の性能値として流用しない
+
 ## 横断性能記録（履歴計測を含む）
 
 | 条件 | 時間・標本 | 平均 | 最小 | 最大 |

@@ -15,9 +15,9 @@ WebGPU／WebGL2描画基盤を共有します。
 
 | Chapter | 状態 | 数学的対象 | 時間構成 | 主な音響・造形 |
 | --- | --- | --- | --- | --- |
-| 1 `Residue Bloom / 剰余の花` | 通常公開 | `n=4k+1`の13項からなる解析的有限Fourier級数と複素フェーザ | 80 BPM、48小節、144秒、5状態 | 短い調波発音、円鎖、主履歴波形、粒子庭園 |
-| 2 `Spectral Cathedral / スペクトルの聖堂` | 通常公開 | 長方形領域上の12個の解析的Dirichlet固有モード | 72 BPM、5/4、18小節、75秒、5幕 | ガラス鐘、木質アタック、波動面、7光柱、6アーチ |
-| 3 `Möbius Choir / メビウスの合唱` | 通常公開 | flat Möbius quotient上の6個の解析的進行波モード | 68 BPM、16小節、56.470588秒、63イベント、5幕 | 絶対時刻carrier、母音状の声、単一Möbius帯、24,000粒子 |
+| 1 `Residue Bloom / 剰余の花` | 通常公開 | `n=4k+1`の13項からなる解析的有限Fourier級数と複素フェーザ | 80 BPM、48小節、144秒、5状態 | 短い調波発音、円鎖、主履歴波形、深度粒子庭園 |
+| 2 `Spectral Cathedral / スペクトルの聖堂` | 通常公開 | 長方形領域上の12個の解析的Dirichlet固有モード | 72 BPM、5/4、18小節、75秒、5幕 | ガラス鐘、波動面、7光柱、立体アーチ、遠景ヴォールト |
+| 3 `Möbius Choir / メビウスの合唱` | 通常公開 | flat Möbius quotient上の6個の解析的進行波モード | 68 BPM、16小節、56.470588秒、63イベント、5幕 | 絶対時刻carrier、母音状の声、単一Möbius帯、発光膜 |
 
 通常URLではChapter 1から3を選択できます。Chapter 3はWebGPU／WebGL2のブラウザQAと
 ユーザーによる実機試聴を完了し、通常公開済みです。
@@ -71,17 +71,25 @@ http://localhost:5173/?seed=qa&quality=high
 http://localhost:5173/?chapters=preview&seed=qa&quality=high
 ```
 
-Chapter 3固定時刻QA:
+全章の固定時刻QA:
 
 ```text
-http://localhost:5173/mobius-choir-qa.html?seed=qa&quality=high&time=28.235
+http://localhost:5173/residue-bloom-qa.html?seed=qa&quality=high&time=72
+http://localhost:5173/spectral-cathedral-qa.html?seed=qa&quality=high&time=50
+http://localhost:5173/mobius-choir-qa.html?seed=qa&quality=high&time=42.353
 ```
+
+各URLはWebGPUを既定とする。`renderer=webgl`でWebGL2を強制し、`poetic=off`で
+シネマティック背景、粒子、発光残光、bloomを除いた厳密数学層と比較できる。
+視覚QAでは16:10、16:9、21:9を同じ固定seed・時刻で確認する。
 
 主なクエリ:
 
 - `renderer=webgl`: WebGL2経路を強制
 - `seed=qa`: 固定シード
 - `quality=low|medium|high|ultra`: 品質を固定
+- `time=<seconds>`: 章別QA入口の絶対transport時刻を固定
+- `poetic=off`: 章別QA入口で詩的造形層を無効化
 - `chapters=preview`: preview章を含むレジストリを使用。現在は通常URLと同じ3章
 
 `quality`を省略した場合は`high`から適応品質制御を開始します。描画、音響、UIを変更した
