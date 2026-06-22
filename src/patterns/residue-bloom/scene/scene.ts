@@ -1,24 +1,18 @@
 import * as THREE from "three/webgpu";
-import type { WebGLRenderer } from "three";
-import {
-  Fn,
-  float,
-  length,
-  mix,
-  pass,
-  sin,
-  smoothstep,
-  uniform,
-  uv,
-  vec2,
-  vec3,
-  vec4,
-} from "three/tsl";
-import { bloom } from "three/addons/tsl/display/BloomNode.js";
+import type { WebGLRenderer, WebGLRendererParameters } from "three";
 
 import { selectRendererBackend, type RendererBackend } from "../../../core/rendererBackend";
 import { createSeededRandom } from "../../../core/seed";
 import { getEpicycleSteps, projectSeriesToVerticalAxis } from "../../../math/fourierSeries";
+import { CinematicEnvironmentLayer } from "../../../rendering/cinematic/environmentLayer";
+import {
+  CINEMATIC_PARTICLE_BUDGETS,
+  getCinematicEnvironmentParticleCount,
+} from "../../../rendering/cinematic/model";
+import {
+  createCinematicPostProcessor,
+  type CinematicPostProcessor,
+} from "../../../rendering/cinematic/postProcessing";
 import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/model";
 import { getResidueBloomVisualResponse, type ResidueBloomVisualResponse } from "./visualResponse";
 import {
@@ -49,13 +43,67 @@ interface DynamicLine {
   positions: Float32Array;
 }
 
-interface AtmosphereLayer {
-  mesh: THREE.Mesh;
-  scaleX: number;
-  scaleY: number;
+type SceneRenderer = THREE.WebGPURenderer | WebGLRenderer;
+
+export interface ResidueBloomSceneOptions extends PatternSceneOptions {
+  poeticLayers?: boolean;
+  preserveDrawingBuffer?: boolean;
 }
 
-type SceneRenderer = THREE.WebGPURenderer | WebGLRenderer;
+const RESIDUE_BLOOM_LOCAL_PARTICLE_COUNTS: Readonly<Record<QualityLevel, number>> = Object.freeze({
+  low: 2_400,
+  medium: 4_200,
+  high: 5_800,
+  ultra: 7_200,
+});
+
+export function getResidueBloomCinematicCounts(level: QualityLevel): {
+  localParticles: number;
+  burstParticles: typeof BURST_PARTICLE_COUNT;
+  environmentParticles: number;
+  totalParticles: number;
+} {
+  const localParticles = RESIDUE_BLOOM_LOCAL_PARTICLE_COUNTS[level];
+  const environmentParticles = getCinematicEnvironmentParticleCount(
+    "residue-bloom",
+    level,
+    localParticles + BURST_PARTICLE_COUNT,
+  );
+  return {
+    localParticles,
+    burstParticles: BURST_PARTICLE_COUNT,
+    environmentParticles,
+    totalParticles: CINEMATIC_PARTICLE_BUDGETS["residue-bloom"][level],
+  };
+}
+
+export function getResidueBloomPrimaryWavePoint(
+  timeSeconds: number,
+  progress: number,
+  waveStartX: number,
+  waveEndX: number,
+  centerY: number,
+  scale: number,
+): { x: number; y: number; angle: number } {
+  if (
+    !Number.isFinite(timeSeconds) ||
+    !Number.isFinite(waveStartX) ||
+    !Number.isFinite(waveEndX) ||
+    !Number.isFinite(centerY) ||
+    !Number.isFinite(scale)
+  ) {
+    throw new Error("Residue Bloom primary waveform inputs must be finite");
+  }
+  if (!Number.isFinite(progress) || progress < 0 || progress > 1) {
+    throw new Error("Residue Bloom primary waveform progress must be between zero and one");
+  }
+  const angle = (timeSeconds - progress * 8.6) * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE;
+  return {
+    x: waveStartX + progress * (waveEndX - waveStartX),
+    y: projectSeriesToVerticalAxis(RESIDUE_BLOOM_SERIES, angle, centerY, scale),
+    angle,
+  };
+}
 
 function hash01(eventSeed: number, particleIndex: number, channel: number): number {
   let value =
@@ -89,156 +137,17 @@ function updateAttribute(line: DynamicLine): void {
   line.line.geometry.computeBoundingSphere();
 }
 
-function createStarField(
-  random: () => number,
-  count: number,
-  spanX: number,
-  spanY: number,
-): THREE.Points {
-  const positions = new Float32Array(count * 3);
-  const colors = new Float32Array(count * 3);
-  const color = new THREE.Color();
-
-  for (let index = 0; index < count; index += 1) {
-    const radiusBias = Math.pow(random(), 0.62);
-    positions[index * 3] = (random() - 0.5) * spanX * radiusBias;
-    positions[index * 3 + 1] = (random() - 0.5) * spanY;
-    positions[index * 3 + 2] = -2 - random() * 8;
-
-    color.setHex(PALETTE[Math.floor(random() * PALETTE.length)] ?? 0xffffff);
-    const brightness = 0.22 + random() * 0.78;
-    colors[index * 3] = color.r * brightness;
-    colors[index * 3 + 1] = color.g * brightness;
-    colors[index * 3 + 2] = color.b * brightness;
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-
-  return new THREE.Points(
-    geometry,
-    new THREE.PointsMaterial({
-      size: 0.025,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: 0.72,
-      vertexColors: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      toneMapped: false,
-    }),
-  );
-}
-
-function createAtmosphereMaterial(
-  cyan: readonly [number, number, number],
-  violet: readonly [number, number, number],
-  phase: number,
-  sceneTime: THREE.UniformNode<"float", number>,
-  scoreEnergy: THREE.UniformNode<"float", number>,
-  scoreWarmth: THREE.UniformNode<"float", number>,
-): THREE.MeshBasicNodeMaterial {
-  const material = new THREE.MeshBasicNodeMaterial({
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
-    toneMapped: false,
-  });
-
-  material.colorNode = Fn(() => {
-    const centered = uv().sub(vec2(0.5, 0.5));
-    const distance = length(centered.mul(vec2(1.0, 1.45)));
-    const displacedDistance = distance.add(scoreEnergy.mul(0.018));
-    const rings = sin(displacedDistance.mul(42).sub(sceneTime.mul(0.27)).add(float(phase)))
-      .mul(0.5)
-      .add(0.5);
-    const veil = float(1).sub(smoothstep(0.02, 0.68, displacedDistance));
-    const baseTone = mix(vec3(...cyan), vec3(...violet), rings);
-    const tone = mix(baseTone, vec3(1, 0.58, 0.24), scoreWarmth.mul(0.24));
-    const alpha = veil.mul(rings.mul(0.055).add(0.018).add(scoreEnergy.mul(0.12)));
-    return vec4(tone, alpha);
-  })();
-
-  return material;
-}
-
-function smoothstepNumber(edge0: number, edge1: number, value: number): number {
-  const normalized = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)));
-  return normalized * normalized * (3 - 2 * normalized);
-}
-
-function createFallbackAtmosphereMaterial(
-  cyan: readonly [number, number, number],
-  violet: readonly [number, number, number],
-  phase: number,
-): THREE.MeshBasicMaterial {
-  const size = 384;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    return new THREE.MeshBasicMaterial({
-      color: new THREE.Color(...cyan),
-      transparent: true,
-      opacity: 0.055,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      toneMapped: false,
-    });
-  }
-
-  const image = context.createImageData(size, size);
-  for (let y = 0; y < size; y += 1) {
-    for (let x = 0; x < size; x += 1) {
-      const centeredX = x / (size - 1) - 0.5;
-      const centeredY = (y / (size - 1) - 0.5) * 1.45;
-      const distance = Math.hypot(centeredX, centeredY);
-      const rings = Math.sin(distance * 42 + phase) * 0.5 + 0.5;
-      const veil = 1 - smoothstepNumber(0.02, 0.68, distance);
-      const alpha = veil * (rings * 0.095 + 0.035);
-      const offset = (y * size + x) * 4;
-      image.data[offset] = Math.round((cyan[0] * (1 - rings) + violet[0] * rings) * 255);
-      image.data[offset + 1] = Math.round((cyan[1] * (1 - rings) + violet[1] * rings) * 255);
-      image.data[offset + 2] = Math.round((cyan[2] * (1 - rings) + violet[2] * rings) * 255);
-      image.data[offset + 3] = Math.round(alpha * 255);
-    }
-  }
-  context.putImageData(image, 0, 0);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.generateMipmaps = false;
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-
-  return new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-    toneMapped: false,
-  });
-}
-
 class ResidueBloomScene implements ResidueBloomSceneInstance {
   private readonly renderer: SceneRenderer;
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.OrthographicCamera();
-  private readonly renderPipeline: THREE.RenderPipeline | null;
-  private readonly bloomNode: ReturnType<typeof bloom> | null;
   private readonly backend: RendererBackend;
   private readonly random: () => number;
-  private readonly sceneTime = uniform(0);
-  private readonly scoreEnergy = uniform(0);
-  private readonly scoreWarmth = uniform(0);
+  private readonly poeticLayers: boolean;
+  private readonly environmentLayer: CinematicEnvironmentLayer | null;
   private readonly epicycleGroup = new THREE.Group();
   private readonly atmosphereGroup = new THREE.Group();
   private readonly fieldGroup = new THREE.Group();
-  private readonly atmosphereLayers: AtmosphereLayer[] = [];
   private readonly circles: THREE.Line[] = [];
   private readonly coronas: THREE.Line[] = [];
   private readonly spokes: DynamicLine;
@@ -253,10 +162,10 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
   private readonly burstParticles: THREE.Points;
   private readonly burstPositions: Float32Array;
   private readonly burstColors: Float32Array;
-  private readonly stars: THREE.Points[] = [];
   private readonly endpointCore: THREE.Mesh;
   private readonly endpointHalo: THREE.Mesh;
   private readonly connector: DynamicLine;
+  private postProcessor: CinematicPostProcessor | null = null;
   private quality: QualityLevel = "high";
   private viewport: Viewport = {
     width: 1,
@@ -264,17 +173,32 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     pixelRatio: 1,
   };
 
-  private constructor(renderer: SceneRenderer, random: () => number, backend: RendererBackend) {
+  private constructor(
+    renderer: SceneRenderer,
+    seed: number,
+    backend: RendererBackend,
+    poeticLayers: boolean,
+  ) {
     this.renderer = renderer;
-    this.random = random;
+    this.random = createSeededRandom(seed);
     this.backend = backend;
+    this.poeticLayers = poeticLayers;
     this.scene.background = new THREE.Color(0x010308);
     this.camera.position.set(0, 0, 20);
     this.camera.near = 0.01;
     this.camera.far = 80;
 
-    this.createAtmosphere();
-    this.createStars();
+    this.environmentLayer = poeticLayers
+      ? new CinematicEnvironmentLayer({
+          backend,
+          chapter: "residue-bloom",
+          seed,
+          maximumParticleCount: getResidueBloomCinematicCounts("ultra").environmentParticles,
+          palette: [0x78f3ff, 0xa798ff, 0xffc782],
+          extent: { x: 39, y: 23, z: 18 },
+        })
+      : null;
+    if (this.environmentLayer) this.scene.add(this.environmentLayer.group);
     this.createEpicycles();
 
     this.spokes = makeLine(14, 0xd6f8ff, 0.48);
@@ -306,6 +230,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
         PALETTE[index % PALETTE.length] ?? 0xffffff,
         index === 0 ? 0.92 : 0.055 + (8 - index) * 0.012,
       );
+      if (!poeticLayers && index > 0) wave.line.visible = false;
       this.waveLines.push(wave);
       this.fieldGroup.add(wave.line);
     }
@@ -342,6 +267,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
         0.035 + (index % 4) * 0.012,
         true,
       );
+      organic.line.visible = poeticLayers;
       this.organicLines.push(organic);
       this.atmosphereGroup.add(organic.line);
     }
@@ -353,12 +279,14 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     const particleData = this.createFlowParticles(7_200);
     this.particleCloud = particleData.points;
     this.particleBase = particleData.base;
+    this.particleCloud.visible = poeticLayers;
     this.atmosphereGroup.add(this.particleCloud);
 
     const burstData = this.createBurstParticles();
     this.burstParticles = burstData.points;
     this.burstPositions = burstData.positions;
     this.burstColors = burstData.colors;
+    this.burstParticles.visible = poeticLayers;
     this.scene.add(this.burstParticles);
 
     const coreGeometry = new THREE.CircleGeometry(0.105, 48);
@@ -384,42 +312,35 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
         toneMapped: false,
       }),
     );
+    this.endpointHalo.visible = poeticLayers;
     this.scene.add(this.endpointHalo, this.endpointCore);
 
     this.scene.add(this.atmosphereGroup, this.fieldGroup, this.epicycleGroup);
-
-    if (backend === "webgpu") {
-      const scenePass = pass(this.scene, this.camera);
-      const sceneColor = scenePass.getTextureNode("output");
-      this.bloomNode = bloom(sceneColor, 0.72, 0.32, 0.17);
-      this.renderPipeline = new THREE.RenderPipeline(renderer as THREE.WebGPURenderer);
-      this.renderPipeline.outputNode = sceneColor.add(this.bloomNode);
-    } else {
-      this.bloomNode = null;
-      this.renderPipeline = null;
-    }
   }
 
   static async create({
     canvas,
     seed,
     onDeviceLost,
-  }: PatternSceneOptions): Promise<ResidueBloomScene> {
+    poeticLayers = true,
+    preserveDrawingBuffer = false,
+  }: ResidueBloomSceneOptions): Promise<ResidueBloomScene> {
     const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
     const backend = selectRendererBackend(forceWebGL, "gpu" in navigator);
 
     if (backend === "webgl") {
       const { WebGLRenderer } = await import("three");
-      const renderer = new WebGLRenderer({
+      const parameters: WebGLRendererParameters = {
         canvas,
         antialias: true,
         alpha: false,
         powerPreference: "high-performance",
-      });
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.13;
-      return new ResidueBloomScene(renderer, createSeededRandom(seed), backend);
+        preserveDrawingBuffer,
+      };
+      const renderer = new WebGLRenderer(parameters);
+      const scene = new ResidueBloomScene(renderer, seed, backend, poeticLayers);
+      await scene.initializePostProcessor();
+      return scene;
     }
 
     const renderer = new THREE.WebGPURenderer({
@@ -432,20 +353,26 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       reportDeviceLost(info);
       onDeviceLost?.();
     };
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.13;
     await renderer.init();
+    const scene = new ResidueBloomScene(renderer, seed, backend, poeticLayers);
+    await scene.initializePostProcessor();
+    return scene;
+  }
 
-    return new ResidueBloomScene(renderer, createSeededRandom(seed), backend);
+  private async initializePostProcessor(): Promise<void> {
+    this.postProcessor = await createCinematicPostProcessor({
+      renderer: this.renderer,
+      backend: this.backend,
+      scene: this.scene,
+      camera: this.camera,
+      exposure: 1.13,
+    });
+    this.postProcessor.setQuality(this.quality);
   }
 
   update(frame: ResidueBloomFrameContext): void {
     const timeValue = frame.time;
     const response = getResidueBloomVisualResponse(frame.score);
-    this.sceneTime.value = timeValue;
-    this.scoreEnergy.value = response.membraneDisplacement;
-    this.scoreWarmth.value = response.warmth;
     const angle = timeValue * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE;
     const aspect = this.viewport.width / this.viewport.height;
     const epicycleScale = aspect < 1.6 ? 0.49 : 0.54;
@@ -470,29 +397,26 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     const waveStart = aspect < 1.6 ? 1.6 : 1.1;
     this.updateConnector(endpointX, endpointY, waveStart);
     this.updateWaves(timeValue, centerY, waveStart, epicycleScale);
-    this.updateHistoryPulses(frame, response, timeValue, centerY, waveStart, epicycleScale);
-    this.updateOrganicField(timeValue, endpointX, endpointY, response);
-    this.updateFlowParticles(timeValue, endpointX, endpointY, response);
-    this.updateBurstParticles(frame, response, centerX, centerY, epicycleScale);
-    this.updateAtmosphereResponse(response);
+    if (this.poeticLayers) {
+      this.updateHistoryPulses(frame, response, timeValue, centerY, waveStart, epicycleScale);
+      this.updateOrganicField(timeValue, endpointX, endpointY, response);
+      this.updateFlowParticles(timeValue, endpointX, endpointY, response);
+      this.updateBurstParticles(frame, response, centerX, centerY, epicycleScale);
+    }
+    this.environmentLayer?.update(
+      timeValue,
+      Math.min(1, response.membraneDisplacement + response.flowEnergy * 0.35),
+      response.warmth,
+    );
 
     this.atmosphereGroup.rotation.z = Math.sin(timeValue * 0.027) * 0.025;
-    this.stars[0]!.rotation.z = timeValue * 0.0018;
-    this.stars[1]!.rotation.z = -timeValue * 0.0011;
     this.waveLines.forEach((wave, trailIndex) => {
       wave.line.position.y = getWaveTrailVerticalDrift(timeValue, trailIndex);
     });
 
-    if (this.bloomNode) {
-      const baseStrength = this.quality === "low" ? 0.48 : this.quality === "medium" ? 0.58 : 0.72;
-      this.bloomNode.strength.value = Math.min(0.9, baseStrength + response.bloomBoost);
-    }
-
-    if (this.renderPipeline) {
-      this.renderPipeline.render();
-    } else {
-      (this.renderer as WebGLRenderer).render(this.scene, this.camera);
-    }
+    this.postProcessor?.setEnergy(Math.min(1, response.bloomBoost + response.flowEnergy * 0.4));
+    if (this.postProcessor) this.postProcessor.render();
+    else this.renderer.render(this.scene, this.camera);
   }
 
   resize(viewport: Viewport): void {
@@ -504,22 +428,33 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     this.camera.top = halfHeight;
     this.camera.bottom = -halfHeight;
     this.camera.updateProjectionMatrix();
-    this.renderer.setPixelRatio(viewport.pixelRatio);
-    this.renderer.setSize(viewport.width, viewport.height, false);
+    this.environmentLayer?.resize(aspect);
+    if (this.postProcessor) {
+      this.postProcessor.resize(viewport.width, viewport.height, viewport.pixelRatio);
+    } else {
+      this.renderer.setPixelRatio(viewport.pixelRatio);
+      this.renderer.setSize(viewport.width, viewport.height, false);
+    }
   }
 
   setQuality(level: QualityLevel): void {
     this.quality = level;
     this.particleCloud.geometry.setDrawRange(0, this.getQualityMaximum());
-    if (this.bloomNode) {
-      this.bloomNode.strength.value = level === "low" ? 0.48 : level === "medium" ? 0.58 : 0.72;
-    }
+    this.environmentLayer?.setParticleCount(
+      getResidueBloomCinematicCounts(level).environmentParticles,
+    );
+    this.postProcessor?.setQuality(level);
     this.organicLines.forEach((line, index) => {
-      line.line.visible = level === "low" ? index < 5 : level === "medium" ? index < 8 : true;
+      line.line.visible =
+        this.poeticLayers && (level === "low" ? index < 5 : level === "medium" ? index < 8 : true);
     });
   }
 
   dispose(): void {
+    if (this.environmentLayer) {
+      this.scene.remove(this.environmentLayer.group);
+      this.environmentLayer.dispose();
+    }
     this.scene.traverse((object) => {
       const mesh = object as THREE.Mesh;
       mesh.geometry?.dispose();
@@ -534,68 +469,9 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
         material?.dispose();
       }
     });
-    this.renderPipeline?.dispose();
+    this.postProcessor?.dispose();
+    this.postProcessor = null;
     this.renderer.dispose();
-  }
-
-  private createAtmosphere(): void {
-    const veils = [
-      {
-        colorA: [0.05, 0.88, 1] as const,
-        colorB: [0.48, 0.2, 1] as const,
-        scale: [1.24, 0.92] as const,
-        rotation: -0.1,
-        phase: 0,
-      },
-      {
-        colorA: [0.22, 0.55, 1] as const,
-        colorB: [1, 0.42, 0.63] as const,
-        scale: [0.94, 1.2] as const,
-        rotation: 0.38,
-        phase: 2.1,
-      },
-      {
-        colorA: [0.18, 1, 0.76] as const,
-        colorB: [1, 0.66, 0.28] as const,
-        scale: [1.08, 0.74] as const,
-        rotation: -0.52,
-        phase: 4.2,
-      },
-    ];
-
-    veils.forEach((veil, index) => {
-      const material =
-        this.backend === "webgpu"
-          ? createAtmosphereMaterial(
-              veil.colorA,
-              veil.colorB,
-              veil.phase,
-              this.sceneTime,
-              this.scoreEnergy,
-              this.scoreWarmth,
-            )
-          : createFallbackAtmosphereMaterial(veil.colorA, veil.colorB, veil.phase);
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(28, 17, 1, 1), material);
-      mesh.scale.set(veil.scale[0], veil.scale[1], 1);
-      mesh.rotation.z = veil.rotation;
-      mesh.position.set(index * 1.8 - 2.4, index * -0.8 + 0.7, -4 - index);
-      this.atmosphereLayers.push({
-        mesh,
-        scaleX: veil.scale[0],
-        scaleY: veil.scale[1],
-      });
-      this.atmosphereGroup.add(mesh);
-    });
-  }
-
-  private createStars(): void {
-    const far = createStarField(this.random, 5_200, 39, 23);
-    const near = createStarField(this.random, 2_600, 34, 20);
-    (near.material as THREE.PointsMaterial).size = 0.044;
-    (near.material as THREE.PointsMaterial).opacity = 0.42;
-    near.position.z = 2;
-    this.stars.push(far, near);
-    this.scene.add(far, near);
   }
 
   private createEpicycles(): void {
@@ -763,13 +639,26 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       const delay = trailIndex * 0.035;
       for (let index = 0; index < 720; index += 1) {
         const progress = index / 719;
-        const historyAngle =
-          (timeValue - progress * 8.6 - delay) * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE;
         const offset = index * 3;
-        wave.positions[offset] = waveStart + progress * lengthValue + trailIndex * 0.018;
-        wave.positions[offset + 1] =
-          projectSeriesToVerticalAxis(RESIDUE_BLOOM_SERIES, historyAngle, centerY, scale) +
-          (trailIndex === 0 ? 0 : Math.sin(progress * 21 + timeValue * 0.22) * trailIndex * 0.012);
+        if (trailIndex === 0) {
+          const point = getResidueBloomPrimaryWavePoint(
+            timeValue,
+            progress,
+            waveStart,
+            worldRight,
+            centerY,
+            scale,
+          );
+          wave.positions[offset] = point.x;
+          wave.positions[offset + 1] = point.y;
+        } else {
+          const historyAngle =
+            (timeValue - progress * 8.6 - delay) * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE;
+          wave.positions[offset] = waveStart + progress * lengthValue + trailIndex * 0.018;
+          wave.positions[offset + 1] =
+            projectSeriesToVerticalAxis(RESIDUE_BLOOM_SERIES, historyAngle, centerY, scale) +
+            Math.sin(progress * 21 + timeValue * 0.22) * trailIndex * 0.012;
+        }
         wave.positions[offset + 2] = 0.25 - trailIndex * 0.028;
       }
       updateAttribute(wave);
@@ -986,32 +875,13 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       true;
   }
 
-  private updateAtmosphereResponse(response: ResidueBloomVisualResponse): void {
-    if (this.backend !== "webgl") return;
-
-    const scaleBoost = 1 + response.membraneDisplacement * 0.08;
-    for (const layer of this.atmosphereLayers) {
-      layer.mesh.scale.set(layer.scaleX * scaleBoost, layer.scaleY * scaleBoost, 1);
-      (layer.mesh.material as THREE.MeshBasicMaterial).opacity = Math.min(
-        1,
-        0.86 + response.membraneOpacityBoost,
-      );
-    }
-  }
-
   private getQualityMaximum(): number {
-    const drawCounts: Record<QualityLevel, number> = {
-      low: 2_400,
-      medium: 4_200,
-      high: 5_800,
-      ultra: 7_200,
-    };
-    return drawCounts[this.quality];
+    return RESIDUE_BLOOM_LOCAL_PARTICLE_COUNTS[this.quality];
   }
 }
 
 export async function createResidueBloomScene(
-  options: PatternSceneOptions,
+  options: ResidueBloomSceneOptions,
 ): Promise<ResidueBloomSceneInstance> {
   return ResidueBloomScene.create(options);
 }
