@@ -22,6 +22,12 @@ describe("Spectral Cathedral poetic layer", () => {
     expect(layer.getStats()).toEqual({
       anchors: 7,
       arches: 6,
+      pillarShells: 7,
+      archFilaments: 30,
+      visibleArchFilaments: 24,
+      vaultRepeats: 24,
+      visibleVaultRepeats: 18,
+      archMembranes: 6,
       particles: 26_000,
       volumetricHalos: 7,
       archTrailLayers: 2,
@@ -40,6 +46,12 @@ describe("Spectral Cathedral poetic layer", () => {
     expect(layer.getStats()).toEqual({
       anchors: 7,
       arches: 6,
+      pillarShells: 7,
+      archFilaments: 30,
+      visibleArchFilaments: 12,
+      vaultRepeats: 24,
+      visibleVaultRepeats: 6,
+      archMembranes: 6,
       particles: 6_000,
       volumetricHalos: 0,
       archTrailLayers: 0,
@@ -48,6 +60,12 @@ describe("Spectral Cathedral poetic layer", () => {
     expect(layer.getStats()).toEqual({
       anchors: 7,
       arches: 6,
+      pillarShells: 7,
+      archFilaments: 30,
+      visibleArchFilaments: 30,
+      vaultRepeats: 24,
+      visibleVaultRepeats: 24,
+      archMembranes: 6,
       particles: 35_000,
       volumetricHalos: 7,
       archTrailLayers: 3,
@@ -76,8 +94,11 @@ describe("Spectral Cathedral poetic layer", () => {
 
     layer.update(0.08);
     const topHeights = Array.from({ length: 7 }, (_, index) => positions.getZ(index * 2 + 1));
+    const shellRoot = layer.group.children[1] as THREE.Group;
+    const shellScales = shellRoot.children.map((child) => child.scale.y.toFixed(4));
 
     expect(new Set(topHeights.map((height) => height.toFixed(4))).size).toBeGreaterThan(1);
+    expect(new Set(shellScales).size).toBeGreaterThan(1);
     layer.dispose();
   });
 

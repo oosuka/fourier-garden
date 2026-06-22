@@ -2,6 +2,11 @@ import * as THREE from "three/webgpu";
 
 import type { RendererBackend } from "../../../core/rendererBackend";
 import {
+  CATHEDRAL_ARCH_FILAMENTS,
+  CATHEDRAL_VAULT_REPEATS,
+  createCathedralArchitectureModel,
+} from "./architecture";
+import {
   evaluateSpectralCathedralAnchorMagnitudes,
   getSpectralCathedralPoeticQuality,
   updateSpectralCathedralParticles,
@@ -22,6 +27,12 @@ const MAX_ARCH_TRAIL_LAYERS = 3;
 export interface SpectralCathedralPoeticLayerStats {
   anchors: number;
   arches: number;
+  pillarShells: number;
+  archFilaments: number;
+  visibleArchFilaments: number;
+  vaultRepeats: number;
+  visibleVaultRepeats: number;
+  archMembranes: number;
   particles: number;
   volumetricHalos: number;
   archTrailLayers: number;
@@ -72,6 +83,41 @@ function createLineGeometry(positions: Float32Array): THREE.BufferGeometry {
   return geometry;
 }
 
+function createArchMembraneGeometry(
+  innerPositions: Float32Array,
+  outerPositions: Float32Array,
+): THREE.BufferGeometry {
+  const pointCount = innerPositions.length / 3;
+  const positions = new Float32Array(pointCount * 2 * 3);
+  const indices = new Uint16Array((pointCount - 1) * 6);
+  for (let index = 0; index < pointCount; index += 1) {
+    const sourceOffset = index * 3;
+    const targetOffset = index * 6;
+    positions.set(innerPositions.subarray(sourceOffset, sourceOffset + 3), targetOffset);
+    positions.set(outerPositions.subarray(sourceOffset, sourceOffset + 3), targetOffset + 3);
+    if (index < pointCount - 1) {
+      const indexOffset = index * 6;
+      const inner = index * 2;
+      const outer = inner + 1;
+      indices.set([inner, inner + 2, outer, outer, inner + 2, outer + 2], indexOffset);
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  return geometry;
+}
+
+export function getSpectralCathedralArchitectureLayerCounts(level: QualityLevel): {
+  filamentsPerArch: number;
+  vaultsPerArch: number;
+} {
+  if (level === "low") return { filamentsPerArch: 2, vaultsPerArch: 1 };
+  if (level === "medium") return { filamentsPerArch: 3, vaultsPerArch: 2 };
+  if (level === "high") return { filamentsPerArch: 4, vaultsPerArch: 3 };
+  return { filamentsPerArch: 5, vaultsPerArch: 4 };
+}
+
 export class SpectralCathedralPoeticLayer {
   readonly group = new THREE.Group();
 
@@ -85,12 +131,21 @@ export class SpectralCathedralPoeticLayer {
   private readonly pillarColorAttribute: THREE.BufferAttribute;
   private readonly pillarMaterial: THREE.LineBasicMaterial;
   private readonly pillarLines: THREE.LineSegments;
+  private readonly pillarShellGeometry = new THREE.CylinderGeometry(0.016, 0.028, 1.6, 12, 1, true);
+  private readonly pillarShells: THREE.Mesh[] = [];
+  private readonly pillarShellMaterials: THREE.MeshBasicMaterial[] = [];
   private readonly haloTexture = createHaloTexture();
   private readonly haloGeometry = new THREE.PlaneGeometry(0.18, 1.6);
   private readonly haloGroups: THREE.Group[] = [];
   private readonly haloMaterials: THREE.MeshBasicMaterial[] = [];
   private readonly archCoreLines: THREE.Line[] = [];
   private readonly archCoreMaterials: THREE.LineBasicMaterial[] = [];
+  private readonly archFilamentMeshes: THREE.Mesh[][] = [];
+  private readonly archFilamentMaterials: THREE.MeshBasicMaterial[][] = [];
+  private readonly archMembraneMeshes: THREE.Mesh[] = [];
+  private readonly archMembraneMaterials: THREE.MeshBasicMaterial[] = [];
+  private readonly vaultLines: THREE.Line[][] = [];
+  private readonly vaultMaterials: THREE.LineBasicMaterial[][] = [];
   private readonly archTrailLines: THREE.Line[][] = [];
   private readonly archTrailMaterials: THREE.LineBasicMaterial[][] = [];
   private readonly archLightPoints: THREE.Points[] = [];
@@ -108,6 +163,7 @@ export class SpectralCathedralPoeticLayer {
     this.modeInfluence = createSpectralCathedralModeInfluenceMatrix(model.anchors);
     this.backend = backend;
     this.qualitySettings = getSpectralCathedralPoeticQuality(this.quality, backend);
+    const architecture = createCathedralArchitectureModel(model.anchors, model.archPositions);
 
     this.pillarPositions = new Float32Array(model.anchors.length * 2 * 3);
     this.pillarColors = new Float32Array(model.anchors.length * 2 * 3);
@@ -141,6 +197,27 @@ export class SpectralCathedralPoeticLayer {
     this.pillarLines.renderOrder = 1;
     this.group.add(this.pillarLines);
 
+    const pillarShellRoot = new THREE.Group();
+    for (const pillar of architecture.pillars) {
+      const material = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(0.24, 1.08, 1.32),
+        transparent: true,
+        opacity: 0.08,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        toneMapped: false,
+      });
+      const shell = new THREE.Mesh(this.pillarShellGeometry, material);
+      shell.rotation.x = Math.PI / 2;
+      shell.position.set(pillar.x, pillar.y, (pillar.bottomZ + pillar.topZ) * 0.5);
+      shell.renderOrder = 0;
+      pillarShellRoot.add(shell);
+      this.pillarShells.push(shell);
+      this.pillarShellMaterials.push(material);
+    }
+    this.group.add(pillarShellRoot);
+
     const haloRoot = new THREE.Group();
     for (const anchor of model.anchors) {
       const material = new THREE.MeshBasicMaterial({
@@ -169,7 +246,7 @@ export class SpectralCathedralPoeticLayer {
     this.group.add(haloRoot);
 
     const archRoot = new THREE.Group();
-    for (const positions of model.archPositions) {
+    for (const [archIndex, positions] of model.archPositions.entries()) {
       const coreMaterial = new THREE.LineBasicMaterial({
         color: new THREE.Color(0.28, 0.86, 0.96),
         transparent: true,
@@ -183,6 +260,89 @@ export class SpectralCathedralPoeticLayer {
       this.archCoreLines.push(core);
       this.archCoreMaterials.push(coreMaterial);
       archRoot.add(core);
+
+      const filamentMeshes: THREE.Mesh[] = [];
+      const filamentMaterials: THREE.MeshBasicMaterial[] = [];
+      for (let filamentIndex = 0; filamentIndex < CATHEDRAL_ARCH_FILAMENTS; filamentIndex += 1) {
+        const filamentPositions =
+          architecture.archFilaments[archIndex * CATHEDRAL_ARCH_FILAMENTS + filamentIndex]!;
+        const points = Array.from(
+          { length: filamentPositions.length / 3 },
+          (_, pointIndex) =>
+            new THREE.Vector3(
+              filamentPositions[pointIndex * 3]!,
+              filamentPositions[pointIndex * 3 + 1]!,
+              filamentPositions[pointIndex * 3 + 2]!,
+            ),
+        );
+        const curve = new THREE.CatmullRomCurve3(points);
+        const geometry = new THREE.TubeGeometry(
+          curve,
+          Math.max(8, points.length - 1),
+          0.0038 + filamentIndex * 0.00055,
+          5,
+          false,
+        );
+        const material = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(0.3, 1.16, 1.38),
+          transparent: true,
+          opacity: 0.035,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          toneMapped: false,
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.renderOrder = 1;
+        archRoot.add(mesh);
+        filamentMeshes.push(mesh);
+        filamentMaterials.push(material);
+      }
+      this.archFilamentMeshes.push(filamentMeshes);
+      this.archFilamentMaterials.push(filamentMaterials);
+
+      const outerFilament =
+        architecture.archFilaments[
+          archIndex * CATHEDRAL_ARCH_FILAMENTS + CATHEDRAL_ARCH_FILAMENTS - 1
+        ]!;
+      const membraneMaterial = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(0.2, 0.72, 1.14),
+        transparent: true,
+        opacity: 0.018,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        toneMapped: false,
+      });
+      const membrane = new THREE.Mesh(
+        createArchMembraneGeometry(positions, outerFilament),
+        membraneMaterial,
+      );
+      membrane.renderOrder = 0;
+      archRoot.add(membrane);
+      this.archMembraneMeshes.push(membrane);
+      this.archMembraneMaterials.push(membraneMaterial);
+
+      const repeatedVaults: THREE.Line[] = [];
+      const repeatedVaultMaterials: THREE.LineBasicMaterial[] = [];
+      for (let repeatIndex = 0; repeatIndex < CATHEDRAL_VAULT_REPEATS; repeatIndex += 1) {
+        const vaultPositions =
+          architecture.vaultRepeats[archIndex * CATHEDRAL_VAULT_REPEATS + repeatIndex]!;
+        const material = new THREE.LineBasicMaterial({
+          color: new THREE.Color(0.42, 0.66, 1.08),
+          transparent: true,
+          opacity: [0.11, 0.075, 0.05, 0.035][repeatIndex]!,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          toneMapped: false,
+        });
+        const vault = new THREE.Line(createLineGeometry(vaultPositions), material);
+        vault.renderOrder = -1;
+        archRoot.add(vault);
+        repeatedVaults.push(vault);
+        repeatedVaultMaterials.push(material);
+      }
+      this.vaultLines.push(repeatedVaults);
+      this.vaultMaterials.push(repeatedVaultMaterials);
 
       const trailLines: THREE.Line[] = [];
       const trailMaterials: THREE.LineBasicMaterial[] = [];
@@ -302,6 +462,19 @@ export class SpectralCathedralPoeticLayer {
       this.pillarPositions[offset + 5] =
         PILLAR_BOTTOM_Z + pillar.height * (PILLAR_TOP_Z - PILLAR_BOTTOM_Z);
 
+      const shell = this.pillarShells[index]!;
+      shell.scale.y = Math.max(0.08, pillar.height);
+      shell.position.z = PILLAR_BOTTOM_Z + pillar.height * (PILLAR_TOP_Z - PILLAR_BOTTOM_Z) * 0.5;
+      const shellMaterial = this.pillarShellMaterials[index]!;
+      shellMaterial.opacity = clamp01(
+        0.025 + magnitudes[index]! * 0.025 + pillar.impact * 0.18 + pillar.afterglow * 0.07,
+      );
+      shellMaterial.color.setRGB(
+        0.32 + pillar.warmth * 0.94,
+        1.16 - pillar.warmth * 0.28,
+        1.38 - pillar.warmth * 0.64,
+      );
+
       const haloMaterial = this.haloMaterials[index]!;
       haloMaterial.opacity = clamp01(
         0.02 + magnitudes[index]! * 0.05 + pillar.impact * 0.22 + pillar.afterglow * 0.08,
@@ -325,6 +498,25 @@ export class SpectralCathedralPoeticLayer {
         0.86 - arch.energy * 0.08,
         0.96 - arch.energy * 0.18,
       );
+      for (const [filamentIndex, filamentMaterial] of this.archFilamentMaterials[
+        archIndex
+      ]!.entries()) {
+        filamentMaterial.opacity = this.archFilamentMeshes[archIndex]![filamentIndex]!.visible
+          ? 0.018 + arch.energy * (0.16 / (filamentIndex + 1)) + arch.afterglow * 0.04
+          : 0;
+        filamentMaterial.color.setRGB(
+          0.28 + arch.energy * 0.82,
+          1.08 - arch.energy * 0.14,
+          1.34 - arch.energy * 0.24,
+        );
+      }
+      this.archMembraneMaterials[archIndex]!.opacity =
+        0.008 + arch.energy * 0.065 + arch.afterglow * 0.025;
+      for (const [repeatIndex, vaultMaterial] of this.vaultMaterials[archIndex]!.entries()) {
+        vaultMaterial.opacity = this.vaultLines[archIndex]![repeatIndex]!.visible
+          ? (0.055 + arch.afterglow * 0.1 + arch.energy * 0.035) / (repeatIndex + 1)
+          : 0;
+      }
       for (const [layerIndex, trailMaterial] of this.archTrailMaterials[archIndex]!.entries()) {
         trailMaterial.opacity =
           layerIndex < this.qualitySettings.archTrailLayers
@@ -370,6 +562,7 @@ export class SpectralCathedralPoeticLayer {
     }
     this.quality = level;
     this.qualitySettings = getSpectralCathedralPoeticQuality(level, this.backend);
+    const architectureLayers = getSpectralCathedralArchitectureLayerCounts(level);
     this.particleGeometry.setDrawRange(0, this.qualitySettings.particleCount);
     this.haloGroups.forEach((group, index) => {
       group.visible = index < this.qualitySettings.volumetricHaloCount;
@@ -379,12 +572,29 @@ export class SpectralCathedralPoeticLayer {
         trail.visible = index < this.qualitySettings.archTrailLayers;
       });
     });
+    this.archFilamentMeshes.forEach((filaments) => {
+      filaments.forEach((filament, index) => {
+        filament.visible = index < architectureLayers.filamentsPerArch;
+      });
+    });
+    this.vaultLines.forEach((vaults) => {
+      vaults.forEach((vault, index) => {
+        vault.visible = index < architectureLayers.vaultsPerArch;
+      });
+    });
   }
 
   getStats(): SpectralCathedralPoeticLayerStats {
+    const architectureLayers = getSpectralCathedralArchitectureLayerCounts(this.quality);
     return {
       anchors: this.model.anchors.length,
       arches: this.model.archPositions.length,
+      pillarShells: this.pillarShells.length,
+      archFilaments: this.model.archPositions.length * CATHEDRAL_ARCH_FILAMENTS,
+      visibleArchFilaments: this.model.archPositions.length * architectureLayers.filamentsPerArch,
+      vaultRepeats: this.model.archPositions.length * CATHEDRAL_VAULT_REPEATS,
+      visibleVaultRepeats: this.model.archPositions.length * architectureLayers.vaultsPerArch,
+      archMembranes: this.archMembraneMeshes.length,
       particles: this.qualitySettings.particleCount,
       volumetricHalos: this.qualitySettings.volumetricHaloCount,
       archTrailLayers: this.qualitySettings.archTrailLayers,
@@ -396,11 +606,27 @@ export class SpectralCathedralPoeticLayer {
     this.disposed = true;
     this.pillarGeometry.dispose();
     this.pillarMaterial.dispose();
+    this.pillarShellGeometry.dispose();
+    this.pillarShellMaterials.forEach((material) => material.dispose());
     this.haloGeometry.dispose();
     this.haloMaterials.forEach((material) => material.dispose());
     this.haloTexture.dispose();
     this.archCoreLines.forEach((line) => line.geometry.dispose());
     this.archCoreMaterials.forEach((material) => material.dispose());
+    this.archFilamentMeshes.forEach((meshes) => {
+      meshes.forEach((mesh) => mesh.geometry.dispose());
+    });
+    this.archFilamentMaterials.forEach((materials) => {
+      materials.forEach((material) => material.dispose());
+    });
+    this.archMembraneMeshes.forEach((mesh) => mesh.geometry.dispose());
+    this.archMembraneMaterials.forEach((material) => material.dispose());
+    this.vaultLines.forEach((vaults) => {
+      vaults.forEach((vault) => vault.geometry.dispose());
+    });
+    this.vaultMaterials.forEach((materials) => {
+      materials.forEach((material) => material.dispose());
+    });
     this.archTrailLines.forEach((trails) => {
       trails.forEach((line) => line.geometry.dispose());
     });

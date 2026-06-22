@@ -12,6 +12,7 @@ import {
   updateSpectralCathedralDrawingModel,
   type SpectralCathedralDrawingModel,
 } from "./drawing";
+import { CATHEDRAL_ARCH_FILAMENTS, CATHEDRAL_VAULT_REPEATS } from "./architecture";
 import { evaluateSpectralCathedralDramaturgy } from "./dramaturgy";
 import {
   SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT,
@@ -19,6 +20,7 @@ import {
   getSpectralCathedralPoeticQuality,
 } from "./poetic";
 import {
+  getSpectralCathedralArchitectureLayerCounts,
   SpectralCathedralPoeticLayer,
   type SpectralCathedralPoeticLayerStats,
 } from "./poeticLayer";
@@ -97,11 +99,19 @@ export function getSpectralCathedralSceneLayerCounts(
     };
   }
   const quality = getSpectralCathedralPoeticQuality(level, backend);
+  const architecture = getSpectralCathedralArchitectureLayerCounts(level);
+  const archCount = SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT - 1;
   return {
     strict: SPECTRAL_CATHEDRAL_STRICT_LAYER_COUNTS,
     poetic: {
       anchors: SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT,
-      arches: SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT - 1,
+      arches: archCount,
+      pillarShells: SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT,
+      archFilaments: archCount * CATHEDRAL_ARCH_FILAMENTS,
+      visibleArchFilaments: archCount * architecture.filamentsPerArch,
+      vaultRepeats: archCount * CATHEDRAL_VAULT_REPEATS,
+      visibleVaultRepeats: archCount * architecture.vaultsPerArch,
+      archMembranes: archCount,
       particles: quality.particleCount,
       volumetricHalos: quality.volumetricHaloCount,
       archTrailLayers: quality.archTrailLayers,
