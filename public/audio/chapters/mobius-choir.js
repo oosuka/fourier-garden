@@ -5,26 +5,6 @@ import {
   isPositiveFinite,
 } from "./shared.js?v=11";
 
-function getMobiusChoirEnvelope(ageSeconds, gesture, preset) {
-  const articulation = preset.articulations[gesture];
-  if (
-    !articulation ||
-    !Number.isFinite(ageSeconds) ||
-    ageSeconds <= 0 ||
-    ageSeconds >= articulation.endSeconds
-  ) {
-    return 0;
-  }
-  const body =
-    (1 - Math.exp(-ageSeconds / articulation.attackSeconds)) *
-    Math.exp(-ageSeconds / articulation.decaySeconds);
-  if (ageSeconds < articulation.fadeStartSeconds) return body;
-  const progress =
-    (ageSeconds - articulation.fadeStartSeconds) /
-    (articulation.endSeconds - articulation.fadeStartSeconds);
-  return body * 0.5 * (1 + Math.cos(Math.PI * progress));
-}
-
 function smoothstepMobius(value) {
   const clamped = Math.min(1, Math.max(0, value));
   return clamped * clamped * (3 - 2 * clamped);

@@ -320,14 +320,14 @@ describe("AudioEngine initialization", () => {
     expect(
       records.nodes.filter((node) => node.kind.startsWith("biquad:")).map((node) => node.options),
     ).toEqual([
-      { type: "highpass", frequency: 90, Q: 0.45 },
-      { type: "highshelf", frequency: 4_200, gain: -1 },
-      { type: "lowpass", frequency: 8_500, Q: 0.3 },
       { type: "highpass", frequency: 160, Q: 0.45 },
+      { type: "highshelf", frequency: 3_600, gain: 1 },
+      { type: "lowpass", frequency: 8_500, Q: 0.3 },
+      { type: "highpass", frequency: 240, Q: 0.45 },
     ]);
     expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
       { kind: "gain", options: { gain: 0.86 } },
-      { kind: "gain", options: { gain: 0.12 } },
+      { kind: "gain", options: { gain: 0.16 } },
     ]);
     expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
       threshold: -14,
@@ -371,14 +371,14 @@ describe("AudioEngine initialization", () => {
     expect(
       records.nodes.filter((node) => node.kind.startsWith("biquad:")).map((node) => node.options),
     ).toEqual([
-      { type: "highpass", frequency: 95, Q: 0.45 },
-      { type: "highshelf", frequency: 4_800, gain: -3 },
-      { type: "lowpass", frequency: 8_200, Q: 0.3 },
-      { type: "highpass", frequency: 180, Q: 0.45 },
+      { type: "highpass", frequency: 155, Q: 0.45 },
+      { type: "highshelf", frequency: 4_800, gain: -1 },
+      { type: "lowpass", frequency: 7_600, Q: 0.3 },
+      { type: "highpass", frequency: 260, Q: 0.45 },
     ]);
     expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
       { kind: "gain", options: { gain: 0.9 } },
-      { kind: "gain", options: { gain: 0.2 } },
+      { kind: "gain", options: { gain: 0.22 } },
     ]);
     expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
       threshold: -16,
