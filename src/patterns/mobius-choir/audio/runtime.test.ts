@@ -14,6 +14,14 @@ describe("Möbius Choir realtime runtime", () => {
       expect(event.amplitudeMotionDepth).toBeGreaterThan(0);
       expect(event.brightnessMotionDepth).toBeGreaterThan(0);
       expect(event.panMotion).toBeGreaterThan(0);
+      expect(event.mora.length).toBeGreaterThanOrEqual(1);
+      expect(event.mora[0]).toEqual({ offsetSeconds: 0, gain: 1 });
+      for (const mora of event.mora) {
+        expect(mora.offsetSeconds).toBeGreaterThanOrEqual(0);
+        expect(mora.offsetSeconds).toBeLessThan(event.endSeconds);
+        expect(mora.gain).toBeGreaterThan(0);
+        expect(mora.gain).toBeLessThanOrEqual(1);
+      }
       expect(event.voices.length).toBeGreaterThan(0);
       expect(event.voices.length).toBeLessThanOrEqual(4);
       for (const voice of event.voices) {

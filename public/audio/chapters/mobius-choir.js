@@ -71,6 +71,12 @@ function hashMobiusUnit(eventIndex, modeId, voiceIndex, component) {
   return hashUint32(seed) / 0x1_0000_0000;
 }
 
+function getMobiusLowCutWeight(frequencyHz) {
+  const ratio = Math.max(0, frequencyHz) / 360;
+  const squared = ratio * ratio;
+  return squared / Math.sqrt(1 + squared * squared);
+}
+
 function getMobiusChoirVoicePan(event, modeIndex, voiceIndex, voiceCount) {
   const modeCount = event.modeIds.length;
   const center =
@@ -116,7 +122,8 @@ function createMobiusChoirRuntime(program) {
             partial,
             leftFrequencyHz,
             rightFrequencyHz,
-            baseWeight: partial ** -synthesis.partialDamping,
+            baseWeight:
+              partial ** -synthesis.partialDamping * getMobiusLowCutWeight(averageFrequencyHz),
             startWeight: getMobiusChoirFormantWeight(
               event.vowelStart,
               averageFrequencyHz,
@@ -164,9 +171,15 @@ function createMobiusChoirRuntime(program) {
       gesture: event.gesture,
       baseGain: event.baseGain,
       wetSend: event.wetSend,
+      attackSeconds: articulation.attackSeconds,
+      decaySeconds: articulation.decaySeconds,
       fadeStartSeconds: articulation.fadeStartSeconds,
       endSeconds: articulation.endSeconds,
       breathGain: articulation.breathGain,
+      mora: articulation.moraOffsetsSeconds.map((offsetSeconds, index) => ({
+        offsetSeconds,
+        gain: articulation.moraGains[index],
+      })),
       partialCount: event.partialCount,
       amplitudeMotionDepth: event.amplitudeMotionDepth,
       brightnessMotionDepth: event.brightnessMotionDepth,
@@ -199,6 +212,38 @@ function renderMobiusChoirBreath(voice, ageSeconds, preset) {
   return (value / voice.breathNormalization) * envelope;
 }
 
+function getMobiusContinuityEnvelope(ageSeconds, maximumEventSeconds) {
+  if (ageSeconds <= 0 || ageSeconds >= maximumEventSeconds) return 0;
+  const progress = ageSeconds / maximumEventSeconds;
+  return Math.sin(Math.PI * progress) ** 2 * Math.exp(-ageSeconds * 0.22);
+}
+
+function renderMobiusChoirAir(voice, absoluteTimeSeconds) {
+  if (voice.breathNormalization <= 0) return 0;
+  let value = 0;
+  for (let index = 0; index < voice.breath.length; index += 1) {
+    const component = voice.breath[index];
+    value +=
+      component.weight *
+      Math.sin(Math.PI * 2 * component.frequencyHz * absoluteTimeSeconds + component.phase);
+  }
+  return value / voice.breathNormalization;
+}
+
+function getMobiusChoirRuntimeEnvelope(
+  ageSeconds,
+  attackSeconds,
+  decaySeconds,
+  fadeStartSeconds,
+  endSeconds,
+) {
+  if (!Number.isFinite(ageSeconds) || ageSeconds <= 0 || ageSeconds >= endSeconds) return 0;
+  const body = (1 - Math.exp(-ageSeconds / attackSeconds)) * Math.exp(-ageSeconds / decaySeconds);
+  if (ageSeconds < fadeStartSeconds) return body;
+  const progress = (ageSeconds - fadeStartSeconds) / (endSeconds - fadeStartSeconds);
+  return body * 0.5 * (1 + Math.cos(Math.PI * progress));
+}
+
 function findLatestMobiusChoirEventIndex(events, localTimeSeconds) {
   let low = 0;
   let high = events.length - 1;
@@ -224,59 +269,87 @@ function accumulateMobiusChoirEvent(
   target,
 ) {
   const ageSeconds = absoluteTimeSeconds - absoluteEventTimeSeconds;
-  const envelope = getMobiusChoirEnvelope(ageSeconds, event.gesture, program.synthesis);
-  if (envelope <= 0) return;
-  const vowelProgress = smoothstepMobius(ageSeconds / event.fadeStartSeconds);
+  if (ageSeconds <= 0 || ageSeconds >= runtime.maximumEventSeconds) return;
   let eventLeft = 0;
   let eventRight = 0;
-  for (let voiceIndex = 0; voiceIndex < event.voices.length; voiceIndex += 1) {
-    const voice = event.voices[voiceIndex];
-    const controlPhase =
-      voice.controlPhaseOffset - voice.modalAngularFrequency * absoluteTimeSeconds;
-    const amplitude = getMobiusChoirContinuousAmplitude(controlPhase, event.amplitudeMotionDepth);
-    const pan = getMobiusChoirContinuousPan(voice.basePan, controlPhase, event.panMotion);
-    const panLeft = Math.sqrt((1 - pan) / 2);
-    const panRight = Math.sqrt((1 + pan) / 2);
-    let voiceLeft = 0;
-    let voiceRight = 0;
-    for (let partialIndex = 0; partialIndex < voice.partials.length; partialIndex += 1) {
-      const partial = voice.partials[partialIndex];
-      const partialPosition = (partial.partial - 1) / Math.max(1, event.partialCount - 1);
-      const brightness = getMobiusChoirContinuousBrightness(
-        controlPhase,
-        event.brightnessMotionDepth,
-        partialPosition,
-      );
-      const weight =
-        partial.baseWeight *
-        (partial.startWeight + (partial.endWeight - partial.startWeight) * vowelProgress) *
-        brightness;
-      voiceLeft +=
-        weight *
-        Math.cos(
-          getMobiusChoirAbsoluteCarrierPhase(
-            partial.leftFrequencyHz,
-            partial.partial,
-            voice.modalAngularFrequency,
-            voice.phaseOffset,
-            absoluteTimeSeconds,
-          ),
+
+  for (let moraIndex = 0; moraIndex < event.mora.length; moraIndex += 1) {
+    const mora = event.mora[moraIndex];
+    const moraAgeSeconds = ageSeconds - mora.offsetSeconds;
+    const envelope =
+      getMobiusChoirRuntimeEnvelope(
+        moraAgeSeconds,
+        event.attackSeconds,
+        event.decaySeconds,
+        event.fadeStartSeconds,
+        event.endSeconds,
+      ) * mora.gain;
+    if (envelope <= 0) continue;
+    const vowelProgress = smoothstepMobius(moraAgeSeconds / event.fadeStartSeconds);
+
+    for (let voiceIndex = 0; voiceIndex < event.voices.length; voiceIndex += 1) {
+      const voice = event.voices[voiceIndex];
+      const controlPhase =
+        voice.controlPhaseOffset - voice.modalAngularFrequency * absoluteTimeSeconds;
+      const amplitude = getMobiusChoirContinuousAmplitude(controlPhase, event.amplitudeMotionDepth);
+      const pan = getMobiusChoirContinuousPan(voice.basePan, controlPhase, event.panMotion);
+      const panLeft = Math.sqrt((1 - pan) / 2);
+      const panRight = Math.sqrt((1 + pan) / 2);
+      let voiceLeft = 0;
+      let voiceRight = 0;
+      for (let partialIndex = 0; partialIndex < voice.partials.length; partialIndex += 1) {
+        const partial = voice.partials[partialIndex];
+        const partialPosition = (partial.partial - 1) / Math.max(1, event.partialCount - 1);
+        const brightness = getMobiusChoirContinuousBrightness(
+          controlPhase,
+          event.brightnessMotionDepth,
+          partialPosition,
         );
-      voiceRight +=
-        weight *
-        Math.cos(
-          getMobiusChoirAbsoluteCarrierPhase(
-            partial.rightFrequencyHz,
-            partial.partial,
-            voice.modalAngularFrequency,
-            voice.phaseOffset,
-            absoluteTimeSeconds,
-          ),
-        );
+        const weight =
+          partial.baseWeight *
+          (partial.startWeight + (partial.endWeight - partial.startWeight) * vowelProgress) *
+          brightness;
+        voiceLeft +=
+          weight *
+          Math.cos(
+            getMobiusChoirAbsoluteCarrierPhase(
+              partial.leftFrequencyHz,
+              partial.partial,
+              voice.modalAngularFrequency,
+              voice.phaseOffset,
+              absoluteTimeSeconds,
+            ),
+          );
+        voiceRight +=
+          weight *
+          Math.cos(
+            getMobiusChoirAbsoluteCarrierPhase(
+              partial.rightFrequencyHz,
+              partial.partial,
+              voice.modalAngularFrequency,
+              voice.phaseOffset,
+              absoluteTimeSeconds,
+            ),
+          );
+      }
+      const breath =
+        event.breathGain *
+        mora.gain *
+        renderMobiusChoirBreath(voice, moraAgeSeconds, program.synthesis);
+      eventLeft += voice.normalizedGain * panLeft * (voiceLeft * envelope * amplitude + breath);
+      eventRight += voice.normalizedGain * panRight * (voiceRight * envelope * amplitude + breath);
     }
-    const breath = event.breathGain * renderMobiusChoirBreath(voice, ageSeconds, program.synthesis);
-    eventLeft += voice.normalizedGain * panLeft * (voiceLeft * envelope * amplitude + breath);
-    eventRight += voice.normalizedGain * panRight * (voiceRight * envelope * amplitude + breath);
+  }
+
+  const airEnvelope =
+    getMobiusContinuityEnvelope(ageSeconds, runtime.maximumEventSeconds) * event.breathGain * 1.8;
+  if (airEnvelope > 0) {
+    for (let voiceIndex = 0; voiceIndex < event.voices.length; voiceIndex += 1) {
+      const voice = event.voices[voiceIndex];
+      const air = renderMobiusChoirAir(voice, absoluteTimeSeconds);
+      eventLeft += voice.normalizedGain * voice.panLeft * air * airEnvelope;
+      eventRight += voice.normalizedGain * voice.panRight * air * airEnvelope;
+    }
   }
   const scale = (runtime.outputGain * event.baseGain) / runtime.normalization;
   target.dryLeft += eventLeft * scale;
@@ -421,7 +494,17 @@ function validateMobiusChoirProgram(program) {
         isNonnegativeFinite(articulation.fadeStartSeconds) &&
         isPositiveFinite(articulation.endSeconds) &&
         articulation.fadeStartSeconds < articulation.endSeconds &&
-        isNonnegativeFinite(articulation.breathGain)
+        isNonnegativeFinite(articulation.breathGain) &&
+        Array.isArray(articulation.moraOffsetsSeconds) &&
+        Array.isArray(articulation.moraGains) &&
+        articulation.moraOffsetsSeconds.length > 0 &&
+        articulation.moraOffsetsSeconds.length === articulation.moraGains.length &&
+        articulation.moraOffsetsSeconds[0] === 0 &&
+        articulation.moraOffsetsSeconds.every(
+          (offsetSeconds) =>
+            isNonnegativeFinite(offsetSeconds) && offsetSeconds < articulation.endSeconds,
+        ) &&
+        articulation.moraGains.every((gain) => isPositiveFinite(gain) && gain <= 1)
       );
     }) &&
     preset.formants &&

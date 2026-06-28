@@ -20,6 +20,11 @@ export interface MobiusChoirRuntimeBreathComponent {
   weight: number;
 }
 
+export interface MobiusChoirRuntimeMora {
+  offsetSeconds: number;
+  gain: number;
+}
+
 export interface MobiusChoirRuntimeVoice {
   modeId: number;
   modalAngularFrequency: number;
@@ -40,9 +45,12 @@ export interface MobiusChoirRuntimeEvent {
   gesture: MobiusChoirGesture;
   baseGain: number;
   wetSend: number;
+  attackSeconds: number;
+  decaySeconds: number;
   fadeStartSeconds: number;
   endSeconds: number;
   breathGain: number;
+  mora: readonly MobiusChoirRuntimeMora[];
   partialCount: number;
   amplitudeMotionDepth: number;
   brightnessMotionDepth: number;
@@ -109,6 +117,12 @@ function hashUnit(eventIndex: number, modeId: number, voiceIndex: number, compon
   return hashUint32(seed) / 0x1_0000_0000;
 }
 
+function getMobiusLowCutWeight(frequencyHz: number): number {
+  const ratio = Math.max(0, frequencyHz) / 360;
+  const squared = ratio * ratio;
+  return squared / Math.sqrt(1 + squared * squared);
+}
+
 function createRuntimeVoice(
   program: MobiusChoirWorkletProgram,
   sampleRate: number,
@@ -136,7 +150,7 @@ function createRuntimeVoice(
       partial,
       leftFrequencyHz,
       rightFrequencyHz,
-      baseWeight: partial ** -synthesis.partialDamping,
+      baseWeight: partial ** -synthesis.partialDamping * getMobiusLowCutWeight(averageFrequencyHz),
       startWeight: getFormantWeight(
         synthesis.formants[event.vowelStart],
         synthesis.formantFloor,
@@ -210,9 +224,15 @@ export function createMobiusChoirRuntime(
       gesture: event.gesture,
       baseGain: event.baseGain,
       wetSend: event.wetSend,
+      attackSeconds: articulation.attackSeconds,
+      decaySeconds: articulation.decaySeconds,
       fadeStartSeconds: articulation.fadeStartSeconds,
       endSeconds: articulation.endSeconds,
       breathGain: articulation.breathGain,
+      mora: articulation.moraOffsetsSeconds.map((offsetSeconds, index) => ({
+        offsetSeconds,
+        gain: articulation.moraGains[index]!,
+      })),
       partialCount: event.partialCount,
       amplitudeMotionDepth: event.amplitudeMotionDepth,
       brightnessMotionDepth: event.brightnessMotionDepth,
@@ -244,8 +264,16 @@ function countOscillatorsAtTime(runtime: MobiusChoirRuntime, absoluteTimeSeconds
       const ageSeconds = absoluteTimeSeconds - (cycleStart + event.localTimeSeconds);
       if (ageSeconds <= 0 || ageSeconds >= event.endSeconds) continue;
       for (const voice of event.voices) {
-        count += voice.partials.length;
-        if (ageSeconds < runtime.breathSeconds) count += voice.breath.length;
+        let hasActiveMora = false;
+        let hasActiveBreath = false;
+        for (const mora of event.mora) {
+          const moraAgeSeconds = ageSeconds - mora.offsetSeconds;
+          if (moraAgeSeconds <= 0 || moraAgeSeconds >= event.endSeconds) continue;
+          hasActiveMora = true;
+          if (moraAgeSeconds < runtime.breathSeconds) hasActiveBreath = true;
+        }
+        if (hasActiveMora) count += voice.partials.length;
+        if (hasActiveBreath) count += voice.breath.length;
       }
     }
   }

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  estimateOnsetSpacing,
+  getBandEnergyRatios,
+  getFrameRmsContinuity,
+  getStereoMetrics,
+} from "../../../audio/audioMetrics";
+import { createWorkletConfigureMessage } from "../../../audio/audioProgram";
+import {
   createSpectralCathedralWorkletProgram,
   renderSpectralCathedralStereo,
 } from "../../spectral-cathedral/audio/synthesis";
@@ -21,47 +28,6 @@ import {
   renderMobiusChoirStereo,
   validateMobiusChoirWorkletProgram,
 } from "./synthesis";
-import { createWorkletConfigureMessage } from "../../../audio/audioProgram";
-
-function getStereoMetrics(left: Float32Array, right: Float32Array) {
-  let sumOfSquares = 0;
-  let sum = 0;
-  let peak = 0;
-  for (const channel of [left, right]) {
-    for (const sample of channel) {
-      sumOfSquares += sample * sample;
-      sum += sample;
-      peak = Math.max(peak, Math.abs(sample));
-    }
-  }
-  const sampleCount = left.length + right.length;
-  return {
-    rms: Math.sqrt(sumOfSquares / sampleCount),
-    mean: sum / sampleCount,
-    peak,
-  };
-}
-
-function getMaximumLowRmsSeconds(
-  left: Float32Array,
-  right: Float32Array,
-  sampleRate: number,
-): number {
-  const blockSamples = Math.round(sampleRate * 0.02);
-  let run = 0;
-  let maximumRun = 0;
-  for (let start = Math.round(sampleRate * 0.1); start < left.length; start += blockSamples) {
-    const end = Math.min(left.length, start + blockSamples);
-    let sumOfSquares = 0;
-    for (let index = start; index < end; index += 1) {
-      sumOfSquares += left[index]! ** 2 + right[index]! ** 2;
-    }
-    const rms = Math.sqrt(sumOfSquares / ((end - start) * 2));
-    run = rms < 0.0015 ? run + 1 : 0;
-    maximumRun = Math.max(maximumRun, run);
-  }
-  return maximumRun * 0.02;
-}
 
 describe("Möbius Choir synthesis", () => {
   it("wraps the six-mode score in the chapter-specific graph", () => {
@@ -73,6 +39,136 @@ describe("Möbius Choir synthesis", () => {
       type: "configure",
       program: program.worklet,
     });
+  });
+
+  it("uses the approved mora synthesis constants and graph", () => {
+    expect(MOBIUS_CHOIR_SYNTHESIS).toEqual({
+      maximumPartials: 6,
+      partialDamping: 1.55,
+      articulations: {
+        breath: {
+          attackSeconds: 0.055,
+          decaySeconds: 0.95,
+          fadeStartSeconds: 1.18,
+          endSeconds: 1.35,
+          breathGain: 0.022,
+          moraOffsetsSeconds: [0, 0.24],
+          moraGains: [1, 0.42],
+        },
+        call: {
+          attackSeconds: 0.035,
+          decaySeconds: 0.72,
+          fadeStartSeconds: 1.05,
+          endSeconds: 1.2,
+          breathGain: 0.024,
+          moraOffsetsSeconds: [0, 0.18, 0.36],
+          moraGains: [1, 0.68, 0.42],
+        },
+        answer: {
+          attackSeconds: 0.04,
+          decaySeconds: 0.76,
+          fadeStartSeconds: 1.12,
+          endSeconds: 1.3,
+          breathGain: 0.024,
+          moraOffsetsSeconds: [0, 0.18, 0.36],
+          moraGains: [1, 0.64, 0.4],
+        },
+        turn: {
+          attackSeconds: 0.03,
+          decaySeconds: 0.62,
+          fadeStartSeconds: 0.92,
+          endSeconds: 1.08,
+          breathGain: 0.03,
+          moraOffsetsSeconds: [0, 0.16, 0.32],
+          moraGains: [1, 0.62, 0.38],
+        },
+        braid: {
+          attackSeconds: 0.032,
+          decaySeconds: 0.66,
+          fadeStartSeconds: 0.98,
+          endSeconds: 1.16,
+          breathGain: 0.032,
+          moraOffsetsSeconds: [0, 0.18, 0.36],
+          moraGains: [1, 0.66, 0.46],
+        },
+        converge: {
+          attackSeconds: 0.07,
+          decaySeconds: 1.18,
+          fadeStartSeconds: 1.86,
+          endSeconds: 2.1,
+          breathGain: 0.026,
+          moraOffsetsSeconds: [0, 0.24, 0.48],
+          moraGains: [1, 0.5, 0.3],
+        },
+      },
+      formants: {
+        u: [
+          { frequencyHz: 350, bandwidthHz: 100, amplitude: 0.62 },
+          { frequencyHz: 900, bandwidthHz: 140, amplitude: 0.78 },
+          { frequencyHz: 2_200, bandwidthHz: 260, amplitude: 0.22 },
+        ],
+        o: [
+          { frequencyHz: 450, bandwidthHz: 110, amplitude: 0.68 },
+          { frequencyHz: 800, bandwidthHz: 130, amplitude: 0.82 },
+          { frequencyHz: 2_830, bandwidthHz: 300, amplitude: 0.2 },
+        ],
+        e: [
+          { frequencyHz: 500, bandwidthHz: 110, amplitude: 0.86 },
+          { frequencyHz: 1_700, bandwidthHz: 180, amplitude: 1 },
+          { frequencyHz: 2_500, bandwidthHz: 300, amplitude: 0.2 },
+        ],
+        a: [
+          { frequencyHz: 800, bandwidthHz: 140, amplitude: 1 },
+          { frequencyHz: 1_150, bandwidthHz: 170, amplitude: 0.86 },
+          { frequencyHz: 2_900, bandwidthHz: 320, amplitude: 0.18 },
+        ],
+      },
+      formantFloor: 0.16,
+      maximumEventSeconds: 2.1,
+      breathSeconds: 0.2,
+      breathMinimumHz: 1_200,
+      breathMaximumHz: 5_000,
+      breathComponentCount: 4,
+      stereoDetuneRatio: 0.00125,
+      antiAliasRatio: 0.9,
+      outputGain: 0.551,
+    });
+    expect(MOBIUS_CHOIR_AUDIO_GRAPH).toEqual({
+      dryHighPassHz: 155,
+      dryHighPassQ: 0.45,
+      dryHighShelfHz: 4_800,
+      dryHighShelfGainDb: -1,
+      dryLowPassHz: 7_600,
+      dryLowPassQ: 0.3,
+      dryGain: 0.9,
+      wetHighPassHz: 260,
+      wetHighPassQ: 0.45,
+      wetGain: 0.22,
+      roomSeconds: 2.6,
+      roomDecay: 3.8,
+      compressor: {
+        thresholdDb: -16,
+        kneeDb: 12,
+        ratio: 3,
+        attackSeconds: 0.008,
+        releaseSeconds: 0.26,
+      },
+      limiterCeilingDbfs: -1,
+    });
+  });
+
+  it("keeps mora offsets deterministic and inside each gesture", () => {
+    for (const articulation of Object.values(MOBIUS_CHOIR_SYNTHESIS.articulations)) {
+      expect(articulation.moraOffsetsSeconds).toHaveLength(articulation.moraGains.length);
+      expect(articulation.moraOffsetsSeconds[0]).toBe(0);
+      for (const [index, offset] of articulation.moraOffsetsSeconds.entries()) {
+        expect(offset).toBeGreaterThanOrEqual(0);
+        expect(offset).toBeLessThan(articulation.endSeconds);
+        expect(articulation.moraGains[index]).toBeGreaterThan(0);
+        expect(articulation.moraGains[index]).toBeLessThanOrEqual(1);
+      }
+    }
+    expect(MOBIUS_CHOIR_SYNTHESIS.articulations.braid.moraOffsetsSeconds).toEqual([0, 0.18, 0.36]);
   });
 
   it("preserves eigenfrequency and coefficient ratios with correct voice kinds", () => {
@@ -275,6 +371,38 @@ describe("Möbius Choir synthesis", () => {
     expect(ratio).toBeLessThanOrEqual(1.1);
   }, 10_000);
 
+  it("matches the reference-like mid-band pulse profile without low boom", () => {
+    const sampleRate = 4_000;
+    const program = createMobiusChoirWorkletProgram();
+    const rendered = renderMobiusChoirStereo({
+      program,
+      startTimeSeconds: 0,
+      durationSeconds: program.score.cycleSeconds,
+      sampleRate,
+    });
+    const metrics = getStereoMetrics(rendered.left, rendered.right);
+    const bands = getBandEnergyRatios(rendered.left, rendered.right, sampleRate);
+    const continuity = getFrameRmsContinuity(
+      rendered.left,
+      rendered.right,
+      sampleRate,
+      0.02,
+      0.0015,
+    );
+    const onsets = estimateOnsetSpacing(rendered.left, rendered.right, sampleRate);
+
+    expect(metrics.peak).toBeLessThanOrEqual(10 ** (-1 / 20));
+    expect(Math.abs(metrics.mean)).toBeLessThan(1e-3);
+    expect(bands.below150Hz).toBeLessThanOrEqual(0.02);
+    expect(bands.below250Hz).toBeLessThanOrEqual(0.06);
+    expect(bands.below400Hz).toBeLessThanOrEqual(0.18);
+    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.6);
+    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.1);
+    expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.16);
+    expect(onsets.medianSeconds).toBeLessThanOrEqual(0.3);
+    expect(onsets.pulseScore).toBeGreaterThan(0.2);
+  }, 15_000);
+
   it("keeps the collective phrase continuous while each gesture closes", () => {
     const sampleRate = 4_000;
     const rendered = renderMobiusChoirStereo({
@@ -284,9 +412,10 @@ describe("Möbius Choir synthesis", () => {
       sampleRate,
     });
 
-    expect(getMaximumLowRmsSeconds(rendered.left, rendered.right, sampleRate)).toBeLessThanOrEqual(
-      0.09,
-    );
+    expect(
+      getFrameRmsContinuity(rendered.left, rendered.right, sampleRate, 0.02, 0.0015)
+        .maximumLowRmsSeconds,
+    ).toBeLessThanOrEqual(0.09);
     for (const [gesture, articulation] of Object.entries(MOBIUS_CHOIR_SYNTHESIS.articulations)) {
       expect(getMobiusChoirEnvelope(articulation.endSeconds, gesture)).toBe(0);
     }
