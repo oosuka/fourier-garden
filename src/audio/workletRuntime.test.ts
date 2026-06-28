@@ -207,6 +207,22 @@ describe("AudioWorklet runtime", () => {
     expect(repeated).toEqual(first);
   });
 
+  it.each([
+    createSpectralCathedralWorkletProgram(),
+    createMobiusChoirWorkletProgram(),
+  ])("renders finite reference-like chapter samples through the worklet", (program) => {
+    const processor = loadProcessor(48_000);
+    const outputs = createOutputs(128);
+
+    send(processor, { type: "configure", program });
+    send(processor, { type: "seek", seconds: 28.25 });
+    send(processor, { type: "active", value: true });
+    processor.fade = 1;
+    processor.process([], outputs);
+
+    expect(outputs.flat().every((channel) => channel.every(Number.isFinite))).toBe(true);
+  });
+
   it("uses the shared fade when becoming inactive", () => {
     const processor = loadProcessor(48_000);
 
