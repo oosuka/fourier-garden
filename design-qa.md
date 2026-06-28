@@ -23,7 +23,7 @@
   DFT、FFT、数値固有値問題を使用しない
 - Chapter 2の音響と詩的造形は75秒・5幕の反復スコアを使うが、厳密数学時刻は
   周期でリセットしない
-- `Möbius Choir`はflat quotientの解析的6モードを63イベント・5幕でソニフィケーションし、
+- `Möbius Choir`はflat quotientの解析的6モードを78イベント・5幕でソニフィケーションし、
   carrierと局所制御を絶対transport時刻で連続評価する
 - Chapter 3の厳密面、境界、同一視辺、節線は詩的粒子と音響応答で変形しない
 
@@ -746,6 +746,28 @@ Spectral Cathedral段階5の4K計測ではJS heapとbuffer backing storageの
 本番ビルドは成功しているが、Viteは`residueBloomScene`のminify後チャンクが
 500 kBを超えるという警告を出している。遅延ロードは維持されており、
 今回の文書変更による増加ではない。
+
+## 参照動画準拠サウンド抜本改善QA
+
+状態: 実装後QA欄。参照動画はMassimo / `@Rainmaker1973`の投稿
+<https://x.com/Rainmaker1973/status/2055220187184386556> と、取得可能なMP4
+<https://video.twimg.com/amplify_video/2055219255423991808/vid/avc1/720x420/YYb7NRCsogiD3sGC.mp4?tag=27>。
+
+参照動画の一時WAV計測では、44.1 kHz stereo、約29.05秒、mono RMS 0.1276、
+400 Hz-3 kHz平均エネルギー比0.963、onset間隔中央値約0.197秒だった。
+
+実装済み確認項目:
+
+- Chapter 2の`0.5` registerを除去し、基準周波数を440 Hzへ上げた
+- Chapter 2の150 Hz未満、250 Hz未満、400 Hz未満のエネルギー比がテスト上限以内だった
+- Chapter 2へsubgrainと高域sparkle tailを加え、長い無音断絶を避けた
+- Chapter 3を78イベントと二次moraへ更新した
+- Chapter 3の400 Hz-3 kHz帯域比、onset中央値、低RMS連続区間がテスト上限以内だった
+
+最終確認項目:
+
+- ヘッドホンとMac内蔵スピーカーで参照動画、Chapter 1、Chapter 2、Chapter 3を比較試聴する
+- Chapter 2を2周期、Chapter 3を2周期連続再生し、低い反復音や唐突な断絶がないことを確認する
 
 ## 全章横断の未確認事項
 
