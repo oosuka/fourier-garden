@@ -161,6 +161,20 @@ describe("Spectral Cathedral audio mapping", () => {
     );
   });
 
+  it("keeps the lowest generated fundamental at or above 176 Hz", () => {
+    const modes = createSpectralCathedralAudioModes();
+    const modesById = new Map(modes.map((mode) => [mode.id, mode]));
+    const minimumFundamental = Math.min(
+      ...SPECTRAL_CATHEDRAL_SCORE.events.flatMap((event) =>
+        event.modeIds.map(
+          (modeId) => modesById.get(modeId)!.baseFrequencyHz * event.registerMultiplier,
+        ),
+      ),
+    );
+
+    expect(minimumFundamental).toBeGreaterThanOrEqual(176);
+  });
+
   it("rejects a partial from both channels when the higher detuned side reaches the limit", () => {
     const sampleRate = 48_000;
     const partial = 8;
@@ -404,5 +418,9 @@ describe("Spectral Cathedral reference DSP", () => {
       },
     };
     expect(() => validateSpectralCathedralWorkletProgram(outsideCycle)).toThrow(/cycle/i);
+
+    const halfRegister = structuredClone(program);
+    Object.defineProperty(halfRegister.score.events[0]!, "registerMultiplier", { value: 0.5 });
+    expect(() => validateSpectralCathedralWorkletProgram(halfRegister)).toThrow(/register/i);
   });
 });

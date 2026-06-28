@@ -405,6 +405,9 @@ export function validateSpectralCathedralWorkletProgram(
     ] as const) {
       assertFinite(`Spectral Cathedral event ${name}`, value);
     }
+    if (![1, 1.5, 2].includes(event.registerMultiplier)) {
+      throw new Error("Spectral Cathedral event register multiplier is invalid");
+    }
     if (!(event.gesture in program.synthesis.articulations)) {
       throw new Error("Spectral Cathedral event gesture is invalid");
     }

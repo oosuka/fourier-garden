@@ -25,7 +25,7 @@ export interface SpectralCathedralScoreEvent {
   baseBrightness: number;
   wetSend: number;
   stereoSpread: number;
-  registerMultiplier: 0.5 | 1 | 2;
+  registerMultiplier: 1 | 1.5 | 2;
 }
 
 export interface SpectralCathedralScoreProgram {
@@ -113,7 +113,7 @@ const SECTION_PROFILES = {
     brightness: 0.28,
     wetSend: 0.72,
     stereoSpread: 0.36,
-    registerMultiplier: 0.5,
+    registerMultiplier: 1,
   },
   procession: {
     baseGain: 0.68,
@@ -127,7 +127,7 @@ const SECTION_PROFILES = {
     brightness: 0.68,
     wetSend: 0.5,
     stereoSpread: 0.72,
-    registerMultiplier: 1,
+    registerMultiplier: 1.5,
   },
   resonance: {
     baseGain: 0.86,
@@ -141,7 +141,7 @@ const SECTION_PROFILES = {
     brightness: 0.34,
     wetSend: 0.84,
     stereoSpread: 0.46,
-    registerMultiplier: 0.5,
+    registerMultiplier: 1,
   },
 } as const satisfies Readonly<
   Record<
@@ -151,7 +151,7 @@ const SECTION_PROFILES = {
       brightness: number;
       wetSend: number;
       stereoSpread: number;
-      registerMultiplier: 0.5 | 1 | 2;
+      registerMultiplier: 1 | 1.5 | 2;
     }
   >
 >;

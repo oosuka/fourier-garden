@@ -49,6 +49,22 @@ describe("Spectral Cathedral musical score", () => {
     }
   });
 
+  it("removes the low half-register that caused repeated 88 Hz pulses", () => {
+    const registerMultipliers = SPECTRAL_CATHEDRAL_SCORE.events.map(
+      (event): number => event.registerMultiplier,
+    );
+
+    expect(new Set(registerMultipliers)).toEqual(new Set([1, 1.5, 2]));
+    expect(registerMultipliers.every((registerMultiplier) => registerMultiplier !== 0.5)).toBe(
+      true,
+    );
+    expect(
+      SPECTRAL_CATHEDRAL_SCORE.events
+        .filter((event) => event.section === "illumination" || event.section === "afterglow")
+        .every((event) => event.registerMultiplier === 1),
+    ).toBe(true);
+  });
+
   it("stores only repeatable score fields in the event table", () => {
     const event = SPECTRAL_CATHEDRAL_SCORE.events[0]!;
 
@@ -64,7 +80,7 @@ describe("Spectral Cathedral musical score", () => {
       baseBrightness: 0.28,
       wetSend: 0.72,
       stereoSpread: 0.36,
-      registerMultiplier: 0.5,
+      registerMultiplier: 1,
     });
     expect(Object.keys(event)).not.toEqual(
       expect.arrayContaining([

@@ -262,7 +262,7 @@ function validateSpectralCathedralProgram(program) {
         event.wetSend <= 1 &&
         isNonnegativeFinite(event.stereoSpread) &&
         event.stereoSpread <= 1 &&
-        [0.5, 1, 2].includes(event.registerMultiplier),
+        [1, 1.5, 2].includes(event.registerMultiplier),
     ) &&
     Array.isArray(modes) &&
     modes.length === 12 &&
