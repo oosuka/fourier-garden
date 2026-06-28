@@ -7,7 +7,7 @@ describe("Möbius Choir realtime runtime", () => {
   it("precomputes mode, voice, pan, partial, and formant data", () => {
     const runtime = createMobiusChoirRuntime(createMobiusChoirWorkletProgram(), 48_000);
 
-    expect(runtime.events).toHaveLength(63);
+    expect(runtime.events).toHaveLength(78);
     for (const event of runtime.events) {
       expect(event.partialCount).toBeGreaterThanOrEqual(3);
       expect(event.partialCount).toBeLessThanOrEqual(6);

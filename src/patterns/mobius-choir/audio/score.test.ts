@@ -15,13 +15,13 @@ function getMaximumRun(events: readonly MobiusChoirScoreEvent[]): number {
 }
 
 describe("Möbius Choir score", () => {
-  it("defines the approved 68 BPM grouped cycle and five acts", () => {
+  it("builds the 78-event reference-like five-act score", () => {
     expect(MOBIUS_CHOIR_SCORE.bpm).toBe(68);
     expect(MOBIUS_CHOIR_SCORE.beatsPerBar).toBe(4);
     expect(MOBIUS_CHOIR_SCORE.slotsPerBeat).toBe(2);
     expect(MOBIUS_CHOIR_SCORE.totalBars).toBe(16);
     expect(MOBIUS_CHOIR_SCORE.cycleSeconds).toBeCloseTo(960 / 17, 12);
-    expect(MOBIUS_CHOIR_SCORE.events).toHaveLength(63);
+    expect(MOBIUS_CHOIR_SCORE.events).toHaveLength(78);
     expect(MOBIUS_CHOIR_SCORE.sections.map((section) => section.id)).toEqual([
       "breath",
       "antiphon",
@@ -34,34 +34,24 @@ describe("Möbius Choir score", () => {
         (section) =>
           MOBIUS_CHOIR_SCORE.events.filter((event) => event.section === section.id).length,
       ),
-    ).toEqual([9, 12, 16, 20, 6]);
+    ).toEqual([12, 15, 20, 24, 7]);
   });
 
-  it("keeps the 3+3+2 pulse audible without long event gaps", () => {
-    const expectedSlots = [
-      [0, 3, 6],
-      [0, 3, 6],
-      [0, 3, 6],
-      [0, 3, 6, 7],
-      [0, 3, 6, 7],
-      [0, 3, 6, 7],
-      [0, 2, 5, 7],
-      [0, 2, 5, 7],
-      [0, 2, 5, 7],
-      [0, 2, 5, 7],
-      [0, 1, 3, 5, 7],
-      [0, 1, 3, 5, 7],
-      [0, 1, 3, 5, 7],
-      [0, 1, 3, 5, 7],
-      [0, 3, 6],
-      [0, 3, 6],
-    ];
+  it("uses the approved slot pattern for each section without long event gaps", () => {
+    const slotsByBar = new Map<number, number[]>();
     const maximumGapSeconds = MOBIUS_CHOIR_SCORE.slotSeconds * 3;
 
-    for (let barIndex = 0; barIndex < MOBIUS_CHOIR_SCORE.totalBars; barIndex += 1) {
-      const events = MOBIUS_CHOIR_SCORE.events.filter((event) => event.barIndex === barIndex);
-      expect(events.map((event) => event.slotInBar)).toEqual(expectedSlots[barIndex]);
+    for (const event of MOBIUS_CHOIR_SCORE.events) {
+      const slots = slotsByBar.get(event.barIndex) ?? [];
+      slots.push(event.slotInBar);
+      slotsByBar.set(event.barIndex, slots);
     }
+    for (const bar of [0, 1, 2]) expect(slotsByBar.get(bar)).toEqual([0, 3, 5, 6]);
+    for (const bar of [3, 4, 5]) expect(slotsByBar.get(bar)).toEqual([0, 2, 3, 6, 7]);
+    for (const bar of [6, 7, 8, 9]) expect(slotsByBar.get(bar)).toEqual([0, 1, 3, 4, 6]);
+    for (const bar of [10, 11, 12, 13]) expect(slotsByBar.get(bar)).toEqual([0, 1, 2, 4, 5, 7]);
+    expect(slotsByBar.get(14)).toEqual([0, 3, 6]);
+    expect(slotsByBar.get(15)).toEqual([0, 2, 5, 7]);
 
     const eventTimes = MOBIUS_CHOIR_SCORE.events.map((event) => event.localTimeSeconds);
     eventTimes.push(MOBIUS_CHOIR_SCORE.cycleSeconds + eventTimes[0]!);
@@ -131,12 +121,12 @@ describe("Möbius Choir score", () => {
     const cycle = MOBIUS_CHOIR_SCORE.cycleSeconds;
     const events = evaluateMobiusChoirEvents(MOBIUS_CHOIR_SCORE, cycle + 0.05, 2.4);
     const previousCycleTail = events.find(
-      (event) => event.cycleIndex === 0 && event.barIndex === 15 && event.slotInBar === 6,
+      (event) => event.cycleIndex === 0 && event.barIndex === 15 && event.slotInBar === 7,
     );
     expect(previousCycleTail).toBeDefined();
     expect(previousCycleTail?.gesture).toBe("converge");
-    expect(previousCycleTail?.absoluteTimeSeconds).toBeCloseTo(55.588235294117645, 12);
-    expect(previousCycleTail?.ageSeconds).toBeCloseTo(0.9323529411764713, 12);
+    expect(previousCycleTail?.absoluteTimeSeconds).toBeCloseTo(56.029411764705884, 12);
+    expect(previousCycleTail?.ageSeconds).toBeCloseTo(0.4911764705882353, 12);
     expect(
       events.some((event) => event.cycleIndex === 1 && event.absoluteTimeSeconds === cycle),
     ).toBe(true);

@@ -420,8 +420,8 @@ export function createMobiusChoirAudioProgram(): AudioEngineProgram<MobiusChoirW
 export function validateMobiusChoirWorkletProgram(program: MobiusChoirWorkletProgram): void {
   if (program.kind !== "mobius-choir") throw new Error("Möbius Choir program kind is invalid");
   if (program.modes.length !== 6) throw new Error("Möbius Choir program must contain 6 modes");
-  if (program.score.events.length !== 63) {
-    throw new Error("Möbius Choir program must contain 63 events");
+  if (program.score.events.length !== 78) {
+    throw new Error("Möbius Choir program must contain 78 events");
   }
   if (Math.abs(program.score.cycleSeconds - 960 / 17) > 1e-12) {
     throw new Error("Möbius Choir cycle is invalid");

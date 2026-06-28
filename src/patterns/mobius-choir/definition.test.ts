@@ -7,10 +7,10 @@ describe("Möbius Choir definition", () => {
     expect(mobiusChoirPattern.publication).toBe("published");
     expect(mobiusChoirPattern.order).toBe(3);
     expect(mobiusChoirPattern.definition.modes).toHaveLength(6);
-    expect(mobiusChoirPattern.audio.score.events).toHaveLength(63);
+    expect(mobiusChoirPattern.audio.score.events).toHaveLength(78);
     expect(mobiusChoirPattern.audio.score.cycleSeconds).toBeCloseTo(960 / 17, 12);
     expect(mobiusChoirPattern.audio.sonificationLatex).toContain("\\psi_{mn,r,q}^{L/R}(t)");
-    expect(mobiusChoirPattern.education.gentleBody).toContain("63イベント");
+    expect(mobiusChoirPattern.education.gentleBody).toContain("78イベント");
     expect(mobiusChoirPattern.education.sonificationBody).toContain("carrierを絶対transport時刻");
     expect(mobiusChoirPattern.education.sonificationBody).toContain("振幅、部分音の明度、定位");
     expect(mobiusChoirPattern.education.poeticLayerBody).toContain("同じモード速度");

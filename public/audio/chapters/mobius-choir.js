@@ -343,7 +343,7 @@ function validateMobiusChoirProgram(program) {
     score &&
     Math.abs(score.cycleSeconds - 960 / 17) <= 1e-12 &&
     Array.isArray(score.events) &&
-    score.events.length === 63 &&
+    score.events.length === 78 &&
     Array.isArray(modes) &&
     modes.length === 6 &&
     modeIds.size === 6 &&
