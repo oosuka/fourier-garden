@@ -6,224 +6,303 @@ import {
   isPositiveFinite,
 } from "./shared.js?v=11";
 
-function evaluateSpectralCathedralEvents(score, absoluteTimeSeconds, maximumAgeSeconds) {
-  if (
-    !Number.isFinite(absoluteTimeSeconds) ||
-    !Number.isFinite(maximumAgeSeconds) ||
-    absoluteTimeSeconds < 0 ||
-    maximumAgeSeconds <= 0
-  ) {
-    return [];
-  }
-
-  const currentCycleIndex = Math.floor(absoluteTimeSeconds / score.cycleSeconds);
-  const evaluated = [];
-
-  for (const cycleIndex of [currentCycleIndex - 1, currentCycleIndex]) {
-    if (cycleIndex < 0) continue;
-
-    for (const event of score.events) {
-      const eventTimeSeconds = cycleIndex * score.cycleSeconds + event.localTimeSeconds;
-      const ageSeconds = absoluteTimeSeconds - eventTimeSeconds;
-      if (ageSeconds < 0 || ageSeconds >= maximumAgeSeconds) continue;
-
-      evaluated.push({
-        ...event,
-        cycleIndex,
-        absoluteEventIndex: cycleIndex * score.events.length + event.index,
-        absoluteTimeSeconds: eventTimeSeconds,
-        ageSeconds,
-      });
-    }
-  }
-
-  return evaluated.toSorted((left, right) => left.absoluteTimeSeconds - right.absoluteTimeSeconds);
-}
-
-function getSpectralCathedralBellEnvelope(ageSeconds, gesture, preset, decayScale) {
-  const articulation = preset.articulations[gesture];
-  if (!Number.isFinite(ageSeconds) || ageSeconds < 0 || ageSeconds >= articulation.endSeconds) {
-    return 0;
-  }
-
-  const body =
-    (1 - Math.exp(-ageSeconds / articulation.attackSeconds)) *
-    Math.exp(-ageSeconds / (articulation.decaySeconds * decayScale));
-  if (ageSeconds < articulation.fadeStartSeconds) return body;
-
-  const fadeProgress =
-    (ageSeconds - articulation.fadeStartSeconds) /
-    (articulation.endSeconds - articulation.fadeStartSeconds);
-  return body * 0.5 * (1 + Math.cos(Math.PI * fadeProgress));
-}
-
-function getSpectralCathedralModeExpression(mode, absoluteEventTimeSeconds) {
-  const phase = mode.modalAngularFrequency * absoluteEventTimeSeconds;
-  return {
-    displacement: Math.abs(Math.cos(phase)),
-    velocity: Math.abs(Math.sin(phase)),
-  };
-}
-
-function evaluateSpectralCathedralEventExpression(event, modes) {
-  const selected = modes.filter((mode) => event.modeIds.includes(mode.id));
-  if (selected.length === 0) return null;
-  const displacement =
-    selected.reduce(
-      (sum, mode) =>
-        sum + getSpectralCathedralModeExpression(mode, event.absoluteTimeSeconds).displacement,
-      0,
-    ) / selected.length;
-  const velocity =
-    selected.reduce(
-      (sum, mode) =>
-        sum + getSpectralCathedralModeExpression(mode, event.absoluteTimeSeconds).velocity,
-      0,
-    ) / selected.length;
-  return {
-    brightness: Math.min(1, event.baseBrightness * (0.78 + velocity * 0.38)),
-    wetSend: Math.min(1, event.wetSend * (0.8 + displacement * 0.32)),
-    woodScale: 0.72 + velocity * 0.56,
-    decayScale: 0.82 + displacement * 0.38,
-  };
-}
-
-function hashUnit(absoluteEventIndex, modeId, component, salt) {
+function hashUnit(eventIndex, modeId, component, salt) {
   const seed =
-    Math.imul(absoluteEventIndex + 1, 0x9e3779b1) ^
+    Math.imul(eventIndex + 1, 0x9e3779b1) ^
     Math.imul(modeId + 1, 0x85ebca6b) ^
     Math.imul(component + 1, 0xc2b2ae35) ^
     salt;
   return hashUint32(seed) / 0x1_0000_0000;
 }
 
-function getSpectralCathedralWoodAttack(absoluteEventIndex, modeId, ageSeconds, preset) {
-  if (!Number.isFinite(ageSeconds) || ageSeconds < 0 || ageSeconds >= preset.woodAttackSeconds) {
-    return 0;
-  }
-
-  let value = 0;
-  let normalization = 0;
-
-  for (let component = 0; component < preset.woodComponentCount; component += 1) {
-    const weight = 1 / Math.sqrt(component + 1);
-    const frequencyUnit = hashUnit(absoluteEventIndex, modeId, component, 0x68bc21eb);
-    const phaseUnit = hashUnit(absoluteEventIndex, modeId, component, 0x02e5be93);
-    const frequencyHz =
-      preset.woodMinimumHz + (preset.woodMaximumHz - preset.woodMinimumHz) * frequencyUnit;
-    value += weight * Math.sin(Math.PI * 2 * frequencyHz * ageSeconds + Math.PI * 2 * phaseUnit);
-    normalization += weight;
-  }
-
-  const envelope = Math.sin((Math.PI * ageSeconds) / preset.woodAttackSeconds) ** 2;
-  return normalization > 0 ? (value / normalization) * envelope : 0;
+function getSpectralCathedralLowCutWeight(frequencyHz) {
+  const ratio = Math.max(0, frequencyHz) / 260;
+  const squared = ratio * ratio;
+  return squared / Math.sqrt(1 + squared * squared);
 }
 
-function renderSpectralCathedralModeVoice(mode, pan, event, expression, preset) {
-  const [panLeft, panRight] = getEqualPowerPanGains(pan);
-  const maximumFrequencyHz = sampleRate * 0.5 * preset.antiAliasRatio;
-  const startPhase =
-    mode.modalAngularFrequency * event.absoluteTimeSeconds + mode.coefficientPhaseOffset;
-  let bellLeft = 0;
-  let bellRight = 0;
-
+function createSpectralCathedralRuntimeVoice(event, mode, modeIndex, preset, frequencyLimitHz) {
+  const centeredPan =
+    event.modeIds.length === 1 ? 0 : (modeIndex / (event.modeIds.length - 1)) * 2 - 1;
+  const basePan = centeredPan * event.stereoSpread;
+  const panGains = getEqualPowerPanGains(basePan);
+  const partials = [];
   for (let partial = 1; partial <= preset.maximumPartials; partial += 1) {
     const leftFrequencyHz =
       mode.baseFrequencyHz * event.registerMultiplier * partial * (1 - preset.stereoDetuneRatio);
     const rightFrequencyHz =
       mode.baseFrequencyHz * event.registerMultiplier * partial * (1 + preset.stereoDetuneRatio);
-    if (Math.max(leftFrequencyHz, rightFrequencyHz) >= maximumFrequencyHz) continue;
-
-    const damping = preset.partialDamping + (1 - expression.brightness) * 0.45;
-    const weight = partial ** -damping;
-    const partialStartPhase = partial * startPhase;
-    bellLeft +=
-      weight * Math.sin(Math.PI * 2 * leftFrequencyHz * event.ageSeconds + partialStartPhase);
-    bellRight +=
-      weight * Math.sin(Math.PI * 2 * rightFrequencyHz * event.ageSeconds + partialStartPhase);
+    if (Math.max(leftFrequencyHz, rightFrequencyHz) >= frequencyLimitHz) continue;
+    partials.push({
+      partial,
+      leftFrequencyHz,
+      rightFrequencyHz,
+      baseWeight:
+        partial ** -preset.partialDamping *
+        getSpectralCathedralLowCutWeight((leftFrequencyHz + rightFrequencyHz) * 0.5),
+    });
   }
 
-  const bellEnvelope = getSpectralCathedralBellEnvelope(
-    event.ageSeconds,
-    event.gesture,
-    preset,
-    expression.decayScale,
-  );
-  const articulation = preset.articulations[event.gesture];
-  const wood =
-    articulation.woodAttackGain *
-    expression.woodScale *
-    getSpectralCathedralWoodAttack(event.absoluteEventIndex, mode.id, event.ageSeconds, preset);
-  return [
-    mode.normalizedGain * panLeft * (bellLeft * bellEnvelope + wood),
-    mode.normalizedGain * panRight * (bellRight * bellEnvelope + wood),
-  ];
-}
-
-function renderSpectralCathedralSample(program, absoluteTimeSeconds) {
-  const events = evaluateSpectralCathedralEvents(
-    program.score,
-    absoluteTimeSeconds,
-    program.synthesis.maximumEventSeconds,
-  );
-  if (events.length === 0) {
-    return { dryLeft: 0, dryRight: 0, wetLeft: 0, wetRight: 0 };
-  }
-
-  let left = 0;
-  let right = 0;
-  let wetLeft = 0;
-  let wetRight = 0;
-
-  for (const event of events) {
-    let eventLeft = 0;
-    let eventRight = 0;
-    const expression = evaluateSpectralCathedralEventExpression(event, program.modes);
-    if (!expression) {
-      return {
-        dryLeft: Number.NaN,
-        dryRight: Number.NaN,
-        wetLeft: Number.NaN,
-        wetRight: Number.NaN,
-      };
-    }
-    for (const [voiceIndex, modeId] of event.modeIds.entries()) {
-      const mode = program.modes.find((candidate) => candidate.id === modeId);
-      if (!mode) {
-        return {
-          dryLeft: Number.NaN,
-          dryRight: Number.NaN,
-          wetLeft: Number.NaN,
-          wetRight: Number.NaN,
-        };
-      }
-      const centeredPan =
-        event.modeIds.length === 1 ? 0 : (voiceIndex / (event.modeIds.length - 1)) * 2 - 1;
-      const pan = centeredPan * event.stereoSpread;
-      const [voiceLeft, voiceRight] = renderSpectralCathedralModeVoice(
-        mode,
-        pan,
-        event,
-        expression,
-        program.synthesis,
-      );
-      eventLeft += voiceLeft;
-      eventRight += voiceRight;
-    }
-
-    const scale = (program.synthesis.outputGain * event.baseGain) / program.normalization;
-    left += eventLeft * scale;
-    right += eventRight * scale;
-    wetLeft += eventLeft * scale * expression.wetSend;
-    wetRight += eventRight * scale * expression.wetSend;
+  const wood = [];
+  let woodNormalization = 0;
+  for (let component = 0; component < preset.woodComponentCount; component += 1) {
+    const frequencyUnit = hashUnit(event.index, mode.id, component, 0x68bc21eb);
+    const phaseUnit = hashUnit(event.index, mode.id, component, 0x02e5be93);
+    const frequencyHz =
+      preset.woodMinimumHz + (preset.woodMaximumHz - preset.woodMinimumHz) * frequencyUnit;
+    if (frequencyHz >= frequencyLimitHz) continue;
+    const weight = 1 / Math.sqrt(component + 1);
+    wood.push({
+      frequencyHz,
+      phaseRadians: Math.PI * 2 * phaseUnit,
+      weight,
+    });
+    woodNormalization += weight;
   }
 
   return {
-    dryLeft: left,
-    dryRight: right,
-    wetLeft,
-    wetRight,
+    modeId: mode.id,
+    normalizedGain: mode.normalizedGain,
+    modalAngularFrequency: mode.modalAngularFrequency,
+    coefficientPhaseOffset: mode.coefficientPhaseOffset,
+    basePan,
+    panLeft: panGains[0],
+    panRight: panGains[1],
+    partials,
+    wood,
+    woodNormalization,
   };
+}
+
+function createSpectralCathedralRuntime(program) {
+  if (!Number.isFinite(sampleRate) || sampleRate <= 0) return null;
+  const preset = program.synthesis;
+  const frequencyLimitHz = sampleRate * 0.5 * preset.antiAliasRatio;
+  const events = [];
+  for (let eventIndex = 0; eventIndex < program.score.events.length; eventIndex += 1) {
+    const event = program.score.events[eventIndex];
+    const articulation = preset.articulations[event.gesture];
+    const voices = [];
+    for (let modeIndex = 0; modeIndex < event.modeIds.length; modeIndex += 1) {
+      const modeId = event.modeIds[modeIndex];
+      const mode = program.modes.find((candidate) => candidate.id === modeId);
+      if (!mode) return null;
+      voices.push(
+        createSpectralCathedralRuntimeVoice(event, mode, modeIndex, preset, frequencyLimitHz),
+      );
+    }
+    events.push({
+      index: event.index,
+      localTimeSeconds: event.localTimeSeconds,
+      gesture: event.gesture,
+      baseGain: event.baseGain,
+      baseBrightness: event.baseBrightness,
+      wetSend: event.wetSend,
+      fadeStartSeconds: articulation.fadeStartSeconds,
+      endSeconds: articulation.endSeconds,
+      attackSeconds: articulation.attackSeconds,
+      decaySeconds: articulation.decaySeconds,
+      woodAttackGain: articulation.woodAttackGain,
+      subgrains: articulation.subgrainOffsetsSeconds.map((offsetSeconds, index) => ({
+        offsetSeconds,
+        gain: articulation.subgrainGains[index],
+      })),
+      voices,
+    });
+  }
+  return {
+    sampleRate,
+    cycleSeconds: program.score.cycleSeconds,
+    maximumEventSeconds: preset.maximumEventSeconds,
+    woodAttackSeconds: preset.woodAttackSeconds,
+    outputGain: preset.outputGain,
+    normalization: program.normalization,
+    events,
+  };
+}
+
+function getRuntimeBellEnvelope(ageSeconds, event, decayScale) {
+  if (!Number.isFinite(ageSeconds) || ageSeconds < 0 || ageSeconds >= event.endSeconds) return 0;
+  const body =
+    (1 - Math.exp(-ageSeconds / event.attackSeconds)) *
+    Math.exp(-ageSeconds / (event.decaySeconds * decayScale));
+  if (ageSeconds < event.fadeStartSeconds) return body;
+  const fadeProgress =
+    (ageSeconds - event.fadeStartSeconds) / (event.endSeconds - event.fadeStartSeconds);
+  return body * 0.5 * (1 + Math.cos(Math.PI * fadeProgress));
+}
+
+function renderRuntimeWood(voice, ageSeconds, woodAttackSeconds) {
+  if (ageSeconds < 0 || ageSeconds >= woodAttackSeconds || voice.woodNormalization <= 0) return 0;
+  let value = 0;
+  for (let componentIndex = 0; componentIndex < voice.wood.length; componentIndex += 1) {
+    const component = voice.wood[componentIndex];
+    value +=
+      component.weight *
+      Math.sin(Math.PI * 2 * component.frequencyHz * ageSeconds + component.phaseRadians);
+  }
+  const envelope = Math.sin((Math.PI * ageSeconds) / woodAttackSeconds) ** 2;
+  return (value / voice.woodNormalization) * envelope;
+}
+
+function getRuntimeSparkleEnvelope(ageSeconds, maximumEventSeconds) {
+  if (ageSeconds < 0 || ageSeconds >= maximumEventSeconds) return 0;
+  const progress = ageSeconds / maximumEventSeconds;
+  return Math.sin(Math.PI * progress) ** 2 * Math.exp(-ageSeconds * 0.16);
+}
+
+function renderRuntimeSparkle(voice, absoluteTimeSeconds) {
+  if (voice.woodNormalization <= 0) return 0;
+  let value = 0;
+  for (let componentIndex = 0; componentIndex < voice.wood.length; componentIndex += 1) {
+    const component = voice.wood[componentIndex];
+    value +=
+      component.weight *
+      Math.sin(Math.PI * 2 * component.frequencyHz * absoluteTimeSeconds + component.phaseRadians);
+  }
+  return value / voice.woodNormalization;
+}
+
+function findLatestSpectralCathedralEventIndex(events, localTimeSeconds) {
+  let low = 0;
+  let high = events.length - 1;
+  let latest = -1;
+  while (low <= high) {
+    const middle = (low + high) >>> 1;
+    if (events[middle].localTimeSeconds <= localTimeSeconds) {
+      latest = middle;
+      low = middle + 1;
+    } else {
+      high = middle - 1;
+    }
+  }
+  return latest;
+}
+
+function accumulateSpectralCathedralRuntimeEvent(
+  runtime,
+  event,
+  absoluteEventTimeSeconds,
+  absoluteTimeSeconds,
+  target,
+) {
+  const baseAgeSeconds = absoluteTimeSeconds - absoluteEventTimeSeconds;
+  if (baseAgeSeconds < 0 || baseAgeSeconds >= runtime.maximumEventSeconds) return;
+  if (event.voices.length === 0) return;
+
+  let expressionDisplacement = 0;
+  let expressionVelocity = 0;
+  for (let voiceIndex = 0; voiceIndex < event.voices.length; voiceIndex += 1) {
+    const voice = event.voices[voiceIndex];
+    const phase = voice.modalAngularFrequency * absoluteEventTimeSeconds;
+    expressionDisplacement += Math.abs(Math.cos(phase));
+    expressionVelocity += Math.abs(Math.sin(phase));
+  }
+  expressionDisplacement /= event.voices.length;
+  expressionVelocity /= event.voices.length;
+
+  const brightness = Math.min(1, event.baseBrightness * (0.78 + expressionVelocity * 0.38));
+  const wetSend = Math.min(1, event.wetSend * (0.8 + expressionDisplacement * 0.32));
+  const woodScale = 0.72 + expressionVelocity * 0.56;
+  const decayScale = 0.82 + expressionDisplacement * 0.38;
+  let eventLeft = 0;
+  let eventRight = 0;
+
+  for (let subgrainIndex = 0; subgrainIndex < event.subgrains.length; subgrainIndex += 1) {
+    const subgrain = event.subgrains[subgrainIndex];
+    const subgrainAgeSeconds = baseAgeSeconds - subgrain.offsetSeconds;
+    const envelope = getRuntimeBellEnvelope(subgrainAgeSeconds, event, decayScale) * subgrain.gain;
+    if (envelope <= 0) continue;
+
+    for (let voiceIndex = 0; voiceIndex < event.voices.length; voiceIndex += 1) {
+      const voice = event.voices[voiceIndex];
+      const startPhase =
+        voice.modalAngularFrequency * absoluteEventTimeSeconds + voice.coefficientPhaseOffset;
+      let bellLeft = 0;
+      let bellRight = 0;
+      for (let partialIndex = 0; partialIndex < voice.partials.length; partialIndex += 1) {
+        const partial = voice.partials[partialIndex];
+        const partialPosition = (partial.partial - 1) / Math.max(1, voice.partials.length - 1);
+        const dampingBrightness = 1 + (brightness - 0.5) * 0.24 * partialPosition;
+        const weight = partial.baseWeight * dampingBrightness;
+        const partialStartPhase = partial.partial * startPhase;
+        bellLeft +=
+          weight *
+          Math.sin(Math.PI * 2 * partial.leftFrequencyHz * absoluteTimeSeconds + partialStartPhase);
+        bellRight +=
+          weight *
+          Math.sin(
+            Math.PI * 2 * partial.rightFrequencyHz * absoluteTimeSeconds + partialStartPhase,
+          );
+      }
+      const wood =
+        event.woodAttackGain *
+        woodScale *
+        renderRuntimeWood(voice, subgrainAgeSeconds, runtime.woodAttackSeconds);
+      eventLeft += voice.normalizedGain * voice.panLeft * (bellLeft * envelope + wood);
+      eventRight += voice.normalizedGain * voice.panRight * (bellRight * envelope + wood);
+    }
+  }
+
+  const sparkleEnvelope =
+    getRuntimeSparkleEnvelope(baseAgeSeconds, runtime.maximumEventSeconds) *
+    event.baseBrightness *
+    0.8;
+  if (sparkleEnvelope > 0) {
+    for (let voiceIndex = 0; voiceIndex < event.voices.length; voiceIndex += 1) {
+      const voice = event.voices[voiceIndex];
+      const sparkle = renderRuntimeSparkle(voice, absoluteTimeSeconds);
+      eventLeft += voice.normalizedGain * voice.panLeft * sparkle * sparkleEnvelope;
+      eventRight += voice.normalizedGain * voice.panRight * sparkle * sparkleEnvelope;
+    }
+  }
+
+  const scale = (runtime.outputGain * event.baseGain) / runtime.normalization;
+  target.dryLeft += eventLeft * scale;
+  target.dryRight += eventRight * scale;
+  target.wetLeft += eventLeft * scale * wetSend;
+  target.wetRight += eventRight * scale * wetSend;
+}
+
+function renderSpectralCathedralSample(_program, runtime, absoluteTimeSeconds, target) {
+  target.dryLeft = 0;
+  target.dryRight = 0;
+  target.wetLeft = 0;
+  target.wetRight = 0;
+  if (!Number.isFinite(absoluteTimeSeconds) || absoluteTimeSeconds < 0) return;
+
+  const currentCycleIndex = Math.floor(absoluteTimeSeconds / runtime.cycleSeconds);
+  const currentCycleStart = currentCycleIndex * runtime.cycleSeconds;
+  const localTimeSeconds = absoluteTimeSeconds - currentCycleStart;
+  const latestIndex = findLatestSpectralCathedralEventIndex(runtime.events, localTimeSeconds);
+  for (let index = latestIndex; index >= 0; index -= 1) {
+    const event = runtime.events[index];
+    const absoluteEventTimeSeconds = currentCycleStart + event.localTimeSeconds;
+    if (absoluteTimeSeconds - absoluteEventTimeSeconds >= runtime.maximumEventSeconds) break;
+    accumulateSpectralCathedralRuntimeEvent(
+      runtime,
+      event,
+      absoluteEventTimeSeconds,
+      absoluteTimeSeconds,
+      target,
+    );
+  }
+
+  if (currentCycleIndex > 0 && localTimeSeconds < runtime.maximumEventSeconds) {
+    const previousCycleStart = currentCycleStart - runtime.cycleSeconds;
+    for (let index = runtime.events.length - 1; index >= 0; index -= 1) {
+      const event = runtime.events[index];
+      const absoluteEventTimeSeconds = previousCycleStart + event.localTimeSeconds;
+      if (absoluteTimeSeconds - absoluteEventTimeSeconds >= runtime.maximumEventSeconds) break;
+      accumulateSpectralCathedralRuntimeEvent(
+        runtime,
+        event,
+        absoluteEventTimeSeconds,
+        absoluteTimeSeconds,
+        target,
+      );
+    }
+  }
 }
 
 function validateSpectralCathedralProgram(program) {
@@ -301,7 +380,17 @@ function validateSpectralCathedralProgram(program) {
         isNonnegativeFinite(articulation.fadeStartSeconds) &&
         isPositiveFinite(articulation.endSeconds) &&
         articulation.fadeStartSeconds < articulation.endSeconds &&
-        isNonnegativeFinite(articulation.woodAttackGain)
+        isNonnegativeFinite(articulation.woodAttackGain) &&
+        Array.isArray(articulation.subgrainOffsetsSeconds) &&
+        Array.isArray(articulation.subgrainGains) &&
+        articulation.subgrainOffsetsSeconds.length > 0 &&
+        articulation.subgrainOffsetsSeconds.length === articulation.subgrainGains.length &&
+        articulation.subgrainOffsetsSeconds[0] === 0 &&
+        articulation.subgrainOffsetsSeconds.every(
+          (offsetSeconds) =>
+            isNonnegativeFinite(offsetSeconds) && offsetSeconds < articulation.endSeconds,
+        ) &&
+        articulation.subgrainGains.every((gain) => isPositiveFinite(gain) && gain <= 1)
       );
     }) &&
     preset.woodMinimumHz <= preset.woodMaximumHz &&
@@ -315,11 +404,18 @@ function validateSpectralCathedralProgram(program) {
 export const spectralCathedralProcessor = {
   kind: "spectral-cathedral",
   validate: validateSpectralCathedralProgram,
-  createState() {
-    return {};
+  stateError: "Unable to create Spectral Cathedral runtime",
+  createState(program) {
+    const runtime = createSpectralCathedralRuntime(program);
+    if (!runtime) return null;
+    return {
+      runtime,
+      sample: { dryLeft: 0, dryRight: 0, wetLeft: 0, wetRight: 0 },
+    };
   },
   resetState() {},
-  render(program, _state, absoluteTimeSeconds) {
-    return renderSpectralCathedralSample(program, absoluteTimeSeconds);
+  render(program, state, absoluteTimeSeconds) {
+    renderSpectralCathedralSample(program, state.runtime, absoluteTimeSeconds, state.sample);
+    return state.sample;
   },
 };

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  estimateOnsetSpacing,
+  getBandEnergyRatios,
+  getFrameRmsContinuity,
+  getStereoMetrics as getStereoAudioMetrics,
+} from "../../../audio/audioMetrics";
+import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   buildMusicalScoreProgram,
 } from "../../residue-bloom/audio/score";
@@ -67,7 +73,7 @@ describe("Spectral Cathedral audio mapping", () => {
       expect(mode.id).toBe(source.id);
       expect(mode.eigenvalue).toBe(source.eigenvalue);
       expect(mode.coefficient).toBe(source.coefficient);
-      expect(mode.baseFrequencyHz).toBeCloseTo(176 * Math.sqrt(source.eigenvalue / 3), 12);
+      expect(mode.baseFrequencyHz).toBeCloseTo(440 * Math.sqrt(source.eigenvalue / 3), 12);
       expect(mode.normalizedGain).toBeCloseTo(
         Math.abs(source.coefficient) / maximumCoefficient,
         12,
@@ -83,53 +89,82 @@ describe("Spectral Cathedral audio mapping", () => {
   it("uses the approved bell synthesis constants", () => {
     expect(SPECTRAL_CATHEDRAL_SYNTHESIS).toEqual({
       maximumPartials: 8,
-      partialDamping: 1.65,
+      partialDamping: 1.85,
       articulations: {
         toll: {
           attackSeconds: 0.003,
-          decaySeconds: 0.42,
-          fadeStartSeconds: 2.17,
-          endSeconds: 2.2,
-          woodAttackGain: 0.07,
+          decaySeconds: 0.32,
+          fadeStartSeconds: 1.77,
+          endSeconds: 1.8,
+          woodAttackGain: 0.045,
+          subgrainOffsetsSeconds: [0, 0.23, 0.46, 0.69, 0.92, 1.15],
+          subgrainGains: [1, 0.62, 0.48, 0.36, 0.26, 0.18],
         },
         answer: {
           attackSeconds: 0.0025,
-          decaySeconds: 0.24,
-          fadeStartSeconds: 1.07,
-          endSeconds: 1.1,
-          woodAttackGain: 0.09,
+          decaySeconds: 0.18,
+          fadeStartSeconds: 0.87,
+          endSeconds: 0.9,
+          woodAttackGain: 0.06,
+          subgrainOffsetsSeconds: [0, 0.23, 0.46],
+          subgrainGains: [1, 0.58, 0.34],
         },
         cascade: {
           attackSeconds: 0.002,
-          decaySeconds: 0.125,
-          fadeStartSeconds: 0.59,
-          endSeconds: 0.62,
-          woodAttackGain: 0.1,
+          decaySeconds: 0.09,
+          fadeStartSeconds: 0.53,
+          endSeconds: 0.56,
+          woodAttackGain: 0.16,
+          subgrainOffsetsSeconds: [0, 0.19, 0.38],
+          subgrainGains: [1, 0.76, 0.58],
         },
         pulse: {
           attackSeconds: 0.0015,
-          decaySeconds: 0.085,
-          fadeStartSeconds: 0.39,
-          endSeconds: 0.42,
-          woodAttackGain: 0.14,
+          decaySeconds: 0.065,
+          fadeStartSeconds: 0.34,
+          endSeconds: 0.37,
+          woodAttackGain: 0.22,
+          subgrainOffsetsSeconds: [0, 0.21],
+          subgrainGains: [1, 0.72],
         },
         choir: {
           attackSeconds: 0.005,
-          decaySeconds: 0.52,
-          fadeStartSeconds: 2.57,
-          endSeconds: 2.6,
-          woodAttackGain: 0.055,
+          decaySeconds: 0.4,
+          fadeStartSeconds: 2.17,
+          endSeconds: 2.2,
+          woodAttackGain: 0.04,
+          subgrainOffsetsSeconds: [0, 0.27, 0.54],
+          subgrainGains: [1, 0.56, 0.34],
         },
       },
-      maximumEventSeconds: 2.6,
-      woodAttackSeconds: 0.02,
+      maximumEventSeconds: 3,
+      woodAttackSeconds: 0.04,
       woodMinimumHz: 700,
-      woodMaximumHz: 2_800,
+      woodMaximumHz: 3_600,
       woodComponentCount: 8,
       stereoDetuneRatio: 0.00125,
       antiAliasRatio: 0.9,
       outputGain: 1.065,
     });
+  });
+
+  it("keeps deterministic subgrain offsets and gains inside each gesture envelope", () => {
+    for (const articulation of Object.values(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations)) {
+      expect(articulation.subgrainOffsetsSeconds).toHaveLength(articulation.subgrainGains.length);
+      expect(articulation.subgrainOffsetsSeconds[0]).toBe(0);
+      for (const [index, offset] of articulation.subgrainOffsetsSeconds.entries()) {
+        expect(offset).toBeGreaterThanOrEqual(0);
+        expect(offset).toBeLessThan(articulation.endSeconds);
+        expect(articulation.subgrainGains[index]).toBeGreaterThan(0);
+        expect(articulation.subgrainGains[index]).toBeLessThanOrEqual(1);
+      }
+    }
+    expect(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations.cascade.subgrainOffsetsSeconds).toEqual([
+      0, 0.19, 0.38,
+    ]);
+    expect(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations.pulse.subgrainOffsetsSeconds).toEqual([
+      0, 0.21,
+    ]);
   });
 
   it("derives modal expression from absolute event time", () => {
@@ -161,7 +196,7 @@ describe("Spectral Cathedral audio mapping", () => {
     );
   });
 
-  it("keeps the lowest generated fundamental at or above 176 Hz", () => {
+  it("keeps the lowest generated fundamental in the reference-like midrange", () => {
     const modes = createSpectralCathedralAudioModes();
     const modesById = new Map(modes.map((mode) => [mode.id, mode]));
     const minimumFundamental = Math.min(
@@ -172,7 +207,7 @@ describe("Spectral Cathedral audio mapping", () => {
       ),
     );
 
-    expect(minimumFundamental).toBeGreaterThanOrEqual(176);
+    expect(minimumFundamental).toBeGreaterThanOrEqual(440);
   });
 
   it("rejects a partial from both channels when the higher detuned side reaches the limit", () => {
@@ -275,7 +310,7 @@ describe("Spectral Cathedral reference DSP", () => {
     expect(repeated).toBe(first);
     expect(nextCycle).not.toBeCloseTo(first, 12);
     expect(getSpectralCathedralWoodAttack(0, 1, 0)).toBe(0);
-    expect(getSpectralCathedralWoodAttack(0, 1, 0.02)).toBe(0);
+    expect(getSpectralCathedralWoodAttack(0, 1, 0.04)).toBe(0);
     expect(getSpectralCathedralWoodAttack(0, 1, 1)).toBe(0);
   });
 
@@ -290,7 +325,7 @@ describe("Spectral Cathedral reference DSP", () => {
           const wood = getSpectralCathedralWoodComponent(absoluteEventIndex, modeId, component);
 
           expect(wood.frequencyHz).toBeGreaterThanOrEqual(700);
-          expect(wood.frequencyHz).toBeLessThanOrEqual(2_800);
+          expect(wood.frequencyHz).toBeLessThanOrEqual(3_600);
           expect(wood.phaseRadians).toBeGreaterThanOrEqual(0);
           expect(wood.phaseRadians).toBeLessThan(Math.PI * 2);
         }
@@ -336,15 +371,14 @@ describe("Spectral Cathedral reference DSP", () => {
     expect(Object.values(nextCycle).every(Number.isFinite)).toBe(true);
   });
 
-  it("returns exact silence between completed bell events", () => {
+  it("keeps a finite high shimmer between primary bell onsets", () => {
     const program = createSpectralCathedralWorkletProgram();
+    const sample = renderSpectralCathedralSample(program, 2.3, 48_000);
+    const peak = Math.max(...Object.values(sample).map(Math.abs));
 
-    expect(renderSpectralCathedralSample(program, 2.3, 48_000)).toEqual({
-      dryLeft: 0,
-      dryRight: 0,
-      wetLeft: 0,
-      wetRight: 0,
-    });
+    expect(Object.values(sample).every(Number.isFinite)).toBe(true);
+    expect(peak).toBeGreaterThan(0.0015);
+    expect(peak).toBeLessThan(0.08);
   });
 
   it("keeps the three-cycle reference output effectively DC-free", () => {
@@ -363,6 +397,38 @@ describe("Spectral Cathedral reference DSP", () => {
     expect(Math.abs(rightMean)).toBeLessThan(1e-4);
     expect(rendered.left.every(Number.isFinite)).toBe(true);
     expect(rendered.right.every(Number.isFinite)).toBe(true);
+  }, 15_000);
+
+  it("moves the full-cycle spectrum away from boomy low-frequency repetition", () => {
+    const sampleRate = 4_000;
+    const program = createSpectralCathedralWorkletProgram();
+    const rendered = renderSpectralCathedralStereo({
+      program,
+      startTimeSeconds: 0,
+      durationSeconds: program.score.cycleSeconds,
+      sampleRate,
+    });
+    const metrics = getStereoAudioMetrics(rendered.left, rendered.right);
+    const bands = getBandEnergyRatios(rendered.left, rendered.right, sampleRate);
+    const continuity = getFrameRmsContinuity(
+      rendered.left,
+      rendered.right,
+      sampleRate,
+      0.02,
+      0.0015,
+    );
+    const onsets = estimateOnsetSpacing(rendered.left, rendered.right, sampleRate);
+
+    expect(metrics.peak).toBeLessThanOrEqual(10 ** (-1 / 20));
+    expect(Math.abs(metrics.mean)).toBeLessThan(1e-3);
+    expect(bands.below150Hz).toBeLessThanOrEqual(0.03);
+    expect(bands.below250Hz).toBeLessThanOrEqual(0.08);
+    expect(bands.below400Hz).toBeLessThanOrEqual(0.22);
+    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.55);
+    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.12);
+    expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.18);
+    expect(onsets.medianSeconds).toBeLessThanOrEqual(0.34);
+    expect(onsets.pulseScore).toBeGreaterThan(0.18);
   }, 15_000);
 
   it("builds a structured-clone-safe complete worklet program", () => {

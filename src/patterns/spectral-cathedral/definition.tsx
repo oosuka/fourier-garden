@@ -111,13 +111,13 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
   },
   audio: {
     mode: "sonification",
-    baseFrequencyHz: 176,
+    baseFrequencyHz: 440,
     initialVolume: 0.35,
     roomSeconds: 1.6,
     sonificationLatex:
-      "f_{mn}=176\\sqrt{\\lambda_{mn}/3},\\quad " +
+      "f_{mn}=440\\sqrt{\\lambda_{mn}/3},\\quad " +
       "f_{mn,r}^{L/R}=rf_{mn}(1\\mp d),\\quad " +
-      "w_{mn,r}=\\frac{|a_{mn}|}{\\max|a|}r^{-1.65},\\quad " +
+      "w_{mn,r}=\\frac{|a_{mn}|}{\\max|a|}r^{-1.85},\\quad " +
       "d_{mn}=|\\cos(\\omega_{mn}t_e)|,\\ v_{mn}=|\\sin(\\omega_{mn}t_e)|",
     score: SPECTRAL_CATHEDRAL_SCORE,
     createProgram: createSpectralCathedralAudioProgram,
@@ -132,7 +132,7 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
     scopeNotice:
       "固有値、固有関数、係数は解析式から直接得ています。表示軸は固有値λであり、Hzスペクトル、DFT、FFT、数値固有値解析ではありません。",
     sonificationBody:
-      "音声は波動場の無加工再生ではありません。固有振動数比√(λ/3)、係数絶対値比、係数符号の開始位相を保持し、176 Hzを基準に移調したガラス鐘と木質アタックへ写します。75秒・18小節・5幕でtoll、answer、cascade、pulse、choirを展開し、絶対イベント時刻のモード変位を持続と残響、モード速度をアタックと明るさへ使います。左右デチューン後の帯域制限、EQ、圧縮、-1 dBFSリミッターを加えたソニフィケーションです。",
+      "音声は波動場の無加工再生ではありません。固有振動数比√(λ/3)、係数絶対値比、係数符号の開始位相を保持し、440 Hzを基準に移調したガラス鐘、木質アタック、短いサブグレイン、高域sparkle tailへ写します。75秒・18小節・5幕でtoll、answer、cascade、pulse、choirを展開し、絶対イベント時刻のモード変位を持続と残響、モード速度をアタックと明るさへ使います。左右デチューン後の帯域制限、EQ、圧縮、-1 dBFSリミッターを加えたソニフィケーションです。",
     poeticLayerBody:
       "7本の光柱、6本のアーチ、塵状粒子、透明ハロー、短い残光は詩的造形です。発音モードの固有関数値を柱ごとの局所励起へ写し、局所的な光柱とアーチ伝播、粒子帯、緩やかなカメラ軌道を作ります。固定格子面、境界、節線、固有値、係数は変形しません。",
   },

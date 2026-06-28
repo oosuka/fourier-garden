@@ -157,10 +157,13 @@ describe("AudioWorklet runtime", () => {
     }
   });
 
-  it.each([
-    0.07, 14.2, 33.4, 51.1, 69.8, 75.04,
-  ])("matches the five-act Spectral Cathedral renderer at %s seconds", (startTimeSeconds) => {
-    const sampleRate = 48_000;
+  it.each(
+    [44_100, 48_000, 96_000].flatMap((sampleRate) =>
+      [0.07, 14.2, 33.4, 51.1, 69.8, 75.04].map(
+        (startTimeSeconds) => [sampleRate, startTimeSeconds] as const,
+      ),
+    ),
+  )("matches the five-act Spectral Cathedral renderer at %i Hz and %s seconds", (sampleRate, startTimeSeconds) => {
     const frameCount = 64;
     const program = createSpectralCathedralWorkletProgram();
     const processor = loadProcessor(sampleRate);
@@ -178,10 +181,10 @@ describe("AudioWorklet runtime", () => {
         startTimeSeconds + frame / sampleRate,
         sampleRate,
       );
-      expect(outputs[0]![0]![frame]).toBeCloseTo(expected.dryLeft, 5);
-      expect(outputs[0]![1]![frame]).toBeCloseTo(expected.dryRight, 5);
-      expect(outputs[1]![0]![frame]).toBeCloseTo(expected.wetLeft, 5);
-      expect(outputs[1]![1]![frame]).toBeCloseTo(expected.wetRight, 5);
+      expect(Math.abs(outputs[0]![0]![frame]! - expected.dryLeft)).toBeLessThanOrEqual(1e-7);
+      expect(Math.abs(outputs[0]![1]![frame]! - expected.dryRight)).toBeLessThanOrEqual(1e-7);
+      expect(Math.abs(outputs[1]![0]![frame]! - expected.wetLeft)).toBeLessThanOrEqual(1e-7);
+      expect(Math.abs(outputs[1]![1]![frame]! - expected.wetRight)).toBeLessThanOrEqual(1e-7);
     }
   });
 
