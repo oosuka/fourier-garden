@@ -39,6 +39,42 @@ describe("audio metrics", () => {
     expect(ratios.between400HzAnd3000Hz).toBeGreaterThan(0.9);
   });
 
+  it("measures upper-band glare from 2.4 kHz and above", () => {
+    const sampleRate = 12_000;
+    const left = sine(sampleRate, 1, 2_800);
+    const right = sine(sampleRate, 1, 2_800);
+    const ratios = getBandEnergyRatios(left, right, sampleRate);
+
+    expect(ratios.between2400HzAnd10000Hz).toBeGreaterThan(0.9);
+  });
+
+  it("measures upper-mid glare from 1.8 kHz and above", () => {
+    const sampleRate = 12_000;
+    const left = sine(sampleRate, 1, 2_100);
+    const right = sine(sampleRate, 1, 2_100);
+    const ratios = getBandEnergyRatios(left, right, sampleRate);
+
+    expect(ratios.between1800HzAnd10000Hz).toBeGreaterThan(0.9);
+  });
+
+  it("measures presence glare from 1.2 kHz and above", () => {
+    const sampleRate = 12_000;
+    const left = sine(sampleRate, 1, 1_450);
+    const right = sine(sampleRate, 1, 1_450);
+    const ratios = getBandEnergyRatios(left, right, sampleRate);
+
+    expect(ratios.between1200HzAnd10000Hz).toBeGreaterThan(0.9);
+  });
+
+  it("measures nasal electronic glare from 900 Hz to 3 kHz", () => {
+    const sampleRate = 12_000;
+    const left = sine(sampleRate, 1, 1_050);
+    const right = sine(sampleRate, 1, 1_050);
+    const ratios = getBandEnergyRatios(left, right, sampleRate);
+
+    expect(ratios.between900HzAnd3000Hz).toBeGreaterThan(0.9);
+  });
+
   it("detects long low-RMS gaps with 20 ms windows", () => {
     const sampleRate = 1_000;
     const left = new Float32Array(1_000);

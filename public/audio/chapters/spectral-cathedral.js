@@ -4,7 +4,7 @@ import {
   isFiniteNumber,
   isNonnegativeFinite,
   isPositiveFinite,
-} from "./shared.js?v=11";
+} from "./shared.js?v=15";
 
 function hashUnit(eventIndex, modeId, component, salt) {
   const seed =
@@ -145,24 +145,6 @@ function renderRuntimeWood(voice, ageSeconds, woodAttackSeconds) {
   return (value / voice.woodNormalization) * envelope;
 }
 
-function getRuntimeSparkleEnvelope(ageSeconds, maximumEventSeconds) {
-  if (ageSeconds < 0 || ageSeconds >= maximumEventSeconds) return 0;
-  const progress = ageSeconds / maximumEventSeconds;
-  return Math.sin(Math.PI * progress) ** 2 * Math.exp(-ageSeconds * 0.16);
-}
-
-function renderRuntimeSparkle(voice, absoluteTimeSeconds) {
-  if (voice.woodNormalization <= 0) return 0;
-  let value = 0;
-  for (let componentIndex = 0; componentIndex < voice.wood.length; componentIndex += 1) {
-    const component = voice.wood[componentIndex];
-    value +=
-      component.weight *
-      Math.sin(Math.PI * 2 * component.frequencyHz * absoluteTimeSeconds + component.phaseRadians);
-  }
-  return value / voice.woodNormalization;
-}
-
 function findLatestSpectralCathedralEventIndex(events, localTimeSeconds) {
   let low = 0;
   let high = events.length - 1;
@@ -244,19 +226,6 @@ function accumulateSpectralCathedralRuntimeEvent(
     }
   }
 
-  const sparkleEnvelope =
-    getRuntimeSparkleEnvelope(baseAgeSeconds, runtime.maximumEventSeconds) *
-    event.baseBrightness *
-    0.8;
-  if (sparkleEnvelope > 0) {
-    for (let voiceIndex = 0; voiceIndex < event.voices.length; voiceIndex += 1) {
-      const voice = event.voices[voiceIndex];
-      const sparkle = renderRuntimeSparkle(voice, absoluteTimeSeconds);
-      eventLeft += voice.normalizedGain * voice.panLeft * sparkle * sparkleEnvelope;
-      eventRight += voice.normalizedGain * voice.panRight * sparkle * sparkleEnvelope;
-    }
-  }
-
   const scale = (runtime.outputGain * event.baseGain) / runtime.normalization;
   target.dryLeft += eventLeft * scale;
   target.dryRight += eventRight * scale;
@@ -317,7 +286,7 @@ function validateSpectralCathedralProgram(program) {
     isPositiveFinite(score.beatSeconds) &&
     isPositiveFinite(score.barSeconds) &&
     Array.isArray(score.events) &&
-    score.events.length === 95 &&
+    score.events.length === 360 &&
     score.events.every(
       (event) =>
         event &&
@@ -325,7 +294,7 @@ function validateSpectralCathedralProgram(program) {
         Number.isInteger(event.barIndex) &&
         Number.isInteger(event.slotInBar) &&
         event.slotInBar >= 0 &&
-        event.slotInBar < 10 &&
+        event.slotInBar < 20 &&
         typeof event.section === "string" &&
         gestureIds.includes(event.gesture) &&
         Array.isArray(event.modeIds) &&
@@ -341,7 +310,7 @@ function validateSpectralCathedralProgram(program) {
         event.wetSend <= 1 &&
         isNonnegativeFinite(event.stereoSpread) &&
         event.stereoSpread <= 1 &&
-        [1, 1.5, 2].includes(event.registerMultiplier),
+        event.registerMultiplier === 1,
     ) &&
     Array.isArray(modes) &&
     modes.length === 12 &&

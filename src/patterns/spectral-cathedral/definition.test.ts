@@ -21,7 +21,7 @@ describe("Spectral Cathedral definition", () => {
     });
     expect(spectralCathedralPattern.definition.modes).toHaveLength(12);
     expect(spectralCathedralPattern.audio.score.cycleSeconds).toBe(75);
-    expect(spectralCathedralPattern.audio.score.events).toHaveLength(95);
+    expect(spectralCathedralPattern.audio.score.events).toHaveLength(360);
     expect(spectralCathedralPattern.dramaturgy.sections).toHaveLength(5);
     expect(spectralCathedralPattern.dramaturgy.localMathMapping).toBe(true);
     expect(spectralCathedralPattern.audio.createProgram().worklet.kind).toBe("spectral-cathedral");

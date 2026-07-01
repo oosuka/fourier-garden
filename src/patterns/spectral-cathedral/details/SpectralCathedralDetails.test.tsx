@@ -13,7 +13,7 @@ describe("SpectralCathedralDetails", () => {
     expect(markup).toContain("固有値 λ");
     expect(markup).toContain("相対エネルギー指標");
     expect(markup).toContain("12モード");
-    expect(markup).toContain("75秒・18小節・5幕");
+    expect(markup).toContain("75秒・18小節・360イベント・5幕");
     expect(spectralCathedralPattern.education.poeticLayerBody).toContain(
       "局所的な光柱とアーチ伝播",
     );

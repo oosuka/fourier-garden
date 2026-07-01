@@ -88,7 +88,7 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
     observatoryLabel: "SPECTRAL CATHEDRAL OBSERVATORY",
     formulaEyebrow: "DIRICHLET EIGENMODE SUM / 固有モード展開",
     formulaSummary:
-      "Analytic standing-wave synthesis · five-act bell sonification of eigenvalue ratios.",
+      "Analytic standing-wave synthesis · constant piko sonification of eigenvalue ratios.",
     annotationContext: "ANALYTIC EIGENVALUE MODES / 解析的固有モード",
     annotations: [
       { label: "λ = 3", value: "(1, 1)" },
@@ -111,13 +111,13 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
   },
   audio: {
     mode: "sonification",
-    baseFrequencyHz: 440,
+    baseFrequencyHz: 420,
     initialVolume: 0.35,
-    roomSeconds: 1.6,
+    roomSeconds: 0.75,
     sonificationLatex:
-      "f_{mn}=440\\sqrt{\\lambda_{mn}/3},\\quad " +
-      "f_{mn,r}^{L/R}=rf_{mn}(1\\mp d),\\quad " +
-      "w_{mn,r}=\\frac{|a_{mn}|}{\\max|a|}r^{-1.85},\\quad " +
+      "f_{mn}=420+560\\frac{\\sqrt{\\lambda_{mn}}-\\sqrt{3}}{\\sqrt{27}-\\sqrt{3}},\\quad " +
+      "f_{mn}^{L/R}=f_{mn}(1\\mp d),\\quad " +
+      "w_{mn}=\\frac{|a_{mn}|}{\\max|a|},\\quad " +
       "d_{mn}=|\\cos(\\omega_{mn}t_e)|,\\ v_{mn}=|\\sin(\\omega_{mn}t_e)|",
     score: SPECTRAL_CATHEDRAL_SCORE,
     createProgram: createSpectralCathedralAudioProgram,
@@ -125,14 +125,14 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
   education: {
     gentleTitle: "ひとつの境界の中に、異なる揺れ方が重なっている。",
     gentleBody:
-      "長方形の縁を動かさずに保つと、その内側には決まった形で揺れる12種類の波が生まれます。ここではそれらを解析式で重ね、75秒・18小節・5幕を通して、波面、節線、鐘の呼び交わしと共鳴として観察します。",
+      "長方形の縁を動かさずに保つと、その内側には決まった形で揺れる12種類の波が生まれます。ここではそれらを解析式で重ね、75秒・18小節・360イベントの一定パルスとして、波面、節線、固有値の呼び交わしを観察します。",
     mathematicalTitle: "Dirichlet Laplacian eigenmodes",
     mathematicalBody:
       "Ω=(0,π)×(0,π/√2)上のDirichletラプラシアン固有関数をλ≤30の12モードへ有限化し、解析的な熱核係数で合成します。各モードは初期速度0の余弦位相を持ち、数学時刻は絶対transport時刻で進みます。",
     scopeNotice:
       "固有値、固有関数、係数は解析式から直接得ています。表示軸は固有値λであり、Hzスペクトル、DFT、FFT、数値固有値解析ではありません。",
     sonificationBody:
-      "音声は波動場の無加工再生ではありません。固有振動数比√(λ/3)、係数絶対値比、係数符号の開始位相を保持し、440 Hzを基準に移調したガラス鐘、木質アタック、短いサブグレイン、高域sparkle tailへ写します。75秒・18小節・5幕でtoll、answer、cascade、pulse、choirを展開し、絶対イベント時刻のモード変位を持続と残響、モード速度をアタックと明るさへ使います。左右デチューン後の帯域制限、EQ、圧縮、-1 dBFSリミッターを加えたソニフィケーションです。",
+      "音声は波動場の無加工再生ではありません。√λを420-980 Hzの安全なpiko帯域へ圧縮し、係数絶対値比、係数符号の開始位相を保持します。75秒・18小節・5幕は全16分スロットで発音し、toll、answer、cascade、pulse、choirは音量、定位、短い包絡の違いとしてだけ使います。左右デチューン後の帯域制限、高域抑制EQ、圧縮、短い残響、-1 dBFSリミッターを加えたソニフィケーションです。",
     poeticLayerBody:
       "7本の光柱、6本のアーチ、塵状粒子、透明ハロー、短い残光は詩的造形です。発音モードの固有関数値を柱ごとの局所励起へ写し、局所的な光柱とアーチ伝播、粒子帯、緩やかなカメラ軌道を作ります。固定格子面、境界、節線、固有値、係数は変形しません。",
   },

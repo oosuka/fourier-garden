@@ -9,6 +9,10 @@ export interface BandEnergyRatios {
   below250Hz: number;
   below400Hz: number;
   between400HzAnd3000Hz: number;
+  between900HzAnd3000Hz: number;
+  between1200HzAnd10000Hz: number;
+  between1800HzAnd10000Hz: number;
+  between2400HzAnd10000Hz: number;
   between3000HzAnd10000Hz: number;
 }
 
@@ -132,6 +136,10 @@ export function getBandEnergyRatios(
   let below250Hz = 0;
   let below400Hz = 0;
   let between400HzAnd3000Hz = 0;
+  let between900HzAnd3000Hz = 0;
+  let between1200HzAnd10000Hz = 0;
+  let between1800HzAnd10000Hz = 0;
+  let between2400HzAnd10000Hz = 0;
   let between3000HzAnd10000Hz = 0;
 
   for (const start of starts) {
@@ -146,6 +154,10 @@ export function getBandEnergyRatios(
       if (frequencyHz < 250) below250Hz += power;
       if (frequencyHz < 400) below400Hz += power;
       if (frequencyHz >= 400 && frequencyHz < 3_000) between400HzAnd3000Hz += power;
+      if (frequencyHz >= 900 && frequencyHz < 3_000) between900HzAnd3000Hz += power;
+      if (frequencyHz >= 1_200 && frequencyHz < 10_000) between1200HzAnd10000Hz += power;
+      if (frequencyHz >= 1_800 && frequencyHz < 10_000) between1800HzAnd10000Hz += power;
+      if (frequencyHz >= 2_400 && frequencyHz < 10_000) between2400HzAnd10000Hz += power;
       if (frequencyHz >= 3_000 && frequencyHz < 10_000) between3000HzAnd10000Hz += power;
     }
   }
@@ -156,6 +168,10 @@ export function getBandEnergyRatios(
     below250Hz: below250Hz / denominator,
     below400Hz: below400Hz / denominator,
     between400HzAnd3000Hz: between400HzAnd3000Hz / denominator,
+    between900HzAnd3000Hz: between900HzAnd3000Hz / denominator,
+    between1200HzAnd10000Hz: between1200HzAnd10000Hz / denominator,
+    between1800HzAnd10000Hz: between1800HzAnd10000Hz / denominator,
+    between2400HzAnd10000Hz: between2400HzAnd10000Hz / denominator,
     between3000HzAnd10000Hz: between3000HzAnd10000Hz / denominator,
   };
 }

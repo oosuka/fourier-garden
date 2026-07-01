@@ -52,7 +52,7 @@ describe("Residue Bloom musical score", () => {
     expect(counts.return).toBe(8 * 16);
   });
 
-  it("uses the approved note-density progression", () => {
+  it("uses the approved constant sixteenth-note pulse", () => {
     const program = createProgram();
     const activeBySection = program.events.reduce<Record<string, number>>((result, event) => {
       if (event.active) {
@@ -61,11 +61,12 @@ describe("Residue Bloom musical score", () => {
       return result;
     }, {});
 
-    expect(activeBySection.intro).toBe(32);
-    expect(activeBySection.growth).toBe(144);
+    expect(activeBySection.intro).toBe(128);
+    expect(activeBySection.growth).toBe(192);
     expect(activeBySection.bloom).toBe(192);
-    expect(activeBySection.hush).toBe(24);
-    expect(activeBySection.return).toBe(76);
+    expect(activeBySection.hush).toBe(128);
+    expect(activeBySection.return).toBe(128);
+    expect(Object.values(activeBySection).reduce((sum, count) => sum + count, 0)).toBe(768);
   });
 
   it("applies the 9, 8, 8, 9 carrier pattern by active-note ordinal", () => {
@@ -167,9 +168,9 @@ describe("Residue Bloom musical score", () => {
     const program = createProgram();
     const frame = evaluateMusicalScore(program, 144);
     const previousCycleEvent = frame.recentImpulses.find(
-      (impulse) => impulse.event.globalStep === 764,
+      (impulse) => impulse.event.globalStep === 767,
     );
-    const expectedTime = 143.25;
+    const expectedTime = 143.8125;
     const expectedEndpoint = evaluateEpicycle(
       RESIDUE_BLOOM_SERIES,
       expectedTime * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,

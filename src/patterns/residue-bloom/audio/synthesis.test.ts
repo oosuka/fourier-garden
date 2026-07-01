@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import {
+  estimateOnsetSpacing,
+  getBandEnergyRatios,
+  getFrameRmsContinuity,
+  getStereoMetrics,
+} from "../../../audio/audioMetrics";
+import { createWorkletConfigureMessage } from "../../../audio/audioProgram";
 import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/model";
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
@@ -15,7 +22,6 @@ import {
   renderRhythmicSeries,
   renderRawSeries,
 } from "./synthesis";
-import { createWorkletConfigureMessage } from "../../../audio/audioProgram";
 
 const score = buildMusicalScoreProgram(
   RESIDUE_BLOOM_SCORE_DEFINITION,
@@ -28,37 +34,31 @@ function rms(values: number[]): number {
   return Math.sqrt(values.reduce((sum, value) => sum + value * value, 0) / values.length);
 }
 
-function countAttackRegions(values: number[], sampleRate: number): number {
-  const windowSamples = Math.round(sampleRate * 0.003125);
-  let previousBelowThreshold = true;
-  let count = 0;
-
-  for (let start = 0; start < values.length; start += windowSamples) {
-    const level = rms(values.slice(start, start + windowSamples));
-    if (previousBelowThreshold && level > 0.02) {
-      count += 1;
-    }
-    previousBelowThreshold = level < 0.005;
-  }
-
-  return count;
+function toStereo(values: readonly number[]): { left: Float32Array; right: Float32Array } {
+  const samples = Float32Array.from(values);
+  return {
+    left: samples,
+    right: Float32Array.from(samples),
+  };
 }
 
 describe("Residue Bloom audio synthesis", () => {
-  it("preserves the existing AudioEngine graph exactly", () => {
+  it("uses the approved rounded midrange AudioEngine graph", () => {
     expect(RESIDUE_BLOOM_AUDIO_GRAPH).toEqual({
-      dryHighPassHz: 125,
+      dryHighPassHz: 170,
       dryHighPassQ: 0.45,
-      dryHighShelfHz: 3_200,
-      dryHighShelfGainDb: -2.2,
-      dryLowPassHz: 4_600,
+      dryHighShelfHz: 1_800,
+      dryHighShelfGainDb: -7,
+      dryLowPassHz: 3_200,
       dryLowPassQ: 0.3,
       dryGain: 0.88,
-      wetHighPassHz: 180,
+      wetHighPassHz: 220,
       wetHighPassQ: 0.45,
-      wetGain: 0.16,
-      roomSeconds: 1.9,
-      roomDecay: 3.4,
+      wetLowPassHz: 2_400,
+      wetLowPassQ: 0.3,
+      wetGain: 0.18,
+      roomSeconds: 1.65,
+      roomDecay: 3,
       compressor: {
         thresholdDb: -12,
         kneeDb: 12,
@@ -167,7 +167,7 @@ describe("Residue Bloom audio synthesis", () => {
     }
   });
 
-  it("renders separated plucks instead of a continuous low drone", () => {
+  it("renders finite rounded plucks with a soft overlap instead of a low drone", () => {
     const sampleRate = 48_000;
     const samples = renderRhythmicSeries({
       durationSeconds: 3,
@@ -185,7 +185,8 @@ describe("Residue Bloom audio synthesis", () => {
       const tail = rms(samples.slice(start + stepSamples - tailWindow, start + stepSamples));
 
       expect(attack).toBeGreaterThan(0.03);
-      expect(tail).toBeLessThan(attack * 0.28);
+      expect(tail).toBeGreaterThan(attack * 0.035);
+      expect(tail).toBeLessThan(attack * 0.46);
     }
 
     expect(samples.every(Number.isFinite)).toBe(true);
@@ -194,23 +195,69 @@ describe("Residue Bloom audio synthesis", () => {
     ).toBeLessThanOrEqual(10 ** (-1 / 20));
   });
 
-  it("renders sparse intro attacks and dense bloom attacks from the same score", () => {
-    const sampleRate = 48_000;
-    const intro = renderRhythmicSeries({
-      durationSeconds: 3,
-      sampleRate,
-      score,
-    });
-    const bloom = renderRhythmicSeries({
-      durationSeconds: 3,
-      sampleRate,
-      score,
-      startTimeSeconds: 60,
-    });
+  it("keeps the same sixteenth-note pulse while sections change gain and color", () => {
+    for (const section of score.definition.sections) {
+      const firstBarEvents = score.events.filter(
+        (event) => event.barIndex === section.startBar && event.active,
+      );
 
-    expect(countAttackRegions(intro, sampleRate)).toBe(4);
-    expect(countAttackRegions(bloom, sampleRate)).toBe(16);
+      expect(firstBarEvents).toHaveLength(16);
+      expect(new Set(firstBarEvents.map((event) => event.stepInBar)).size).toBe(16);
+    }
+
+    const introFrame = evaluateMusicalScore(score, 0.01);
+    const bloomFrame = evaluateMusicalScore(score, 60.01);
+    expect(introFrame.event.baseBrightness).not.toBeCloseTo(bloomFrame.event.baseBrightness, 2);
+    expect(introFrame.event.wetSend).not.toBeCloseTo(bloomFrame.event.wetSend, 2);
   });
+
+  it("keeps the full cycle close to the captured reference rhythm and comfortable band", () => {
+    const sampleRate = 4_000;
+    const rendered = toStereo(
+      renderRhythmicSeries({
+        durationSeconds: score.cycleSeconds,
+        sampleRate,
+        score,
+      }),
+    );
+    const metrics = getStereoMetrics(rendered.left, rendered.right);
+    const bands = getBandEnergyRatios(rendered.left, rendered.right, sampleRate);
+    const continuity = getFrameRmsContinuity(
+      rendered.left,
+      rendered.right,
+      sampleRate,
+      0.02,
+      0.0015,
+    );
+    const onsets = estimateOnsetSpacing(rendered.left, rendered.right, sampleRate);
+
+    expect(metrics.peak).toBeLessThanOrEqual(10 ** (-1 / 20));
+    expect(Math.abs(metrics.mean)).toBeLessThan(1e-3);
+    expect(bands.below150Hz).toBeLessThanOrEqual(0.01);
+    expect(bands.below250Hz).toBeLessThanOrEqual(0.02);
+    expect(bands.below400Hz).toBeLessThanOrEqual(0.04);
+    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.82);
+    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.1);
+    expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.18);
+    expect(onsets.medianSeconds).toBeLessThanOrEqual(0.26);
+    expect(onsets.pulseScore).toBeGreaterThan(0.45);
+  }, 15_000);
+
+  it("keeps the harmonic sparkle below the harsh upper band", () => {
+    const sampleRate = 12_000;
+    const rendered = toStereo(
+      renderRhythmicSeries({
+        durationSeconds: 12,
+        sampleRate,
+        score,
+        startTimeSeconds: 60,
+      }),
+    );
+    const bands = getBandEnergyRatios(rendered.left, rendered.right, sampleRate);
+
+    expect(bands.between3000HzAnd10000Hz).toBeLessThanOrEqual(0.05);
+    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.86);
+  }, 10_000);
 
   it("repeats the musical form while retaining absolute phasor controls", () => {
     const firstTime = 18.02;

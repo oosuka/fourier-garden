@@ -65,7 +65,10 @@ export function SpectralCathedralDetails({ pattern }: SpectralCathedralDetailsPr
           </div>
           <div>
             <dt>音楽構成</dt>
-            <dd>75秒・18小節・5幕（72 BPM / 5/4）</dd>
+            <dd>
+              {pattern.audio.score.cycleSeconds.toFixed(0)}秒・18小節・
+              {pattern.audio.score.events.length}イベント・5幕（72 BPM / 5/4）
+            </dd>
           </div>
           <div>
             <dt>変換アルゴリズム</dt>

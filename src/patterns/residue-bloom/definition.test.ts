@@ -36,7 +36,7 @@ describe("Residue Bloom definition", () => {
     expect(residueBloomPattern.audio.score.cycleSeconds).toBeCloseTo(144, 12);
     expect(residueBloomPattern.audio.score.totalSteps).toBe(768);
     expect(residueBloomPattern.audio.score.events.filter((event) => event.active)).toHaveLength(
-      468,
+      768,
     );
     expect(residueBloomPattern.audio.score.phasorMapping.visualAngularRate).toBe(
       residueBloomPattern.mathematics.visualTime.angularRateRadiansPerSecond,

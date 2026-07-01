@@ -12,6 +12,8 @@ export interface AudioGraphPreset {
   dryGain: number;
   wetHighPassHz: number;
   wetHighPassQ: number;
+  wetLowPassHz: number;
+  wetLowPassQ: number;
   wetGain: number;
   roomSeconds: number;
   roomDecay: number;

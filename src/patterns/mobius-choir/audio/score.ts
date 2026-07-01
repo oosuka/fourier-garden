@@ -26,7 +26,7 @@ export interface MobiusChoirScoreEvent {
   baseGain: number;
   wetSend: number;
   stereoSpread: number;
-  registerMultiplier: number;
+  registerMultiplier: 1;
   partialCount: number;
   amplitudeMotionDepth: number;
   brightnessMotionDepth: number;
@@ -38,7 +38,7 @@ export interface MobiusChoirScoreEvent {
 export interface MobiusChoirScoreProgram {
   bpm: 68;
   beatsPerBar: 4;
-  slotsPerBeat: 2;
+  slotsPerBeat: 4;
   totalBars: 16;
   beatSeconds: number;
   slotSeconds: number;
@@ -63,30 +63,20 @@ const SECTIONS = [
   { id: "confluence", startBar: 14, barCount: 2 },
 ] as const satisfies readonly MobiusChoirScoreSection[];
 
-const SLOT_PATTERNS_BY_SECTION = {
-  breath: [0, 3, 5, 6],
-  antiphon: [0, 2, 3, 6, 7],
-  inversion: [0, 1, 3, 4, 6],
-  interweave: [0, 1, 2, 4, 5, 7],
-  confluence: [0, 3, 6],
-} as const satisfies Readonly<Record<MobiusChoirSectionId, readonly number[]>>;
-
-const CONFLUENCE_FINAL_BAR_SLOTS = [0, 2, 5, 7] as const;
-
 const GESTURES_BY_SECTION = {
-  breath: ["breath", "breath", "call"],
-  antiphon: ["call", "answer", "call", "answer"],
-  inversion: ["turn", "answer", "turn", "call", "breath"],
-  interweave: ["braid", "turn", "answer", "braid", "converge"],
-  confluence: ["converge", "answer", "converge"],
+  breath: ["call", "answer", "call", "breath"],
+  antiphon: ["call", "answer", "turn", "answer"],
+  inversion: ["turn", "call", "answer", "turn"],
+  interweave: ["braid", "turn", "answer", "braid"],
+  confluence: ["converge", "answer", "converge", "call"],
 } as const satisfies Readonly<Record<MobiusChoirSectionId, readonly MobiusChoirGesture[]>>;
 
 const MODE_SETS_BY_SECTION = {
-  breath: [[1], [2], [3], [2, 3]],
-  antiphon: [[2, 3], [5, 6], [1, 4], [2], [3]],
-  inversion: [[1, 4], [5, 6], [2, 3], [4], [1]],
-  interweave: [[2], [5], [3], [6], [1, 4], [1], [4]],
-  confluence: [[1, 4], [5, 6], [2, 3], [1]],
+  breath: [[1], [2], [3], [4]],
+  antiphon: [[2], [3], [5], [6]],
+  inversion: [[1], [4], [2], [5], [3], [6]],
+  interweave: [[2], [5], [3], [6], [1], [4]],
+  confluence: [[1], [4], [2], [3]],
 } as const satisfies Readonly<Record<MobiusChoirSectionId, readonly (readonly number[])[]>>;
 
 const VOWELS_BY_GESTURE = {
@@ -103,52 +93,52 @@ const VOWELS_BY_GESTURE = {
 const SECTION_PROFILES = {
   breath: {
     baseGain: 0.48,
-    wetSend: 0.66,
+    wetSend: 0.06,
     stereoSpread: 0.28,
     registers: [1],
-    partialCount: 3,
+    partialCount: 1,
     amplitudeMotionDepth: 0.12,
-    brightnessMotionDepth: 0.22,
+    brightnessMotionDepth: 0.12,
     panMotion: 0.14,
   },
   antiphon: {
     baseGain: 0.56,
-    wetSend: 0.48,
+    wetSend: 0.05,
     stereoSpread: 0.74,
-    registers: [1, 4 / 3],
-    partialCount: 4,
-    amplitudeMotionDepth: 0.18,
-    brightnessMotionDepth: 0.32,
+    registers: [1],
+    partialCount: 1,
+    amplitudeMotionDepth: 0.16,
+    brightnessMotionDepth: 0.14,
     panMotion: 0.28,
   },
   inversion: {
-    baseGain: 0.7,
-    wetSend: 0.4,
+    baseGain: 0.66,
+    wetSend: 0.04,
     stereoSpread: 0.86,
-    registers: [4 / 3, 3 / 2],
-    partialCount: 5,
-    amplitudeMotionDepth: 0.24,
-    brightnessMotionDepth: 0.38,
+    registers: [1],
+    partialCount: 1,
+    amplitudeMotionDepth: 0.22,
+    brightnessMotionDepth: 0.16,
     panMotion: 0.34,
   },
   interweave: {
-    baseGain: 0.74,
-    wetSend: 0.52,
+    baseGain: 0.7,
+    wetSend: 0.05,
     stereoSpread: 0.98,
-    registers: [1, 4 / 3, 3 / 2],
-    partialCount: 6,
-    amplitudeMotionDepth: 0.3,
-    brightnessMotionDepth: 0.46,
+    registers: [1],
+    partialCount: 1,
+    amplitudeMotionDepth: 0.26,
+    brightnessMotionDepth: 0.18,
     panMotion: 0.44,
   },
   confluence: {
     baseGain: 0.52,
-    wetSend: 0.82,
+    wetSend: 0.08,
     stereoSpread: 0.5,
     registers: [1],
-    partialCount: 4,
+    partialCount: 1,
     amplitudeMotionDepth: 0.16,
-    brightnessMotionDepth: 0.28,
+    brightnessMotionDepth: 0.12,
     panMotion: 0.18,
   },
 } as const satisfies Readonly<
@@ -158,7 +148,7 @@ const SECTION_PROFILES = {
       baseGain: number;
       wetSend: number;
       stereoSpread: number;
-      registers: readonly number[];
+      registers: readonly 1[];
       partialCount: number;
       amplitudeMotionDepth: number;
       brightnessMotionDepth: number;
@@ -168,7 +158,7 @@ const SECTION_PROFILES = {
 >;
 
 const BEAT_SECONDS = 60 / 68;
-const SLOT_SECONDS = BEAT_SECONDS / 2;
+const SLOT_SECONDS = BEAT_SECONDS / 4;
 const BAR_SECONDS = BEAT_SECONDS * 4;
 
 function getSection(barIndex: number): MobiusChoirScoreSection {
@@ -196,16 +186,12 @@ function buildEvents(): MobiusChoirScoreEvent[] {
 
   for (let barIndex = 0; barIndex < 16; barIndex += 1) {
     const section = getSection(barIndex);
-    const slots =
-      section.id === "confluence" && barIndex === 15
-        ? CONFLUENCE_FINAL_BAR_SLOTS
-        : SLOT_PATTERNS_BY_SECTION[section.id];
     const gestures = GESTURES_BY_SECTION[section.id];
     const profile = SECTION_PROFILES[section.id];
     const modeSets = MODE_SETS_BY_SECTION[section.id];
 
-    for (const [eventInBar, slotInBar] of slots.entries()) {
-      const gesture = gestures[eventInBar % gestures.length]!;
+    for (let slotInBar = 0; slotInBar < 16; slotInBar += 1) {
+      const gesture = gestures[(barIndex + slotInBar) % gestures.length]!;
       let modeIds: readonly number[];
       do {
         modeIds = modeSets[sectionOrdinals[section.id] % modeSets.length]!;
@@ -219,10 +205,10 @@ function buildEvents(): MobiusChoirScoreEvent[] {
         )
       );
 
-      if (barIndex === 15 && slotInBar === 7) modeIds = [1, 4];
+      if (barIndex === 15 && slotInBar === 15) modeIds = [1];
       const sectionOrdinal = sectionOrdinals[section.id] - 1;
       const [vowelStart, vowelEnd] = VOWELS_BY_GESTURE[gesture];
-      const phraseAccent = [1, 0.86, 0.94, 0.82, 0.9, 0.78][eventInBar]!;
+      const phraseAccent = [1, 0.88, 0.96, 0.82][slotInBar % 4]!;
       events.push({
         index: events.length,
         barIndex,
@@ -250,7 +236,7 @@ function buildEvents(): MobiusChoirScoreEvent[] {
 export const MOBIUS_CHOIR_SCORE: MobiusChoirScoreProgram = Object.freeze({
   bpm: 68,
   beatsPerBar: 4,
-  slotsPerBeat: 2,
+  slotsPerBeat: 4,
   totalBars: 16,
   beatSeconds: BEAT_SECONDS,
   slotSeconds: SLOT_SECONDS,

@@ -83,84 +83,86 @@ interface SpectralCathedralRenderOptions {
 }
 
 export const SPECTRAL_CATHEDRAL_SYNTHESIS = {
-  maximumPartials: 8,
-  partialDamping: 1.85,
+  maximumPartials: 1,
+  partialDamping: 8,
   articulations: {
     toll: {
-      attackSeconds: 0.003,
-      decaySeconds: 0.32,
-      fadeStartSeconds: 1.77,
-      endSeconds: 1.8,
-      woodAttackGain: 0.045,
-      subgrainOffsetsSeconds: [0, 0.23, 0.46, 0.69, 0.92, 1.15],
-      subgrainGains: [1, 0.62, 0.48, 0.36, 0.26, 0.18],
+      attackSeconds: 0.008,
+      decaySeconds: 0.055,
+      fadeStartSeconds: 0.14,
+      endSeconds: 0.165,
+      woodAttackGain: 0,
+      subgrainOffsetsSeconds: [0],
+      subgrainGains: [0.86],
     },
     answer: {
-      attackSeconds: 0.0025,
-      decaySeconds: 0.18,
-      fadeStartSeconds: 0.87,
-      endSeconds: 0.9,
-      woodAttackGain: 0.06,
-      subgrainOffsetsSeconds: [0, 0.23, 0.46],
-      subgrainGains: [1, 0.58, 0.34],
+      attackSeconds: 0.008,
+      decaySeconds: 0.058,
+      fadeStartSeconds: 0.14,
+      endSeconds: 0.165,
+      woodAttackGain: 0,
+      subgrainOffsetsSeconds: [0],
+      subgrainGains: [0.92],
     },
     cascade: {
-      attackSeconds: 0.002,
-      decaySeconds: 0.09,
-      fadeStartSeconds: 0.53,
-      endSeconds: 0.56,
-      woodAttackGain: 0.16,
-      subgrainOffsetsSeconds: [0, 0.19, 0.38],
-      subgrainGains: [1, 0.76, 0.58],
+      attackSeconds: 0.006,
+      decaySeconds: 0.052,
+      fadeStartSeconds: 0.135,
+      endSeconds: 0.16,
+      woodAttackGain: 0,
+      subgrainOffsetsSeconds: [0],
+      subgrainGains: [1],
     },
     pulse: {
-      attackSeconds: 0.0015,
-      decaySeconds: 0.065,
-      fadeStartSeconds: 0.34,
-      endSeconds: 0.37,
-      woodAttackGain: 0.22,
-      subgrainOffsetsSeconds: [0, 0.21],
-      subgrainGains: [1, 0.72],
+      attackSeconds: 0.006,
+      decaySeconds: 0.05,
+      fadeStartSeconds: 0.135,
+      endSeconds: 0.16,
+      woodAttackGain: 0,
+      subgrainOffsetsSeconds: [0],
+      subgrainGains: [1],
     },
     choir: {
-      attackSeconds: 0.005,
-      decaySeconds: 0.4,
-      fadeStartSeconds: 2.17,
-      endSeconds: 2.2,
-      woodAttackGain: 0.04,
-      subgrainOffsetsSeconds: [0, 0.27, 0.54],
-      subgrainGains: [1, 0.56, 0.34],
+      attackSeconds: 0.009,
+      decaySeconds: 0.062,
+      fadeStartSeconds: 0.145,
+      endSeconds: 0.17,
+      woodAttackGain: 0,
+      subgrainOffsetsSeconds: [0],
+      subgrainGains: [0.8],
     },
   },
-  maximumEventSeconds: 3,
+  maximumEventSeconds: 0.18,
   woodAttackSeconds: 0.04,
-  woodMinimumHz: 700,
-  woodMaximumHz: 3_600,
-  woodComponentCount: 8,
+  woodMinimumHz: 420,
+  woodMaximumHz: 980,
+  woodComponentCount: 1,
   stereoDetuneRatio: 0.00125,
   antiAliasRatio: 0.9,
-  outputGain: 1.065,
+  outputGain: 0.52,
 } as const satisfies SpectralCathedralSynthesisPreset;
 
 export const SPECTRAL_CATHEDRAL_AUDIO_GRAPH: AudioGraphPreset = {
-  dryHighPassHz: 160,
+  dryHighPassHz: 220,
   dryHighPassQ: 0.45,
-  dryHighShelfHz: 3_600,
-  dryHighShelfGainDb: 1,
-  dryLowPassHz: 8_500,
-  dryLowPassQ: 0.3,
-  dryGain: 0.86,
-  wetHighPassHz: 240,
+  dryHighShelfHz: 1_100,
+  dryHighShelfGainDb: -24,
+  dryLowPassHz: 1_180,
+  dryLowPassQ: 0.25,
+  dryGain: 0.92,
+  wetHighPassHz: 220,
   wetHighPassQ: 0.45,
-  wetGain: 0.16,
-  roomSeconds: 1.6,
-  roomDecay: 3.2,
+  wetLowPassHz: 950,
+  wetLowPassQ: 0.25,
+  wetGain: 0.035,
+  roomSeconds: 0.75,
+  roomDecay: 1.7,
   compressor: {
-    thresholdDb: -14,
+    thresholdDb: -16,
     kneeDb: 12,
     ratio: 3,
     attackSeconds: 0.006,
-    releaseSeconds: 0.24,
+    releaseSeconds: 0.18,
   },
   limiterCeilingDbfs: -1,
 };
@@ -169,12 +171,19 @@ export function createSpectralCathedralAudioModes(): SpectralCathedralAudioMode[
   const maximumCoefficient = Math.max(
     ...SPECTRAL_CATHEDRAL_DEFINITION.modes.map((mode) => Math.abs(mode.coefficient)),
   );
+  const squareRootEigenvalues = SPECTRAL_CATHEDRAL_DEFINITION.modes.map((mode) =>
+    Math.sqrt(mode.eigenvalue),
+  );
+  const minimumRoot = Math.min(...squareRootEigenvalues);
+  const maximumRoot = Math.max(...squareRootEigenvalues);
 
   return SPECTRAL_CATHEDRAL_DEFINITION.modes.map((mode) => ({
     id: mode.id,
     eigenvalue: mode.eigenvalue,
     coefficient: mode.coefficient,
-    baseFrequencyHz: 440 * Math.sqrt(mode.eigenvalue / 3),
+    baseFrequencyHz:
+      420 +
+      ((Math.sqrt(mode.eigenvalue) - minimumRoot) / (maximumRoot - minimumRoot)) * (980 - 420),
     normalizedGain: Math.abs(mode.coefficient) / maximumCoefficient,
     modalAngularFrequency: SPECTRAL_CATHEDRAL_DEFINITION.waveSpeed * Math.sqrt(mode.eigenvalue),
     coefficientPhaseOffset: mode.coefficient < 0 ? Math.PI : 0,
@@ -376,8 +385,8 @@ export function validateSpectralCathedralWorkletProgram(
   if (program.modes.length !== 12) {
     throw new Error("Spectral Cathedral worklet program must contain 12 modes");
   }
-  if (program.score.events.length !== 95) {
-    throw new Error("Spectral Cathedral worklet program must contain 95 events");
+  if (program.score.events.length !== 360) {
+    throw new Error("Spectral Cathedral worklet program must contain 360 events");
   }
 
   const expectedModeIds = new Set(SPECTRAL_CATHEDRAL_DEFINITION.modes.map((mode) => mode.id));
@@ -421,8 +430,8 @@ export function validateSpectralCathedralWorkletProgram(
     ] as const) {
       assertFinite(`Spectral Cathedral event ${name}`, value);
     }
-    if (![1, 1.5, 2].includes(event.registerMultiplier)) {
-      throw new Error("Spectral Cathedral event register multiplier is invalid");
+    if (event.registerMultiplier !== 1) {
+      throw new Error("Spectral Cathedral piko event register multiplier must be 1");
     }
     if (!(event.gesture in program.synthesis.articulations)) {
       throw new Error("Spectral Cathedral event gesture is invalid");
@@ -553,27 +562,6 @@ function renderRuntimeWood(
   return (value / voice.woodNormalization) * envelope;
 }
 
-function getRuntimeSparkleEnvelope(ageSeconds: number, maximumEventSeconds: number): number {
-  if (ageSeconds < 0 || ageSeconds >= maximumEventSeconds) return 0;
-  const progress = ageSeconds / maximumEventSeconds;
-  return Math.sin(Math.PI * progress) ** 2 * Math.exp(-ageSeconds * 0.16);
-}
-
-function renderRuntimeSparkle(
-  voice: SpectralCathedralRuntimeVoice,
-  absoluteTimeSeconds: number,
-): number {
-  if (voice.woodNormalization <= 0) return 0;
-
-  let value = 0;
-  for (const component of voice.wood) {
-    value +=
-      component.weight *
-      Math.sin(Math.PI * 2 * component.frequencyHz * absoluteTimeSeconds + component.phaseRadians);
-  }
-  return value / voice.woodNormalization;
-}
-
 function findLatestSpectralCathedralEventIndex(
   events: readonly SpectralCathedralRuntimeEvent[],
   localTimeSeconds: number,
@@ -661,18 +649,6 @@ function accumulateSpectralCathedralRuntimeEvent(
         renderRuntimeWood(voice, subgrainAgeSeconds, runtime.woodAttackSeconds);
       eventLeft += voice.normalizedGain * voice.panLeft * (bellLeft * envelope + wood);
       eventRight += voice.normalizedGain * voice.panRight * (bellRight * envelope + wood);
-    }
-  }
-
-  const sparkleEnvelope =
-    getRuntimeSparkleEnvelope(baseAgeSeconds, runtime.maximumEventSeconds) *
-    event.baseBrightness *
-    0.8;
-  if (sparkleEnvelope > 0) {
-    for (const voice of event.voices) {
-      const sparkle = renderRuntimeSparkle(voice, absoluteTimeSeconds);
-      eventLeft += voice.normalizedGain * voice.panLeft * sparkle * sparkleEnvelope;
-      eventRight += voice.normalizedGain * voice.panRight * sparkle * sparkleEnvelope;
     }
   }
 

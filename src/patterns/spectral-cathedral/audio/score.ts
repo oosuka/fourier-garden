@@ -25,13 +25,13 @@ export interface SpectralCathedralScoreEvent {
   baseBrightness: number;
   wetSend: number;
   stereoSpread: number;
-  registerMultiplier: 1 | 1.5 | 2;
+  registerMultiplier: 1;
 }
 
 export interface SpectralCathedralScoreProgram {
   bpm: 72;
   beatsPerBar: 5;
-  slotsPerBeat: 2;
+  slotsPerBeat: 4;
   totalBars: 18;
   beatSeconds: number;
   slotSeconds: number;
@@ -56,91 +56,58 @@ const SECTIONS = [
   { id: "afterglow", startBar: 15, barCount: 3 },
 ] as const satisfies readonly SpectralCathedralScoreSection[];
 
-const BAR_EVENT_COUNTS = [2, 3, 3, 4, 5, 4, 5, 6, 6, 7, 7, 8, 9, 8, 9, 4, 3, 2] as const;
-
-const SLOT_PATTERNS = {
-  2: [0, 6],
-  3: [0, 3, 7],
-  4: [0, 3, 5, 8],
-  5: [0, 2, 4, 6, 8],
-  6: [0, 2, 3, 5, 7, 9],
-  7: [0, 1, 3, 4, 6, 7, 9],
-  8: [0, 1, 2, 4, 5, 6, 8, 9],
-  9: [0, 1, 2, 3, 4, 5, 6, 8, 9],
-} as const;
-
 const GESTURES_BY_SECTION = {
-  illumination: ["toll", "answer", "toll"],
-  procession: ["answer", "pulse", "toll", "cascade"],
-  ascent: ["cascade", "pulse", "answer", "cascade", "choir"],
-  resonance: ["choir", "cascade", "pulse", "answer", "choir", "pulse"],
-  afterglow: ["toll", "answer", "toll", "cascade"],
+  illumination: ["pulse", "answer", "pulse", "toll"],
+  procession: ["pulse", "cascade", "answer", "pulse"],
+  ascent: ["cascade", "pulse", "answer", "cascade"],
+  resonance: ["pulse", "choir", "cascade", "answer"],
+  afterglow: ["pulse", "answer", "toll", "pulse"],
 } as const satisfies Readonly<
   Record<SpectralCathedralSectionId, readonly SpectralCathedralGesture[]>
 >;
 
 const MODES_BY_GESTURE = {
-  toll: [[1], [3], [5], [7], [9], [11], [2, 4], [6, 8], [10, 12]],
-  answer: [
-    [1, 2],
-    [3, 4],
-    [5, 6],
-    [7, 8],
-    [9, 10],
-    [11, 12],
-  ],
-  cascade: [[1], [4], [2], [5], [3], [7], [6], [9], [8], [11], [10], [12]],
-  pulse: [
-    [1, 4],
-    [2, 5],
-    [3, 6],
-    [7, 10],
-    [8, 11],
-    [9, 12],
-  ],
-  choir: [
-    [1, 4, 7],
-    [2, 5, 8, 11],
-    [3, 6, 9, 12],
-    [1, 6, 10],
-    [4, 8, 12],
-  ],
+  toll: [[1], [5], [9], [3]],
+  answer: [[2], [6], [10], [4]],
+  cascade: [[1], [4], [7], [10], [2], [5], [8], [11]],
+  pulse: [[1], [3], [5], [7], [9], [11]],
+  choir: [[2], [4], [6], [8], [10], [12]],
 } as const satisfies Readonly<Record<SpectralCathedralGesture, readonly (readonly number[])[]>>;
 
 const SECTION_PROFILES = {
   illumination: {
     baseGain: 0.58,
-    brightness: 0.28,
-    wetSend: 0.72,
-    stereoSpread: 0.36,
+    brightness: 0.2,
+    wetSend: 0.1,
+    stereoSpread: 0.24,
     registerMultiplier: 1,
   },
   procession: {
-    baseGain: 0.68,
-    brightness: 0.46,
-    wetSend: 0.62,
-    stereoSpread: 0.58,
+    baseGain: 0.66,
+    brightness: 0.34,
+    wetSend: 0.08,
+    stereoSpread: 0.42,
     registerMultiplier: 1,
   },
   ascent: {
-    baseGain: 0.76,
-    brightness: 0.68,
-    wetSend: 0.5,
-    stereoSpread: 0.72,
-    registerMultiplier: 1.5,
+    baseGain: 0.72,
+    brightness: 0.52,
+    wetSend: 0.06,
+    stereoSpread: 0.58,
+    registerMultiplier: 1,
   },
   resonance: {
-    baseGain: 0.86,
-    brightness: 0.86,
-    wetSend: 0.68,
-    stereoSpread: 0.88,
-    registerMultiplier: 2,
+    baseGain: 0.78,
+    brightness: 0.68,
+    wetSend: 0.08,
+    stereoSpread: 0.74,
+    registerMultiplier: 1,
   },
   afterglow: {
-    baseGain: 0.54,
-    brightness: 0.34,
-    wetSend: 0.84,
-    stereoSpread: 0.46,
+    baseGain: 0.52,
+    brightness: 0.26,
+    wetSend: 0.12,
+    stereoSpread: 0.32,
     registerMultiplier: 1,
   },
 } as const satisfies Readonly<
@@ -151,13 +118,13 @@ const SECTION_PROFILES = {
       brightness: number;
       wetSend: number;
       stereoSpread: number;
-      registerMultiplier: 1 | 1.5 | 2;
+      registerMultiplier: 1;
     }
   >
 >;
 
 const BEAT_SECONDS = 60 / 72;
-const SLOT_SECONDS = BEAT_SECONDS / 2;
+const SLOT_SECONDS = BEAT_SECONDS / 4;
 const BAR_SECONDS = BEAT_SECONDS * 5;
 
 function getSection(barIndex: number): SpectralCathedralScoreSection {
@@ -179,20 +146,19 @@ function buildEvents(): SpectralCathedralScoreEvent[] {
     choir: 0,
   };
 
-  for (const [barIndex, eventCount] of BAR_EVENT_COUNTS.entries()) {
+  for (let barIndex = 0; barIndex < 18; barIndex += 1) {
     const section = getSection(barIndex);
-    const slots = SLOT_PATTERNS[eventCount];
     const gestures = GESTURES_BY_SECTION[section.id];
     const profile = SECTION_PROFILES[section.id];
 
-    for (const [eventInBar, slotInBar] of slots.entries()) {
+    for (let slotInBar = 0; slotInBar < 20; slotInBar += 1) {
       const index = events.length;
-      const gesture = gestures[(barIndex + eventInBar) % gestures.length]!;
+      const gesture = gestures[(barIndex + slotInBar) % gestures.length]!;
       const modeSets = MODES_BY_GESTURE[gesture];
       const modeSetIndex = gestureOrdinals[gesture] % modeSets.length;
       const modeIds = modeSets[modeSetIndex]!;
       gestureOrdinals[gesture] += 1;
-      const phraseAccent = [1, 0.88, 0.94, 0.84][index % 4]!;
+      const phraseAccent = [1, 0.92, 0.98, 0.88][slotInBar % 4]!;
 
       events.push({
         index,
@@ -217,7 +183,7 @@ function buildEvents(): SpectralCathedralScoreEvent[] {
 export const SPECTRAL_CATHEDRAL_SCORE: SpectralCathedralScoreProgram = {
   bpm: 72,
   beatsPerBar: 5,
-  slotsPerBeat: 2,
+  slotsPerBeat: 4,
   totalBars: 18,
   beatSeconds: BEAT_SECONDS,
   slotSeconds: SLOT_SECONDS,

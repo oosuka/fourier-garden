@@ -76,7 +76,7 @@ export function evaluateMobiusChoirVisualFrame(
     const ambientVelocity = kinematics.velocity;
     const normalizedEnergy = clamp01(
       Math.max(
-        energy[index]! * 2.35,
+        energy[index]! * 3.3,
         0.07 + ambientVelocity * 0.09 + dramaturgy.motionEnergy * 0.04,
       ),
     );
@@ -103,9 +103,9 @@ export function evaluateMobiusChoirVisualFrame(
 
   return {
     dramaturgy,
-    collectiveEnergy: clamp01(collectiveEnergy * 1.8),
-    onsetEnergy: clamp01(onsetEnergy),
-    seamEnergy: clamp01(Math.max(...seam) * 2.1),
+    collectiveEnergy: clamp01(collectiveEnergy * 1.55 + dramaturgy.audioEnergy * 0.45),
+    onsetEnergy: clamp01(onsetEnergy + dramaturgy.motionEnergy * 0.35),
+    seamEnergy: clamp01(Math.max(...seam) * 1.85 + dramaturgy.visualEnergy * 0.35),
     modes,
   };
 }

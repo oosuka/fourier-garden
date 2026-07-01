@@ -3,14 +3,15 @@ import { describe, expect, it } from "vitest";
 import { SPECTRAL_CATHEDRAL_SCORE, evaluateSpectralCathedralEvents } from "./score";
 
 describe("Spectral Cathedral musical score", () => {
-  it("builds the five-act 75-second cathedral form", () => {
+  it("builds the five-act 75-second piko cathedral form", () => {
     expect(SPECTRAL_CATHEDRAL_SCORE.bpm).toBe(72);
     expect(SPECTRAL_CATHEDRAL_SCORE.beatsPerBar).toBe(5);
     expect(SPECTRAL_CATHEDRAL_SCORE.totalBars).toBe(18);
     expect(SPECTRAL_CATHEDRAL_SCORE.beatSeconds).toBeCloseTo(5 / 6, 12);
     expect(SPECTRAL_CATHEDRAL_SCORE.barSeconds).toBeCloseTo(25 / 6, 12);
     expect(SPECTRAL_CATHEDRAL_SCORE.cycleSeconds).toBe(75);
-    expect(SPECTRAL_CATHEDRAL_SCORE.events).toHaveLength(95);
+    expect(SPECTRAL_CATHEDRAL_SCORE.slotsPerBeat).toBe(4);
+    expect(SPECTRAL_CATHEDRAL_SCORE.events).toHaveLength(360);
     expect(SPECTRAL_CATHEDRAL_SCORE.sections.map((section) => section.id)).toEqual([
       "illumination",
       "procession",
@@ -20,7 +21,7 @@ describe("Spectral Cathedral musical score", () => {
     ]);
   });
 
-  it("creates a dense resonance and a sparse illumination", () => {
+  it("keeps a constant event density while changing act expression", () => {
     const counts = Object.fromEntries(
       SPECTRAL_CATHEDRAL_SCORE.sections.map((section) => [
         section.id,
@@ -29,7 +30,37 @@ describe("Spectral Cathedral musical score", () => {
       ]),
     );
 
-    expect(counts.resonance! / counts.illumination!).toBeGreaterThanOrEqual(2.5);
+    expect(new Set(Object.values(counts))).toEqual(new Set([20]));
+    expect(
+      new Set(
+        SPECTRAL_CATHEDRAL_SCORE.sections.map((section) =>
+          SPECTRAL_CATHEDRAL_SCORE.events.find((event) => event.section === section.id),
+        ),
+      ).size,
+    ).toBe(SPECTRAL_CATHEDRAL_SCORE.sections.length);
+  });
+
+  it("uses a constant sixteenth-note piko clock across the full cycle", () => {
+    expect(SPECTRAL_CATHEDRAL_SCORE.slotsPerBeat).toBe(4);
+    expect(SPECTRAL_CATHEDRAL_SCORE.slotSeconds).toBeCloseTo(5 / 24, 12);
+    expect(SPECTRAL_CATHEDRAL_SCORE.events).toHaveLength(360);
+
+    for (let barIndex = 0; barIndex < SPECTRAL_CATHEDRAL_SCORE.totalBars; barIndex += 1) {
+      expect(
+        SPECTRAL_CATHEDRAL_SCORE.events
+          .filter((event) => event.barIndex === barIndex)
+          .map((event) => event.slotInBar),
+      ).toEqual(Array.from({ length: 20 }, (_, slot) => slot));
+    }
+
+    const eventTimes = SPECTRAL_CATHEDRAL_SCORE.events.map((event) => event.localTimeSeconds);
+    eventTimes.push(SPECTRAL_CATHEDRAL_SCORE.cycleSeconds);
+    for (let index = 1; index < eventTimes.length; index += 1) {
+      expect(eventTimes[index]! - eventTimes[index - 1]!).toBeCloseTo(
+        SPECTRAL_CATHEDRAL_SCORE.slotSeconds,
+        12,
+      );
+    }
   });
 
   it("uses every gesture and mode without five identical gestures in a row", () => {
@@ -49,20 +80,12 @@ describe("Spectral Cathedral musical score", () => {
     }
   });
 
-  it("removes the low half-register that caused repeated 88 Hz pulses", () => {
+  it("uses only the safe piko register that avoids piercing upper partials", () => {
     const registerMultipliers = SPECTRAL_CATHEDRAL_SCORE.events.map(
       (event): number => event.registerMultiplier,
     );
 
-    expect(new Set(registerMultipliers)).toEqual(new Set([1, 1.5, 2]));
-    expect(registerMultipliers.every((registerMultiplier) => registerMultiplier !== 0.5)).toBe(
-      true,
-    );
-    expect(
-      SPECTRAL_CATHEDRAL_SCORE.events
-        .filter((event) => event.section === "illumination" || event.section === "afterglow")
-        .every((event) => event.registerMultiplier === 1),
-    ).toBe(true);
+    expect(new Set(registerMultipliers)).toEqual(new Set([1]));
   });
 
   it("stores only repeatable score fields in the event table", () => {
@@ -73,13 +96,13 @@ describe("Spectral Cathedral musical score", () => {
       barIndex: 0,
       slotInBar: 0,
       section: "illumination",
-      gesture: "toll",
+      gesture: "pulse",
       modeIds: [1],
       localTimeSeconds: 0,
       baseGain: 0.58,
-      baseBrightness: 0.28,
-      wetSend: 0.72,
-      stereoSpread: 0.36,
+      baseBrightness: 0.2,
+      wetSend: 0.1,
+      stereoSpread: 0.24,
       registerMultiplier: 1,
     });
     expect(Object.keys(event)).not.toEqual(
@@ -97,15 +120,15 @@ describe("Spectral Cathedral musical score", () => {
   });
 
   it("evaluates current events from absolute transport time", () => {
-    const events = evaluateSpectralCathedralEvents(SPECTRAL_CATHEDRAL_SCORE, 0.25, 1.45);
+    const events = evaluateSpectralCathedralEvents(SPECTRAL_CATHEDRAL_SCORE, 0.25, 0.1);
 
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({
-      index: 0,
+      index: 1,
       cycleIndex: 0,
-      absoluteEventIndex: 0,
-      absoluteTimeSeconds: 0,
-      ageSeconds: 0.25,
+      absoluteEventIndex: 1,
+      absoluteTimeSeconds: SPECTRAL_CATHEDRAL_SCORE.slotSeconds,
+      ageSeconds: 0.25 - SPECTRAL_CATHEDRAL_SCORE.slotSeconds,
     });
   });
 
@@ -113,27 +136,30 @@ describe("Spectral Cathedral musical score", () => {
     const events = evaluateSpectralCathedralEvents(
       SPECTRAL_CATHEDRAL_SCORE,
       SPECTRAL_CATHEDRAL_SCORE.cycleSeconds + 0.25,
-      3,
+      0.5,
     );
 
-    expect(events).toHaveLength(2);
+    expect(events).toHaveLength(3);
     expect(events[0]).toMatchObject({
-      index: 94,
+      index: 359,
       cycleIndex: 0,
-      absoluteEventIndex: 94,
+      absoluteEventIndex: 359,
     });
-    expect(events[0]?.absoluteTimeSeconds).toBeCloseTo(220 / 3, 12);
-    expect(events[0]?.ageSeconds).toBeCloseTo(
-      SPECTRAL_CATHEDRAL_SCORE.cycleSeconds + 0.25 - 220 / 3,
+    expect(events[0]?.absoluteTimeSeconds).toBeCloseTo(
+      SPECTRAL_CATHEDRAL_SCORE.cycleSeconds - SPECTRAL_CATHEDRAL_SCORE.slotSeconds,
       12,
     );
-    expect(events[1]).toMatchObject({
-      index: 0,
+    expect(events[0]?.ageSeconds).toBeCloseTo(0.25 + SPECTRAL_CATHEDRAL_SCORE.slotSeconds, 12);
+    expect(events[2]).toMatchObject({
+      index: 1,
       cycleIndex: 1,
-      absoluteEventIndex: 95,
-      absoluteTimeSeconds: SPECTRAL_CATHEDRAL_SCORE.cycleSeconds,
-      ageSeconds: 0.25,
+      absoluteEventIndex: 361,
     });
+    expect(events[2]?.absoluteTimeSeconds).toBeCloseTo(
+      SPECTRAL_CATHEDRAL_SCORE.cycleSeconds + SPECTRAL_CATHEDRAL_SCORE.slotSeconds,
+      12,
+    );
+    expect(events[2]?.ageSeconds).toBeCloseTo(0.25 - SPECTRAL_CATHEDRAL_SCORE.slotSeconds, 12);
   });
 
   it("does not invent events before transport time zero", () => {

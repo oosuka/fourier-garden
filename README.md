@@ -15,9 +15,9 @@ WebGPU／WebGL2描画基盤を共有します。
 
 | Chapter | 状態 | 数学的対象 | 時間構成 | 主な音響・造形 |
 | --- | --- | --- | --- | --- |
-| 1 `Residue Bloom / 剰余の花` | 通常公開 | `n=4k+1`の13項からなる解析的有限Fourier級数と複素フェーザ | 80 BPM、48小節、144秒、5状態 | 短い調波発音、円鎖、主履歴波形、深度粒子庭園 |
-| 2 `Spectral Cathedral / スペクトルの聖堂` | 通常公開 | 長方形領域上の12個の解析的Dirichlet固有モード | 72 BPM、5/4、18小節、75秒、95イベント、低域を抑えた中域粒状鐘 | ガラス鐘、木質粒、波動面、7光柱、立体アーチ、遠景ヴォールト |
-| 3 `Möbius Choir / メビウスの合唱` | 通常公開 | flat Möbius quotient上の6個の解析的進行波モード | 68 BPM、16小節、56.470588秒、78イベント、絶対時刻carrierと二次mora | 母音状の声、中域粒状フレーズ、単一Möbius帯、発光膜 |
+| 1 `Residue Bloom / 剰余の花` | 通常公開 | `n=4k+1`の13項からなる解析的有限Fourier級数と複素フェーザ | 80 BPM、48小節、144秒、5状態、一定16分パルス | 丸い中域調波粒、円鎖、主履歴波形、深度粒子庭園 |
+| 2 `Spectral Cathedral / スペクトルの聖堂` | 通常公開 | 長方形領域上の12個の解析的Dirichlet固有モード | 72 BPM、5/4、18小節、75秒、360イベント、一定16分ピコ粒 | 中域電子粒、波動面、7光柱、立体アーチ、遠景ヴォールト |
+| 3 `Möbius Choir / メビウスの合唱` | 通常公開 | flat Möbius quotient上の6個の解析的進行波モード | 68 BPM、16小節、56.470588秒、256イベント、一定16分ピコ粒 | 中域電子粒、単一Möbius帯、発光膜 |
 
 通常URLではChapter 1から3を選択できます。Chapter 3はWebGPU／WebGL2のブラウザQAと
 ユーザーによる実機試聴を完了し、通常公開済みです。
@@ -166,5 +166,4 @@ GPU資源、イベント、タイマーを、AudioEngineはAudioNodeとAudioCont
 - [`docs/mathematical-model.md`](docs/mathematical-model.md): 実装済み章の数理・音響正本
 - [`docs/chapter-atlas.md`](docs/chapter-atlas.md): 候補章、比較、依存関係、入口条件
 - [`design-qa.md`](design-qa.md): 実測QA、履歴、未確認事項
-- [`docs/superpowers/specs/`](docs/superpowers/specs/): 承認済み設計と履歴仕様
-- [`docs/superpowers/plans/`](docs/superpowers/plans/): 実装計画と実施記録
+- [`docs/superpowers/README.md`](docs/superpowers/README.md): 廃止済み設計・実装計画の履歴索引

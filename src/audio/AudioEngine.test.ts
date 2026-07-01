@@ -262,14 +262,14 @@ describe("AudioEngine initialization", () => {
     await expect(audio.play(0)).rejects.toThrow(/disposed/i);
   });
 
-  it("builds the unchanged Residue Bloom graph without a limiter", async () => {
+  it("builds the rounded Residue Bloom graph without a limiter", async () => {
     const records = installAudioGraphStubs();
     const pattern = getResidueBloomPattern();
     const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);
 
     await audio.initialize();
 
-    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=11"]);
+    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=15"]);
     expect(records.workletMessages).toEqual([
       expect.objectContaining({
         type: "configure",
@@ -279,14 +279,15 @@ describe("AudioEngine initialization", () => {
     expect(
       records.nodes.filter((node) => node.kind.startsWith("biquad:")).map((node) => node.options),
     ).toEqual([
-      { type: "highpass", frequency: 125, Q: 0.45 },
-      { type: "highshelf", frequency: 3_200, gain: -2.2 },
-      { type: "lowpass", frequency: 4_600, Q: 0.3 },
-      { type: "highpass", frequency: 180, Q: 0.45 },
+      { type: "highpass", frequency: 170, Q: 0.45 },
+      { type: "highshelf", frequency: 1_800, gain: -7 },
+      { type: "lowpass", frequency: 3_200, Q: 0.3 },
+      { type: "highpass", frequency: 220, Q: 0.45 },
+      { type: "lowpass", frequency: 2_400, Q: 0.3 },
     ]);
     expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
       { kind: "gain", options: { gain: 0.88 } },
-      { kind: "gain", options: { gain: 0.16 } },
+      { kind: "gain", options: { gain: 0.18 } },
     ]);
     expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
       threshold: -12,
@@ -296,7 +297,7 @@ describe("AudioEngine initialization", () => {
       release: 0.2,
     });
     expect(records.nodes.some((node) => node.kind === "waveshaper")).toBe(false);
-    expect(records.bufferLengths).toEqual([1_900]);
+    expect(records.bufferLengths).toEqual([1_650]);
     expect(records.connections).toContainEqual({
       source: "compressor",
       destination: "analyser",
@@ -320,28 +321,29 @@ describe("AudioEngine initialization", () => {
     expect(
       records.nodes.filter((node) => node.kind.startsWith("biquad:")).map((node) => node.options),
     ).toEqual([
-      { type: "highpass", frequency: 160, Q: 0.45 },
-      { type: "highshelf", frequency: 3_600, gain: 1 },
-      { type: "lowpass", frequency: 8_500, Q: 0.3 },
-      { type: "highpass", frequency: 240, Q: 0.45 },
+      { type: "highpass", frequency: 220, Q: 0.45 },
+      { type: "highshelf", frequency: 1_100, gain: -24 },
+      { type: "lowpass", frequency: 1_180, Q: 0.25 },
+      { type: "highpass", frequency: 220, Q: 0.45 },
+      { type: "lowpass", frequency: 950, Q: 0.25 },
     ]);
     expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
-      { kind: "gain", options: { gain: 0.86 } },
-      { kind: "gain", options: { gain: 0.16 } },
+      { kind: "gain", options: { gain: 0.92 } },
+      { kind: "gain", options: { gain: 0.035 } },
     ]);
     expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
-      threshold: -14,
+      threshold: -16,
       knee: 12,
       ratio: 3,
       attack: 0.006,
-      release: 0.24,
+      release: 0.18,
     });
     const limiter = records.nodes.find((node) => node.kind === "waveshaper");
     expect(limiter?.options.oversample).toBe("4x");
     expect(
       Math.max(...Array.from(limiter?.options.curve as Float32Array, Math.abs)),
     ).toBeLessThanOrEqual(10 ** (-1 / 20));
-    expect(records.bufferLengths).toEqual([1_600]);
+    expect(records.bufferLengths).toEqual([750]);
     expect(records.connections).toContainEqual({
       source: "compressor",
       destination: "waveshaper",
@@ -356,7 +358,7 @@ describe("AudioEngine initialization", () => {
     });
   });
 
-  it("builds the Möbius Choir graph with its choral filters and limiter", async () => {
+  it("builds the Möbius Choir graph with its piko filters and limiter", async () => {
     const records = installAudioGraphStubs();
     const audio = new AudioEngine(createMobiusChoirAudioProgram());
 
@@ -371,24 +373,25 @@ describe("AudioEngine initialization", () => {
     expect(
       records.nodes.filter((node) => node.kind.startsWith("biquad:")).map((node) => node.options),
     ).toEqual([
-      { type: "highpass", frequency: 155, Q: 0.45 },
-      { type: "highshelf", frequency: 4_800, gain: -1 },
-      { type: "lowpass", frequency: 7_600, Q: 0.3 },
-      { type: "highpass", frequency: 260, Q: 0.45 },
+      { type: "highpass", frequency: 220, Q: 0.45 },
+      { type: "highshelf", frequency: 1_050, gain: -24 },
+      { type: "lowpass", frequency: 1_120, Q: 0.25 },
+      { type: "highpass", frequency: 220, Q: 0.45 },
+      { type: "lowpass", frequency: 900, Q: 0.25 },
     ]);
     expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
-      { kind: "gain", options: { gain: 0.9 } },
-      { kind: "gain", options: { gain: 0.22 } },
+      { kind: "gain", options: { gain: 0.92 } },
+      { kind: "gain", options: { gain: 0.025 } },
     ]);
     expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
       threshold: -16,
       knee: 12,
       ratio: 3,
       attack: 0.008,
-      release: 0.26,
+      release: 0.18,
     });
     expect(records.nodes.find((node) => node.kind === "waveshaper")?.options.oversample).toBe("4x");
-    expect(records.bufferLengths).toEqual([2_600]);
+    expect(records.bufferLengths).toEqual([650]);
   });
 });
 

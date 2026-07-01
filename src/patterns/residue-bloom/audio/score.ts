@@ -97,9 +97,9 @@ export const RESIDUE_BLOOM_SCORE_DEFINITION: MusicalScoreDefinition = {
   stepsPerBeat: 4,
   totalBars: 48,
   carrierMultipliers: [9, 8, 8, 9],
-  attackSeconds: 0.006,
-  decaySeconds: 0.075,
-  releaseSeconds: 0.024,
+  attackSeconds: 0.012,
+  decaySeconds: 0.11,
+  releaseSeconds: 0.055,
   antiAliasRatio: 0.9,
   stereoDetuneRatio: 0.00125,
   timbreDamping: 1.4,
@@ -113,11 +113,7 @@ export const RESIDUE_BLOOM_SCORE_DEFINITION: MusicalScoreDefinition = {
   ],
 };
 
-const QUARTER_NOTES = [0, 4, 8, 12] as const;
-const EIGHTH_NOTES = [0, 2, 4, 6, 8, 10, 12, 14] as const;
-const TWELVE_NOTES = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14] as const;
 const SIXTEENTH_NOTES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] as const;
-const HALF_NOTES = [0, 8] as const;
 const PHRASE_ACCENTS = [1, 0.82, 0.86, 0.92] as const;
 
 const SECTION_TARGETS = {
@@ -212,19 +208,8 @@ function getSection(
   return section;
 }
 
-function getActiveSteps(section: MusicalSectionId, barInSection: number): readonly number[] {
-  if (section === "intro") return QUARTER_NOTES;
-  if (section === "growth") {
-    if (barInSection < 4) return EIGHTH_NOTES;
-    if (barInSection < 8) return TWELVE_NOTES;
-    return SIXTEENTH_NOTES;
-  }
-  if (section === "bloom") return SIXTEENTH_NOTES;
-  if (section === "hush") return barInSection < 4 ? QUARTER_NOTES : HALF_NOTES;
-  if (barInSection < 2) return QUARTER_NOTES;
-  if (barInSection < 4) return EIGHTH_NOTES;
-  if (barInSection < 7) return SIXTEENTH_NOTES;
-  return QUARTER_NOTES;
+function getActiveSteps(): readonly number[] {
+  return SIXTEENTH_NOTES;
 }
 
 function getSectionProfile(section: MusicalSectionId, sectionProgress: number): SectionProfile {
@@ -292,7 +277,7 @@ export function buildMusicalScoreProgram(
     const barInSection = barIndex - section.startBar;
     const sectionProgress = (barInSection + stepInBar / stepsPerBar) / section.barCount;
     const profile = getSectionProfile(section.id, sectionProgress);
-    const active = getActiveSteps(section.id, barInSection).includes(stepInBar);
+    const active = getActiveSteps().includes(stepInBar);
     const eventOrdinal = active ? activeNoteOrdinal : -1;
     const phraseIndex = (active ? eventOrdinal % 4 : 0) as 0 | 1 | 2 | 3;
     const downbeatAccent = stepInBar === 0 ? 1.08 : 1;

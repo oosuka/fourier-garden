@@ -130,21 +130,16 @@ f_k=n_kf_0
 | 静寂 `hush` | 32-39 | 96-120秒 |
 | 再開 `return` | 40-47 | 120-144秒 |
 
-小節内の0始まり16分音符位置を用い、発音マスクを
+小節内の0始まり16分音符位置を用い、全区間で発音マスク
 
 \[
-\begin{aligned}
-Q&=\{0,4,8,12\},\\
-E&=\{0,2,4,6,8,10,12,14\},\\
-T&=\{0,1,2,4,5,6,8,9,10,12,13,14\},\\
-S&=\{0,1,\ldots,15\},\\
-H&=\{0,8\}
-\end{aligned}
+S=\{0,1,\ldots,15\}
 \]
 
-とする。`intro`は\(Q\)、`growth`は4小節ごとに\(E,T,S\)、`bloom`は\(S\)、
-`hush`は前半\(Q\)・後半\(H\)、`return`は\(Q,E,S,Q\)の順に密度を変える。
-最後の小節では音響・詩的造形のプロファイルを導入冒頭へ戻す。
+を使う。約0.1875秒間隔の一定パルスを保ち、`intro`、`growth`、`bloom`、
+`hush`、`return`の差は基礎ゲイン、明度、ウェット送出、ステレオ幅、
+詩的造形強度で作る。最後の小節では音響・詩的造形のプロファイルを
+導入冒頭へ戻す。
 
 音楽形式の周期時刻を
 
@@ -186,7 +181,8 @@ f_{k,j}^{L/R}=n_k\nu_j(1\mp d),
 \]
 
 とする。等電力定位係数を\(P_k^{L/R}\)、基礎ゲインと評価済みアクセントの積を
-イベントゲイン\(G_e\)、短いエンベロープを\(E_e(\tau)\)、正規化係数を\(C\)
+イベントゲイン\(G_e\)、12 ms attack、110 ms decay、55 ms releaseを持つ
+有限エンベロープを\(E_e(\tau)\)、正規化係数を\(C\)
 とすると、ローパス前の左右信号は
 
 \[
@@ -240,9 +236,13 @@ p_r=\operatorname{clamp}\left(\frac{|z_e|}{M},0,1\right)
 \]
 
 は変更しない。動的な明るさは部分音合成後の1極ローパスであり、
+カットオフは720 Hzから\(\min(2600,0.18F_s)\) Hzの範囲へ写す。
 係数\(A_k\)や基礎知覚重みの変更ではない。動的な空間量は生成済みconvolverへ
 送る区間プロファイル由来のウェット送出であり、\(p_r\)からは得ない。
-さらにステレオデチューン、EQ、コンプレッションを適用する。
+さらにステレオデチューン、EQ、コンプレッションを適用する。Chapter 1の
+Web Audioグラフはdry high-pass 170 Hz、high-shelf 1,800 Hz / -7 dB、
+dry low-pass 3,200 Hz、wet high-pass 220 Hz、wet low-pass 2,400 Hz、
+1.65秒残響、threshold -12 dBの圧縮を使う。
 これらは数学層の同一表示ではなく、調波構造を聴覚へ写すための音響演出である。
 
 反復イベント表はTypeScriptで一度だけ生成し、描画とAudioWorkletへ同じ
@@ -333,21 +333,9 @@ Chapter 2は長方形領域
 厳密数学描画、詩的造形、通常アプリの章切替、詳細パネルを実装している。
 通常URLでChapter 1と往復でき、`patternRegistry`へ公開済み章として登録する。
 ヘッドホンとMac内蔵スピーカーの最終試聴は、公開状態と分けた手動QA事項として残す。
-段階1の完全な仕様は
-[`docs/superpowers/specs/2026-06-13-spectral-cathedral-mathematical-specification-design.md`](superpowers/specs/2026-06-13-spectral-cathedral-mathematical-specification-design.md)
-を、音響実装の完全な仕様は
-[`docs/superpowers/specs/2026-06-13-spectral-cathedral-audio-design.md`](superpowers/specs/2026-06-13-spectral-cathedral-audio-design.md)
-を、厳密描画の実装仕様は
-[`docs/superpowers/specs/2026-06-13-spectral-cathedral-strict-rendering-design.md`](superpowers/specs/2026-06-13-spectral-cathedral-strict-rendering-design.md)
-を、作品化の実装仕様は
-[`docs/superpowers/specs/2026-06-14-spectral-cathedral-poetic-production-design.md`](superpowers/specs/2026-06-14-spectral-cathedral-poetic-production-design.md)
-を、統合preview時点の公開保留条件は履歴資料
-[`docs/superpowers/specs/2026-06-14-spectral-cathedral-integration-publication-design.md`](superpowers/specs/2026-06-14-spectral-cathedral-integration-publication-design.md)
-を、通常公開条件は
-[`docs/superpowers/specs/2026-06-18-spectral-cathedral-publication-design.md`](superpowers/specs/2026-06-18-spectral-cathedral-publication-design.md)
-を参照する。音響、詩的造形、総合演出の現行仕様は
-[`docs/superpowers/specs/2026-06-20-spectral-cathedral-dramaturgy-redesign-design.md`](superpowers/specs/2026-06-20-spectral-cathedral-dramaturgy-redesign-design.md)
-を正本とし、2026年6月13日・14日の疎な20イベント構成を置き換える。
+2026年6月までの詳細設計と実装計画は、現行仕様と矛盾する旧音響案を含むため
+本文からは参照しない。履歴上の位置付けだけを
+[`docs/superpowers/README.md`](superpowers/README.md)に残す。
 以下の厳密数学定義は再設計でも変更しない。
 
 正規直交固有関数と固有値を
@@ -504,8 +492,8 @@ WebGL2の粒子は同じ個数と基礎配列を維持しつつ、実ブラウ�
 ### Chapter 2の反復スコア
 
 音楽スコアは72 BPM、5/4拍子、18小節であり、1拍は\(5/6\)秒、
-1小節は\(25/6\)秒、周期は75秒である。1拍を2分割した8分音符格子を使い、
-5幕を
+1小節は\(25/6\)秒、周期は75秒である。1拍を4分割した16分音符格子を使い、
+全小節の20 slotすべてへ発音を置く。5幕は
 
 ```text
 illumination: 0-2小節
@@ -515,15 +503,11 @@ resonance:   11-14小節
 afterglow:   15-17小節
 ```
 
-とする。小節ごとのイベント数は
-
-```text
-2, 3, 3, 4, 5, 4, 5, 6, 6, 7, 7, 8, 9, 8, 9, 4, 3, 2
-```
-
-であり、周期内に95イベントを置く。最密幕の小節平均イベント数は最疎幕の
-2.5倍以上である。発音gestureは`toll`、`answer`、`cascade`、`pulse`、
-`choir`の5種類であり、同じgestureを5イベント以上連続させない。
+とする。周期内イベント数は18小節×20 slotの360イベントである。密度で展開せず、
+参照動画のような一定リズムを優先し、幕ごとに基礎ゲイン、brightness、wet send、
+stereo spread、gesture配列、選択モードを変える。発音gestureは`toll`、
+`answer`、`cascade`、`pulse`、`choir`の5種類であるが、音色上はすべて短い
+中域ピコ粒へ丸める。
 
 イベント表は周期内時刻、幕、gesture、モードID、基礎ゲイン、基礎brightness、
 wet send、stereo spread、全モード共通register倍率だけを保持する。
@@ -538,10 +522,12 @@ t_e^{\mathrm{abs}}=75q+t_e
 
 ### Chapter 2のソニフィケーション
 
-各数学モードを鐘音へ写す基礎周波数、利得、開始位相を
+各数学モードを短い電子粒へ写す基礎周波数、利得、開始位相を
 
 \[
-f_{mn}=440\sqrt{\lambda_{mn}/3},
+f_{mn}=420+
+\frac{\sqrt{\lambda_{mn}}-\sqrt{\lambda_{\min}}}
+{\sqrt{\lambda_{\max}}-\sqrt{\lambda_{\min}}}(980-420)\ \mathrm{Hz},
 \qquad
 g_{mn}=\frac{|a_{mn}|}{\max|a|},
 \]
@@ -555,20 +541,16 @@ g_{mn}=\frac{|a_{mn}|}{\max|a|},
 \end{cases}
 \]
 
-とする。参照動画に近い中域粒状連続性をQA基準に加えたため、176 Hz基準と
-`0.5` registerによる88 Hz近辺の反復は使用しない。第\(r\)部分音は
-\(r=1,\ldots,8\)、重みは\(r^{-1.85}\)に、260 Hz基準の緩い低域カット
-\[
-h(f)=\frac{(f/260)^2}{\sqrt{1+(f/260)^4}}
-\]
-を掛ける。イベントは全モード共通のregister倍率\(R\in\{1,1.5,2\}\)を持つ。
+とする。参照動画に近い一定した中域粒状連続性をQA基準にしたため、低い
+register、鐘の高次部分音、木質アタック、sparkle尾は使用しない。発音に使う部分音は
+単一の基音\(r=1\)だけであり、イベントは全モード共通のregister倍率\(R=1\)を持つ。
 左右デチューン比を\(d=0.00125\)とし、
 
 \[
 \max\left(Rrf_{mn}(1-d),Rrf_{mn}(1+d)\right)<0.45F_s
 \]
 
-を満たさない部分音は左右とも除外する。イベントごとには再正規化せず、95イベントで
+を満たさない部分音は左右とも除外する。イベントごとには再正規化せず、360イベントで
 最大の係数利得和、基礎ゲイン、部分音重み積を全イベント共通の正規化定数として使う。
 1音は中央、複数音はイベントの`stereoSpread`内へ等間隔に置き、
 
@@ -589,30 +571,28 @@ v_{mn}(t_e)=|\sin(c_C\sqrt{\lambda_{mn}}t_e)|
 \]
 
 とする。\(d_{mn}\)は減衰時間とwet send、\(v_{mn}\)は部分音brightnessと
-木質アタックへ有界に写す。基礎周波数、係数比、符号位相は変更しない。
+丸いアタックへ有界に写す。現在の公開DSPでは単一部分音のため、brightnessは
+高次部分音を増やさず、包絡とwet sendの微小変化としてだけ働く。基礎周波数、
+係数比、符号位相は変更しない。
 
-鐘包絡とsubgrainはgestureごとに異なる。subgrainはcarrierを再始動せず、
+ピコ粒の包絡とsubgrainはgestureごとに異なる。subgrainはcarrierを再始動せず、
 絶対時刻carrierへ掛ける有限包絡である。
 
-| gesture | attack | 主減衰 | 終了 | subgrain offset秒 | subgrain gain |
-| --- | ---: | ---: | ---: | --- | --- |
-| toll | 3 ms | 320 ms | 1.8秒 | `[0,0.23,0.46,0.69,0.92,1.15]` | `[1,0.62,0.48,0.36,0.26,0.18]` |
-| answer | 2.5 ms | 180 ms | 0.9秒 | `[0,0.23,0.46]` | `[1,0.58,0.34]` |
-| cascade | 2 ms | 90 ms | 0.56秒 | `[0,0.19,0.38]` | `[1,0.76,0.58]` |
-| pulse | 1.5 ms | 65 ms | 0.37秒 | `[0,0.21]` | `[1,0.72]` |
-| choir | 5 ms | 400 ms | 2.2秒 | `[0,0.27,0.54]` | `[1,0.56,0.34]` |
+| gesture | attack | 主減衰 | fade開始 | 終了 | subgrain gain |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| toll | 8 ms | 55 ms | 140 ms | 165 ms | 0.86 |
+| answer | 8 ms | 58 ms | 140 ms | 165 ms | 0.92 |
+| cascade | 6 ms | 52 ms | 135 ms | 160 ms | 1.00 |
+| pulse | 6 ms | 50 ms | 135 ms | 160 ms | 1.00 |
+| choir | 9 ms | 62 ms | 145 ms | 170 ms | 0.80 |
 
 各包絡は終了30 ms前から余弦fadeし、終了時刻以後は厳密に0を返す。
-集団的な連続性は、最大3.0秒までの高域sparkle tailを重ねて作る。
+集団的な連続性は、短い粒を16分格子で常時重ね、低いwet sendで隙間を埋めて作る。
 
-発音開始にはgestureごとに強さの異なる40 msの決定的な木質アタックを加える。score内イベント番号、
-モードID、8成分の番号から32 bit整数ハッシュで700 Hz以上3,600 Hz以下の
-周波数と開始位相を作る。これは数学モードを表す追加固有成分ではなく、
-ソニフィケーション層の音色処理である。
-
-Chapter 2のWeb Audioグラフはdry high-pass 160 Hz、high-shelf 3,600 Hz /
-+1 dB、low-pass 8,500 Hz、wet high-pass 240 Hz、1.6秒の残響、
-threshold -14 dBのコンプレッサーを使う。コンプレッサー後には
+Chapter 2のWeb Audioグラフはdry high-pass 220 Hz、high-shelf 1,100 Hz /
+-24 dB、dry low-pass 1,180 Hz、wet high-pass 220 Hz、wet low-pass 950 Hz、
+0.75秒の残響、
+threshold -16 dBのコンプレッサーを使う。コンプレッサー後には
 4倍oversamplingのhard-clampを置き、出力を原則として\(-1\) dBFS以下へ保護する。
 この音声は波動場の無加工再生ではなく、固有値、係数比、符号位相、
 絶対数学時刻を保った音楽的ソニフィケーションである。
@@ -688,28 +668,31 @@ piecewise-linear contourとして抽出する。Dirichlet境界は一つの閉�
 
 ### Chapter 3の反復スコアとソニフィケーション
 
-テンポは4分音符68 BPM、1小節は4拍を8ステップへ分ける。
-16小節の周期は\(960/17=56.470588\ldots\)秒で、幕ごとにslotと密度を変え、
-合計78イベントを5幕へ置く。
+テンポは4分音符68 BPM、1小節は4拍を16分音符16 slotへ分ける。
+16小節の周期は\(960/17=56.470588\ldots\)秒で、全小節の16 slotすべてへ
+発音を置き、合計256イベントを5幕へ置く。密度は一定に保ち、幕ごとに基礎ゲイン、
+wet send、定位幅、連続制御depth、gesture配列、選択モードを変える。
 
 | 幕 | 小節 | slot | イベント数 | 部分音 | 主gesture |
 | --- | ---: | --- | ---: | ---: | --- |
-| breath | 0–2 | `[0,3,5,6]` | 12 | 3 | breath / call |
-| antiphon | 3–5 | `[0,2,3,6,7]` | 15 | 4 | call / answer |
-| inversion | 6–9 | `[0,1,3,4,6]` | 20 | 5 | turn / answer |
-| interweave | 10–13 | `[0,1,2,4,5,7]` | 24 | 6 | braid / converge |
-| confluence | 14 | `[0,3,6]` | 3 | 4 | converge |
-| confluence | 15 | `[0,2,5,7]` | 4 | 4 | answer / converge |
+| breath | 0–2 | `0..15` | 48 | 1 | call / answer / breath |
+| antiphon | 3–5 | `0..15` | 48 | 1 | call / answer / turn |
+| inversion | 6–9 | `0..15` | 64 | 1 | turn / call / answer |
+| interweave | 10–13 | `0..15` | 64 | 1 | braid / turn / answer |
+| confluence | 14–15 | `0..15` | 32 | 1 | converge / answer / call |
 
 前周期の余韻は絶対イベント時刻で評価する。基礎周波数と係数利得は
 
 \[
-f_{mn}=196\sqrt{\lambda_{mn}},\qquad
+f_{mn}=420+
+\frac{\sqrt{\lambda_{mn}}-\sqrt{\lambda_{\min}}}
+{\sqrt{\lambda_{\max}}-\sqrt{\lambda_{\min}}}(920-420)\ \mathrm{Hz},
+\qquad
 g_{mn}=\frac{b_{mn}}{b_{10}}=\frac{2}{1+\lambda_{mn}}
 \]
 
 である。\(n=0\)は単独声部、\(n>0\)は0と\(-\pi/2\)の位相差を持つ二声部にする。
-各部分音のcarrierはevent ageで再始動せず、絶対時刻\(t\)で
+DSPで採用するcarrierはevent ageで再始動せず、絶対時刻\(t\)で
 
 \[
 \cos\left(2\pi f_{mn,r}^{L/R}t+r(0.14\sqrt{\lambda_{mn}}t+q\pi/2)\right),
@@ -718,22 +701,23 @@ g_{mn}=\frac{b_{mn}}{b_{10}}=\frac{2}{1+\lambda_{mn}}
 
 と評価する。観察lane \(y_i=(i-1)\pi/6\)の位相
 \(\phi_i(t)=n_iy_i-0.14\sqrt{\lambda_i}t\)から、\(|\cos\phi_i|\)を振幅、
-\(|\sin\phi_i|\)を高次部分音の明度、\(\sin\phi_i\)を定位へ連続写像する。
-共通register倍率、母音フォルマント、短い呼吸包絡、二次mora、定位、EQ、圧縮、
-残響を加えるが、個々の発音を有限時間で減衰させながら異なる声部を重ねる。
-`call`、`answer`、`turn`、`braid`、`converge`などのmoraはcarrierを再始動しない。
-絶対時刻carrierへ掛ける短い振幅、formant、breath包絡であり、数学時刻とモード位相は
-score周期でリセットしない。360 Hz基準の緩い低域カットと高域air tailにより、
-20 ms RMSで100 msを超える長い低レベル区間を作らない。
+\(\sin\phi_i\)を定位へ連続写像する。高次部分音の明度、母音フォルマント、
+breath sourceは不快な高域と息成分を避けるため公開DSPでは0にし、単一部分音の
+短い電子粒、定位、EQ、圧縮、低い残響だけを加える。
+`call`、`answer`、`turn`、`braid`、`converge`などのgestureはcarrierを
+再始動しない短い包絡差であり、数学時刻とモード位相はscore周期でリセットしない。
+最大イベント長は0.19秒で、16分格子上の重なりと低いwet sendにより、長い無音断絶を
+作らない。
 全周期stereo RMSはChapter 2の0.85倍以上1.12倍以下、代表10秒区間は0.82倍以上
 1.18倍以下とする。
-固有振動数比、係数比、奇偶条件、quadrature関係は変更しない。同時発音は単一モード、
-同一固有値対`[2,3]`・`[5,6]`、または固有振動数比1:3の`[1,4]`に限定する。
-幕ごとの3–6部分音と4成分の決定的breath sourceは、左右デチューン後の実周波数が
-\(0.45F_s\)未満の場合だけ生成する。AudioWorklet設定時に周波数、定位、フォルマント
-重みを事前計算し、標本ループでは時間窓内のeventだけを評価する。
-Web Audioグラフはdry high-pass 155 Hz、high-shelf 4,800 Hz / -1 dB、
-low-pass 7,600 Hz、wet high-pass 260 Hz、2.6秒残響、threshold -16 dBの圧縮、
+固有値順序、係数比、奇偶条件、quadrature関係は変更しない。同時発音は単一モードに
+限定する。DSPで採用する部分音は\(r=1\)のみで、register倍率は常に1である。
+左右デチューン後の実周波数が\(0.45F_s\)未満の場合だけ生成する。
+AudioWorklet設定時に周波数、定位、フォルマント重みを事前計算し、
+標本ループでは時間窓内のeventだけを評価する。
+Web Audioグラフはdry high-pass 220 Hz、high-shelf 1,050 Hz / -24 dB、
+dry low-pass 1,120 Hz、wet high-pass 220 Hz、wet low-pass 900 Hz、
+0.65秒残響、threshold -16 dBの圧縮、
 4倍oversamplingの-1 dBFS limiterを使う。
 
 息の粒子、六本の声部リボン、継ぎ目のシアン残光は詩的造形である。各発音モードの

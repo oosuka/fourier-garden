@@ -65,18 +65,20 @@ export interface SonificationComponent extends AudioPartial {
 export type WorkletConfigurationMessage = WorkletConfigureMessage<ResidueBloomWorkletProgram>;
 
 export const RESIDUE_BLOOM_AUDIO_GRAPH: AudioGraphPreset = {
-  dryHighPassHz: 125,
+  dryHighPassHz: 170,
   dryHighPassQ: 0.45,
-  dryHighShelfHz: 3_200,
-  dryHighShelfGainDb: -2.2,
-  dryLowPassHz: 4_600,
+  dryHighShelfHz: 1_800,
+  dryHighShelfGainDb: -7,
+  dryLowPassHz: 3_200,
   dryLowPassQ: 0.3,
   dryGain: 0.88,
-  wetHighPassHz: 180,
+  wetHighPassHz: 220,
   wetHighPassQ: 0.45,
-  wetGain: 0.16,
-  roomSeconds: 1.9,
-  roomDecay: 3.4,
+  wetLowPassHz: 2_400,
+  wetLowPassQ: 0.3,
+  wetGain: 0.18,
+  roomSeconds: 1.65,
+  roomDecay: 3,
   compressor: {
     thresholdDb: -12,
     kneeDb: 12,
@@ -212,8 +214,8 @@ export function renderRhythmicSeries({
       frame.event.baseGain *
       frame.event.accent *
       score.definition.outputGain;
-    const minimumCutoffHz = 1_800;
-    const maximumCutoffHz = Math.min(6_200, sampleRate * 0.18);
+    const minimumCutoffHz = 720;
+    const maximumCutoffHz = Math.min(2_600, sampleRate * 0.18);
     const cutoffHz = minimumCutoffHz + (maximumCutoffHz - minimumCutoffHz) * frame.event.brightness;
     const filterCoefficient = 1 - Math.exp((-2 * Math.PI * cutoffHz) / sampleRate);
     filterState += (dryValue - filterState) * filterCoefficient;

@@ -87,124 +87,129 @@ interface MobiusChoirRenderOptions {
 }
 
 const LIMITER_CEILING = 10 ** (-1 / 20);
-const MOBIUS_CHOIR_NORMALIZATION_COMPENSATION = 0.73;
+const MOBIUS_CHOIR_NORMALIZATION_COMPENSATION = 0.86;
 
 export const MOBIUS_CHOIR_SYNTHESIS = {
-  maximumPartials: 6,
-  partialDamping: 1.55,
+  maximumPartials: 1,
+  partialDamping: 8,
   articulations: {
     breath: {
-      attackSeconds: 0.055,
-      decaySeconds: 0.95,
-      fadeStartSeconds: 1.18,
-      endSeconds: 1.35,
-      breathGain: 0.022,
-      moraOffsetsSeconds: [0, 0.24],
-      moraGains: [1, 0.42],
+      attackSeconds: 0.01,
+      decaySeconds: 0.06,
+      fadeStartSeconds: 0.15,
+      endSeconds: 0.175,
+      breathGain: 0,
+      moraOffsetsSeconds: [0],
+      moraGains: [0.82],
     },
     call: {
-      attackSeconds: 0.035,
-      decaySeconds: 0.72,
-      fadeStartSeconds: 1.05,
-      endSeconds: 1.2,
-      breathGain: 0.024,
-      moraOffsetsSeconds: [0, 0.18, 0.36],
-      moraGains: [1, 0.68, 0.42],
+      attackSeconds: 0.008,
+      decaySeconds: 0.054,
+      fadeStartSeconds: 0.145,
+      endSeconds: 0.17,
+      breathGain: 0,
+      moraOffsetsSeconds: [0],
+      moraGains: [1],
     },
     answer: {
-      attackSeconds: 0.04,
-      decaySeconds: 0.76,
-      fadeStartSeconds: 1.12,
-      endSeconds: 1.3,
-      breathGain: 0.024,
-      moraOffsetsSeconds: [0, 0.18, 0.36],
-      moraGains: [1, 0.64, 0.4],
+      attackSeconds: 0.008,
+      decaySeconds: 0.056,
+      fadeStartSeconds: 0.145,
+      endSeconds: 0.17,
+      breathGain: 0,
+      moraOffsetsSeconds: [0],
+      moraGains: [0.94],
     },
     turn: {
-      attackSeconds: 0.03,
-      decaySeconds: 0.62,
-      fadeStartSeconds: 0.92,
-      endSeconds: 1.08,
-      breathGain: 0.03,
-      moraOffsetsSeconds: [0, 0.16, 0.32],
-      moraGains: [1, 0.62, 0.38],
+      attackSeconds: 0.006,
+      decaySeconds: 0.052,
+      fadeStartSeconds: 0.14,
+      endSeconds: 0.165,
+      breathGain: 0,
+      moraOffsetsSeconds: [0],
+      moraGains: [1],
     },
     braid: {
-      attackSeconds: 0.032,
-      decaySeconds: 0.66,
-      fadeStartSeconds: 0.98,
-      endSeconds: 1.16,
-      breathGain: 0.032,
-      moraOffsetsSeconds: [0, 0.18, 0.36],
-      moraGains: [1, 0.66, 0.46],
+      attackSeconds: 0.006,
+      decaySeconds: 0.05,
+      fadeStartSeconds: 0.14,
+      endSeconds: 0.165,
+      breathGain: 0,
+      moraOffsetsSeconds: [0],
+      moraGains: [0.98],
     },
     converge: {
-      attackSeconds: 0.07,
-      decaySeconds: 1.18,
-      fadeStartSeconds: 1.86,
-      endSeconds: 2.1,
-      breathGain: 0.026,
-      moraOffsetsSeconds: [0, 0.24, 0.48],
-      moraGains: [1, 0.5, 0.3],
+      attackSeconds: 0.011,
+      decaySeconds: 0.062,
+      fadeStartSeconds: 0.15,
+      endSeconds: 0.18,
+      breathGain: 0,
+      moraOffsetsSeconds: [0],
+      moraGains: [0.84],
     },
   },
   formants: {
     u: [
-      { frequencyHz: 350, bandwidthHz: 100, amplitude: 0.62 },
-      { frequencyHz: 900, bandwidthHz: 140, amplitude: 0.78 },
-      { frequencyHz: 2_200, bandwidthHz: 260, amplitude: 0.22 },
+      { frequencyHz: 520, bandwidthHz: 600, amplitude: 0 },
+      { frequencyHz: 760, bandwidthHz: 600, amplitude: 0 },
+      { frequencyHz: 980, bandwidthHz: 600, amplitude: 0 },
     ],
     o: [
-      { frequencyHz: 450, bandwidthHz: 110, amplitude: 0.68 },
-      { frequencyHz: 800, bandwidthHz: 130, amplitude: 0.82 },
-      { frequencyHz: 2_830, bandwidthHz: 300, amplitude: 0.2 },
+      { frequencyHz: 520, bandwidthHz: 600, amplitude: 0 },
+      { frequencyHz: 760, bandwidthHz: 600, amplitude: 0 },
+      { frequencyHz: 980, bandwidthHz: 600, amplitude: 0 },
     ],
     e: [
-      { frequencyHz: 500, bandwidthHz: 110, amplitude: 0.86 },
-      { frequencyHz: 1_700, bandwidthHz: 180, amplitude: 1 },
-      { frequencyHz: 2_500, bandwidthHz: 300, amplitude: 0.2 },
+      { frequencyHz: 520, bandwidthHz: 600, amplitude: 0 },
+      { frequencyHz: 760, bandwidthHz: 600, amplitude: 0 },
+      { frequencyHz: 980, bandwidthHz: 600, amplitude: 0 },
     ],
     a: [
-      { frequencyHz: 800, bandwidthHz: 140, amplitude: 1 },
-      { frequencyHz: 1_150, bandwidthHz: 170, amplitude: 0.86 },
-      { frequencyHz: 2_900, bandwidthHz: 320, amplitude: 0.18 },
+      { frequencyHz: 520, bandwidthHz: 600, amplitude: 0 },
+      { frequencyHz: 760, bandwidthHz: 600, amplitude: 0 },
+      { frequencyHz: 980, bandwidthHz: 600, amplitude: 0 },
     ],
   },
-  formantFloor: 0.16,
-  maximumEventSeconds: 2.1,
-  breathSeconds: 0.2,
-  breathMinimumHz: 1_200,
-  breathMaximumHz: 5_000,
-  breathComponentCount: 4,
+  formantFloor: 1,
+  maximumEventSeconds: 0.19,
+  breathSeconds: 0.04,
+  breathMinimumHz: 420,
+  breathMaximumHz: 920,
+  breathComponentCount: 1,
   stereoDetuneRatio: 0.00125,
   antiAliasRatio: 0.9,
-  outputGain: 0.551,
+  outputGain: 0.42,
 } as const satisfies MobiusChoirSynthesisPreset;
 
 export const MOBIUS_CHOIR_AUDIO_GRAPH: AudioGraphPreset = {
-  dryHighPassHz: 155,
+  dryHighPassHz: 220,
   dryHighPassQ: 0.45,
-  dryHighShelfHz: 4_800,
-  dryHighShelfGainDb: -1,
-  dryLowPassHz: 7_600,
-  dryLowPassQ: 0.3,
-  dryGain: 0.9,
-  wetHighPassHz: 260,
+  dryHighShelfHz: 1_050,
+  dryHighShelfGainDb: -24,
+  dryLowPassHz: 1_120,
+  dryLowPassQ: 0.25,
+  dryGain: 0.92,
+  wetHighPassHz: 220,
   wetHighPassQ: 0.45,
-  wetGain: 0.22,
-  roomSeconds: 2.6,
-  roomDecay: 3.8,
+  wetLowPassHz: 900,
+  wetLowPassQ: 0.25,
+  wetGain: 0.025,
+  roomSeconds: 0.65,
+  roomDecay: 1.6,
   compressor: {
     thresholdDb: -16,
     kneeDb: 12,
     ratio: 3,
     attackSeconds: 0.008,
-    releaseSeconds: 0.26,
+    releaseSeconds: 0.18,
   },
   limiterCeilingDbfs: -1,
 };
 
 export function createMobiusChoirAudioModes(): MobiusChoirAudioMode[] {
+  const roots = MOBIUS_CHOIR_DEFINITION.modes.map((mode) => Math.sqrt(mode.eigenvalue));
+  const minimumRoot = Math.min(...roots);
+  const maximumRoot = Math.max(...roots);
   return MOBIUS_CHOIR_DEFINITION.modes.map((mode) => ({
     id: mode.id,
     m: mode.m,
@@ -212,7 +217,9 @@ export function createMobiusChoirAudioModes(): MobiusChoirAudioMode[] {
     eigenvalue: mode.eigenvalue,
     coefficient: mode.coefficient,
     voiceKind: mode.voiceKind,
-    baseFrequencyHz: 196 * Math.sqrt(mode.eigenvalue),
+    baseFrequencyHz:
+      420 +
+      ((Math.sqrt(mode.eigenvalue) - minimumRoot) / (maximumRoot - minimumRoot)) * (920 - 420),
     normalizedGain: 2 / (1 + mode.eigenvalue),
     modalAngularFrequency: MOBIUS_CHOIR_DEFINITION.waveTimeScale * Math.sqrt(mode.eigenvalue),
   }));
@@ -477,8 +484,8 @@ export function createMobiusChoirAudioProgram(): AudioEngineProgram<MobiusChoirW
 export function validateMobiusChoirWorkletProgram(program: MobiusChoirWorkletProgram): void {
   if (program.kind !== "mobius-choir") throw new Error("Möbius Choir program kind is invalid");
   if (program.modes.length !== 6) throw new Error("Möbius Choir program must contain 6 modes");
-  if (program.score.events.length !== 78) {
-    throw new Error("Möbius Choir program must contain 78 events");
+  if (program.score.events.length !== 256) {
+    throw new Error("Möbius Choir program must contain 256 events");
   }
   if (Math.abs(program.score.cycleSeconds - 960 / 17) > 1e-12) {
     throw new Error("Möbius Choir cycle is invalid");
@@ -518,17 +525,21 @@ export function validateMobiusChoirWorkletProgram(program: MobiusChoirWorkletPro
     if (
       !Number.isInteger(event.partialCount) ||
       event.partialCount < 1 ||
-      event.partialCount > program.synthesis.maximumPartials ||
+      event.partialCount > 1 ||
       ![event.amplitudeMotionDepth, event.brightnessMotionDepth, event.panMotion].every(
         (value) => Number.isFinite(value) && value >= 0 && value <= 1,
       ) ||
-      ![1, 4 / 3, 3 / 2].includes(event.registerMultiplier)
+      event.registerMultiplier !== 1
     ) {
       throw new Error("Möbius Choir event expression is invalid");
     }
   }
-  if (program.synthesis.maximumPartials !== 6) {
-    throw new Error("Möbius Choir synthesis must contain at most 6 partials");
+  if (
+    !Number.isInteger(program.synthesis.maximumPartials) ||
+    program.synthesis.maximumPartials < 1 ||
+    program.synthesis.maximumPartials > 1
+  ) {
+    throw new Error("Möbius Choir piko synthesis must contain exactly 1 partial");
   }
   for (const articulation of Object.values(program.synthesis.articulations)) {
     if (
@@ -642,7 +653,9 @@ export function renderMobiusChoirSample(
     }
 
     const airEnvelope =
-      getMobiusContinuityEnvelope(ageSeconds, runtime.maximumEventSeconds) * event.breathGain * 1.8;
+      getMobiusContinuityEnvelope(ageSeconds, runtime.maximumEventSeconds) *
+      event.breathGain *
+      0.035;
     if (airEnvelope > 0) {
       for (const voice of event.voices) {
         const air = renderRuntimeAir(voice, absoluteTimeSeconds);

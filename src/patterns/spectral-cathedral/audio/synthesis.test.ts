@@ -65,6 +65,9 @@ describe("Spectral Cathedral audio mapping", () => {
     const maximumCoefficient = Math.max(
       ...SPECTRAL_CATHEDRAL_DEFINITION.modes.map((mode) => Math.abs(mode.coefficient)),
     );
+    const roots = SPECTRAL_CATHEDRAL_DEFINITION.modes.map((mode) => Math.sqrt(mode.eigenvalue));
+    const minimumRoot = Math.min(...roots);
+    const maximumRoot = Math.max(...roots);
 
     expect(modes).toHaveLength(12);
     for (const [index, mode] of modes.entries()) {
@@ -73,7 +76,10 @@ describe("Spectral Cathedral audio mapping", () => {
       expect(mode.id).toBe(source.id);
       expect(mode.eigenvalue).toBe(source.eigenvalue);
       expect(mode.coefficient).toBe(source.coefficient);
-      expect(mode.baseFrequencyHz).toBeCloseTo(440 * Math.sqrt(source.eigenvalue / 3), 12);
+      expect(mode.baseFrequencyHz).toBeCloseTo(
+        420 + ((Math.sqrt(source.eigenvalue) - minimumRoot) / (maximumRoot - minimumRoot)) * 560,
+        12,
+      );
       expect(mode.normalizedGain).toBeCloseTo(
         Math.abs(source.coefficient) / maximumCoefficient,
         12,
@@ -86,65 +92,65 @@ describe("Spectral Cathedral audio mapping", () => {
     }
   });
 
-  it("uses the approved bell synthesis constants", () => {
+  it("uses the approved piko synthesis constants", () => {
     expect(SPECTRAL_CATHEDRAL_SYNTHESIS).toEqual({
-      maximumPartials: 8,
-      partialDamping: 1.85,
+      maximumPartials: 1,
+      partialDamping: 8,
       articulations: {
         toll: {
-          attackSeconds: 0.003,
-          decaySeconds: 0.32,
-          fadeStartSeconds: 1.77,
-          endSeconds: 1.8,
-          woodAttackGain: 0.045,
-          subgrainOffsetsSeconds: [0, 0.23, 0.46, 0.69, 0.92, 1.15],
-          subgrainGains: [1, 0.62, 0.48, 0.36, 0.26, 0.18],
+          attackSeconds: 0.008,
+          decaySeconds: 0.055,
+          fadeStartSeconds: 0.14,
+          endSeconds: 0.165,
+          woodAttackGain: 0,
+          subgrainOffsetsSeconds: [0],
+          subgrainGains: [0.86],
         },
         answer: {
-          attackSeconds: 0.0025,
-          decaySeconds: 0.18,
-          fadeStartSeconds: 0.87,
-          endSeconds: 0.9,
-          woodAttackGain: 0.06,
-          subgrainOffsetsSeconds: [0, 0.23, 0.46],
-          subgrainGains: [1, 0.58, 0.34],
+          attackSeconds: 0.008,
+          decaySeconds: 0.058,
+          fadeStartSeconds: 0.14,
+          endSeconds: 0.165,
+          woodAttackGain: 0,
+          subgrainOffsetsSeconds: [0],
+          subgrainGains: [0.92],
         },
         cascade: {
-          attackSeconds: 0.002,
-          decaySeconds: 0.09,
-          fadeStartSeconds: 0.53,
-          endSeconds: 0.56,
-          woodAttackGain: 0.16,
-          subgrainOffsetsSeconds: [0, 0.19, 0.38],
-          subgrainGains: [1, 0.76, 0.58],
+          attackSeconds: 0.006,
+          decaySeconds: 0.052,
+          fadeStartSeconds: 0.135,
+          endSeconds: 0.16,
+          woodAttackGain: 0,
+          subgrainOffsetsSeconds: [0],
+          subgrainGains: [1],
         },
         pulse: {
-          attackSeconds: 0.0015,
-          decaySeconds: 0.065,
-          fadeStartSeconds: 0.34,
-          endSeconds: 0.37,
-          woodAttackGain: 0.22,
-          subgrainOffsetsSeconds: [0, 0.21],
-          subgrainGains: [1, 0.72],
+          attackSeconds: 0.006,
+          decaySeconds: 0.05,
+          fadeStartSeconds: 0.135,
+          endSeconds: 0.16,
+          woodAttackGain: 0,
+          subgrainOffsetsSeconds: [0],
+          subgrainGains: [1],
         },
         choir: {
-          attackSeconds: 0.005,
-          decaySeconds: 0.4,
-          fadeStartSeconds: 2.17,
-          endSeconds: 2.2,
-          woodAttackGain: 0.04,
-          subgrainOffsetsSeconds: [0, 0.27, 0.54],
-          subgrainGains: [1, 0.56, 0.34],
+          attackSeconds: 0.009,
+          decaySeconds: 0.062,
+          fadeStartSeconds: 0.145,
+          endSeconds: 0.17,
+          woodAttackGain: 0,
+          subgrainOffsetsSeconds: [0],
+          subgrainGains: [0.8],
         },
       },
-      maximumEventSeconds: 3,
+      maximumEventSeconds: 0.18,
       woodAttackSeconds: 0.04,
-      woodMinimumHz: 700,
-      woodMaximumHz: 3_600,
-      woodComponentCount: 8,
+      woodMinimumHz: 420,
+      woodMaximumHz: 980,
+      woodComponentCount: 1,
       stereoDetuneRatio: 0.00125,
       antiAliasRatio: 0.9,
-      outputGain: 1.065,
+      outputGain: 0.52,
     });
   });
 
@@ -159,12 +165,8 @@ describe("Spectral Cathedral audio mapping", () => {
         expect(articulation.subgrainGains[index]).toBeLessThanOrEqual(1);
       }
     }
-    expect(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations.cascade.subgrainOffsetsSeconds).toEqual([
-      0, 0.19, 0.38,
-    ]);
-    expect(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations.pulse.subgrainOffsetsSeconds).toEqual([
-      0, 0.21,
-    ]);
+    expect(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations.cascade.subgrainOffsetsSeconds).toEqual([0]);
+    expect(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations.pulse.subgrainOffsetsSeconds).toEqual([0]);
   });
 
   it("derives modal expression from absolute event time", () => {
@@ -181,17 +183,9 @@ describe("Spectral Cathedral audio mapping", () => {
     );
   });
 
-  it("keeps one register multiplier for every mode in a chord event", () => {
-    const event = SPECTRAL_CATHEDRAL_SCORE.events.find(
-      (candidate) => candidate.modeIds.length > 2,
-    )!;
-    const modes = createSpectralCathedralAudioModes().filter((mode) =>
-      event.modeIds.includes(mode.id),
-    );
-    const frequencies = modes.map((mode) => mode.baseFrequencyHz * event.registerMultiplier);
-
-    expect(frequencies[1]! / frequencies[0]!).toBeCloseTo(
-      Math.sqrt(modes[1]!.eigenvalue / modes[0]!.eigenvalue),
+  it("uses single-mode piko events instead of chordal bell events", () => {
+    expect(SPECTRAL_CATHEDRAL_SCORE.events.every((event) => event.modeIds.length === 1)).toBe(true);
+    expect(new Set(SPECTRAL_CATHEDRAL_SCORE.events.flatMap((event) => event.modeIds)).size).toBe(
       12,
     );
   });
@@ -207,12 +201,21 @@ describe("Spectral Cathedral audio mapping", () => {
       ),
     );
 
-    expect(minimumFundamental).toBeGreaterThanOrEqual(440);
+    const maximumFundamental = Math.max(
+      ...SPECTRAL_CATHEDRAL_SCORE.events.flatMap((event) =>
+        event.modeIds.map(
+          (modeId) => modesById.get(modeId)!.baseFrequencyHz * event.registerMultiplier,
+        ),
+      ),
+    );
+
+    expect(minimumFundamental).toBeGreaterThanOrEqual(420);
+    expect(maximumFundamental).toBeLessThanOrEqual(980);
   });
 
   it("rejects a partial from both channels when the higher detuned side reaches the limit", () => {
     const sampleRate = 48_000;
-    const partial = 8;
+    const partial = 1;
     const limitHz = sampleRate * 0.5 * SPECTRAL_CATHEDRAL_SYNTHESIS.antiAliasRatio;
     const baseFrequencyHz =
       limitHz / (partial * (1 + SPECTRAL_CATHEDRAL_SYNTHESIS.stereoDetuneRatio));
@@ -222,12 +225,12 @@ describe("Spectral Cathedral audio mapping", () => {
     };
     const partials = getSpectralCathedralPartials(mode, sampleRate, SPECTRAL_CATHEDRAL_SYNTHESIS);
 
-    expect(partials[6]?.included).toBe(true);
-    expect(partials[7]).toMatchObject({
-      partial: 8,
+    expect(partials).toHaveLength(1);
+    expect(partials[0]).toMatchObject({
+      partial: 1,
       included: false,
     });
-    expect(partials[7]?.rightFrequencyHz).toBeCloseTo(limitHz, 9);
+    expect(partials[0]?.rightFrequencyHz).toBeCloseTo(limitHz, 9);
   });
 
   it.each([
@@ -247,8 +250,8 @@ describe("Spectral Cathedral audio mapping", () => {
   });
 });
 
-describe("Spectral Cathedral reference DSP", () => {
-  it("keeps the strongest bell onset near Residue Bloom without exceeding its raw peak", () => {
+describe("Spectral Cathedral piko reference DSP", () => {
+  it("keeps the strongest piko onset near Residue Bloom without exceeding its raw peak", () => {
     const sampleRate = 48_000;
     const durationSeconds = 0.1;
     const residueBloomScore = buildMusicalScoreProgram(
@@ -272,7 +275,7 @@ describe("Spectral Cathedral reference DSP", () => {
     });
     const cathedralMetrics = getStereoMetrics(spectralCathedral.left, spectralCathedral.right);
 
-    expect(cathedralMetrics.rms).toBeGreaterThanOrEqual(residueBloom.rms * 0.9);
+    expect(cathedralMetrics.rms).toBeGreaterThanOrEqual(residueBloom.rms * 0.55);
     expect(cathedralMetrics.peak).toBeLessThanOrEqual(residueBloom.peak);
   });
 
@@ -288,11 +291,11 @@ describe("Spectral Cathedral reference DSP", () => {
   });
 
   it.each([
-    ["toll", 2.2],
-    ["answer", 1.1],
-    ["cascade", 0.62],
-    ["pulse", 0.42],
-    ["choir", 2.6],
+    ["toll", 0.165],
+    ["answer", 0.165],
+    ["cascade", 0.16],
+    ["pulse", 0.16],
+    ["choir", 0.17],
   ] as const)("closes the %s envelope at its exact end", (gesture, endSeconds) => {
     expect(getSpectralCathedralBellEnvelope(0, gesture)).toBe(0);
     expect(getSpectralCathedralBellEnvelope(0.01, gesture)).toBeGreaterThan(0);
@@ -305,7 +308,7 @@ describe("Spectral Cathedral reference DSP", () => {
     const ageSeconds = 0.007;
     const first = getSpectralCathedralWoodAttack(0, 1, ageSeconds);
     const repeated = getSpectralCathedralWoodAttack(0, 1, ageSeconds);
-    const nextCycle = getSpectralCathedralWoodAttack(95, 1, ageSeconds);
+    const nextCycle = getSpectralCathedralWoodAttack(360, 1, ageSeconds);
 
     expect(repeated).toBe(first);
     expect(nextCycle).not.toBeCloseTo(first, 12);
@@ -324,8 +327,8 @@ describe("Spectral Cathedral reference DSP", () => {
         ) {
           const wood = getSpectralCathedralWoodComponent(absoluteEventIndex, modeId, component);
 
-          expect(wood.frequencyHz).toBeGreaterThanOrEqual(700);
-          expect(wood.frequencyHz).toBeLessThanOrEqual(3_600);
+          expect(wood.frequencyHz).toBeGreaterThanOrEqual(420);
+          expect(wood.frequencyHz).toBeLessThanOrEqual(980);
           expect(wood.phaseRadians).toBeGreaterThanOrEqual(0);
           expect(wood.phaseRadians).toBeLessThan(Math.PI * 2);
         }
@@ -371,7 +374,7 @@ describe("Spectral Cathedral reference DSP", () => {
     expect(Object.values(nextCycle).every(Number.isFinite)).toBe(true);
   });
 
-  it("keeps a finite high shimmer between primary bell onsets", () => {
+  it("keeps a finite rounded piko tail between primary onsets", () => {
     const program = createSpectralCathedralWorkletProgram();
     const sample = renderSpectralCathedralSample(program, 2.3, 48_000);
     const peak = Math.max(...Object.values(sample).map(Math.abs));
@@ -423,13 +426,64 @@ describe("Spectral Cathedral reference DSP", () => {
     expect(Math.abs(metrics.mean)).toBeLessThan(1e-3);
     expect(bands.below150Hz).toBeLessThanOrEqual(0.03);
     expect(bands.below250Hz).toBeLessThanOrEqual(0.08);
-    expect(bands.below400Hz).toBeLessThanOrEqual(0.22);
+    expect(bands.below400Hz).toBeLessThanOrEqual(0.42);
     expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.55);
-    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.12);
+    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.14);
     expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.18);
     expect(onsets.medianSeconds).toBeLessThanOrEqual(0.34);
-    expect(onsets.pulseScore).toBeGreaterThan(0.18);
+    expect(onsets.pulseScore).toBeGreaterThan(0.14);
   }, 15_000);
+
+  it("keeps the reference-like pulse profile without a sharp upper-band glare", () => {
+    const sampleRate = 12_000;
+    const program = createSpectralCathedralWorkletProgram();
+    const rendered = renderSpectralCathedralStereo({
+      program,
+      startTimeSeconds: 0,
+      durationSeconds: program.score.cycleSeconds,
+      sampleRate,
+    });
+    const bands = getBandEnergyRatios(rendered.left, rendered.right, sampleRate);
+    const onsets = estimateOnsetSpacing(rendered.left, rendered.right, sampleRate);
+
+    expect(bands.between1800HzAnd10000Hz).toBeLessThanOrEqual(0.07);
+    expect(bands.between2400HzAnd10000Hz).toBeLessThanOrEqual(0.018);
+    expect(bands.between3000HzAnd10000Hz).toBeLessThanOrEqual(0.006);
+    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.68);
+    expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.18);
+    expect(onsets.medianSeconds).toBeLessThanOrEqual(0.34);
+    expect(onsets.pulseScore).toBeGreaterThan(0.14);
+  }, 15_000);
+
+  it("renders the renewed piko engine as a narrow-band constant pulse train", () => {
+    const sampleRate = 12_000;
+    const program = createSpectralCathedralWorkletProgram();
+    const rendered = renderSpectralCathedralStereo({
+      program,
+      startTimeSeconds: 0,
+      durationSeconds: program.score.cycleSeconds,
+      sampleRate,
+    });
+    const bands = getBandEnergyRatios(rendered.left, rendered.right, sampleRate);
+    const continuity = getFrameRmsContinuity(
+      rendered.left,
+      rendered.right,
+      sampleRate,
+      0.02,
+      0.0015,
+    );
+    const onsets = estimateOnsetSpacing(rendered.left, rendered.right, sampleRate);
+
+    expect(bands.below250Hz).toBeLessThanOrEqual(0.01);
+    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.92);
+    expect(bands.between1200HzAnd10000Hz).toBeLessThanOrEqual(0.025);
+    expect(bands.between1800HzAnd10000Hz).toBeLessThanOrEqual(0.003);
+    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.14);
+    expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.19);
+    expect(onsets.medianSeconds).toBeLessThanOrEqual(0.23);
+    expect(onsets.p90Seconds - onsets.p10Seconds).toBeLessThanOrEqual(0.06);
+    expect(onsets.pulseScore).toBeGreaterThanOrEqual(0.18);
+  }, 20_000);
 
   it("builds a structured-clone-safe complete worklet program", () => {
     const program = createSpectralCathedralWorkletProgram();
@@ -437,7 +491,7 @@ describe("Spectral Cathedral reference DSP", () => {
 
     expect(() => validateSpectralCathedralWorkletProgram(cloned)).not.toThrow();
     expect(cloned.modes).toHaveLength(12);
-    expect(cloned.score.events).toHaveLength(95);
+    expect(cloned.score.events).toHaveLength(360);
     expect(cloned).toEqual(program);
   });
 
@@ -456,7 +510,7 @@ describe("Spectral Cathedral reference DSP", () => {
         events: program.score.events.slice(0, -1),
       },
     };
-    expect(() => validateSpectralCathedralWorkletProgram(missingEvent)).toThrow(/95 events/i);
+    expect(() => validateSpectralCathedralWorkletProgram(missingEvent)).toThrow(/360 events/i);
 
     const unknownMode = {
       ...program,

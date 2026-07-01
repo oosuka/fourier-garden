@@ -3,7 +3,7 @@ import {
   hashUint32,
   isNonnegativeFinite,
   isPositiveFinite,
-} from "./shared.js?v=11";
+} from "./shared.js?v=15";
 
 function smoothstepMobius(value) {
   const clamped = Math.min(1, Math.max(0, value));
@@ -322,7 +322,7 @@ function accumulateMobiusChoirEvent(
   }
 
   const airEnvelope =
-    getMobiusContinuityEnvelope(ageSeconds, runtime.maximumEventSeconds) * event.breathGain * 1.8;
+    getMobiusContinuityEnvelope(ageSeconds, runtime.maximumEventSeconds) * event.breathGain * 0.035;
   if (airEnvelope > 0) {
     for (let voiceIndex = 0; voiceIndex < event.voices.length; voiceIndex += 1) {
       const voice = event.voices[voiceIndex];
@@ -396,7 +396,7 @@ function validateMobiusChoirProgram(program) {
     score &&
     Math.abs(score.cycleSeconds - 960 / 17) <= 1e-12 &&
     Array.isArray(score.events) &&
-    score.events.length === 78 &&
+    score.events.length === 256 &&
     Array.isArray(modes) &&
     modes.length === 6 &&
     modeIds.size === 6 &&
@@ -421,7 +421,7 @@ function validateMobiusChoirProgram(program) {
         Number.isInteger(event.barIndex) &&
         Number.isInteger(event.slotInBar) &&
         event.slotInBar >= 0 &&
-        event.slotInBar < 8 &&
+        event.slotInBar < 16 &&
         gestures.includes(event.gesture) &&
         Array.isArray(event.modeIds) &&
         event.modeIds.length > 0 &&
@@ -437,20 +437,21 @@ function validateMobiusChoirProgram(program) {
         event.stereoSpread <= 1 &&
         Number.isInteger(event.partialCount) &&
         event.partialCount >= 1 &&
-        event.partialCount <= preset.maximumPartials &&
+        event.partialCount <= 1 &&
         isNonnegativeFinite(event.amplitudeMotionDepth) &&
         event.amplitudeMotionDepth <= 1 &&
         isNonnegativeFinite(event.brightnessMotionDepth) &&
         event.brightnessMotionDepth <= 1 &&
         isNonnegativeFinite(event.panMotion) &&
         event.panMotion <= 1 &&
-        [1, 4 / 3, 3 / 2].includes(event.registerMultiplier) &&
+        event.registerMultiplier === 1 &&
         vowels.includes(event.vowelStart) &&
         vowels.includes(event.vowelEnd),
     ) &&
     preset &&
     Number.isInteger(preset.maximumPartials) &&
-    preset.maximumPartials === 6 &&
+    preset.maximumPartials >= 1 &&
+    preset.maximumPartials <= 1 &&
     isPositiveFinite(preset.partialDamping) &&
     isPositiveFinite(preset.maximumEventSeconds) &&
     isPositiveFinite(preset.breathSeconds) &&

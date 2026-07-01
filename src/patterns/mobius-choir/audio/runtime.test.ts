@@ -7,15 +7,16 @@ describe("Möbius Choir realtime runtime", () => {
   it("precomputes mode, voice, pan, partial, and formant data", () => {
     const runtime = createMobiusChoirRuntime(createMobiusChoirWorkletProgram(), 48_000);
 
-    expect(runtime.events).toHaveLength(78);
+    expect(runtime.events).toHaveLength(256);
     for (const event of runtime.events) {
-      expect(event.partialCount).toBeGreaterThanOrEqual(3);
-      expect(event.partialCount).toBeLessThanOrEqual(6);
+      expect(event.partialCount).toBe(1);
       expect(event.amplitudeMotionDepth).toBeGreaterThan(0);
       expect(event.brightnessMotionDepth).toBeGreaterThan(0);
       expect(event.panMotion).toBeGreaterThan(0);
-      expect(event.mora.length).toBeGreaterThanOrEqual(1);
-      expect(event.mora[0]).toEqual({ offsetSeconds: 0, gain: 1 });
+      expect(event.mora).toHaveLength(1);
+      expect(event.mora[0]?.offsetSeconds).toBe(0);
+      expect(event.mora[0]?.gain).toBeGreaterThan(0);
+      expect(event.mora[0]?.gain).toBeLessThanOrEqual(1);
       for (const mora of event.mora) {
         expect(mora.offsetSeconds).toBeGreaterThanOrEqual(0);
         expect(mora.offsetSeconds).toBeLessThan(event.endSeconds);

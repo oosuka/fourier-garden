@@ -63,7 +63,7 @@ export class AudioEngine {
   private async initializeContext(): Promise<void> {
     const context = new AudioContext({ latencyHint: "interactive" });
     try {
-      await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=11");
+      await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=15");
       if (this.disposed) {
         await context.close();
         return;
@@ -95,6 +95,11 @@ export class AudioEngine {
         type: "highpass",
         frequency: this.program.graph.wetHighPassHz,
         Q: this.program.graph.wetHighPassQ,
+      });
+      const wetLowPass = new BiquadFilterNode(context, {
+        type: "lowpass",
+        frequency: this.program.graph.wetLowPassHz,
+        Q: this.program.graph.wetLowPassQ,
       });
       const wet = new GainNode(context, { gain: this.program.graph.wetGain });
       const convolver = new ConvolverNode(context, {
@@ -128,7 +133,12 @@ export class AudioEngine {
 
       source.connect(highPass, 0, 0).connect(highShelf).connect(softLowPass);
       softLowPass.connect(dry).connect(compressor);
-      source.connect(wetHighPass, 1, 0).connect(convolver).connect(wet).connect(compressor);
+      source
+        .connect(wetHighPass, 1, 0)
+        .connect(convolver)
+        .connect(wetLowPass)
+        .connect(wet)
+        .connect(compressor);
       if (limiter) {
         compressor.connect(limiter).connect(analyser);
       } else {
@@ -146,6 +156,7 @@ export class AudioEngine {
         softLowPass,
         dry,
         wetHighPass,
+        wetLowPass,
         wet,
         convolver,
         compressor,

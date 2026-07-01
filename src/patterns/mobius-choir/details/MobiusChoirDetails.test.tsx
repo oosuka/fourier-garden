@@ -35,7 +35,7 @@ describe("MobiusChoirDetails", () => {
     expect(markup).toContain("6モード");
     expect(markup).toContain("12,288頂点");
     expect(markup).toContain("56.470588秒");
-    expect(markup).toContain("78イベント");
+    expect(markup).toContain("256イベント");
     expect(markup).toContain("非等長埋め込み");
     expect(markup).not.toContain("FFT解析");
   });
