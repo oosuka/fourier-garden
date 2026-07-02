@@ -102,7 +102,7 @@ export const RESIDUE_BLOOM_SCORE_DEFINITION: MusicalScoreDefinition = {
   releaseSeconds: 0.055,
   antiAliasRatio: 0.9,
   stereoDetuneRatio: 0.00125,
-  timbreDamping: 1.4,
+  timbreDamping: 1.85,
   outputGain: 0.5,
   sections: [
     { id: "intro", startBar: 0, barCount: 8 },
@@ -114,43 +114,43 @@ export const RESIDUE_BLOOM_SCORE_DEFINITION: MusicalScoreDefinition = {
 };
 
 const SIXTEENTH_NOTES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] as const;
-const PHRASE_ACCENTS = [1, 0.82, 0.86, 0.92] as const;
+const PHRASE_ACCENTS = [1, 0.64, 0.9, 0.72] as const;
 
 const SECTION_TARGETS = {
   intro: {
-    gain: [0.68, 0.76],
-    brightness: [0.28, 0.4],
-    wetSend: [0.72, 0.66],
-    stereoSpread: [0.42, 0.5],
-    visualIntensity: [0.62, 0.72],
+    gain: [0.62, 0.72],
+    brightness: [0.16, 0.3],
+    wetSend: [0.54, 0.46],
+    stereoSpread: [0.36, 0.48],
+    visualIntensity: [0.56, 0.7],
   },
   growth: {
-    gain: [0.76, 0.94],
-    brightness: [0.4, 0.78],
-    wetSend: [0.64, 0.54],
-    stereoSpread: [0.5, 0.7],
-    visualIntensity: [0.72, 0.94],
+    gain: [0.72, 0.94],
+    brightness: [0.3, 0.78],
+    wetSend: [0.42, 0.28],
+    stereoSpread: [0.48, 0.7],
+    visualIntensity: [0.7, 0.94],
   },
   bloom: {
     gain: [0.94, 1],
-    brightness: [0.78, 0.9],
-    wetSend: [0.54, 0.62],
+    brightness: [0.78, 0.94],
+    wetSend: [0.26, 0.34],
     stereoSpread: [0.7, 0.82],
     visualIntensity: [0.94, 1],
   },
   hush: {
-    gain: [0.62, 0.5],
-    brightness: [0.34, 0.2],
-    wetSend: [0.82, 0.92],
-    stereoSpread: [0.58, 0.42],
-    visualIntensity: [0.58, 0.38],
+    gain: [0.5, 0.42],
+    brightness: [0.18, 0.08],
+    wetSend: [0.78, 0.88],
+    stereoSpread: [0.52, 0.34],
+    visualIntensity: [0.52, 0.32],
   },
   return: {
-    gain: [0.7, 0.9],
-    brightness: [0.38, 0.74],
-    wetSend: [0.74, 0.6],
-    stereoSpread: [0.48, 0.72],
-    visualIntensity: [0.64, 0.9],
+    gain: [0.66, 0.9],
+    brightness: [0.24, 0.72],
+    wetSend: [0.62, 0.42],
+    stereoSpread: [0.42, 0.72],
+    visualIntensity: [0.6, 0.9],
   },
 } as const;
 

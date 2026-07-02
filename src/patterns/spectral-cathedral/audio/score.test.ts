@@ -63,6 +63,18 @@ describe("Spectral Cathedral musical score", () => {
     }
   });
 
+  it("keeps the cathedral voice dry and grid-like instead of drifting toward the choir", () => {
+    const wetSends = SPECTRAL_CATHEDRAL_SCORE.events.map((event) => event.wetSend);
+    const spreads = SPECTRAL_CATHEDRAL_SCORE.events.map((event) => event.stereoSpread);
+    const firstFourGainRatios = SPECTRAL_CATHEDRAL_SCORE.events
+      .slice(0, 4)
+      .map((event) => event.baseGain / 0.58);
+
+    expect(Math.max(...wetSends)).toBeLessThanOrEqual(0.055);
+    expect(Math.max(...spreads)).toBeLessThanOrEqual(0.38);
+    expect(firstFourGainRatios).toEqual([1, 0.7, 0.96, 0.66]);
+  });
+
   it("uses every gesture and mode without five identical gestures in a row", () => {
     expect(new Set(SPECTRAL_CATHEDRAL_SCORE.events.map((event) => event.gesture))).toEqual(
       new Set(["toll", "answer", "cascade", "pulse", "choir"]),
@@ -101,8 +113,8 @@ describe("Spectral Cathedral musical score", () => {
       localTimeSeconds: 0,
       baseGain: 0.58,
       baseBrightness: 0.2,
-      wetSend: 0.1,
-      stereoSpread: 0.24,
+      wetSend: 0.045,
+      stereoSpread: 0.12,
       registerMultiplier: 1,
     });
     expect(Object.keys(event)).not.toEqual(

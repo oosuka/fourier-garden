@@ -79,6 +79,16 @@ describe("Residue Bloom musical score", () => {
     expect(activeEvents.every((event, index) => event.phraseIndex === index % 4)).toBe(true);
   });
 
+  it("keeps the clock constant while giving the four-note figure an audible accent shape", () => {
+    const program = createProgram();
+    const firstBar = program.events.filter((event) => event.barIndex === 0);
+    const activeAccents = firstBar.map((event) => event.baseAccent);
+
+    expect(firstBar.every((event) => event.active)).toBe(true);
+    expect(activeAccents.slice(0, 4)).toEqual([1.08, 0.64, 0.9, 0.72]);
+    expect(Math.max(...activeAccents) - Math.min(...activeAccents)).toBeGreaterThanOrEqual(0.4);
+  });
+
   it("repeats musical form without storing phasor results in the event table", () => {
     const program = createProgram();
     const event = program.events[0] as MusicalScoreEvent & Record<string, unknown>;

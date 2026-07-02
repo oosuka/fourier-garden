@@ -134,7 +134,7 @@ export const residueBloomPattern: ResidueBloomPatternDefinition = {
     initialVolume: 0.35,
     roomSeconds: 1.9,
     sonificationLatex:
-      "w_k=\\frac{A_k}{(k+1)^{1.4}},\\quad " +
+      "w_k=\\frac{A_k}{(k+1)^{1.85}},\\quad " +
       "f_{k,j}^{L/R}=n_k\\nu_j(1\\mp d),\\quad " +
       "g_{\\nu_j}^{L/R}(\\tau)=CG_eE_e(\\tau)" +
       "\\sum_{k\\in K(F_s)}w_kP_k^{L/R}" +

@@ -78,36 +78,36 @@ const SECTION_PROFILES = {
   illumination: {
     baseGain: 0.58,
     brightness: 0.2,
-    wetSend: 0.1,
-    stereoSpread: 0.24,
+    wetSend: 0.045,
+    stereoSpread: 0.12,
     registerMultiplier: 1,
   },
   procession: {
     baseGain: 0.66,
     brightness: 0.34,
-    wetSend: 0.08,
-    stereoSpread: 0.42,
+    wetSend: 0.04,
+    stereoSpread: 0.22,
     registerMultiplier: 1,
   },
   ascent: {
     baseGain: 0.72,
     brightness: 0.52,
-    wetSend: 0.06,
-    stereoSpread: 0.58,
+    wetSend: 0.035,
+    stereoSpread: 0.32,
     registerMultiplier: 1,
   },
   resonance: {
     baseGain: 0.78,
     brightness: 0.68,
-    wetSend: 0.08,
-    stereoSpread: 0.74,
+    wetSend: 0.045,
+    stereoSpread: 0.38,
     registerMultiplier: 1,
   },
   afterglow: {
     baseGain: 0.52,
     brightness: 0.26,
-    wetSend: 0.12,
-    stereoSpread: 0.32,
+    wetSend: 0.055,
+    stereoSpread: 0.18,
     registerMultiplier: 1,
   },
 } as const satisfies Readonly<
@@ -158,7 +158,7 @@ function buildEvents(): SpectralCathedralScoreEvent[] {
       const modeSetIndex = gestureOrdinals[gesture] % modeSets.length;
       const modeIds = modeSets[modeSetIndex]!;
       gestureOrdinals[gesture] += 1;
-      const phraseAccent = [1, 0.92, 0.98, 0.88][slotInBar % 4]!;
+      const phraseAccent = [1, 0.7, 0.96, 0.66][slotInBar % 4]!;
 
       events.push({
         index,

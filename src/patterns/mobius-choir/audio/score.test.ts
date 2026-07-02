@@ -92,9 +92,9 @@ describe("Möbius Choir score", () => {
     expect(
       Math.max(...MOBIUS_CHOIR_SCORE.events.map((event) => event.stereoSpread)),
     ).toBeGreaterThan(0.9);
-    expect(Math.min(...MOBIUS_CHOIR_SCORE.events.map((event) => event.stereoSpread))).toBeLessThan(
-      0.3,
-    );
+    expect(
+      Math.min(...MOBIUS_CHOIR_SCORE.events.map((event) => event.stereoSpread)),
+    ).toBeGreaterThanOrEqual(0.64);
     expect(new Set(MOBIUS_CHOIR_SCORE.events.map((event) => event.registerMultiplier))).toEqual(
       new Set([1]),
     );
@@ -107,6 +107,23 @@ describe("Möbius Choir score", () => {
     expect(
       new Set(MOBIUS_CHOIR_SCORE.events.map((event) => event.panMotion)).size,
     ).toBeGreaterThanOrEqual(4);
+    expect(
+      Math.min(...MOBIUS_CHOIR_SCORE.events.map((event) => event.panMotion)),
+    ).toBeGreaterThanOrEqual(0.3);
+    expect(
+      Math.max(...MOBIUS_CHOIR_SCORE.events.map((event) => event.panMotion)),
+    ).toBeGreaterThanOrEqual(0.7);
+  });
+
+  it("keeps the choir rhythm flowing with a different four-slot accent shape", () => {
+    const firstFour = MOBIUS_CHOIR_SCORE.events.slice(0, 4);
+    const unityAccentGain = firstFour[1]!.baseGain;
+    const firstFourGainRatios = firstFour.map((event) => event.baseGain / unityAccentGain);
+
+    expect(firstFourGainRatios).toEqual([0.78, 1, 0.68, 0.92]);
+    expect(
+      Math.max(...firstFourGainRatios) - Math.min(...firstFourGainRatios),
+    ).toBeGreaterThanOrEqual(0.3);
   });
 
   it("varies gestures and avoids mechanical mode repetitions", () => {

@@ -139,7 +139,9 @@ S=\{0,1,\ldots,15\}
 を使う。約0.1875秒間隔の一定パルスを保ち、`intro`、`growth`、`bloom`、
 `hush`、`return`の差は基礎ゲイン、明度、ウェット送出、ステレオ幅、
 詩的造形強度で作る。最後の小節では音響・詩的造形のプロファイルを
-導入冒頭へ戻す。
+導入冒頭へ戻す。4発音単位のアクセントは`[1.00, 0.64, 0.90, 0.72]`を基準とし、
+先頭小節のdownbeatは1.08倍する。全16分を埋める一定時計は保ちながら、
+Chapter 1固有の花弁状の起伏を聴感上のリズム差として与える。
 
 音楽形式の周期時刻を
 
@@ -174,7 +176,7 @@ z_e=z(0.31t_e^{\mathrm{abs}})
 基礎知覚重みと左右実周波数を
 
 \[
-w_k=\frac{A_k}{(k+1)^{1.4}},
+w_k=\frac{A_k}{(k+1)^{1.85}},
 \qquad
 f_{k,j}^{L/R}=n_k\nu_j(1\mp d),
 \qquad d=0.00125
@@ -232,17 +234,17 @@ p_r=\operatorname{clamp}\left(\frac{|z_e|}{M},0,1\right)
 基礎知覚重み
 
 \[
-\frac{A_k}{(k+1)^{1.4}}
+\frac{A_k}{(k+1)^{1.85}}
 \]
 
 は変更しない。動的な明るさは部分音合成後の1極ローパスであり、
-カットオフは720 Hzから\(\min(2600,0.18F_s)\) Hzの範囲へ写す。
+カットオフは520 Hzから\(\min(2050,0.20F_s)\) Hzの範囲へ写す。
 係数\(A_k\)や基礎知覚重みの変更ではない。動的な空間量は生成済みconvolverへ
 送る区間プロファイル由来のウェット送出であり、\(p_r\)からは得ない。
 さらにステレオデチューン、EQ、コンプレッションを適用する。Chapter 1の
-Web Audioグラフはdry high-pass 170 Hz、high-shelf 1,800 Hz / -7 dB、
-dry low-pass 3,200 Hz、wet high-pass 220 Hz、wet low-pass 2,400 Hz、
-1.65秒残響、threshold -12 dBの圧縮を使う。
+Web Audioグラフはdry high-pass 190 Hz、high-shelf 1,250 Hz / -16 dB、
+dry low-pass 2,100 Hz、wet high-pass 220 Hz、wet low-pass 1,450 Hz、
+1.15秒残響、threshold -14 dBの圧縮、-1 dBFS limiterを使う。
 これらは数学層の同一表示ではなく、調波構造を聴覚へ写すための音響演出である。
 
 反復イベント表はTypeScriptで一度だけ生成し、描画とAudioWorkletへ同じ
@@ -271,8 +273,8 @@ DFT、FFTの計算結果として解釈してはならない。
 
 \[
 q_k=
-\frac{A_k/(k+1)^{1.4}}
-{\max_{0\le j\le12}\left(A_j/(j+1)^{1.4}\right)}
+\frac{A_k/(k+1)^{1.85}}
+{\max_{0\le j\le12}\left(A_j/(j+1)^{1.85}\right)}
 \]
 
 として正規化した値から得る。\(q_k\)は別ラインの不透明度へだけ写し、
@@ -507,7 +509,9 @@ afterglow:   15-17小節
 参照動画のような一定リズムを優先し、幕ごとに基礎ゲイン、brightness、wet send、
 stereo spread、gesture配列、選択モードを変える。発音gestureは`toll`、
 `answer`、`cascade`、`pulse`、`choir`の5種類であるが、音色上はすべて短い
-中域ピコ粒へ丸める。
+中域ピコ粒へ丸める。4 slotアクセントは`[1.00, 0.70, 0.96, 0.66]`で、
+wet sendは最大0.055、stereo spreadは最大0.38に制限し、Chapter 3より乾いた
+格子状のキャラクターを保つ。
 
 イベント表は周期内時刻、幕、gesture、モードID、基礎ゲイン、基礎brightness、
 wet send、stereo spread、全モード共通register倍率だけを保持する。
@@ -580,18 +584,20 @@ v_{mn}(t_e)=|\sin(c_C\sqrt{\lambda_{mn}}t_e)|
 
 | gesture | attack | 主減衰 | fade開始 | 終了 | subgrain gain |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| toll | 8 ms | 55 ms | 140 ms | 165 ms | 0.86 |
-| answer | 8 ms | 58 ms | 140 ms | 165 ms | 0.92 |
-| cascade | 6 ms | 52 ms | 135 ms | 160 ms | 1.00 |
-| pulse | 6 ms | 50 ms | 135 ms | 160 ms | 1.00 |
-| choir | 9 ms | 62 ms | 145 ms | 170 ms | 0.80 |
+| toll | 8 ms | 48 ms | 122 ms | 150 ms | 0.86 |
+| answer | 8 ms | 50 ms | 122 ms | 150 ms | 0.92 |
+| cascade | 6 ms | 46 ms | 116 ms | 145 ms | 1.00 |
+| pulse | 6 ms | 44 ms | 112 ms | 140 ms | 1.00 |
+| choir | 9 ms | 52 ms | 126 ms | 155 ms | 0.80 |
 
-各包絡は終了30 ms前から余弦fadeし、終了時刻以後は厳密に0を返す。
+各包絡は終了28-34 ms前から余弦fadeし、終了時刻以後は厳密に0を返す。
 集団的な連続性は、短い粒を16分格子で常時重ね、低いwet sendで隙間を埋めて作る。
+Chapter 2は乾いた幾何学的な輪郭を持つため、Chapter 3より短い包絡、
+低いwet send、狭い定位幅を使う。
 
-Chapter 2のWeb Audioグラフはdry high-pass 220 Hz、high-shelf 1,100 Hz /
--24 dB、dry low-pass 1,180 Hz、wet high-pass 220 Hz、wet low-pass 950 Hz、
-0.75秒の残響、
+Chapter 2のWeb Audioグラフはdry high-pass 220 Hz、high-shelf 1,200 Hz /
+-18 dB、dry low-pass 1,300 Hz、wet high-pass 220 Hz、wet low-pass 1,050 Hz、
+0.55秒の残響、
 threshold -16 dBのコンプレッサーを使う。コンプレッサー後には
 4倍oversamplingのhard-clampを置き、出力を原則として\(-1\) dBFS以下へ保護する。
 この音声は波動場の無加工再生ではなく、固有値、係数比、符号位相、
@@ -672,6 +678,9 @@ piecewise-linear contourとして抽出する。Dirichlet境界は一つの閉�
 16小節の周期は\(960/17=56.470588\ldots\)秒で、全小節の16 slotすべてへ
 発音を置き、合計256イベントを5幕へ置く。密度は一定に保ち、幕ごとに基礎ゲイン、
 wet send、定位幅、連続制御depth、gesture配列、選択モードを変える。
+4 slotアクセントは`[0.78, 1.00, 0.68, 0.92]`で、Chapter 2の乾いた格子ではなく、
+2拍目に重心が来る流動的な帯として聴こえるようにする。pan motionは最小0.32、
+最大0.72以上を不変条件にし、左右運動でChapter 2から分離する。
 
 | 幕 | 小節 | slot | イベント数 | 部分音 | 主gesture |
 | --- | ---: | --- | ---: | ---: | --- |
@@ -706,8 +715,8 @@ breath sourceは不快な高域と息成分を避けるため公開DSPでは0に
 短い電子粒、定位、EQ、圧縮、低い残響だけを加える。
 `call`、`answer`、`turn`、`braid`、`converge`などのgestureはcarrierを
 再始動しない短い包絡差であり、数学時刻とモード位相はscore周期でリセットしない。
-最大イベント長は0.19秒で、16分格子上の重なりと低いwet sendにより、長い無音断絶を
-作らない。
+包絡終了は0.19-0.21秒、評価窓の最大イベント長は0.23秒で、16分格子上の重なりと
+Chapter 2より広い定位、やや高いwet sendにより、長い無音断絶を作らない。
 全周期stereo RMSはChapter 2の0.85倍以上1.12倍以下、代表10秒区間は0.82倍以上
 1.18倍以下とする。
 固有値順序、係数比、奇偶条件、quadrature関係は変更しない。同時発音は単一モードに
@@ -715,9 +724,9 @@ breath sourceは不快な高域と息成分を避けるため公開DSPでは0に
 左右デチューン後の実周波数が\(0.45F_s\)未満の場合だけ生成する。
 AudioWorklet設定時に周波数、定位、フォルマント重みを事前計算し、
 標本ループでは時間窓内のeventだけを評価する。
-Web Audioグラフはdry high-pass 220 Hz、high-shelf 1,050 Hz / -24 dB、
-dry low-pass 1,120 Hz、wet high-pass 220 Hz、wet low-pass 900 Hz、
-0.65秒残響、threshold -16 dBの圧縮、
+Web Audioグラフはdry high-pass 220 Hz、high-shelf 1,000 Hz / -24 dB、
+dry low-pass 1,080 Hz、wet high-pass 220 Hz、wet low-pass 860 Hz、
+0.95秒残響、音響正規化後の出力ゲイン0.36、threshold -16 dBの圧縮、
 4倍oversamplingの-1 dBFS limiterを使う。
 
 息の粒子、六本の声部リボン、継ぎ目のシアン残光は詩的造形である。各発音モードの

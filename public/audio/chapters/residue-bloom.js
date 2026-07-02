@@ -1,4 +1,4 @@
-import { clamp, isFiniteNumber, isPositiveFinite } from "./shared.js?v=15";
+import { clamp, isFiniteNumber, isPositiveFinite } from "./shared.js?v=16";
 
 function evaluateSerializedPhasor(mapping, absoluteTimeSeconds) {
   const angle = absoluteTimeSeconds * mapping.visualAngularRate;
@@ -115,8 +115,8 @@ function renderResidueBloomSample(program, state, absoluteTime) {
       : 0;
   const unfilteredLeft = leftSample * scale;
   const unfilteredRight = rightSample * scale;
-  const minimumCutoffHz = 720;
-  const maximumCutoffHz = Math.min(2_600, sampleRate * 0.18);
+  const minimumCutoffHz = 520;
+  const maximumCutoffHz = Math.min(2_050, sampleRate * 0.2);
   const cutoffHz = minimumCutoffHz + (maximumCutoffHz - minimumCutoffHz) * event.brightness;
   const filterCoefficient = 1 - Math.exp((-2 * Math.PI * cutoffHz) / sampleRate);
   state.filterLeft += (unfilteredLeft - state.filterLeft) * filterCoefficient;

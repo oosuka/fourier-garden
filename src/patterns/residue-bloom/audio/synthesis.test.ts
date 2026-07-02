@@ -45,28 +45,28 @@ function toStereo(values: readonly number[]): { left: Float32Array; right: Float
 describe("Residue Bloom audio synthesis", () => {
   it("uses the approved rounded midrange AudioEngine graph", () => {
     expect(RESIDUE_BLOOM_AUDIO_GRAPH).toEqual({
-      dryHighPassHz: 170,
+      dryHighPassHz: 190,
       dryHighPassQ: 0.45,
-      dryHighShelfHz: 1_800,
-      dryHighShelfGainDb: -7,
-      dryLowPassHz: 3_200,
+      dryHighShelfHz: 1_250,
+      dryHighShelfGainDb: -16,
+      dryLowPassHz: 2_100,
       dryLowPassQ: 0.3,
-      dryGain: 0.88,
+      dryGain: 0.9,
       wetHighPassHz: 220,
       wetHighPassQ: 0.45,
-      wetLowPassHz: 2_400,
+      wetLowPassHz: 1_450,
       wetLowPassQ: 0.3,
-      wetGain: 0.18,
-      roomSeconds: 1.65,
-      roomDecay: 3,
+      wetGain: 0.12,
+      roomSeconds: 1.15,
+      roomDecay: 2.1,
       compressor: {
-        thresholdDb: -12,
+        thresholdDb: -14,
         kneeDb: 12,
         ratio: 3,
         attackSeconds: 0.006,
-        releaseSeconds: 0.2,
+        releaseSeconds: 0.18,
       },
-      limiterCeilingDbfs: null,
+      limiterCeilingDbfs: -1,
     });
   });
 
@@ -131,7 +131,7 @@ describe("Residue Bloom audio synthesis", () => {
       nominalFrequencyHz: 24_255,
       included: false,
     });
-    expect(at495[1]?.weightedAmplitude).toBeCloseTo(2.5 / 2 ** 1.4, 12);
+    expect(at495[1]?.weightedAmplitude).toBeCloseTo(2.5 / 2 ** 1.85, 12);
   });
 
   it("applies the anti-alias guard to the higher detuned frequency", () => {
@@ -209,6 +209,18 @@ describe("Residue Bloom audio synthesis", () => {
     const bloomFrame = evaluateMusicalScore(score, 60.01);
     expect(introFrame.event.baseBrightness).not.toBeCloseTo(bloomFrame.event.baseBrightness, 2);
     expect(introFrame.event.wetSend).not.toBeCloseTo(bloomFrame.event.wetSend, 2);
+  });
+
+  it("keeps Chapter 1 in the shared piko family while preserving strong act contrast", () => {
+    const activeEvents = score.events.filter((event) => event.active);
+    const brightnessValues = activeEvents.map((event) => event.baseBrightness);
+    const wetSendValues = activeEvents.map((event) => event.wetSend);
+
+    expect(score.definition.timbreDamping).toBeGreaterThanOrEqual(1.8);
+    expect(Math.max(...brightnessValues) - Math.min(...brightnessValues)).toBeGreaterThanOrEqual(
+      0.78,
+    );
+    expect(Math.max(...wetSendValues) - Math.min(...wetSendValues)).toBeGreaterThanOrEqual(0.45);
   });
 
   it("keeps the full cycle close to the captured reference rhythm and comfortable band", () => {

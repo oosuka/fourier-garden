@@ -65,28 +65,28 @@ export interface SonificationComponent extends AudioPartial {
 export type WorkletConfigurationMessage = WorkletConfigureMessage<ResidueBloomWorkletProgram>;
 
 export const RESIDUE_BLOOM_AUDIO_GRAPH: AudioGraphPreset = {
-  dryHighPassHz: 170,
+  dryHighPassHz: 190,
   dryHighPassQ: 0.45,
-  dryHighShelfHz: 1_800,
-  dryHighShelfGainDb: -7,
-  dryLowPassHz: 3_200,
+  dryHighShelfHz: 1_250,
+  dryHighShelfGainDb: -16,
+  dryLowPassHz: 2_100,
   dryLowPassQ: 0.3,
-  dryGain: 0.88,
+  dryGain: 0.9,
   wetHighPassHz: 220,
   wetHighPassQ: 0.45,
-  wetLowPassHz: 2_400,
+  wetLowPassHz: 1_450,
   wetLowPassQ: 0.3,
-  wetGain: 0.18,
-  roomSeconds: 1.65,
-  roomDecay: 3,
+  wetGain: 0.12,
+  roomSeconds: 1.15,
+  roomDecay: 2.1,
   compressor: {
-    thresholdDb: -12,
+    thresholdDb: -14,
     kneeDb: 12,
     ratio: 3,
     attackSeconds: 0.006,
-    releaseSeconds: 0.2,
+    releaseSeconds: 0.18,
   },
-  limiterCeilingDbfs: null,
+  limiterCeilingDbfs: -1,
 };
 
 export function createAudioPartials(fundamentalHz: number): AudioPartial[] {
@@ -214,8 +214,8 @@ export function renderRhythmicSeries({
       frame.event.baseGain *
       frame.event.accent *
       score.definition.outputGain;
-    const minimumCutoffHz = 720;
-    const maximumCutoffHz = Math.min(2_600, sampleRate * 0.18);
+    const minimumCutoffHz = 520;
+    const maximumCutoffHz = Math.min(2_050, sampleRate * 0.2);
     const cutoffHz = minimumCutoffHz + (maximumCutoffHz - minimumCutoffHz) * frame.event.brightness;
     const filterCoefficient = 1 - Math.exp((-2 * Math.PI * cutoffHz) / sampleRate);
     filterState += (dryValue - filterState) * filterCoefficient;

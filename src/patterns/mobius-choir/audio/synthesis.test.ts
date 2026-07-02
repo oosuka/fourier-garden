@@ -44,13 +44,14 @@ describe("Möbius Choir synthesis", () => {
   it("uses the approved piko synthesis constants and graph", () => {
     expect(MOBIUS_CHOIR_SYNTHESIS.maximumPartials).toBe(1);
     expect(MOBIUS_CHOIR_SYNTHESIS.partialDamping).toBe(8);
-    expect(MOBIUS_CHOIR_SYNTHESIS.maximumEventSeconds).toBe(0.19);
+    expect(MOBIUS_CHOIR_SYNTHESIS.maximumEventSeconds).toBe(0.23);
     expect(MOBIUS_CHOIR_SYNTHESIS.formantFloor).toBe(1);
-    expect(MOBIUS_CHOIR_SYNTHESIS.outputGain).toBe(0.42);
+    expect(MOBIUS_CHOIR_SYNTHESIS.outputGain).toBe(0.36);
     for (const articulation of Object.values(MOBIUS_CHOIR_SYNTHESIS.articulations)) {
       expect(articulation.breathGain).toBe(0);
       expect(articulation.moraOffsetsSeconds).toEqual([0]);
-      expect(articulation.endSeconds).toBeLessThanOrEqual(0.18);
+      expect(articulation.endSeconds).toBeGreaterThanOrEqual(0.19);
+      expect(articulation.endSeconds).toBeLessThanOrEqual(0.21);
     }
     for (const bands of Object.values(MOBIUS_CHOIR_SYNTHESIS.formants)) {
       expect(bands.every((band) => band.amplitude === 0)).toBe(true);
@@ -58,24 +59,24 @@ describe("Möbius Choir synthesis", () => {
     expect(MOBIUS_CHOIR_AUDIO_GRAPH).toEqual({
       dryHighPassHz: 220,
       dryHighPassQ: 0.45,
-      dryHighShelfHz: 1_050,
+      dryHighShelfHz: 1_000,
       dryHighShelfGainDb: -24,
-      dryLowPassHz: 1_120,
+      dryLowPassHz: 1_080,
       dryLowPassQ: 0.25,
-      dryGain: 0.92,
+      dryGain: 0.88,
       wetHighPassHz: 220,
       wetHighPassQ: 0.45,
-      wetLowPassHz: 900,
+      wetLowPassHz: 860,
       wetLowPassQ: 0.25,
-      wetGain: 0.025,
-      roomSeconds: 0.65,
-      roomDecay: 1.6,
+      wetGain: 0.065,
+      roomSeconds: 0.95,
+      roomDecay: 2,
       compressor: {
         thresholdDb: -16,
         kneeDb: 12,
         ratio: 3,
         attackSeconds: 0.008,
-        releaseSeconds: 0.18,
+        releaseSeconds: 0.2,
       },
       limiterCeilingDbfs: -1,
     });
