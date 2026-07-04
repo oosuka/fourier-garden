@@ -393,8 +393,8 @@ input:focus-visible {
 }
 
 .chapterArrow {
-  width: 28px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   display: grid;
   flex: 0 0 auto;
   place-items: center;
@@ -996,7 +996,7 @@ input:focus-visible {
   }
 
   .chapterArrow {
-    width: 20px;
+    width: 44px;
   }
 }
 

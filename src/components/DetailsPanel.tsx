@@ -36,7 +36,7 @@ export function DetailsPanel({ open, pattern, audio, onClose }: DetailsPanelProp
           <span className="eyebrow">OBSERVATION NOTES</span>
           <h2>{pattern.title.ja}</h2>
         </div>
-        <button className="iconButton" onClick={onClose} aria-label="詳細を閉じる">
+        <button className="iconButton" type="button" onClick={onClose} aria-label="詳細を閉じる">
           <X aria-hidden="true" />
         </button>
       </header>
@@ -44,6 +44,7 @@ export function DetailsPanel({ open, pattern, audio, onClose }: DetailsPanelProp
       <div className="detailsTabs" role="tablist" aria-label="解説の種類">
         <button
           className={tab === "gentle" ? "isActive" : ""}
+          type="button"
           onClick={() => setTab("gentle")}
           role="tab"
           aria-selected={tab === "gentle"}
@@ -52,6 +53,7 @@ export function DetailsPanel({ open, pattern, audio, onClose }: DetailsPanelProp
         </button>
         <button
           className={tab === "mathematical" ? "isActive" : ""}
+          type="button"
           onClick={() => setTab("mathematical")}
           role="tab"
           aria-selected={tab === "mathematical"}

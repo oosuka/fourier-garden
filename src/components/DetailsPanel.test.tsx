@@ -44,4 +44,19 @@ describe("DetailsPanel visibility", () => {
     expect(panel?.hasAttribute("inert")).toBe(true);
     expect(panel?.getAttribute("aria-hidden")).toBe("true");
   });
+
+  it("uses explicit button types for close and tab controls", () => {
+    const pattern = patternRegistry[0]!;
+    const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);
+    const container = document.createElement("div");
+    container.innerHTML = renderToStaticMarkup(
+      <DetailsPanel open pattern={pattern} audio={audio} onClose={vi.fn<() => void>()} />,
+    );
+    const panelButtons = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(".detailsPanel button"),
+    );
+
+    expect(panelButtons.length).toBeGreaterThan(0);
+    expect(panelButtons.every((button) => button.type === "button")).toBe(true);
+  });
 });

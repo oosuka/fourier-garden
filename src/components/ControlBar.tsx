@@ -62,8 +62,10 @@ export function ControlBar({
       <div className="controlCluster controlCluster--play">
         <button
           className="primaryControl"
+          type="button"
           onClick={onTogglePlay}
-          aria-label={playing ? "一時停止" : "再生"}
+          aria-label={playing ? "一時停止 (Space)" : "再生 (Space)"}
+          aria-keyshortcuts="Space"
         >
           {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
         </button>
@@ -135,8 +137,11 @@ export function ControlBar({
 
       <button
         className={`textControl ${detailsOpen ? "isActive" : ""}`}
+        type="button"
         onClick={onToggleDetails}
+        aria-label={detailsOpen ? "詳細パネルを閉じる (D)" : "詳細パネルを開く (D)"}
         aria-pressed={detailsOpen}
+        aria-keyshortcuts="D"
       >
         <Info aria-hidden="true" />
         <span>DETAILS</span>
@@ -144,8 +149,11 @@ export function ControlBar({
 
       <button
         className={`textControl ${fullscreen ? "isActive" : ""}`}
+        type="button"
         onClick={onToggleFullscreen}
+        aria-label={fullscreen ? "全画面を解除 (F)" : "全画面表示 (F)"}
         aria-pressed={fullscreen}
+        aria-keyshortcuts="F"
       >
         <Expand aria-hidden="true" />
         <span>FULLSCREEN</span>

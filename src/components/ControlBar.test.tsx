@@ -75,4 +75,29 @@ describe("ControlBar chapter navigation", () => {
       true,
     );
   });
+
+  it("exposes explicit button semantics and keyboard shortcuts for core controls", () => {
+    const container = document.createElement("div");
+    container.innerHTML = renderControlBar(0, 3);
+
+    expect(container.querySelector<HTMLButtonElement>(".primaryControl")?.type).toBe("button");
+    expect(container.querySelector(".primaryControl")?.getAttribute("aria-keyshortcuts")).toBe(
+      "Space",
+    );
+    expect(container.querySelector(".primaryControl")?.getAttribute("aria-label")).toBe(
+      "再生 (Space)",
+    );
+
+    const details = container.querySelector<HTMLButtonElement>(
+      "button[aria-label='詳細パネルを開く (D)']",
+    );
+    expect(details?.type).toBe("button");
+    expect(details?.getAttribute("aria-keyshortcuts")).toBe("D");
+
+    const fullscreen = container.querySelector<HTMLButtonElement>(
+      "button[aria-label='全画面表示 (F)']",
+    );
+    expect(fullscreen?.type).toBe("button");
+    expect(fullscreen?.getAttribute("aria-keyshortcuts")).toBe("F");
+  });
 });
