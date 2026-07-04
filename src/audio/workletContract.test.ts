@@ -9,9 +9,9 @@ const chapterSources = [residueBloomSource, spectralCathedralSource, mobiusChoir
 
 describe("AudioWorklet mathematical contract", () => {
   it("cache-busts every module in the worklet dependency graph", () => {
-    expect(workletSource.match(/from ["'][^"']+\?v=16["']/g) ?? []).toHaveLength(4);
+    expect(workletSource.match(/from ["'][^"']+\?v=18["']/g) ?? []).toHaveLength(4);
     for (const chapterSource of [residueBloomSource, spectralCathedralSource, mobiusChoirSource]) {
-      expect(chapterSource).toMatch(/from ["']\.\/shared\.js\?v=16["']/);
+      expect(chapterSource).toMatch(/from ["']\.\/shared\.js\?v=18["']/);
     }
   });
 

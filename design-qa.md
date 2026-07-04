@@ -6,7 +6,7 @@
 未確認事項を記録する。数理定義と音響仕様は
 [`docs/mathematical-model.md`](docs/mathematical-model.md)を正本とする。
 
-2026年6月の詳細設計・実装計画は試行錯誤を含み、現行v16音響と矛盾する仕様が
+2026年6月の詳細設計・実装計画は試行錯誤を含み、現行v18音響と矛盾する仕様が
 多かったため、2026年7月2日に削除し、履歴索引だけを
 [`docs/superpowers/README.md`](docs/superpowers/README.md)へ残した。
 
@@ -18,7 +18,7 @@
 - 3章とも厳密数学時刻を音楽スコア周期でリセットしない
 - 音声は数学量を中域の短い粒へ写す音楽的ソニフィケーションであり、波動場や係数列の無加工再生ではない
 
-## v16サウンドQA
+## v18サウンドQA
 
 実施日: 2026年7月2日
 
@@ -35,23 +35,26 @@
 
 | Chapter | 主なスコア | 安全帯域 | 400 Hz-3 kHz比 | 1.2 kHz以上 | onset中央値 | 最大低RMS連続 |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| 1 Residue Bloom | 80 BPM、144秒、一定16分 | carrier列495/440 Hz基準 | 0.997106 | 0.004166 | 0.180秒 | 0秒 |
+| 1 Residue Bloom | 80 BPM、144秒、ゴースト強弱付き一定16分 | carrier列495/440 Hz基準 | 0.997333 | 0.004453 | 0.180秒 | 0.02秒 |
 | 2 Spectral Cathedral | 72 BPM、75秒、360イベント | 420-980 Hz | 0.999003 | 0.000002 | 0.200秒 | 0.14秒 |
 | 3 Möbius Choir | 68 BPM、56.470588秒、256イベント | 420-920 Hz | 0.993294 | 0.000001 | 0.220秒 | 0.06秒 |
 
 Chapter 1はdry low-pass 2,100 Hz、wet low-pass 1,450 Hz、timbre damping 1.85へ
-丸め、Chapter 2/3と同じ中域ピコ系へ寄せたうえで、4音アクセント
-`[1.00, 0.64, 0.90, 0.72]`により一定16分内の起伏を作る。Chapter 2は単一部分音、
-register倍率1、dry low-pass 1,300 Hz、wet low-pass 1,050 Hz、wet send最大0.055、
+丸め、Chapter 2/3と同じ中域ピコ系へ寄せたうえで、sectionごとの4音アクセントと
+小節ごとのアクセントローテーション、3ステップずつ循環する16ステップのゴースト輪郭により、
+一定16分内の重心移動を作る。
+評価済みアクセントは基礎brightnessと減衰倍率にも写し、強拍を明るく長く、
+弱拍を暗く短くして、音量だけでは埋もれないリズム差を固定する。
+Chapter 2は単一部分音、register倍率1、dry low-pass 1,300 Hz、wet low-pass 1,050 Hz、wet send最大0.055、
 stereo spread最大0.38、4 slotアクセント`[1.00, 0.70, 0.96, 0.66]`を使い、
-乾いた幾何学的な粒にする。Chapter 3は単一partial、息成分なし、dry low-pass
+乾いた幾何学的な粒にする。Chapter 3は単一partial、ノイズ状付加音源ゲイン0、dry low-pass
 1,080 Hz、wet low-pass 860 Hz、pan motion 0.32-0.72、4 slotアクセント
 `[0.78, 1.00, 0.68, 0.92]`、出力ゲイン0.36を使い、Chapter 2より長い包絡と
 広い定位、やや高いwet sendで流れる帯状の粒にする。
 
 ## ブラウザQA
 
-実施日: 2026年7月1日
+実施日: 2026年7月1日、2026年7月2日追試
 
 条件:
 
@@ -65,10 +68,14 @@ stereo spread最大0.38、4 slotアクセント`[1.00, 0.70, 0.96, 0.66]`を使�
 - 開始後に`CHAPTER 01 / 03`と`Residue Bloom`を表示した
 - `次の章`で`CHAPTER 02`と`Spectral Cathedral`を表示した
 - さらに`次の章`で`CHAPTER 03`と`Möbius Choir`を表示した
+- 2026年7月2日の追試では同URLを再読み込みし、開始後に`CHAPTER 01 / 03`と
+  `Residue Bloom`を表示し、console warning/errorは0件だった
+- v18音響変更後は内蔵ブラウザ制御スクリプトが現在の環境で見つからなかったため、
+  ブラウザ自動追試は未実施である
 - 各段階のconsole error/warningは0件だった
 
-内蔵ブラウザ環境では音声試聴を信頼できる証拠として扱わない。最終的な快不快は
-ユーザー環境のヘッドホンとMac内蔵スピーカーで確認する。
+内蔵ブラウザ環境では音声試聴と再生ボタン状態を信頼できる証拠として扱わない。
+最終的な快不快はユーザー環境のヘッドホンとMac内蔵スピーカーで確認する。
 
 ## 視覚QA
 
@@ -105,8 +112,8 @@ Vite buildは成功しているが、post-processing系chunkが500 kBを超え�
 
 実施日: 2026年7月2日
 
-- `AGENTS.md`へv16音響の一定16分ピコ時計、単一部分音、安全帯域、高域抑制、
-  旧方向へ戻さない禁止条件を追加した
+- `AGENTS.md`へv18音響の一定16分ピコ時計、単一部分音、安全帯域、高域抑制、
+  章別リズムキャラクターの維持条件を追加した
 - `README.md`、`docs/mathematical-model.md`、`docs/chapter-atlas.md`から
   廃止済み詳細設計への直接リンクを外した
 - `docs/superpowers/specs/`と`docs/superpowers/plans/`の詳細本文を削除し、
@@ -115,8 +122,9 @@ Vite buildは成功しているが、post-processing系chunkが500 kBを超え�
 
 ## 未確認事項
 
-- ユーザー環境でのv16音響のヘッドホン試聴
-- ユーザー環境でのv16音響のMac内蔵スピーカー試聴
+- ユーザー環境でのv18音響のヘッドホン試聴
+- ユーザー環境でのv18音響のMac内蔵スピーカー試聴
+- v18音響のChrome実機QA
 - 実hidden状態を伴うタブ非表示と復帰
 - 実ウィンドウでのネイティブ全画面の見た目
 - 10分以上の実音声を伴うAudioNode、JS heap、GPUメモリ残留
@@ -124,6 +132,6 @@ Vite buildは成功しているが、post-processing系chunkが500 kBを超え�
 
 ## 現在の公開判定
 
-Chapter 1、Chapter 2、Chapter 3は通常公開済みである。v16音響リニューアルは数学、
+Chapter 1、Chapter 2、Chapter 3は通常公開済みである。v18音響リニューアルは数学、
 スコア、DSP契約、帯域、リズム、Worklet cache-busterの自動検証を完了した。
 実機試聴と長時間実行は運用QA事項として追跡する。

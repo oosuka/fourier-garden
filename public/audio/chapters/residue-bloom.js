@@ -1,4 +1,4 @@
-import { clamp, isFiniteNumber, isPositiveFinite } from "./shared.js?v=16";
+import { clamp, isFiniteNumber, isPositiveFinite } from "./shared.js?v=18";
 
 function evaluateSerializedPhasor(mapping, absoluteTimeSeconds) {
   const angle = absoluteTimeSeconds * mapping.visualAngularRate;
@@ -64,7 +64,8 @@ function renderResidueBloomSample(program, state, absoluteTime) {
     state.cachedEvent = evaluateEvent(score, baseEvent, cycleIndex);
   }
   const event = state.cachedEvent;
-  const decayScale = 0.88 + event.normalizedPhasorRadius * 0.24;
+  const accentDecayScale = clamp(0.16 + event.baseAccent * 1.08, 0.52, 1.55);
+  const decayScale = (0.88 + event.normalizedPhasorRadius * 0.24) * accentDecayScale;
   const attackProgress = Math.min(1, Math.max(0, localTime / score.definition.attackSeconds));
   const attackShape = attackProgress * attackProgress * (3 - 2 * attackProgress);
   const decay =

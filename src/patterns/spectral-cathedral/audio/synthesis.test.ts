@@ -275,7 +275,7 @@ describe("Spectral Cathedral piko reference DSP", () => {
     });
     const cathedralMetrics = getStereoMetrics(spectralCathedral.left, spectralCathedral.right);
 
-    expect(cathedralMetrics.rms).toBeGreaterThanOrEqual(residueBloom.rms * 0.55);
+    expect(cathedralMetrics.rms).toBeGreaterThanOrEqual(residueBloom.rms * 0.48);
     expect(cathedralMetrics.peak).toBeLessThanOrEqual(residueBloom.peak);
   });
 

@@ -61,7 +61,8 @@ describe("current documentation", () => {
     expect(compactAgents).toContain("420-980Hzの安全な中域へ正規化した単一部分音");
     expect(compactAgents).toContain("Chapter3は68BPM、16小節、56.470588秒、256イベント");
     expect(compactAgents).toContain("420-920Hzの安全な中域へ正規化した単一部分音");
-    expect(agents).toContain("戻してはならない");
+    expect(agents).toContain("Chapter 3より短く中央寄り");
+    expect(agents).toContain("ノイズ状付加音源とフォルマント系付加音のゲインは0");
 
     expect(mathematicalModel).toContain("周期内イベント数は18小節×20 slotの360イベント");
     expect(mathematicalModel).toContain("合計256イベント");

@@ -85,8 +85,44 @@ describe("Residue Bloom musical score", () => {
     const activeAccents = firstBar.map((event) => event.baseAccent);
 
     expect(firstBar.every((event) => event.active)).toBe(true);
-    expect(activeAccents.slice(0, 4)).toEqual([1.08, 0.64, 0.9, 0.72]);
-    expect(Math.max(...activeAccents) - Math.min(...activeAccents)).toBeGreaterThanOrEqual(0.4);
+    expect(Math.min(...activeAccents)).toBeLessThanOrEqual(0.3);
+    expect(Math.max(...activeAccents) - Math.min(...activeAccents)).toBeGreaterThanOrEqual(0.9);
+  });
+
+  it("moves the accent weight by act and by bar while keeping every sixteenth active", () => {
+    const program = createProgram();
+    const firstEightBars = Array.from({ length: 8 }, (_, barIndex) =>
+      program.events.filter((event) => event.barIndex === barIndex),
+    );
+    const weakestIntroAccents = firstEightBars.map((events) =>
+      Math.min(...events.map((event) => event.baseAccent)),
+    );
+    const strongestIntroSteps = firstEightBars.map((events) => {
+      const accents = events.map((event) => event.baseAccent);
+      return accents.indexOf(Math.max(...accents));
+    });
+
+    expect(firstEightBars.every((events) => events.every((event) => event.active))).toBe(true);
+    expect(Math.max(...weakestIntroAccents)).toBeLessThanOrEqual(0.34);
+    expect(new Set(strongestIntroSteps.slice(0, 4)).size).toBeGreaterThanOrEqual(3);
+  });
+
+  it("makes strong and weak pulses differ in audible brightness and tail length", () => {
+    const program = createProgram();
+    const firstBar = program.events.filter((event) => event.barIndex === 0);
+    const strongPulse = firstBar[0]!;
+    const weakPulse = firstBar[1]!;
+    const strongTail = evaluateMusicalScore(
+      program,
+      strongPulse.globalStep * program.stepSeconds + 0.11,
+    ).noteEnvelope;
+    const weakTail = evaluateMusicalScore(
+      program,
+      weakPulse.globalStep * program.stepSeconds + 0.11,
+    ).noteEnvelope;
+
+    expect(strongPulse.baseBrightness - weakPulse.baseBrightness).toBeGreaterThanOrEqual(0.08);
+    expect(strongTail / weakTail).toBeGreaterThanOrEqual(1.45);
   });
 
   it("repeats musical form without storing phasor results in the event table", () => {

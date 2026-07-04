@@ -185,7 +185,7 @@ describe("Residue Bloom audio synthesis", () => {
       const tail = rms(samples.slice(start + stepSamples - tailWindow, start + stepSamples));
 
       expect(attack).toBeGreaterThan(0.03);
-      expect(tail).toBeGreaterThan(attack * 0.035);
+      expect(tail).toBeGreaterThan(attack * 0.015);
       expect(tail).toBeLessThan(attack * 0.46);
     }
 
@@ -252,10 +252,31 @@ describe("Residue Bloom audio synthesis", () => {
     expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.1);
     expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.18);
     expect(onsets.medianSeconds).toBeLessThanOrEqual(0.26);
-    expect(onsets.pulseScore).toBeGreaterThan(0.45);
+    expect(onsets.onsetCount).toBeGreaterThanOrEqual(score.totalSteps * 0.85);
+    expect(onsets.p10Seconds).toBeGreaterThanOrEqual(0.16);
+    expect(onsets.p90Seconds).toBeLessThanOrEqual(0.22);
   }, 15_000);
 
-  it("keeps the harmonic sparkle below the harsh upper band", () => {
+  it("renders clearly separated anchors and ghost ticks in the first thirty seconds", () => {
+    const sampleRate = 4_000;
+    const rendered = renderRhythmicSeries({
+      durationSeconds: 30,
+      sampleRate,
+      score,
+    });
+    const stepSamples = Math.floor(score.stepSeconds * sampleRate);
+    const stepRms = Array.from({ length: Math.floor(rendered.length / stepSamples) }, (_, step) =>
+      rms(rendered.slice(step * stepSamples, step * stepSamples + stepSamples)),
+    );
+    const introBarContrasts = Array.from({ length: 8 }, (_, barIndex) => {
+      const barSteps = stepRms.slice(barIndex * 16, barIndex * 16 + 16);
+      return Math.min(...barSteps) / Math.max(...barSteps);
+    });
+
+    expect(introBarContrasts.every((ratio) => ratio <= 0.32)).toBe(true);
+  });
+
+  it("keeps the harmonic brightness below the harsh upper band", () => {
     const sampleRate = 12_000;
     const rendered = toStereo(
       renderRhythmicSeries({

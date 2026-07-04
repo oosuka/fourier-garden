@@ -269,7 +269,7 @@ describe("AudioEngine initialization", () => {
 
     await audio.initialize();
 
-    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=16"]);
+    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=18"]);
     expect(records.workletMessages).toEqual([
       expect.objectContaining({
         type: "configure",

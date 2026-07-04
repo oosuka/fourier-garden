@@ -114,7 +114,16 @@ export const RESIDUE_BLOOM_SCORE_DEFINITION: MusicalScoreDefinition = {
 };
 
 const SIXTEENTH_NOTES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] as const;
-const PHRASE_ACCENTS = [1, 0.64, 0.9, 0.72] as const;
+const SECTION_PHRASE_ACCENTS = {
+  intro: [1, 0.64, 0.9, 0.72],
+  growth: [0.9, 0.74, 1.08, 0.66],
+  bloom: [1.1, 0.7, 0.94, 0.82],
+  hush: [0.72, 0.58, 0.84, 0.62],
+  return: [0.92, 0.66, 1, 0.78],
+} as const satisfies Readonly<Record<MusicalSectionId, readonly [number, number, number, number]>>;
+const STEP_GHOST_CONTOUR = [
+  1.14, 0.48, 0.82, 0.52, 1.0, 0.46, 0.78, 0.5, 1.06, 0.48, 0.8, 0.54, 0.96, 0.46, 0.74, 0.5,
+] as const;
 
 const SECTION_TARGETS = {
   intro: {
@@ -212,6 +221,28 @@ function getActiveSteps(): readonly number[] {
   return SIXTEENTH_NOTES;
 }
 
+function getRhythmicAccent(
+  section: MusicalSectionId,
+  phraseIndex: 0 | 1 | 2 | 3,
+  barInSection: number,
+  stepInBar: number,
+): number {
+  const motif = SECTION_PHRASE_ACCENTS[section];
+  const rotation = positiveModulo(barInSection, motif.length);
+  const contourIndex = positiveModulo(stepInBar + barInSection * 3, STEP_GHOST_CONTOUR.length);
+  const ghostContour = STEP_GHOST_CONTOUR[contourIndex]!;
+  const downbeatAccent = stepInBar === 0 ? 1.08 : 1;
+  return clamp(
+    motif[(phraseIndex + rotation) % motif.length]! * ghostContour * downbeatAccent,
+    0.3,
+    1.36,
+  );
+}
+
+function getRhythmicBrightness(baseBrightness: number, baseAccent: number): number {
+  return clamp(baseBrightness + (baseAccent - 0.7) * 0.26, 0, 1);
+}
+
 function getSectionProfile(section: MusicalSectionId, sectionProgress: number): SectionProfile {
   const progress = clamp(sectionProgress, 0, 1);
   const target = SECTION_TARGETS[section];
@@ -280,8 +311,10 @@ export function buildMusicalScoreProgram(
     const active = getActiveSteps().includes(stepInBar);
     const eventOrdinal = active ? activeNoteOrdinal : -1;
     const phraseIndex = (active ? eventOrdinal % 4 : 0) as 0 | 1 | 2 | 3;
-    const downbeatAccent = stepInBar === 0 ? 1.08 : 1;
     const carrierHz = active ? definition.carrierMultipliers[phraseIndex] * fundamentalHz : 0;
+    const baseAccent = active
+      ? getRhythmicAccent(section.id, phraseIndex, barInSection, stepInBar)
+      : 0;
 
     if (active) {
       activeNoteOrdinal += 1;
@@ -298,8 +331,10 @@ export function buildMusicalScoreProgram(
       phraseIndex,
       carrierHz,
       baseGain: active ? profile.gain : 0,
-      baseAccent: active ? PHRASE_ACCENTS[phraseIndex] * downbeatAccent : 0,
-      baseBrightness: profile.brightness,
+      baseAccent,
+      baseBrightness: active
+        ? getRhythmicBrightness(profile.brightness, baseAccent)
+        : profile.brightness,
       wetSend: profile.wetSend,
       stereoSpread: profile.stereoSpread,
       visualIntensity: profile.visualIntensity,
@@ -378,7 +413,8 @@ export function evaluateMusicalScore(
   const localStepTimeSeconds = cycleTimeSeconds - globalStep * program.stepSeconds;
   const baseEvent = program.events[globalStep]!;
   const event = evaluateScoreEvent(program, baseEvent, cycleIndex);
-  const decayScale = 0.88 + event.normalizedPhasorRadius * 0.24;
+  const accentDecayScale = clamp(0.16 + event.baseAccent * 1.08, 0.52, 1.55);
+  const decayScale = (0.88 + event.normalizedPhasorRadius * 0.24) * accentDecayScale;
   const noteEnvelope = event.active
     ? getNoteEnvelope(
         localStepTimeSeconds,
