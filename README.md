@@ -165,5 +165,5 @@ GPU資源、イベント、タイマーを、AudioEngineはAudioNodeとAudioCont
 - [`AGENTS.md`](AGENTS.md): 開発時の数学・音響・描画・QA不変条件
 - [`docs/mathematical-model.md`](docs/mathematical-model.md): 実装済み章の数理・音響正本
 - [`docs/chapter-atlas.md`](docs/chapter-atlas.md): 候補章、比較、依存関係、入口条件
-- [`design-qa.md`](design-qa.md): 実測QA、履歴、未確認事項
+- [`design-qa.md`](design-qa.md): 実測QA、履歴、運用QA項目
 - [`docs/superpowers/README.md`](docs/superpowers/README.md): 廃止済み設計・実装計画の履歴索引

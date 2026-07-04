@@ -7,7 +7,7 @@
 - 開発時の不変条件: [`../../AGENTS.md`](../../AGENTS.md)
 - 実装済み章の数理・音響正本: [`../mathematical-model.md`](../mathematical-model.md)
 - 章比較と将来章入口条件: [`../chapter-atlas.md`](../chapter-atlas.md)
-- QA履歴と未確認事項: [`../../design-qa.md`](../../design-qa.md)
+- QA履歴と運用QA項目: [`../../design-qa.md`](../../design-qa.md)
 - 利用者向け概要: [`../../README.md`](../../README.md)
 
 削除した詳細計画には、現行v18音響と矛盾する廃止済み仕様が含まれていた。
