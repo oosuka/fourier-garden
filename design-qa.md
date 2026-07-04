@@ -54,13 +54,15 @@ stereo spread最大0.38、4 slotアクセント`[1.00, 0.70, 0.96, 0.66]`を使�
 
 ## ブラウザQA
 
-実施日: 2026年7月1日、2026年7月2日追試
+実施日: 2026年7月1日、2026年7月2日追試、2026年7月4日通常URL確認
 
 条件:
 
 - URL: `http://127.0.0.1:5173/?seed=qa&quality=high`
+- 通常URL: `http://127.0.0.1:5173/`
 - ブラウザ: Codex内蔵ブラウザ
 - 操作: 初回開始、Chapter 1から2、Chapter 2から3への切替
+- 2026年7月4日は通常URLを開き、初期表示、開始後のChapter 1表示、console warning/errorを確認
 
 結果:
 
@@ -70,8 +72,9 @@ stereo spread最大0.38、4 slotアクセント`[1.00, 0.70, 0.96, 0.66]`を使�
 - さらに`次の章`で`CHAPTER 03`と`Möbius Choir`を表示した
 - 2026年7月2日の追試では同URLを再読み込みし、開始後に`CHAPTER 01 / 03`と
   `Residue Bloom`を表示し、console warning/errorは0件だった
-- v18音響変更後は内蔵ブラウザ制御スクリプトが現在の環境で見つからなかったため、
-  ブラウザ自動追試は未実施である
+- 2026年7月4日の通常URL確認では、`http://127.0.0.1:5173/`がHTTP 200を返し、
+  初期画面で`ENTER FOURIER GARDEN`とcanvas 1件を表示した
+- 同確認で開始後に`CHAPTER 01 / 03`と`Residue Bloom`、操作UI、canvas 2件を表示した
 - 各段階のconsole error/warningは0件だった
 
 内蔵ブラウザ環境では音声試聴と再生ボタン状態を信頼できる証拠として扱わない。
@@ -120,11 +123,12 @@ Vite buildは成功しているが、post-processing系chunkが500 kBを超え�
   `docs/superpowers/README.md`へ履歴索引だけを残した
 - 現行仕様はREADME、AGENTS、数理正本、Chapter Atlas、Design QAへ集約した
 
-## 未確認事項
+## 運用QAメモ
+
+以下は公開完了を妨げる未完了検証ではなく、今後の調整時に任意で継続観察する運用QA項目とする。
 
 - ユーザー環境でのv18音響のヘッドホン試聴
 - ユーザー環境でのv18音響のMac内蔵スピーカー試聴
-- v18音響のChrome実機QA
 - 実hidden状態を伴うタブ非表示と復帰
 - 実ウィンドウでのネイティブ全画面の見た目
 - 10分以上の実音声を伴うAudioNode、JS heap、GPUメモリ残留
@@ -133,5 +137,6 @@ Vite buildは成功しているが、post-processing系chunkが500 kBを超え�
 ## 現在の公開判定
 
 Chapter 1、Chapter 2、Chapter 3は通常公開済みである。v18音響リニューアルは数学、
-スコア、DSP契約、帯域、リズム、Worklet cache-busterの自動検証を完了した。
-実機試聴と長時間実行は運用QA事項として追跡する。
+スコア、DSP契約、帯域、リズム、Worklet cache-buster、通常URL到達、ブラウザ初期表示、
+開始後Chapter 1表示の自動検証を完了扱いとする。実機試聴と長時間実行は運用QA事項として
+追跡する。
