@@ -39,7 +39,7 @@ import type { QualityLevel, Viewport } from "../../contracts";
 
 const CAMERA_FOV_DEGREES = 38;
 const MATHEMATICAL_BOUND_RADIUS = Math.hypot(1, 1 / Math.sqrt(2), 0.6);
-const CAMERA_FIT_RADIUS = MATHEMATICAL_BOUND_RADIUS * 1.18;
+const CAMERA_FIT_RADIUS = MATHEMATICAL_BOUND_RADIUS * 1.16;
 const CAMERA_DIRECTION = new THREE.Vector3(1.9, -2.7, 1.8).normalize();
 const CAMERA_TARGET_Z = 0.42;
 const BOUNDARY_HALF_HEIGHT =
@@ -235,7 +235,7 @@ function createSurface(model: SpectralCathedralDrawingModel): {
     color: new THREE.Color(0.52, 0.72, 1),
     vertexColors: true,
     transparent: true,
-    opacity: 0.68,
+    opacity: 0.84,
     side: THREE.DoubleSide,
     toneMapped: false,
     polygonOffset: true,
@@ -268,7 +268,7 @@ function createBoundary(): THREE.Line {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   const material = new THREE.LineBasicMaterial({
-    color: 0xb8d1d8,
+    color: 0xd7f9ff,
     toneMapped: false,
   });
   const boundary = new THREE.Line(geometry, material);
@@ -287,7 +287,7 @@ function createNodalLines(model: SpectralCathedralDrawingModel): {
   geometry.setDrawRange(0, model.nodalSegmentCount * 2);
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), MATHEMATICAL_BOUND_RADIUS);
   const material = new THREE.LineBasicMaterial({
-    color: 0x9c7a3b,
+    color: 0xffc875,
     toneMapped: false,
   });
   const lines = new THREE.LineSegments(geometry, material);
@@ -334,7 +334,7 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
             getSpectralCathedralPoeticQuality("ultra", backend).particleCount,
           ),
           palette: [0x62eaff, 0xb678ff, 0xffb56e],
-          extent: { x: 18, y: 13, z: 18 },
+          extent: { x: 24, y: 16, z: 24 },
         })
       : null;
     this.poeticLayer = poeticLayers
@@ -351,7 +351,7 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
       backend: this.backend,
       scene: this.scene,
       camera: this.camera,
-      exposure: 1.08,
+      exposure: 1.22,
     });
     this.postProcessor.setQuality(this.quality);
   }

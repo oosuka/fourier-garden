@@ -20,10 +20,10 @@ describe("Möbius Choir poetic layer", () => {
     );
 
     expect(layer.getStats()).toEqual({
-      particles: 24_000,
-      surfaceParticles: 13_000,
-      atmosphereParticles: 5_000,
-      panoramaParticles: 6_000,
+      particles: 34_000,
+      surfaceParticles: 17_000,
+      atmosphereParticles: 7_000,
+      panoramaParticles: 10_000,
       ribbons: 6,
       trailLayers: 3,
       halos: 6,
@@ -42,10 +42,10 @@ describe("Möbius Choir poetic layer", () => {
     );
     layer.setQuality("low");
     expect(layer.getStats()).toEqual({
-      particles: 6_000,
-      surfaceParticles: 3_300,
-      atmosphereParticles: 1_200,
-      panoramaParticles: 1_500,
+      particles: 10_000,
+      surfaceParticles: 5_000,
+      atmosphereParticles: 2_000,
+      panoramaParticles: 3_000,
       ribbons: 3,
       trailLayers: 1,
       halos: 6,
@@ -54,10 +54,10 @@ describe("Möbius Choir poetic layer", () => {
     });
     layer.setQuality("ultra");
     expect(layer.getStats()).toEqual({
-      particles: 24_000,
-      surfaceParticles: 13_000,
-      atmosphereParticles: 5_000,
-      panoramaParticles: 6_000,
+      particles: 34_000,
+      surfaceParticles: 17_000,
+      atmosphereParticles: 7_000,
+      panoramaParticles: 10_000,
       ribbons: 6,
       trailLayers: 3,
       halos: 6,

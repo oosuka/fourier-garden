@@ -30,7 +30,7 @@ describe("Spectral Cathedral poetic layer", () => {
       grandVaultRibs: 9,
       visibleGrandVaultRibs: 7,
       archMembranes: 6,
-      particles: 26_000,
+      particles: 38_000,
       volumetricHalos: 7,
       archTrailLayers: 2,
     });
@@ -56,7 +56,7 @@ describe("Spectral Cathedral poetic layer", () => {
       grandVaultRibs: 9,
       visibleGrandVaultRibs: 3,
       archMembranes: 6,
-      particles: 6_000,
+      particles: 10_000,
       volumetricHalos: 0,
       archTrailLayers: 0,
     });
@@ -72,7 +72,7 @@ describe("Spectral Cathedral poetic layer", () => {
       grandVaultRibs: 9,
       visibleGrandVaultRibs: 9,
       archMembranes: 6,
-      particles: 35_000,
+      particles: 52_000,
       volumetricHalos: 7,
       archTrailLayers: 3,
     });

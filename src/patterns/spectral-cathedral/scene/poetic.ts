@@ -13,7 +13,7 @@ import type { QualityLevel } from "../../contracts";
 export const SPECTRAL_CATHEDRAL_LIGHT_ANCHOR_LIMIT = 8;
 export const SPECTRAL_CATHEDRAL_CANONICAL_LIGHT_ANCHOR_COUNT = 7;
 export const SPECTRAL_CATHEDRAL_ARCH_POINT_COUNT = 48;
-export const SPECTRAL_CATHEDRAL_MAX_PARTICLES = 35_000;
+export const SPECTRAL_CATHEDRAL_MAX_PARTICLES = 52_000;
 
 const MINIMUM_ANCHOR_DISTANCE = SPECTRAL_CATHEDRAL_DEFINITION.width * 0.12;
 const LOCAL_MAXIMUM_EPSILON = 1e-12;
@@ -45,22 +45,22 @@ export interface SpectralCathedralPoeticModel {
 
 const WEBGPU_QUALITY: Readonly<Record<QualityLevel, SpectralCathedralPoeticQuality>> = {
   low: {
-    particleCount: 6_000,
+    particleCount: 10_000,
     volumetricHaloCount: 0,
     archTrailLayers: 0,
   },
   medium: {
-    particleCount: 14_000,
+    particleCount: 22_000,
     volumetricHaloCount: 4,
     archTrailLayers: 1,
   },
   high: {
-    particleCount: 26_000,
+    particleCount: 38_000,
     volumetricHaloCount: 7,
     archTrailLayers: 2,
   },
   ultra: {
-    particleCount: 35_000,
+    particleCount: 52_000,
     volumetricHaloCount: 7,
     archTrailLayers: 3,
   },
@@ -186,9 +186,9 @@ function initializeParticles(
   for (let index = 0; index < SPECTRAL_CATHEDRAL_MAX_PARTICLES; index += 1) {
     const baseOffset = index * 6;
     const positionOffset = index * 3;
-    const baseX = -1.45 + random() * 2.9;
-    const baseY = -1.05 + random() * 2.1;
-    const baseZ = -0.28 + random() * 2;
+    const baseX = -1.72 + random() * 3.44;
+    const baseY = -1.26 + random() * 2.52;
+    const baseZ = -0.42 + random() * 2.82;
     base[baseOffset] = baseX;
     base[baseOffset + 1] = baseY;
     base[baseOffset + 2] = baseZ;

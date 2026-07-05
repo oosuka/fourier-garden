@@ -84,12 +84,12 @@ describe("Spectral Cathedral poetic anchors", () => {
 describe("Spectral Cathedral poetic quality", () => {
   it("reduces only poetic budgets", () => {
     expect(getSpectralCathedralPoeticQuality("low", "webgpu")).toEqual({
-      particleCount: 6_000,
+      particleCount: 10_000,
       volumetricHaloCount: 0,
       archTrailLayers: 0,
     });
     expect(getSpectralCathedralPoeticQuality("ultra", "webgpu")).toEqual({
-      particleCount: 35_000,
+      particleCount: 52_000,
       volumetricHaloCount: 7,
       archTrailLayers: 3,
     });
@@ -133,16 +133,16 @@ describe("Spectral Cathedral poetic particles", () => {
 
   it("keeps updated particles finite and inside the poetic volume", () => {
     const model = createSpectralCathedralPoeticModel(41_041);
-    updateSpectralCathedralParticles(model, 90, [1, 0.8, 0.6, 0.4, 0.2, 0.7, 0.9], 35_000);
+    updateSpectralCathedralParticles(model, 90, [1, 0.8, 0.6, 0.4, 0.2, 0.7, 0.9], 52_000);
 
     for (const value of model.particlePositions) {
       expect(Number.isFinite(value)).toBe(true);
     }
-    for (let index = 0; index < 35_000; index += 1) {
-      expect(model.particlePositions[index * 3]!).toBeGreaterThanOrEqual(-1.65);
-      expect(model.particlePositions[index * 3]!).toBeLessThanOrEqual(1.65);
-      expect(model.particlePositions[index * 3 + 1]!).toBeGreaterThanOrEqual(-1.2);
-      expect(model.particlePositions[index * 3 + 1]!).toBeLessThanOrEqual(1.2);
+    for (let index = 0; index < 52_000; index += 1) {
+      expect(model.particlePositions[index * 3]!).toBeGreaterThanOrEqual(-1.95);
+      expect(model.particlePositions[index * 3]!).toBeLessThanOrEqual(1.95);
+      expect(model.particlePositions[index * 3 + 1]!).toBeGreaterThanOrEqual(-1.42);
+      expect(model.particlePositions[index * 3 + 1]!).toBeLessThanOrEqual(1.42);
       expect(model.particlePositions[index * 3 + 2]!).toBeGreaterThanOrEqual(-0.28);
       expect(model.particlePositions[index * 3 + 2]!).toBeLessThanOrEqual(1.72);
     }
@@ -168,7 +168,7 @@ describe("Spectral Cathedral poetic particles", () => {
       /energy/i,
     );
     expect(() => updateSpectralCathedralParticles(model, 0, [0, 0], 1)).toThrow(/energy/i);
-    expect(() => updateSpectralCathedralParticles(model, 0, [0, 0, 0, 0, 0, 0, 0], 35_001)).toThrow(
+    expect(() => updateSpectralCathedralParticles(model, 0, [0, 0, 0, 0, 0, 0, 0], 52_001)).toThrow(
       /count/i,
     );
   });

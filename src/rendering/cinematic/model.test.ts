@@ -10,14 +10,14 @@ import {
 describe("cinematic environment model", () => {
   it("uses the approved total particle budgets", () => {
     expect(CINEMATIC_PARTICLE_BUDGETS).toEqual({
-      "residue-bloom": { low: 8_000, medium: 18_000, high: 32_000, ultra: 48_000 },
+      "residue-bloom": { low: 14_000, medium: 32_000, high: 64_000, ultra: 96_000 },
       "spectral-cathedral": {
-        low: 8_000,
-        medium: 24_000,
-        high: 48_000,
-        ultra: 64_000,
+        low: 16_000,
+        medium: 44_000,
+        high: 86_000,
+        ultra: 128_000,
       },
-      "mobius-choir": { low: 8_000, medium: 22_000, high: 44_000, ultra: 60_000 },
+      "mobius-choir": { low: 16_000, medium: 42_000, high: 82_000, ultra: 112_000 },
     });
   });
 
@@ -41,9 +41,9 @@ describe("cinematic environment model", () => {
   });
 
   it("reserves chapter-local poetic particles before allocating environment dust", () => {
-    expect(getCinematicEnvironmentParticleCount("mobius-choir", "high", 24_000)).toBe(20_000);
-    expect(getCinematicEnvironmentParticleCount("spectral-cathedral", "ultra", 35_000)).toBe(
-      29_000,
+    expect(getCinematicEnvironmentParticleCount("mobius-choir", "high", 34_000)).toBe(48_000);
+    expect(getCinematicEnvironmentParticleCount("spectral-cathedral", "ultra", 52_000)).toBe(
+      76_000,
     );
   });
 
@@ -54,7 +54,7 @@ describe("cinematic environment model", () => {
   });
 
   it("rejects impossible budgets and invalid aspects", () => {
-    expect(() => getCinematicEnvironmentParticleCount("residue-bloom", "low", 8_001)).toThrow(
+    expect(() => getCinematicEnvironmentParticleCount("residue-bloom", "low", 14_001)).toThrow(
       /exceeds/i,
     );
     expect(() => getCinematicViewportSpan(0)).toThrow(/positive/i);

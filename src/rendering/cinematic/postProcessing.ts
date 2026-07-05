@@ -12,14 +12,15 @@ export interface CinematicPostProfile {
   enabled: boolean;
   strength: number;
   radius: number;
+  threshold: number;
 }
 
 const POST_PROFILES: Readonly<Record<QualityLevel, Readonly<CinematicPostProfile>>> = Object.freeze(
   {
-    low: Object.freeze({ enabled: false, strength: 0, radius: 0 }),
-    medium: Object.freeze({ enabled: true, strength: 0.45, radius: 0.18 }),
-    high: Object.freeze({ enabled: true, strength: 0.7, radius: 0.3 }),
-    ultra: Object.freeze({ enabled: true, strength: 0.85, radius: 0.38 }),
+    low: Object.freeze({ enabled: false, strength: 0, radius: 0, threshold: 1 }),
+    medium: Object.freeze({ enabled: true, strength: 0.66, radius: 0.24, threshold: 0.86 }),
+    high: Object.freeze({ enabled: true, strength: 1.05, radius: 0.42, threshold: 0.72 }),
+    ultra: Object.freeze({ enabled: true, strength: 1.25, radius: 0.54, threshold: 0.64 }),
   },
 );
 
@@ -100,7 +101,7 @@ abstract class BasePostProcessor implements CinematicPostProcessor {
   protected getStrength(): number {
     const profile = getCinematicPostProfile(this.quality);
     return profile.enabled
-      ? Math.min(1.01, profile.strength + Math.min(0.16, this.energy * 0.12))
+      ? Math.min(1.44, profile.strength + Math.min(0.24, this.energy * 0.2))
       : 0;
   }
 
@@ -152,7 +153,7 @@ class WebGpuPostProcessor extends BasePostProcessor {
     super();
     this.scenePass = pass(scene, camera);
     const sceneColor = this.scenePass.getTextureNode("output");
-    this.bloomNode = bloom(sceneColor, 0.7, 0.3, 1.05);
+    this.bloomNode = bloom(sceneColor, 1.05, 0.42, 0.72);
     this.pipeline = new THREE.RenderPipeline(renderer);
     this.pipeline.outputNode = sceneColor.add(this.bloomNode);
     this.applyProfile();
@@ -175,6 +176,7 @@ class WebGpuPostProcessor extends BasePostProcessor {
     const profile = getCinematicPostProfile(this.quality);
     this.bloomNode.strength.value = this.getStrength();
     this.bloomNode.radius.value = profile.radius;
+    this.bloomNode.threshold.value = profile.threshold;
   }
 
   dispose(): void {
@@ -194,6 +196,7 @@ interface WebGlComposerLike {
 interface WebGlBloomLike {
   strength: number;
   radius: number;
+  threshold: number;
 }
 
 class WebGlPostProcessor extends BasePostProcessor {
@@ -229,6 +232,7 @@ class WebGlPostProcessor extends BasePostProcessor {
     const profile = getCinematicPostProfile(this.quality);
     this.bloomPass.strength = this.getStrength();
     this.bloomPass.radius = profile.radius;
+    this.bloomPass.threshold = profile.threshold;
   }
 
   dispose(): void {
@@ -275,7 +279,7 @@ export async function createCinematicPostProcessor({
     const webGlRenderer = renderer as WebGLRenderer;
     const composer = new EffectComposer(webGlRenderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.7, 0.3, 1.05);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 1.05, 0.42, 0.72);
     composer.addPass(bloomPass);
     return new WebGlPostProcessor(webGlRenderer, scene, camera, composer, bloomPass);
   } catch (error) {

@@ -2,23 +2,27 @@ import { describe, expect, it } from "vitest";
 
 import { projectSeriesToVerticalAxis } from "../../../math/fourierSeries";
 import { RESIDUE_BLOOM_SERIES } from "../math/model";
-import { getResidueBloomCinematicCounts, getResidueBloomPrimaryWavePoint } from "./scene";
+import {
+  getResidueBloomCinematicCounts,
+  getResidueBloomLocalParticleCount,
+  getResidueBloomPrimaryWavePoint,
+} from "./scene";
 
 describe("Residue Bloom cinematic scene", () => {
   it("matches every approved total particle budget", () => {
     expect(getResidueBloomCinematicCounts("low")).toEqual({
-      localParticles: 2_400,
-      burstParticles: 384,
-      environmentParticles: 5_216,
-      totalParticles: 8_000,
+      localParticles: 4_000,
+      burstParticles: 768,
+      environmentParticles: 9_232,
+      totalParticles: 14_000,
     });
-    expect(getResidueBloomCinematicCounts("medium").totalParticles).toBe(18_000);
-    expect(getResidueBloomCinematicCounts("high").totalParticles).toBe(32_000);
+    expect(getResidueBloomCinematicCounts("medium").totalParticles).toBe(32_000);
+    expect(getResidueBloomCinematicCounts("high").totalParticles).toBe(64_000);
     expect(getResidueBloomCinematicCounts("ultra")).toEqual({
-      localParticles: 7_200,
-      burstParticles: 384,
-      environmentParticles: 40_416,
-      totalParticles: 48_000,
+      localParticles: 16_000,
+      burstParticles: 768,
+      environmentParticles: 79_232,
+      totalParticles: 96_000,
     });
   });
 
@@ -30,6 +34,12 @@ describe("Residue Bloom cinematic scene", () => {
       projectSeriesToVerticalAxis(RESIDUE_BLOOM_SERIES, point.angle, 0.35, 0.54),
       12,
     );
+  });
+
+  it("caps local poetic flow particles on the WebGL fallback path", () => {
+    expect(getResidueBloomLocalParticleCount("high", "webgpu")).toBe(12_000);
+    expect(getResidueBloomLocalParticleCount("high", "webgl")).toBe(7_000);
+    expect(getResidueBloomLocalParticleCount("ultra", "webgl")).toBe(9_000);
   });
 
   it("rejects invalid primary waveform inputs", () => {

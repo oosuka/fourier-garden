@@ -32,21 +32,21 @@ describe("Möbius Choir strict scene contracts", () => {
     expect(ultra.strict).toEqual(MOBIUS_CHOIR_STRICT_LAYER_COUNTS);
     expect(low.poetic?.particles).toBeLessThan(ultra.poetic?.particles ?? 0);
     expect(low.poetic).toMatchObject({
-      particles: 6_000,
-      environmentParticles: 2_000,
-      totalParticles: 8_000,
+      particles: 10_000,
+      environmentParticles: 6_000,
+      totalParticles: 16_000,
       shellLayers: 1,
     });
     expect(getMobiusChoirSceneLayerCounts("high", "webgpu", true).poetic).toMatchObject({
-      particles: 24_000,
-      environmentParticles: 20_000,
-      totalParticles: 44_000,
+      particles: 34_000,
+      environmentParticles: 48_000,
+      totalParticles: 82_000,
       shellLayers: 2,
     });
     expect(ultra.poetic).toMatchObject({
-      particles: 24_000,
-      environmentParticles: 36_000,
-      totalParticles: 60_000,
+      particles: 34_000,
+      environmentParticles: 78_000,
+      totalParticles: 112_000,
       shellLayers: 2,
     });
     expect(getMobiusChoirSceneLayerCounts("high", "webgl", false)).toEqual({

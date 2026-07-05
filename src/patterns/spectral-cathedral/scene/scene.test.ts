@@ -30,19 +30,19 @@ describe("Spectral Cathedral strict scene contracts", () => {
     expect(ultra.poetic?.anchors).toBe(7);
     expect(low.poetic?.particles).toBeLessThan(ultra.poetic?.particles ?? 0);
     expect(low.poetic).toMatchObject({
-      particles: 6_000,
-      environmentParticles: 2_000,
-      totalParticles: 8_000,
+      particles: 10_000,
+      environmentParticles: 6_000,
+      totalParticles: 16_000,
     });
     expect(getSpectralCathedralSceneLayerCounts("high", "webgpu", true).poetic).toMatchObject({
-      particles: 26_000,
-      environmentParticles: 22_000,
-      totalParticles: 48_000,
+      particles: 38_000,
+      environmentParticles: 48_000,
+      totalParticles: 86_000,
     });
     expect(ultra.poetic).toMatchObject({
-      particles: 35_000,
-      environmentParticles: 29_000,
-      totalParticles: 64_000,
+      particles: 52_000,
+      environmentParticles: 76_000,
+      totalParticles: 128_000,
     });
   });
 

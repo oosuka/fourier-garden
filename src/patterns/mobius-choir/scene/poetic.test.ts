@@ -38,30 +38,30 @@ describe("Möbius Choir two-lap poetic topology", () => {
 });
 
 describe("Möbius Choir poetic model", () => {
-  it("uses the approved quality budgets up to 24,000 particles", () => {
+  it("uses the approved quality budgets up to 34,000 particles", () => {
     expect(getMobiusChoirPoeticQuality("low")).toEqual({
-      particleCount: 6_000,
-      surfaceParticleCount: 3_300,
-      atmosphereParticleCount: 1_200,
-      panoramaParticleCount: 1_500,
+      particleCount: 10_000,
+      surfaceParticleCount: 5_000,
+      atmosphereParticleCount: 2_000,
+      panoramaParticleCount: 3_000,
       ribbonCount: 3,
       trailLayers: 1,
       haloCount: 6,
     });
     expect(getMobiusChoirPoeticQuality("high")).toEqual({
-      particleCount: 24_000,
-      surfaceParticleCount: 13_000,
-      atmosphereParticleCount: 5_000,
-      panoramaParticleCount: 6_000,
+      particleCount: 34_000,
+      surfaceParticleCount: 17_000,
+      atmosphereParticleCount: 7_000,
+      panoramaParticleCount: 10_000,
       ribbonCount: 6,
       trailLayers: 3,
       haloCount: 6,
     });
     expect(getMobiusChoirPoeticQuality("ultra")).toEqual({
-      particleCount: 24_000,
-      surfaceParticleCount: 13_000,
-      atmosphereParticleCount: 5_000,
-      panoramaParticleCount: 6_000,
+      particleCount: 34_000,
+      surfaceParticleCount: 17_000,
+      atmosphereParticleCount: 7_000,
+      panoramaParticleCount: 10_000,
       ribbonCount: 6,
       trailLayers: 3,
       haloCount: 6,
@@ -96,7 +96,7 @@ describe("Möbius Choir poetic model", () => {
       12.5,
       [0.2, 0.4, 0.7, 0.1, 0.8, 0.5],
       [0.1, 0.3, 0.5, 0.7, 0.9, 0.2],
-      24_000,
+      34_000,
     );
     const panoramaStart = MOBIUS_CHOIR_SURFACE_PARTICLES + MOBIUS_CHOIR_ATMOSPHERE_PARTICLES;
     let minimumX = Number.POSITIVE_INFINITY;
@@ -121,7 +121,7 @@ describe("Möbius Choir poetic model", () => {
       12.5,
       [0.2, 0.4, 0.7, 0.1, 0.8, 0.5],
       [0.1, 0.3, 0.5, 0.7, 0.9, 0.2],
-      24_000,
+      34_000,
     );
     let surfaceRadius = 0;
     let atmosphereRadius = 0;
@@ -153,7 +153,7 @@ describe("Möbius Choir poetic model", () => {
       12.5,
       [0.2, 0.4, 0.7, 0.1, 0.8, 0.5],
       [0.1, 0.3, 0.5, 0.7, 0.9, 0.2],
-      24_000,
+      34_000,
     );
 
     expect(model.particlePositions).toBe(positions);
@@ -165,8 +165,8 @@ describe("Möbius Choir poetic model", () => {
     const moving = createMobiusChoirPoeticModel(41_041);
     const energy = [0.4, 0.4, 0.4, 0.4, 0.4, 0.4];
 
-    updateMobiusChoirParticles(still, 12.5, energy, [0, 0, 0, 0, 0, 0], 24_000);
-    updateMobiusChoirParticles(moving, 12.5, energy, [1, 1, 1, 1, 1, 1], 24_000);
+    updateMobiusChoirParticles(still, 12.5, energy, [0, 0, 0, 0, 0, 0], 34_000);
+    updateMobiusChoirParticles(moving, 12.5, energy, [1, 1, 1, 1, 1, 1], 34_000);
 
     expect(moving.particlePositions).not.toEqual(still.particlePositions);
     expect(moving.particlePositions.every(Number.isFinite)).toBe(true);

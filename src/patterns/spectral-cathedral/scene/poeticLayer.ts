@@ -22,7 +22,7 @@ import {
 import type { QualityLevel } from "../../contracts";
 
 const PILLAR_BOTTOM_Z = 0.02;
-const PILLAR_TOP_Z = 1.62;
+const PILLAR_TOP_Z = 2.58;
 const MAX_ARCH_TRAIL_LAYERS = 3;
 
 export interface SpectralCathedralPoeticLayerStats {
@@ -45,7 +45,7 @@ export function getSpectralCathedralParticleStyle(backend: RendererBackend): Rea
   size: number;
   opacity: number;
 }> {
-  return backend === "webgl" ? { size: 0.006, opacity: 0.14 } : { size: 0.018, opacity: 0.28 };
+  return backend === "webgl" ? { size: 0.008, opacity: 0.2 } : { size: 0.024, opacity: 0.42 };
 }
 
 function clamp01(value: number): number {
@@ -135,11 +135,18 @@ export class SpectralCathedralPoeticLayer {
   private readonly pillarColorAttribute: THREE.BufferAttribute;
   private readonly pillarMaterial: THREE.LineBasicMaterial;
   private readonly pillarLines: THREE.LineSegments;
-  private readonly pillarShellGeometry = new THREE.CylinderGeometry(0.016, 0.028, 1.6, 12, 1, true);
+  private readonly pillarShellGeometry = new THREE.CylinderGeometry(
+    0.026,
+    0.046,
+    2.58,
+    16,
+    1,
+    true,
+  );
   private readonly pillarShells: THREE.Mesh[] = [];
   private readonly pillarShellMaterials: THREE.MeshBasicMaterial[] = [];
   private readonly haloTexture = createHaloTexture();
-  private readonly haloGeometry = new THREE.PlaneGeometry(0.18, 1.6);
+  private readonly haloGeometry = new THREE.PlaneGeometry(0.32, 2.72);
   private readonly haloGroups: THREE.Group[] = [];
   private readonly haloMaterials: THREE.MeshBasicMaterial[] = [];
   private readonly archCoreLines: THREE.Line[] = [];
@@ -208,7 +215,7 @@ export class SpectralCathedralPoeticLayer {
       const material = new THREE.MeshBasicMaterial({
         color: new THREE.Color(0.24, 1.08, 1.32),
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.13,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide,
@@ -230,7 +237,7 @@ export class SpectralCathedralPoeticLayer {
         map: this.haloTexture,
         color: new THREE.Color(0.25, 1.1, 1.3),
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.13,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide,
@@ -285,14 +292,14 @@ export class SpectralCathedralPoeticLayer {
         const geometry = new THREE.TubeGeometry(
           curve,
           Math.max(8, points.length - 1),
-          0.0038 + filamentIndex * 0.00055,
+          0.0062 + filamentIndex * 0.00075,
           5,
           false,
         );
         const material = new THREE.MeshBasicMaterial({
           color: new THREE.Color(0.3, 1.16, 1.38),
           transparent: true,
-          opacity: 0.035,
+          opacity: 0.06,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
           toneMapped: false,
@@ -313,7 +320,7 @@ export class SpectralCathedralPoeticLayer {
       const membraneMaterial = new THREE.MeshBasicMaterial({
         color: new THREE.Color(0.2, 0.72, 1.14),
         transparent: true,
-        opacity: 0.018,
+        opacity: 0.034,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide,
@@ -336,7 +343,7 @@ export class SpectralCathedralPoeticLayer {
         const material = new THREE.LineBasicMaterial({
           color: new THREE.Color(0.42, 0.66, 1.08),
           transparent: true,
-          opacity: [0.11, 0.075, 0.05, 0.035][repeatIndex]!,
+          opacity: [0.18, 0.125, 0.084, 0.056][repeatIndex]!,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
           toneMapped: false,
@@ -421,14 +428,14 @@ export class SpectralCathedralPoeticLayer {
       const geometry = new THREE.TubeGeometry(
         new THREE.CatmullRomCurve3(points),
         points.length - 1,
-        0.0038,
+        0.0064,
         5,
         false,
       );
       const material = new THREE.MeshBasicMaterial({
         color: grandVaultColors[ribIndex % grandVaultColors.length],
         transparent: true,
-        opacity: 0.035,
+        opacity: 0.058,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         toneMapped: false,
@@ -482,14 +489,14 @@ export class SpectralCathedralPoeticLayer {
       const breathing = 0.5 + 0.5 * Math.sin(absoluteTimeSeconds * 0.19 + anchor.breathingPhase);
       const pillar = response.pillars[index]!;
       const intensity = Math.min(
-        0.78,
+        1,
         Math.max(
-          0.08,
-          0.1 +
-            magnitudes[index]! * 0.14 +
-            breathing * 0.025 +
-            pillar.impact * 0.42 +
-            pillar.afterglow * 0.14,
+          0.12,
+          0.15 +
+            magnitudes[index]! * 0.19 +
+            breathing * 0.04 +
+            pillar.impact * 0.58 +
+            pillar.afterglow * 0.2,
         ),
       );
       const warmth = pillar.warmth * 0.3;
@@ -512,7 +519,7 @@ export class SpectralCathedralPoeticLayer {
       shell.position.z = PILLAR_BOTTOM_Z + pillar.height * (PILLAR_TOP_Z - PILLAR_BOTTOM_Z) * 0.5;
       const shellMaterial = this.pillarShellMaterials[index]!;
       shellMaterial.opacity = clamp01(
-        0.012 + magnitudes[index]! * 0.012 + pillar.impact * 0.075 + pillar.afterglow * 0.035,
+        0.026 + magnitudes[index]! * 0.022 + pillar.impact * 0.12 + pillar.afterglow * 0.06,
       );
       shellMaterial.color.setRGB(
         0.08 + pillar.warmth * 0.88,
@@ -522,7 +529,7 @@ export class SpectralCathedralPoeticLayer {
 
       const haloMaterial = this.haloMaterials[index]!;
       haloMaterial.opacity = clamp01(
-        0.012 + magnitudes[index]! * 0.025 + pillar.impact * 0.1 + pillar.afterglow * 0.04,
+        0.026 + magnitudes[index]! * 0.04 + pillar.impact * 0.16 + pillar.afterglow * 0.07,
       );
       haloMaterial.color.setRGB(
         0.12 + pillar.warmth * 0.48,
@@ -537,7 +544,7 @@ export class SpectralCathedralPoeticLayer {
 
     for (const [archIndex, material] of this.archCoreMaterials.entries()) {
       const arch = response.arches[archIndex]!;
-      material.opacity = 0.035 + arch.energy * 0.22 + arch.afterglow * 0.08;
+      material.opacity = 0.07 + arch.energy * 0.34 + arch.afterglow * 0.14;
       material.color.setRGB(
         0.28 + arch.energy * 0.28,
         0.86 - arch.energy * 0.08,
@@ -547,7 +554,7 @@ export class SpectralCathedralPoeticLayer {
         archIndex
       ]!.entries()) {
         filamentMaterial.opacity = this.archFilamentMeshes[archIndex]![filamentIndex]!.visible
-          ? 0.018 + arch.energy * (0.16 / (filamentIndex + 1)) + arch.afterglow * 0.04
+          ? 0.03 + arch.energy * (0.24 / (filamentIndex + 1)) + arch.afterglow * 0.07
           : 0;
         filamentMaterial.color.setRGB(
           0.28 + arch.energy * 0.82,
@@ -556,16 +563,16 @@ export class SpectralCathedralPoeticLayer {
         );
       }
       this.archMembraneMaterials[archIndex]!.opacity =
-        0.008 + arch.energy * 0.065 + arch.afterglow * 0.025;
+        0.018 + arch.energy * 0.11 + arch.afterglow * 0.045;
       for (const [repeatIndex, vaultMaterial] of this.vaultMaterials[archIndex]!.entries()) {
         vaultMaterial.opacity = this.vaultLines[archIndex]![repeatIndex]!.visible
-          ? (0.055 + arch.afterglow * 0.1 + arch.energy * 0.035) / (repeatIndex + 1)
+          ? (0.09 + arch.afterglow * 0.16 + arch.energy * 0.06) / (repeatIndex + 1)
           : 0;
       }
       for (const [layerIndex, trailMaterial] of this.archTrailMaterials[archIndex]!.entries()) {
         trailMaterial.opacity =
           layerIndex < this.qualitySettings.archTrailLayers
-            ? arch.afterglow * (0.15 / (layerIndex + 1))
+            ? arch.afterglow * (0.24 / (layerIndex + 1))
             : 0;
       }
 
@@ -598,12 +605,12 @@ export class SpectralCathedralPoeticLayer {
     const meanParticleEnergy =
       response.particles.reduce((sum, particle) => sum + particle.energy, 0) /
       response.particles.length;
-    this.particleMaterial.opacity = particleStyle.opacity * (1 + meanParticleEnergy * 0.38);
+    this.particleMaterial.opacity = particleStyle.opacity * (1 + meanParticleEnergy * 0.52);
     this.grandVaultMaterials.forEach((material, index) => {
       const breathing =
         0.82 + Math.sin(absoluteTimeSeconds * (0.07 + index * 0.003) + index) * 0.18;
       material.opacity = this.grandVaultMeshes[index]!.visible
-        ? 0.02 + meanParticleEnergy * 0.032 * breathing
+        ? 0.036 + meanParticleEnergy * 0.052 * breathing
         : 0;
     });
   }

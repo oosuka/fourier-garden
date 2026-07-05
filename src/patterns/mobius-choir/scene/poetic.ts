@@ -6,10 +6,10 @@ import {
 } from "../math/model";
 import type { QualityLevel } from "../../contracts";
 
-export const MOBIUS_CHOIR_MAX_PARTICLES = 24_000;
-export const MOBIUS_CHOIR_SURFACE_PARTICLES = 13_000;
-export const MOBIUS_CHOIR_ATMOSPHERE_PARTICLES = 5_000;
-export const MOBIUS_CHOIR_PANORAMA_PARTICLES = 6_000;
+export const MOBIUS_CHOIR_MAX_PARTICLES = 34_000;
+export const MOBIUS_CHOIR_SURFACE_PARTICLES = 17_000;
+export const MOBIUS_CHOIR_ATMOSPHERE_PARTICLES = 7_000;
+export const MOBIUS_CHOIR_PANORAMA_PARTICLES = 10_000;
 export const MOBIUS_CHOIR_RIBBON_POINT_COUNT = 128;
 
 export interface MobiusChoirPoeticQuality {
@@ -42,37 +42,37 @@ export interface MobiusChoirPoeticModel {
 
 const QUALITY: Readonly<Record<QualityLevel, MobiusChoirPoeticQuality>> = {
   low: {
-    particleCount: 6_000,
-    surfaceParticleCount: 3_300,
-    atmosphereParticleCount: 1_200,
-    panoramaParticleCount: 1_500,
+    particleCount: 10_000,
+    surfaceParticleCount: 5_000,
+    atmosphereParticleCount: 2_000,
+    panoramaParticleCount: 3_000,
     ribbonCount: 3,
     trailLayers: 1,
     haloCount: 6,
   },
   medium: {
-    particleCount: 14_000,
-    surfaceParticleCount: 7_500,
-    atmosphereParticleCount: 2_500,
-    panoramaParticleCount: 4_000,
+    particleCount: 22_000,
+    surfaceParticleCount: 11_000,
+    atmosphereParticleCount: 4_500,
+    panoramaParticleCount: 6_500,
     ribbonCount: 6,
     trailLayers: 2,
     haloCount: 6,
   },
   high: {
-    particleCount: 24_000,
-    surfaceParticleCount: 13_000,
-    atmosphereParticleCount: 5_000,
-    panoramaParticleCount: 6_000,
+    particleCount: 34_000,
+    surfaceParticleCount: 17_000,
+    atmosphereParticleCount: 7_000,
+    panoramaParticleCount: 10_000,
     ribbonCount: 6,
     trailLayers: 3,
     haloCount: 6,
   },
   ultra: {
-    particleCount: 24_000,
-    surfaceParticleCount: 13_000,
-    atmosphereParticleCount: 5_000,
-    panoramaParticleCount: 6_000,
+    particleCount: 34_000,
+    surfaceParticleCount: 17_000,
+    atmosphereParticleCount: 7_000,
+    panoramaParticleCount: 10_000,
     ribbonCount: 6,
     trailLayers: 3,
     haloCount: 6,

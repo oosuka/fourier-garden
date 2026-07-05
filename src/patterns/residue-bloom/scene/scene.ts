@@ -31,7 +31,7 @@ import type { ResidueBloomFrameContext, ResidueBloomSceneInstance } from "../typ
 const PALETTE = [0x78f3ff, 0x8ac8ff, 0xa798ff, 0xe59aff, 0xffc782, 0xc8fff3] as const;
 const TWO_PI = Math.PI * 2;
 const BURST_SLOT_COUNT = 4;
-const BURST_PARTICLES_PER_SLOT = 96;
+const BURST_PARTICLES_PER_SLOT = 192;
 const BURST_PARTICLE_COUNT = BURST_SLOT_COUNT * BURST_PARTICLES_PER_SLOT;
 const HISTORY_PULSE_SLOT_COUNT = 4;
 const RESIDUE_BLOOM_AMPLITUDE_BOUND = RESIDUE_BLOOM_SERIES.terms.reduce(
@@ -58,11 +58,28 @@ export interface ResidueBloomSceneStats {
 }
 
 const RESIDUE_BLOOM_LOCAL_PARTICLE_COUNTS: Readonly<Record<QualityLevel, number>> = Object.freeze({
-  low: 2_400,
-  medium: 4_200,
-  high: 5_800,
-  ultra: 7_200,
+  low: 4_000,
+  medium: 8_000,
+  high: 12_000,
+  ultra: 16_000,
 });
+
+const RESIDUE_BLOOM_WEBGL_LOCAL_PARTICLE_COUNTS: Readonly<Record<QualityLevel, number>> =
+  Object.freeze({
+    low: 3_000,
+    medium: 5_000,
+    high: 7_000,
+    ultra: 9_000,
+  });
+
+export function getResidueBloomLocalParticleCount(
+  level: QualityLevel,
+  backend: RendererBackend,
+): number {
+  return backend === "webgl"
+    ? RESIDUE_BLOOM_WEBGL_LOCAL_PARTICLE_COUNTS[level]
+    : RESIDUE_BLOOM_LOCAL_PARTICLE_COUNTS[level];
+}
 
 export function getResidueBloomCinematicCounts(level: QualityLevel): {
   localParticles: number;
@@ -202,7 +219,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
           seed,
           maximumParticleCount: getResidueBloomCinematicCounts("ultra").environmentParticles,
           palette: [0x78f3ff, 0xa798ff, 0xffc782],
-          extent: { x: 39, y: 23, z: 18 },
+          extent: { x: 46, y: 27, z: 22 },
         })
       : null;
     if (this.environmentLayer) this.scene.add(this.environmentLayer.group);
@@ -235,7 +252,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       const wave = makeLine(
         720,
         PALETTE[index % PALETTE.length] ?? 0xffffff,
-        index === 0 ? 0.92 : 0.055 + (8 - index) * 0.012,
+        index === 0 ? 1 : 0.08 + (8 - index) * 0.017,
       );
       if (!poeticLayers && index > 0) wave.line.visible = false;
       this.waveLines.push(wave);
@@ -267,11 +284,11 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       this.fieldGroup.add(bead);
     }
 
-    for (let index = 0; index < 11; index += 1) {
+    for (let index = 0; index < 15; index += 1) {
       const organic = makeLine(
         460,
         PALETTE[(index + 2) % PALETTE.length] ?? 0xffffff,
-        0.035 + (index % 4) * 0.012,
+        0.048 + (index % 4) * 0.016,
         true,
       );
       organic.line.visible = poeticLayers;
@@ -283,7 +300,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     (this.connector.line.material as THREE.LineBasicMaterial).transparent = true;
     this.scene.add(this.connector.line);
 
-    const particleData = this.createFlowParticles(7_200);
+    const particleData = this.createFlowParticles(16_000);
     this.particleCloud = particleData.points;
     this.particleBase = particleData.base;
     this.particleCloud.visible = poeticLayers;
@@ -313,7 +330,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       new THREE.MeshBasicMaterial({
         color: 0x72eaff,
         transparent: true,
-        opacity: 0.11,
+        opacity: 0.16,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         toneMapped: false,
@@ -372,7 +389,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       backend: this.backend,
       scene: this.scene,
       camera: this.camera,
-      exposure: 1.13,
+      exposure: 1.26,
     });
     this.postProcessor.setQuality(this.quality);
   }
@@ -382,9 +399,9 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     const response = getResidueBloomVisualResponse(frame.score);
     const angle = timeValue * RESIDUE_BLOOM_VISUAL_ANGULAR_RATE;
     const aspect = this.viewport.width / this.viewport.height;
-    const epicycleScale = aspect < 1.6 ? 0.49 : 0.54;
-    const centerX = aspect < 1.6 ? -4.9 : -5.9;
-    const centerY = 0.35;
+    const epicycleScale = aspect < 1.6 ? 0.58 : 0.66;
+    const centerX = aspect < 1.6 ? -5.15 : -6.35;
+    const centerY = 0.12;
     const steps = getEpicycleSteps(RESIDUE_BLOOM_SERIES, angle);
 
     this.epicycleGroup.position.set(centerX, centerY, 0.7);
@@ -396,12 +413,14 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     this.endpointCore.position.set(endpointX, endpointY, 1.4);
     this.endpointHalo.position.set(endpointX, endpointY, 1.3);
     this.endpointHalo.scale.setScalar(
-      this.backend === "webgl" ? response.haloScale * 1.08 : response.haloScale,
+      this.backend === "webgl" ? response.haloScale * 1.18 : response.haloScale * 1.12,
     );
     (this.endpointHalo.material as THREE.MeshBasicMaterial).opacity =
-      this.backend === "webgl" ? Math.min(0.48, response.haloOpacity * 1.35) : response.haloOpacity;
+      this.backend === "webgl"
+        ? Math.min(0.54, response.haloOpacity * 1.5)
+        : Math.min(0.48, response.haloOpacity * 1.18);
 
-    const waveStart = aspect < 1.6 ? 1.6 : 1.1;
+    const waveStart = aspect < 1.6 ? 2.05 : 2.55;
     this.updateConnector(endpointX, endpointY, waveStart);
     this.updateWaves(timeValue, centerY, waveStart, epicycleScale);
     if (this.poeticLayers) {
@@ -557,9 +576,9 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     const points = new THREE.Points(
       geometry,
       new THREE.PointsMaterial({
-        size: 0.034,
+        size: 0.044,
         transparent: true,
-        opacity: 0.64,
+        opacity: 0.76,
         vertexColors: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -894,7 +913,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
   }
 
   private getQualityMaximum(): number {
-    return RESIDUE_BLOOM_LOCAL_PARTICLE_COUNTS[this.quality];
+    return getResidueBloomLocalParticleCount(this.quality, this.backend);
   }
 }
 

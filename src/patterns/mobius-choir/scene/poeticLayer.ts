@@ -35,7 +35,7 @@ const MAX_TRAIL_LAYERS = 3;
 const SHELL_OFFSET = 0.026;
 
 export function getMobiusChoirParticleStyle(backend: RendererBackend): MobiusChoirParticleStyle {
-  return backend === "webgl" ? { size: 0.022, opacity: 0.56 } : { size: 0.028, opacity: 0.62 };
+  return backend === "webgl" ? { size: 0.026, opacity: 0.6 } : { size: 0.036, opacity: 0.78 };
 }
 
 function createAtmosphereShell(): THREE.Mesh {
@@ -48,16 +48,16 @@ function createAtmosphereShell(): THREE.Mesh {
     const z = positions.getZ(index) / 12;
     const violet = 0.5 + 0.5 * Math.sin(x * 3.1 + z * 2.3);
     const cyan = 0.5 + 0.5 * Math.sin(y * 3.7 - x * 1.9);
-    colors[index * 3] = 0.003 + violet * 0.009;
-    colors[index * 3 + 1] = 0.004 + cyan * 0.014;
-    colors[index * 3 + 2] = 0.012 + violet * 0.025 + cyan * 0.012;
+    colors[index * 3] = 0.005 + violet * 0.014;
+    colors[index * 3 + 1] = 0.007 + cyan * 0.02;
+    colors[index * 3 + 2] = 0.02 + violet * 0.036 + cyan * 0.018;
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   const material = new THREE.MeshBasicMaterial({
     vertexColors: true,
     side: THREE.BackSide,
     transparent: true,
-    opacity: 0.76,
+    opacity: 0.9,
     depthWrite: false,
     toneMapped: false,
   });
@@ -190,7 +190,7 @@ export class MobiusChoirPoeticLayer {
     atmosphereGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 6.4);
     const atmosphereMaterial = new THREE.PointsMaterial({
       size: style.size * 0.72,
-      opacity: style.opacity * 0.68,
+      opacity: style.opacity * 0.74,
       transparent: true,
       vertexColors: true,
       depthWrite: false,
@@ -217,7 +217,7 @@ export class MobiusChoirPoeticLayer {
     panoramaGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 14);
     this.panoramaMaterial = new THREE.PointsMaterial({
       size: style.size * 0.9,
-      opacity: style.opacity * 0.52,
+      opacity: style.opacity * 0.64,
       transparent: true,
       vertexColors: true,
       depthWrite: false,
@@ -245,7 +245,7 @@ export class MobiusChoirPoeticLayer {
       const material = new THREE.MeshBasicMaterial({
         color: index === 0 ? 0x78efff : 0xb274ff,
         transparent: true,
-        opacity: index === 0 ? 0.075 : 0.055,
+        opacity: index === 0 ? 0.13 : 0.1,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
         side: THREE.DoubleSide,
@@ -265,7 +265,7 @@ export class MobiusChoirPoeticLayer {
       const material = new THREE.LineBasicMaterial({
         color: 0x805eff,
         transparent: true,
-        opacity: 0.18,
+        opacity: 0.31,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
         toneMapped: false,
@@ -304,7 +304,7 @@ export class MobiusChoirPoeticLayer {
         map: this.haloTexture,
         color: new THREE.Color(0.42, 0.3, 1.25),
         transparent: true,
-        opacity: 0.06,
+        opacity: 0.1,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
         side: THREE.DoubleSide,
@@ -370,12 +370,12 @@ export class MobiusChoirPoeticLayer {
     this.surfaceParticleAttribute.needsUpdate = true;
     this.atmosphereParticleAttribute.needsUpdate = true;
     this.panoramaParticleAttribute.needsUpdate = true;
-    this.panoramaMaterial.opacity = 0.22 + frame.collectiveEnergy * 0.22;
-    this.panoramaMaterial.size = this.panoramaBaseSize * (0.9 + frame.onsetEnergy * 0.55);
+    this.panoramaMaterial.opacity = 0.32 + frame.collectiveEnergy * 0.32;
+    this.panoramaMaterial.size = this.panoramaBaseSize * (1 + frame.onsetEnergy * 0.72);
     this.ribbonLines.forEach((line, index) => {
       const response = frame.modes[index]!;
       const material = line.material as THREE.LineBasicMaterial;
-      material.opacity = 0.05 + response.opacity * 0.62;
+      material.opacity = 0.08 + response.opacity * 0.78;
       material.color.setRGB(
         0.34 + response.cyanRatio * 0.18,
         0.22 + response.cyanRatio * 0.55,
@@ -391,9 +391,9 @@ export class MobiusChoirPoeticLayer {
       const direction = index === 0 ? 1 : -1;
       const localResponse = Math.max(-1, Math.min(1, signedVelocity * direction * 0.025));
       material.opacity =
-        (index === 0 ? 0.022 : 0.018) +
-        frame.collectiveEnergy * 0.05 +
-        Math.max(0, localResponse) * 0.025;
+        (index === 0 ? 0.045 : 0.036) +
+        frame.collectiveEnergy * 0.08 +
+        Math.max(0, localResponse) * 0.04;
       if (index === 0) {
         material.color.setRGB(
           0.04 + frame.seamEnergy * 0.08,
@@ -410,12 +410,12 @@ export class MobiusChoirPoeticLayer {
     });
     this.trailLines.forEach((line, index) => {
       (line.material as THREE.LineBasicMaterial).opacity =
-        seamEnergy * (0.38 / Math.max(1, index + 1));
+        seamEnergy * (0.52 / Math.max(1, index + 1));
     });
     this.haloGroups.forEach((halo, index) => {
       const response = frame.modes[index]!;
       const material = this.haloMaterials[index]!;
-      material.opacity = 0.035 + response.opacity * 0.2 + response.seamAfterglow * 0.16;
+      material.opacity = 0.055 + response.opacity * 0.28 + response.seamAfterglow * 0.22;
       material.color.setRGB(
         0.38 + response.cyanRatio * 0.24,
         0.24 + response.cyanRatio * 0.72,
@@ -428,7 +428,7 @@ export class MobiusChoirPoeticLayer {
     this.atmosphere.rotation.z =
       Math.sin(absoluteTimeSeconds * 0.09) * (0.035 + frame.seamEnergy * 0.035);
     (this.atmosphere.material as THREE.MeshBasicMaterial).opacity =
-      0.62 + frame.collectiveEnergy * 0.18;
+      0.72 + frame.collectiveEnergy * 0.2;
   }
 
   getStats(): MobiusChoirPoeticLayerStats {

@@ -4,21 +4,29 @@ import { getCinematicPostMode, getCinematicPostProfile } from "./postProcessing"
 
 describe("cinematic post processing", () => {
   it("uses the approved bloom profiles", () => {
-    expect(getCinematicPostProfile("low")).toEqual({ enabled: false, strength: 0, radius: 0 });
+    expect(getCinematicPostProfile("low")).toEqual({
+      enabled: false,
+      strength: 0,
+      radius: 0,
+      threshold: 1,
+    });
     expect(getCinematicPostProfile("medium")).toEqual({
       enabled: true,
-      strength: 0.45,
-      radius: 0.18,
+      strength: 0.66,
+      radius: 0.24,
+      threshold: 0.86,
     });
     expect(getCinematicPostProfile("high")).toEqual({
       enabled: true,
-      strength: 0.7,
-      radius: 0.3,
+      strength: 1.05,
+      radius: 0.42,
+      threshold: 0.72,
     });
     expect(getCinematicPostProfile("ultra")).toEqual({
       enabled: true,
-      strength: 0.85,
-      radius: 0.38,
+      strength: 1.25,
+      radius: 0.54,
+      threshold: 0.64,
     });
   });
 

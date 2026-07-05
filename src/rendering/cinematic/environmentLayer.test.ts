@@ -31,15 +31,16 @@ describe("CinematicEnvironmentLayer", () => {
     }
   });
 
-  it("creates three depth bands and three nebula veils", () => {
+  it("creates three depth bands, five nebula veils, and six filament veils", () => {
     const layer = makeLayer("residue-bloom", 40_416);
 
     expect(layer.getStats()).toEqual({
       particles: 40_416,
       depthBands: 3,
-      nebulaVeils: 3,
+      nebulaVeils: 5,
+      filamentVeils: 6,
     });
-    expect(layer.group.children).toHaveLength(6);
+    expect(layer.group.children).toHaveLength(14);
     layer.dispose();
   });
 
@@ -88,7 +89,7 @@ describe("CinematicEnvironmentLayer", () => {
     layer.update(12.5, 0.8, 0.3, camera);
 
     const cameraDirection = camera.getWorldDirection(new THREE.Vector3());
-    for (const child of layer.group.children.slice(3)) {
+    for (const child of layer.group.children.slice(3, 8)) {
       const veilNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(child.quaternion);
       expect(Math.abs(veilNormal.dot(cameraDirection))).toBeCloseTo(1, 5);
     }
@@ -120,8 +121,26 @@ describe("CinematicEnvironmentLayer", () => {
       extent: { x: 18, y: 13, z: 18 },
     });
 
-    expect(layer.getStats().nebulaVeils).toBe(3);
+    expect(layer.getStats().nebulaVeils).toBe(5);
+    expect(layer.getStats().filamentVeils).toBe(6);
     expect(() => layer.update(1, 0.4, 0.7)).not.toThrow();
+    layer.dispose();
+  });
+
+  it("caps large WebGL fallback particle buffers while accepting requested quality counts", () => {
+    const layer = new CinematicEnvironmentLayer({
+      backend: "webgl",
+      chapter: "residue-bloom",
+      seed: 41_041,
+      maximumParticleCount: 80_000,
+      palette: [0x78f3ff, 0xa798ff, 0xffc782],
+      extent: { x: 24, y: 14, z: 18 },
+    });
+
+    expect(layer.getStats().particles).toBe(8_000);
+    expect(() => layer.setParticleCount(64_000)).not.toThrow();
+    expect(layer.getStats().particles).toBe(8_000);
+    expect(() => layer.setParticleCount(80_001)).toThrow(/count/i);
     layer.dispose();
   });
 });

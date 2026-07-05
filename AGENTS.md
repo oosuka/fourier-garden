@@ -37,6 +37,18 @@ UI、README、説明文、コメントでは、この区別を曖昧にしない
 実際にDFTやFFTを導入していない機能を「高速フーリエ解析」「FFT解析」
 「FFT可視化」と呼んではならない。
 
+### 2.1 現在の正式版
+
+2026年7月5日時点の最新版を正式版として扱う。正式版の通常公開章は
+`Residue Bloom`、`Spectral Cathedral`、`Möbius Choir`の3章であり、
+いずれも`src/patterns/registry.ts`で`publication: "published"`として登録されている。
+正式版は数学・音響仕様を維持したまま、全章のシネマティック背景、粒子密度、
+星雲、フィラメント、光柱、膜、bloomを強化した版である。
+
+正式版の利用者向け概要は`README.md`、数理・音響正本は
+`docs/mathematical-model.md`、候補章と比較は`docs/chapter-atlas.md`、
+QA結果と代表画像は`design-qa.md`を参照すること。
+
 ## 3. 作品の優先順位
 
 設計判断では次を重視する。

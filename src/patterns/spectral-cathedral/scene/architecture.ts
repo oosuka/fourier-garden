@@ -6,8 +6,8 @@ export const CATHEDRAL_GRAND_VAULT_RIBS = 9;
 const GRAND_VAULT_POINTS = 65;
 
 const FILAMENT_OFFSETS = [0, -0.018, -0.009, 0.009, 0.018] as const;
-const VAULT_DEPTHS = [-0.16, -0.32, -0.48, -0.64] as const;
-const VAULT_SCALES = [0.96, 0.92, 0.88, 0.84] as const;
+const VAULT_DEPTHS = [-0.2, -0.42, -0.66, -0.92] as const;
+const VAULT_SCALES = [1.04, 0.98, 0.92, 0.86] as const;
 
 export interface CathedralPillarModel {
   readonly x: number;
@@ -73,8 +73,8 @@ function createGrandVaultRibs(): readonly Float32Array[] {
   return Array.from({ length: CATHEDRAL_GRAND_VAULT_RIBS }, (_, ribIndex) => {
     const positions = new Float32Array(GRAND_VAULT_POINTS * 3);
     const depthProgress = ribIndex / (CATHEDRAL_GRAND_VAULT_RIBS - 1);
-    const y = -1.45 + depthProgress * 2.6;
-    const width = 1.58 - Math.abs(depthProgress - 0.5) * 0.12;
+    const y = -1.74 + depthProgress * 3.16;
+    const width = 1.95 - Math.abs(depthProgress - 0.5) * 0.18;
     for (let pointIndex = 0; pointIndex < GRAND_VAULT_POINTS; pointIndex += 1) {
       const progress = pointIndex / (GRAND_VAULT_POINTS - 1);
       const normalizedX = progress * 2 - 1;
@@ -82,7 +82,7 @@ function createGrandVaultRibs(): readonly Float32Array[] {
       const offset = pointIndex * 3;
       positions[offset] = normalizedX * width;
       positions[offset + 1] = y;
-      positions[offset + 2] = 0.04 + arch * 1.98;
+      positions[offset + 2] = 0.02 + arch * 2.84;
     }
     return positions;
   });
@@ -100,8 +100,8 @@ export function createCathedralArchitectureModel(
     x: anchor.displayX,
     y: anchor.displayY,
     bottomZ: 0.02,
-    topZ: 1.62,
-    radius: 0.016,
+    topZ: 2.58,
+    radius: 0.024,
   }));
   const archFilaments = archPositions.flatMap((positions) =>
     FILAMENT_OFFSETS.map((offset) => createFilament(positions, offset)),

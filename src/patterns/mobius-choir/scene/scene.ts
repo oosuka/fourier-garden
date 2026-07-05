@@ -205,7 +205,7 @@ function createSurface(model: MobiusChoirDrawingModel): {
     color: new THREE.Color(0.58, 0.72, 1),
     vertexColors: true,
     transparent: true,
-    opacity: 0.8,
+    opacity: 0.9,
     side: THREE.DoubleSide,
     toneMapped: false,
     polygonOffset: true,
@@ -298,7 +298,7 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
   private readonly parameterGrid = createLineSegments(
     this.drawing.parameterGridPositions,
     0x5c5d9e,
-    0.2,
+    0.28,
     1,
   );
   private readonly seam = createSeam();
@@ -335,7 +335,7 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
             getMobiusChoirPoeticQuality("ultra").particleCount,
           ),
           palette: [0x76efff, 0xa766ff, 0xffbd78],
-          extent: { x: 20, y: 14, z: 20 },
+          extent: { x: 25, y: 16, z: 24 },
         })
       : null;
     this.poetic = poeticLayers
@@ -366,7 +366,7 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
       backend: this.backend,
       scene: this.scene,
       camera: this.camera,
-      exposure: 1.1,
+      exposure: 1.2,
     });
     this.postProcessor.setQuality(this.quality);
   }

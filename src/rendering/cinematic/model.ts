@@ -7,22 +7,22 @@ export const CINEMATIC_PARTICLE_BUDGETS: Readonly<
   Record<CinematicChapterId, Readonly<Record<QualityLevel, number>>>
 > = Object.freeze({
   "residue-bloom": Object.freeze({
-    low: 8_000,
-    medium: 18_000,
-    high: 32_000,
-    ultra: 48_000,
+    low: 14_000,
+    medium: 32_000,
+    high: 64_000,
+    ultra: 96_000,
   }),
   "spectral-cathedral": Object.freeze({
-    low: 8_000,
-    medium: 24_000,
-    high: 48_000,
-    ultra: 64_000,
+    low: 16_000,
+    medium: 44_000,
+    high: 86_000,
+    ultra: 128_000,
   }),
   "mobius-choir": Object.freeze({
-    low: 8_000,
-    medium: 22_000,
-    high: 44_000,
-    ultra: 60_000,
+    low: 16_000,
+    medium: 42_000,
+    high: 82_000,
+    ultra: 112_000,
   }),
 });
 
@@ -33,9 +33,9 @@ const CHAPTER_PALETTES: Readonly<Record<CinematicChapterId, readonly [number, nu
 };
 
 const BAND_RANGES = [
-  { spanX: 36, spanY: 22, minimumZ: -18, maximumZ: -8, minimumSize: 0.35, maximumSize: 0.7 },
-  { spanX: 30, spanY: 18, minimumZ: -8, maximumZ: -2, minimumSize: 0.7, maximumSize: 1.2 },
-  { spanX: 24, spanY: 14, minimumZ: -2, maximumZ: 3, minimumSize: 1.2, maximumSize: 2.2 },
+  { spanX: 44, spanY: 27, minimumZ: -24, maximumZ: -10, minimumSize: 0.35, maximumSize: 0.8 },
+  { spanX: 36, spanY: 22, minimumZ: -11, maximumZ: -2, minimumSize: 0.75, maximumSize: 1.45 },
+  { spanX: 30, spanY: 17, minimumZ: -2, maximumZ: 4, minimumSize: 1.25, maximumSize: 2.65 },
 ] as const;
 
 export interface CinematicParticleField {
@@ -78,8 +78,15 @@ export function createCinematicParticleField(
     const range = BAND_RANGES[band];
     const positionOffset = index * 3;
     const radialBias = 0.22 + 0.78 * random() ** 0.62;
-    positions[positionOffset] = (random() - 0.5) * range.spanX * radialBias;
-    positions[positionOffset + 1] = (random() - 0.5) * range.spanY;
+    const streamPhase = random() * Math.PI * 2;
+    const streamDepth = random() ** 0.72;
+    const streamOffset = (band + 1) * 0.58;
+    positions[positionOffset] =
+      (random() - 0.5) * range.spanX * radialBias +
+      Math.sin(streamPhase * 1.7 + streamOffset) * range.spanX * 0.12 * streamDepth;
+    positions[positionOffset + 1] =
+      (random() - 0.5) * range.spanY +
+      Math.cos(streamPhase * 1.13 - streamOffset) * range.spanY * 0.08 * streamDepth;
     positions[positionOffset + 2] = range.minimumZ + random() * (range.maximumZ - range.minimumZ);
 
     const firstColorIndex = Math.floor(random() * palette.length);
@@ -87,7 +94,7 @@ export function createCinematicParticleField(
     const firstColor = palette[firstColorIndex]!;
     const secondColor = palette[secondColorIndex]!;
     const colorMix = random();
-    const brightness = 0.24 + random() * 0.76;
+    const brightness = 0.14 + random() * 0.62;
     for (let channel = 0; channel < 3; channel += 1) {
       const shift = (2 - channel) * 8;
       const first = colorChannel(firstColor, shift);
