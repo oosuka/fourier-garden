@@ -24,6 +24,7 @@ import {
 import { evaluateMobiusChoirDramaturgy } from "./dramaturgy";
 import { createMobiusChoirPoeticModel, getMobiusChoirPoeticQuality } from "./poetic";
 import { MobiusChoirPoeticLayer, type MobiusChoirPoeticLayerStats } from "./poeticLayer";
+import type { MobiusChoirVisualFrame } from "./visualResponse";
 import type { QualityLevel, Viewport } from "../../contracts";
 
 const CAMERA_FOV_DEGREES = 36;
@@ -71,6 +72,13 @@ export interface MobiusChoirSceneStats {
 export interface MobiusChoirScenePoeticStats extends MobiusChoirPoeticLayerStats {
   environmentParticles: number;
   totalParticles: number;
+}
+
+export interface MobiusChoirSceneReaction {
+  environmentEnergy: number;
+  warmth: number;
+  bloomEnergy: number;
+  cameraDollyScale: number;
 }
 
 export interface MobiusChoirSceneOptions {
@@ -169,6 +177,46 @@ export function getMobiusChoirCameraPlacement(aspect: number): MobiusChoirCamera
     targetX: 0,
     targetY: 0,
     targetZ: 0,
+  };
+}
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+export function getMobiusChoirSceneReaction(
+  frame: MobiusChoirVisualFrame,
+): MobiusChoirSceneReaction {
+  const confluenceWarmth = frame.dramaturgy.sectionId === "confluence" ? 0.8 : 0;
+  const pulseEnergy = Math.max(...frame.modes.map((mode) => mode.pulseEnergy));
+  return {
+    environmentEnergy: clamp01(
+      frame.dramaturgy.visualEnergy * 0.56 +
+        frame.collectiveEnergy * 0.28 +
+        frame.onsetEnergy * 0.26 +
+        frame.seamEnergy * 0.1 +
+        pulseEnergy * 0.14,
+    ),
+    warmth: clamp01(
+      Math.max(confluenceWarmth, frame.dramaturgy.audioEnergy * 0.34) +
+        frame.collectiveEnergy * 0.18 +
+        frame.seamEnergy * 0.22 +
+        pulseEnergy * 0.1,
+    ),
+    bloomEnergy: clamp01(
+      frame.dramaturgy.visualEnergy * 0.56 +
+        frame.collectiveEnergy * 0.24 +
+        frame.onsetEnergy * 0.32 +
+        frame.seamEnergy * 0.14 +
+        pulseEnergy * 0.2,
+    ),
+    cameraDollyScale: Math.min(
+      1.008,
+      Math.max(
+        0.982,
+        1 + frame.seamEnergy * 0.003 - frame.onsetEnergy * 0.01 - pulseEnergy * 0.028,
+      ),
+    ),
   };
 }
 
@@ -378,23 +426,31 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
     this.nodes.attribute.needsUpdate = true;
     this.nodes.lines.geometry.setDrawRange(0, this.drawing.nodalSegmentCount * 2);
     this.nodes.lines.visible = getMobiusChoirNodalVisibility(this.drawing.nodalSegmentCount);
-    this.poetic?.update(absoluteTimeSeconds);
-    const dramaturgy = evaluateMobiusChoirDramaturgy(absoluteTimeSeconds);
+    const visualFrame = this.poetic?.update(absoluteTimeSeconds) ?? null;
+    const dramaturgy =
+      visualFrame?.dramaturgy ?? evaluateMobiusChoirDramaturgy(absoluteTimeSeconds);
+    const reaction = visualFrame ? getMobiusChoirSceneReaction(visualFrame) : null;
     if (this.basePlacement) {
       const placement = getMobiusChoirChoreographedCameraPlacement(
         this.basePlacement,
         absoluteTimeSeconds,
       );
-      this.camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
+      const cameraDollyScale = reaction?.cameraDollyScale ?? 1;
+      this.camera.position.set(
+        placement.targetX + (placement.positionX - placement.targetX) * cameraDollyScale,
+        placement.targetY + (placement.positionY - placement.targetY) * cameraDollyScale,
+        placement.targetZ + (placement.positionZ - placement.targetZ) * cameraDollyScale,
+      );
       this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     }
     this.environment?.update(
       absoluteTimeSeconds,
-      dramaturgy.visualEnergy,
-      dramaturgy.sectionId === "confluence" ? 0.8 : dramaturgy.audioEnergy * 0.45,
+      reaction?.environmentEnergy ?? dramaturgy.visualEnergy,
+      reaction?.warmth ??
+        (dramaturgy.sectionId === "confluence" ? 0.8 : dramaturgy.audioEnergy * 0.45),
       this.camera,
     );
-    this.postProcessor?.setEnergy(dramaturgy.visualEnergy);
+    this.postProcessor?.setEnergy(reaction?.bloomEnergy ?? dramaturgy.visualEnergy);
     if (this.postProcessor) this.postProcessor.render();
     else this.renderer.render(this.scene, this.camera);
   }

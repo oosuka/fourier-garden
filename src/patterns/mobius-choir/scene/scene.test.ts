@@ -1,16 +1,19 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
+import { MOBIUS_CHOIR_SCORE } from "../audio/score";
 import { mapMobiusChoirEmbedding } from "../math/model";
 import {
   MOBIUS_CHOIR_STRICT_LAYER_COUNTS,
   getMobiusChoirCameraPlacement,
   getMobiusChoirChoreographedCameraPlacement,
   getMobiusChoirNodalVisibility,
+  getMobiusChoirSceneReaction,
   getMobiusChoirSceneLayerCounts,
   getMobiusChoirStrictQuality,
   getMobiusChoirWebGLRendererParameters,
 } from "./scene";
+import { evaluateMobiusChoirVisualFrame } from "./visualResponse";
 
 describe("Möbius Choir strict scene contracts", () => {
   it("skips a zero-vertex nodal draw while preserving nonempty contours", () => {
@@ -97,6 +100,25 @@ describe("Möbius Choir strict scene contracts", () => {
     expect(end).toEqual(start);
     expect(active.distance).toBeLessThanOrEqual(base.distance * 1.12);
     expect(active.distance).toBeGreaterThanOrEqual(base.distance * 0.88);
+  });
+
+  it("maps local choir onsets into scene-wide bloom and environment pulses", () => {
+    const idle = getMobiusChoirSceneReaction(evaluateMobiusChoirVisualFrame(0));
+    const onset = getMobiusChoirSceneReaction(evaluateMobiusChoirVisualFrame(0.08));
+
+    expect(onset.bloomEnergy).toBeGreaterThan(idle.bloomEnergy + 0.1);
+    expect(onset.environmentEnergy).toBeGreaterThan(idle.environmentEnergy + 0.1);
+    expect(onset.cameraDollyScale).toBeLessThan(idle.cameraDollyScale);
+  });
+
+  it("uses traveling mode pulses for a stronger but bounded scene breath", () => {
+    const event = MOBIUS_CHOIR_SCORE.events[12]!;
+    const reaction = getMobiusChoirSceneReaction(
+      evaluateMobiusChoirVisualFrame(event.localTimeSeconds + 0.06),
+    );
+
+    expect(reaction.cameraDollyScale).toBeLessThan(0.99);
+    expect(reaction.bloomEnergy).toBeGreaterThan(0.42);
   });
 
   it("keeps the strict surface in frame throughout the choreography", () => {

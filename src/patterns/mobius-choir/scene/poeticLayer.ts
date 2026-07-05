@@ -7,11 +7,13 @@ import {
   MOBIUS_CHOIR_SURFACE_PARTICLES,
   type MobiusChoirPoeticModel,
   getMobiusChoirPoeticQuality,
+  mapMobiusChoirLiftedPath,
   updateMobiusChoirParticles,
 } from "./poetic";
 import type { MobiusChoirDrawingModel } from "./drawing";
 import { createMobiusChoirShellModel } from "./shell";
 import { evaluateMobiusChoirVisualFrame } from "./visualResponse";
+import type { MobiusChoirVisualFrame } from "./visualResponse";
 import type { QualityLevel } from "../../contracts";
 
 export interface MobiusChoirPoeticLayerStats {
@@ -356,15 +358,15 @@ export class MobiusChoirPoeticLayer {
     });
   }
 
-  update(absoluteTimeSeconds: number): void {
+  update(absoluteTimeSeconds: number): MobiusChoirVisualFrame {
     if (this.disposed) throw new Error("Möbius Choir poetic layer has been disposed");
     const quality = getMobiusChoirPoeticQuality(this.quality);
     const frame = evaluateMobiusChoirVisualFrame(absoluteTimeSeconds);
     updateMobiusChoirParticles(
       this.model,
       absoluteTimeSeconds,
-      frame.modes.map((mode) => mode.energy),
-      frame.modes.map((mode) => mode.mathematicalVelocity),
+      frame.modes.map((mode) => Math.min(1, mode.energy + mode.pulseEnergy * 0.32)),
+      frame.modes.map((mode) => Math.min(1, mode.mathematicalVelocity + mode.pulseEnergy * 0.22)),
       quality.particleCount,
     );
     this.surfaceParticleAttribute.needsUpdate = true;
@@ -377,11 +379,11 @@ export class MobiusChoirPoeticLayer {
       const material = line.material as THREE.LineBasicMaterial;
       material.opacity = 0.08 + response.opacity * 0.78;
       material.color.setRGB(
-        0.34 + response.cyanRatio * 0.18,
-        0.22 + response.cyanRatio * 0.55,
-        0.92 + response.cyanRatio * 0.08,
+        0.34 + response.cyanRatio * 0.18 + response.pulseEnergy * 0.18,
+        0.22 + response.cyanRatio * 0.55 + response.pulseEnergy * 0.28,
+        0.92 + response.cyanRatio * 0.08 + response.pulseEnergy * 0.32,
       );
-      line.scale.setScalar(1 + response.ribbonWidth * 0.006);
+      line.scale.setScalar(1 + response.ribbonWidth * 0.008 + response.pulseEnergy * 0.022);
     });
     const seamEnergy = Math.max(...frame.modes.map((mode) => mode.seamAfterglow));
     const signedVelocity =
@@ -410,25 +412,40 @@ export class MobiusChoirPoeticLayer {
     });
     this.trailLines.forEach((line, index) => {
       (line.material as THREE.LineBasicMaterial).opacity =
-        seamEnergy * (0.52 / Math.max(1, index + 1));
+        (seamEnergy * 0.52 + frame.onsetEnergy * 0.24) / Math.max(1, index + 1);
     });
     this.haloGroups.forEach((halo, index) => {
+      const mode = MOBIUS_CHOIR_DEFINITION.modes[index]!;
       const response = frame.modes[index]!;
       const material = this.haloMaterials[index]!;
-      material.opacity = 0.055 + response.opacity * 0.28 + response.seamAfterglow * 0.22;
+      const sourceX = Math.PI / (2 * mode.m);
+      const travel =
+        response.pulseEnergy > 0.02
+          ? response.pulseTravel
+          : (absoluteTimeSeconds * 0.018 + index / MOBIUS_CHOIR_DEFINITION.modes.length) % 1;
+      const point = mapMobiusChoirLiftedPath(sourceX, travel * Math.PI * 2);
+      halo.position.set(point.x, point.y, point.z);
+      halo.lookAt(0, 0, 0);
+      material.opacity =
+        0.045 +
+        response.opacity * 0.22 +
+        response.seamAfterglow * 0.18 +
+        response.pulseEnergy * 0.3;
       material.color.setRGB(
-        0.38 + response.cyanRatio * 0.24,
-        0.24 + response.cyanRatio * 0.72,
-        1.08 + response.energy * 0.38,
+        0.38 + response.cyanRatio * 0.22 + response.pulseEnergy * 0.24,
+        0.24 + response.cyanRatio * 0.68 + response.pulseEnergy * 0.34,
+        1.08 + response.energy * 0.28 + response.pulseEnergy * 0.42,
       );
-      halo.scale.setScalar(0.82 + response.ribbonWidth * 0.78);
-      halo.rotation.z = absoluteTimeSeconds * (0.025 + index * 0.003);
+      halo.scale.setScalar(0.72 + response.ribbonWidth * 0.62 + response.pulseEnergy * 0.95);
+      halo.rotation.z =
+        absoluteTimeSeconds * (0.04 + index * 0.006) + response.pulseTravel * Math.PI;
     });
     this.atmosphere.rotation.y = absoluteTimeSeconds * (0.006 + frame.collectiveEnergy * 0.008);
     this.atmosphere.rotation.z =
       Math.sin(absoluteTimeSeconds * 0.09) * (0.035 + frame.seamEnergy * 0.035);
     (this.atmosphere.material as THREE.MeshBasicMaterial).opacity =
       0.72 + frame.collectiveEnergy * 0.2;
+    return frame;
   }
 
   getStats(): MobiusChoirPoeticLayerStats {

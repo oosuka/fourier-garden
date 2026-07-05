@@ -1,5 +1,7 @@
+import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
+import { MOBIUS_CHOIR_SCORE } from "../audio/score";
 import { createMobiusChoirDrawingModel } from "./drawing";
 import { createMobiusChoirPoeticModel } from "./poetic";
 import { MobiusChoirPoeticLayer, getMobiusChoirParticleStyle } from "./poeticLayer";
@@ -75,6 +77,27 @@ describe("Möbius Choir poetic layer", () => {
     expect(model.particlePositions).toBe(positions);
     expect(() => layer.dispose()).not.toThrow();
     expect(() => layer.dispose()).not.toThrow();
+  });
+
+  it("moves active mode halos along the Möbius path after an onset", () => {
+    const layer = new MobiusChoirPoeticLayer(
+      createMobiusChoirPoeticModel(41_041),
+      "webgpu",
+      createMobiusChoirDrawingModel(),
+    );
+    const halos = layer.group.children[5] as THREE.Group;
+    const event = MOBIUS_CHOIR_SCORE.events[12]!;
+    const modeIndex = event.modeIds[0]! - 1;
+
+    layer.update(event.localTimeSeconds + 0.06);
+    const earlyPosition = halos.children[modeIndex]!.position.clone();
+    const earlyScale = halos.children[modeIndex]!.scale.x;
+    layer.update(event.localTimeSeconds + 0.28);
+    const laterPosition = halos.children[modeIndex]!.position.clone();
+
+    expect(earlyPosition.distanceTo(laterPosition)).toBeGreaterThan(0.05);
+    expect(earlyScale).toBeGreaterThan(1.1);
+    layer.dispose();
   });
 
   it("rejects updates after disposal", () => {

@@ -37,6 +37,17 @@ describe("Spectral Cathedral visual response", () => {
     expect(frame.arches.some((arch) => arch.progress > 0 && arch.progress < 1)).toBe(true);
   });
 
+  it("exposes onset and collective energy for scene-wide audiovisual pulses", () => {
+    const idle = evaluateSpectralCathedralVisualFrame(0, matrix);
+    const onset = evaluateSpectralCathedralVisualFrame(0.04, matrix);
+    const afterglow = evaluateSpectralCathedralVisualFrame(0.18, matrix);
+
+    expect(idle.onsetEnergy).toBeLessThan(0.05);
+    expect(onset.onsetEnergy).toBeGreaterThan(0.5);
+    expect(onset.collectiveEnergy).toBeGreaterThan(afterglow.collectiveEnergy);
+    expect(afterglow.collectiveEnergy).toBeGreaterThan(afterglow.onsetEnergy);
+  });
+
   it("repeats the poetic score while absolute mathematics remains independent", () => {
     const first = evaluateSpectralCathedralVisualFrame(
       SPECTRAL_CATHEDRAL_SCORE.cycleSeconds + 0.08,
@@ -51,6 +62,8 @@ describe("Spectral Cathedral visual response", () => {
       first.dramaturgy.audioEnergy,
       first.dramaturgy.visualEnergy,
       first.dramaturgy.motionEnergy,
+      first.collectiveEnergy,
+      first.onsetEnergy,
       ...first.pillars.flatMap(Object.values),
       ...first.arches.flatMap(Object.values),
       ...first.particles.flatMap(Object.values),
@@ -59,6 +72,8 @@ describe("Spectral Cathedral visual response", () => {
       next.dramaturgy.audioEnergy,
       next.dramaturgy.visualEnergy,
       next.dramaturgy.motionEnergy,
+      next.collectiveEnergy,
+      next.onsetEnergy,
       ...next.pillars.flatMap(Object.values),
       ...next.arches.flatMap(Object.values),
       ...next.particles.flatMap(Object.values),
@@ -71,6 +86,8 @@ describe("Spectral Cathedral visual response", () => {
     for (let time = 0; time < 90; time += 0.125) {
       const frame = evaluateSpectralCathedralVisualFrame(time, matrix);
       const values = [
+        frame.collectiveEnergy,
+        frame.onsetEnergy,
         ...frame.pillars.flatMap(Object.values),
         ...frame.arches.flatMap(Object.values),
         ...frame.particles.flatMap(Object.values),

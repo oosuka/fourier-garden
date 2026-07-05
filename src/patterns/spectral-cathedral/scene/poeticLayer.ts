@@ -18,12 +18,25 @@ import {
   createSpectralCathedralModeInfluenceMatrix,
   evaluateSpectralCathedralVisualFrame,
   type SpectralCathedralModeInfluenceMatrix,
+  type SpectralCathedralVisualFrame,
 } from "./visualResponse";
 import type { QualityLevel } from "../../contracts";
 
 const PILLAR_BOTTOM_Z = 0.02;
 const PILLAR_TOP_Z = 2.58;
 const MAX_ARCH_TRAIL_LAYERS = 3;
+const PILLAR_SHELL_STYLE = Object.freeze({
+  coreRadius: 0.012,
+  haloRadius: 0.024,
+  radialSegments: 14,
+  baseOpacity: 0.082,
+  haloWidth: 0.2,
+  haloHeight: 2.7,
+  haloBaseOpacity: 0.074,
+  maximumCoreIntensity: 0.84,
+  webgpuHdrScale: 0.86,
+  webglHdrScale: 0.72,
+});
 
 export interface SpectralCathedralPoeticLayerStats {
   anchors: number;
@@ -46,6 +59,10 @@ export function getSpectralCathedralParticleStyle(backend: RendererBackend): Rea
   opacity: number;
 }> {
   return backend === "webgl" ? { size: 0.008, opacity: 0.2 } : { size: 0.024, opacity: 0.42 };
+}
+
+export function getSpectralCathedralPillarShellStyle(): typeof PILLAR_SHELL_STYLE {
+  return PILLAR_SHELL_STYLE;
 }
 
 function clamp01(value: number): number {
@@ -136,17 +153,20 @@ export class SpectralCathedralPoeticLayer {
   private readonly pillarMaterial: THREE.LineBasicMaterial;
   private readonly pillarLines: THREE.LineSegments;
   private readonly pillarShellGeometry = new THREE.CylinderGeometry(
-    0.026,
-    0.046,
+    PILLAR_SHELL_STYLE.coreRadius,
+    PILLAR_SHELL_STYLE.haloRadius,
     2.58,
-    16,
+    PILLAR_SHELL_STYLE.radialSegments,
     1,
     true,
   );
   private readonly pillarShells: THREE.Mesh[] = [];
   private readonly pillarShellMaterials: THREE.MeshBasicMaterial[] = [];
   private readonly haloTexture = createHaloTexture();
-  private readonly haloGeometry = new THREE.PlaneGeometry(0.32, 2.72);
+  private readonly haloGeometry = new THREE.PlaneGeometry(
+    PILLAR_SHELL_STYLE.haloWidth,
+    PILLAR_SHELL_STYLE.haloHeight,
+  );
   private readonly haloGroups: THREE.Group[] = [];
   private readonly haloMaterials: THREE.MeshBasicMaterial[] = [];
   private readonly archCoreLines: THREE.Line[] = [];
@@ -215,7 +235,7 @@ export class SpectralCathedralPoeticLayer {
       const material = new THREE.MeshBasicMaterial({
         color: new THREE.Color(0.24, 1.08, 1.32),
         transparent: true,
-        opacity: 0.13,
+        opacity: PILLAR_SHELL_STYLE.baseOpacity,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide,
@@ -237,7 +257,7 @@ export class SpectralCathedralPoeticLayer {
         map: this.haloTexture,
         color: new THREE.Color(0.25, 1.1, 1.3),
         transparent: true,
-        opacity: 0.13,
+        opacity: PILLAR_SHELL_STYLE.haloBaseOpacity,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide,
@@ -474,7 +494,7 @@ export class SpectralCathedralPoeticLayer {
     this.update(0);
   }
 
-  update(absoluteTimeSeconds: number): void {
+  update(absoluteTimeSeconds: number): SpectralCathedralVisualFrame {
     if (this.disposed) {
       throw new Error("Spectral Cathedral poetic layer has been disposed");
     }
@@ -483,20 +503,23 @@ export class SpectralCathedralPoeticLayer {
       this.model.anchors,
       absoluteTimeSeconds,
     );
-    const hdrScale = this.backend === "webgpu" ? 1 : 0.82;
+    const hdrScale =
+      this.backend === "webgpu"
+        ? PILLAR_SHELL_STYLE.webgpuHdrScale
+        : PILLAR_SHELL_STYLE.webglHdrScale;
 
     for (const [index, anchor] of this.model.anchors.entries()) {
       const breathing = 0.5 + 0.5 * Math.sin(absoluteTimeSeconds * 0.19 + anchor.breathingPhase);
       const pillar = response.pillars[index]!;
       const intensity = Math.min(
-        1,
+        PILLAR_SHELL_STYLE.maximumCoreIntensity,
         Math.max(
           0.12,
-          0.15 +
-            magnitudes[index]! * 0.19 +
-            breathing * 0.04 +
-            pillar.impact * 0.58 +
-            pillar.afterglow * 0.2,
+          0.12 +
+            magnitudes[index]! * 0.15 +
+            breathing * 0.035 +
+            pillar.impact * 0.44 +
+            pillar.afterglow * 0.16,
         ),
       );
       const warmth = pillar.warmth * 0.3;
@@ -519,7 +542,7 @@ export class SpectralCathedralPoeticLayer {
       shell.position.z = PILLAR_BOTTOM_Z + pillar.height * (PILLAR_TOP_Z - PILLAR_BOTTOM_Z) * 0.5;
       const shellMaterial = this.pillarShellMaterials[index]!;
       shellMaterial.opacity = clamp01(
-        0.026 + magnitudes[index]! * 0.022 + pillar.impact * 0.12 + pillar.afterglow * 0.06,
+        0.018 + magnitudes[index]! * 0.012 + pillar.impact * 0.09 + pillar.afterglow * 0.045,
       );
       shellMaterial.color.setRGB(
         0.08 + pillar.warmth * 0.88,
@@ -529,7 +552,7 @@ export class SpectralCathedralPoeticLayer {
 
       const haloMaterial = this.haloMaterials[index]!;
       haloMaterial.opacity = clamp01(
-        0.026 + magnitudes[index]! * 0.04 + pillar.impact * 0.16 + pillar.afterglow * 0.07,
+        0.014 + magnitudes[index]! * 0.02 + pillar.impact * 0.11 + pillar.afterglow * 0.05,
       );
       haloMaterial.color.setRGB(
         0.12 + pillar.warmth * 0.48,
@@ -613,6 +636,7 @@ export class SpectralCathedralPoeticLayer {
         ? 0.036 + meanParticleEnergy * 0.052 * breathing
         : 0;
     });
+    return response;
   }
 
   setQuality(level: QualityLevel): void {

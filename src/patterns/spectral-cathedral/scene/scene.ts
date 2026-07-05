@@ -35,6 +35,7 @@ import {
   SpectralCathedralPoeticLayer,
   type SpectralCathedralPoeticLayerStats,
 } from "./poeticLayer";
+import type { SpectralCathedralVisualFrame } from "./visualResponse";
 import type { QualityLevel, Viewport } from "../../contracts";
 
 const CAMERA_FOV_DEGREES = 38;
@@ -79,6 +80,13 @@ export interface SpectralCathedralSceneStats {
 export interface SpectralCathedralScenePoeticStats extends SpectralCathedralPoeticLayerStats {
   environmentParticles: number;
   totalParticles: number;
+}
+
+export interface SpectralCathedralSceneReaction {
+  environmentEnergy: number;
+  warmth: number;
+  bloomEnergy: number;
+  cameraDollyScale: number;
 }
 
 export interface SpectralCathedralSceneOptions {
@@ -192,6 +200,37 @@ export function getSpectralCathedralCameraPlacement(
 
 export function orientSpectralCathedralCamera(camera: THREE.PerspectiveCamera): void {
   camera.up.set(0, 0, 1);
+}
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+export function getSpectralCathedralSceneReaction(
+  frame: SpectralCathedralVisualFrame,
+): SpectralCathedralSceneReaction {
+  const sectionWarmth = frame.dramaturgy.sectionId === "afterglow" ? 0.8 : 0;
+  return {
+    environmentEnergy: clamp01(
+      frame.dramaturgy.visualEnergy * 0.68 +
+        frame.collectiveEnergy * 0.22 +
+        frame.onsetEnergy * 0.18,
+    ),
+    warmth: clamp01(
+      Math.max(sectionWarmth, frame.dramaturgy.audioEnergy * 0.38) +
+        frame.collectiveEnergy * 0.24 +
+        frame.onsetEnergy * 0.12,
+    ),
+    bloomEnergy: clamp01(
+      frame.dramaturgy.visualEnergy * 0.7 +
+        frame.collectiveEnergy * 0.22 +
+        frame.onsetEnergy * 0.26,
+    ),
+    cameraDollyScale: Math.min(
+      1.006,
+      Math.max(0.992, 1 + frame.collectiveEnergy * 0.004 - frame.onsetEnergy * 0.012),
+    ),
+  };
 }
 
 export function getSpectralCathedralChoreographedCameraPlacement(
@@ -365,23 +404,31 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
     this.surface.colorAttribute.needsUpdate = true;
     this.nodalLines.positionAttribute.needsUpdate = true;
     this.nodalLines.lines.geometry.setDrawRange(0, this.drawingModel.nodalSegmentCount * 2);
-    this.poeticLayer?.update(absoluteTimeSeconds);
-    const dramaturgy = evaluateSpectralCathedralDramaturgy(absoluteTimeSeconds);
+    const visualFrame = this.poeticLayer?.update(absoluteTimeSeconds) ?? null;
+    const dramaturgy =
+      visualFrame?.dramaturgy ?? evaluateSpectralCathedralDramaturgy(absoluteTimeSeconds);
+    const reaction = visualFrame ? getSpectralCathedralSceneReaction(visualFrame) : null;
     if (this.cameraBasePlacement) {
       const placement = getSpectralCathedralChoreographedCameraPlacement(
         this.cameraBasePlacement,
         absoluteTimeSeconds,
       );
-      this.camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
+      const cameraDollyScale = reaction?.cameraDollyScale ?? 1;
+      this.camera.position.set(
+        placement.targetX + (placement.positionX - placement.targetX) * cameraDollyScale,
+        placement.targetY + (placement.positionY - placement.targetY) * cameraDollyScale,
+        placement.targetZ + (placement.positionZ - placement.targetZ) * cameraDollyScale,
+      );
       this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     }
     this.environmentLayer?.update(
       absoluteTimeSeconds,
-      dramaturgy.visualEnergy,
-      dramaturgy.sectionId === "afterglow" ? 0.8 : dramaturgy.audioEnergy * 0.5,
+      reaction?.environmentEnergy ?? dramaturgy.visualEnergy,
+      reaction?.warmth ??
+        (dramaturgy.sectionId === "afterglow" ? 0.8 : dramaturgy.audioEnergy * 0.5),
       this.camera,
     );
-    this.postProcessor?.setEnergy(dramaturgy.visualEnergy);
+    this.postProcessor?.setEnergy(reaction?.bloomEnergy ?? dramaturgy.visualEnergy);
     if (this.postProcessor) this.postProcessor.render();
     else this.renderer.render(this.scene, this.camera);
   }

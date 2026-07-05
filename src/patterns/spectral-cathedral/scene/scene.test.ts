@@ -5,11 +5,17 @@ import {
   SPECTRAL_CATHEDRAL_STRICT_LAYER_COUNTS,
   getSpectralCathedralChoreographedCameraPlacement,
   getSpectralCathedralCameraPlacement,
+  getSpectralCathedralSceneReaction,
   getSpectralCathedralSceneLayerCounts,
   getSpectralCathedralStrictQuality,
   getSpectralCathedralWebGLRendererParameters,
   orientSpectralCathedralCamera,
 } from "./scene";
+import { createSpectralCathedralLightAnchors } from "./poetic";
+import {
+  createSpectralCathedralModeInfluenceMatrix,
+  evaluateSpectralCathedralVisualFrame,
+} from "./visualResponse";
 
 describe("Spectral Cathedral strict scene contracts", () => {
   it("never reduces strict mathematical objects by quality", () => {
@@ -114,6 +120,20 @@ describe("Spectral Cathedral strict scene contracts", () => {
     expect(Math.hypot(resonance.positionX, resonance.positionY, resonance.positionZ)).toBeLessThan(
       base.distance * 1.11,
     );
+  });
+
+  it("maps local score onsets into scene-wide bloom and environment pulses", () => {
+    const matrix = createSpectralCathedralModeInfluenceMatrix(
+      createSpectralCathedralLightAnchors(),
+    );
+    const idle = getSpectralCathedralSceneReaction(evaluateSpectralCathedralVisualFrame(0, matrix));
+    const onset = getSpectralCathedralSceneReaction(
+      evaluateSpectralCathedralVisualFrame(0.04, matrix),
+    );
+
+    expect(onset.bloomEnergy).toBeGreaterThan(idle.bloomEnergy + 0.12);
+    expect(onset.environmentEnergy).toBeGreaterThan(idle.environmentEnergy + 0.1);
+    expect(onset.cameraDollyScale).toBeLessThan(idle.cameraDollyScale);
   });
 
   it("keeps the strict mathematical bounds in frame throughout the enlarged choreography", () => {

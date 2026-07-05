@@ -2,7 +2,11 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
 import { createSpectralCathedralPoeticModel } from "./poetic";
-import { SpectralCathedralPoeticLayer, getSpectralCathedralParticleStyle } from "./poeticLayer";
+import {
+  SpectralCathedralPoeticLayer,
+  getSpectralCathedralParticleStyle,
+  getSpectralCathedralPillarShellStyle,
+} from "./poeticLayer";
 
 describe("Spectral Cathedral poetic layer", () => {
   it("keeps WebGL dust finer and dimmer than the WebGPU particles", () => {
@@ -11,6 +15,19 @@ describe("Spectral Cathedral poetic layer", () => {
 
     expect(webgl.size).toBeLessThan(webgpu.size);
     expect(webgl.opacity).toBeLessThanOrEqual(webgpu.opacity * 0.5);
+  });
+
+  it("keeps vertical pillar shells fine enough to read as precise light columns", () => {
+    const style = getSpectralCathedralPillarShellStyle();
+
+    expect(style.coreRadius).toBeLessThanOrEqual(0.014);
+    expect(style.haloRadius).toBeLessThanOrEqual(0.028);
+    expect(style.haloRadius).toBeGreaterThan(style.coreRadius);
+    expect(style.baseOpacity).toBeLessThanOrEqual(0.09);
+    expect(style.haloWidth).toBeLessThanOrEqual(0.22);
+    expect(style.haloBaseOpacity).toBeLessThanOrEqual(0.08);
+    expect(style.maximumCoreIntensity).toBeLessThanOrEqual(0.84);
+    expect(style.webgpuHdrScale).toBeLessThanOrEqual(0.9);
   });
 
   it("creates seven pillar cores, six arch cores, and one particle cloud", () => {

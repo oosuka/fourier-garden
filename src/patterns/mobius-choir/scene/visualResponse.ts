@@ -1,6 +1,10 @@
 import { MOBIUS_CHOIR_SCORE, evaluateMobiusChoirEvents } from "../audio/score";
 import { MOBIUS_CHOIR_SYNTHESIS, getMobiusChoirEnvelope } from "../audio/synthesis";
-import { MOBIUS_CHOIR_DEFINITION, evaluateMobiusChoirModeKinematics } from "../math/model";
+import {
+  MOBIUS_CHOIR_DEFINITION,
+  evaluateMobiusChoirModeKinematics,
+  getMobiusChoirTravelSpeed,
+} from "../math/model";
 import { evaluateMobiusChoirDramaturgy } from "./dramaturgy";
 
 export interface MobiusChoirModeVisualResponse {
@@ -14,6 +18,8 @@ export interface MobiusChoirModeVisualResponse {
   opacity: number;
   cyanRatio: number;
   seamAfterglow: number;
+  pulseEnergy: number;
+  pulseTravel: number;
 }
 
 export interface MobiusChoirVisualFrame {
@@ -26,6 +32,10 @@ export interface MobiusChoirVisualFrame {
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
+}
+
+function wrap01(value: number): number {
+  return ((value % 1) + 1) % 1;
 }
 
 export function evaluateMobiusChoirVisualFrame(
@@ -44,6 +54,8 @@ export function evaluateMobiusChoirVisualFrame(
   const displacement = new Float64Array(energy.length);
   const velocity = new Float64Array(energy.length);
   const seam = new Float64Array(energy.length);
+  const pulseEnergy = new Float64Array(energy.length);
+  const pulseTravel = new Float64Array(energy.length);
   let collectiveEnergy = 0;
   let onsetEnergy = 0;
 
@@ -66,6 +78,14 @@ export function evaluateMobiusChoirVisualFrame(
         seam[index]!,
         eventEnvelope * (0.25 + 0.75 * Math.abs(Math.cos(kinematics.phase + mode.n * Math.PI))),
       );
+      const pulseCandidate = clamp01(eventEnvelope * Math.exp(-event.ageSeconds / 0.5) * 2.7);
+      if (pulseCandidate > pulseEnergy[index]!) {
+        const modeSpeed = mode.n > 0 ? getMobiusChoirTravelSpeed(mode) : 0.08;
+        pulseEnergy[index] = pulseCandidate;
+        pulseTravel[index] = wrap01(
+          mode.id * 0.137 + event.absoluteEventIndex * 0.061 + event.ageSeconds * modeSpeed * 0.48,
+        );
+      }
     }
   }
 
@@ -98,6 +118,8 @@ export function evaluateMobiusChoirVisualFrame(
       opacity: clamp01(0.08 + normalizedEnergy * 0.72 + normalizedDisplacement * 0.2),
       cyanRatio: clamp01(seamAfterglow * 0.76 + normalizedVelocity * 0.24),
       seamAfterglow,
+      pulseEnergy: pulseEnergy[index]!,
+      pulseTravel: pulseTravel[index]!,
     } satisfies MobiusChoirModeVisualResponse;
   });
 

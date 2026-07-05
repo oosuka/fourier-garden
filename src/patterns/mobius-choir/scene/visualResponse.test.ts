@@ -44,6 +44,22 @@ describe("Möbius Choir local visual response", () => {
     expect(new Set(signatures).size).toBeGreaterThan(2);
   });
 
+  it("adds traveling mode pulses that move after each referenced onset", () => {
+    const event = MOBIUS_CHOIR_SCORE.events[12]!;
+    const early = evaluateMobiusChoirVisualFrame(event.localTimeSeconds + 0.06);
+    const later = evaluateMobiusChoirVisualFrame(event.localTimeSeconds + 0.28);
+
+    for (const modeId of event.modeIds) {
+      const earlyMode = early.modes[modeId - 1]!;
+      const laterMode = later.modes[modeId - 1]!;
+      const travelDelta = Math.abs(laterMode.pulseTravel - earlyMode.pulseTravel);
+
+      expect(earlyMode.pulseEnergy).toBeGreaterThan(0.25);
+      expect(Math.min(travelDelta, 1 - travelDelta)).toBeGreaterThan(0.02);
+    }
+    expect(early.modes.some((mode) => mode.pulseEnergy > 0.2)).toBe(true);
+  });
+
   it("shares the exact absolute-time mode kinematics used by the mathematical layer", () => {
     const absoluteTimeSeconds = 28.3;
     const frame = evaluateMobiusChoirVisualFrame(absoluteTimeSeconds);

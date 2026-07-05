@@ -37,6 +37,8 @@ export interface SpectralCathedralParticleBandResponse {
 
 export interface SpectralCathedralVisualFrame {
   dramaturgy: ReturnType<typeof evaluateSpectralCathedralDramaturgy>;
+  collectiveEnergy: number;
+  onsetEnergy: number;
   pillars: readonly SpectralCathedralPillarResponse[];
   arches: readonly SpectralCathedralArchResponse[];
   particles: readonly SpectralCathedralParticleBandResponse[];
@@ -137,9 +139,14 @@ export function evaluateSpectralCathedralVisualFrame(
   const afterglowSums = Array.from({ length: matrix.pillarCount }, () => 0);
   const warmthSums = Array.from({ length: matrix.pillarCount }, () => 0);
   const influenceSums = Array.from({ length: matrix.pillarCount }, () => 0);
+  let collectiveEnergySum = 0;
+  let onsetEnergy = 0;
 
   for (const event of events) {
     const envelope = getVisualEnvelope(event.ageSeconds, event.gesture);
+    const eventEnergy = envelope * event.baseGain;
+    collectiveEnergySum += eventEnergy;
+    onsetEnergy = Math.max(onsetEnergy, eventEnergy * Math.exp(-event.ageSeconds / 0.12) * 2.2);
     const influence = getEventPillarInfluence(event, matrix);
     for (let index = 0; index < matrix.pillarCount; index += 1) {
       const weighted = envelope * influence[index]!;
@@ -206,6 +213,16 @@ export function evaluateSpectralCathedralVisualFrame(
       verticalSpeed: clamp01(dramaturgy.motionEnergy * 0.42 + pillar.afterglow * 0.58),
     }),
   );
+  const collectiveEnergy = clamp01(
+    1 - Math.exp(-collectiveEnergySum * 0.88) + dramaturgy.audioEnergy * 0.12,
+  );
 
-  return { dramaturgy, pillars, arches, particles };
+  return {
+    dramaturgy,
+    collectiveEnergy,
+    onsetEnergy: clamp01(onsetEnergy),
+    pillars,
+    arches,
+    particles,
+  };
 }
