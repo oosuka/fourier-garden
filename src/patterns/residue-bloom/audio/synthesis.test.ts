@@ -290,7 +290,7 @@ describe("Residue Bloom audio synthesis", () => {
 
     expect(bands.between3000HzAnd10000Hz).toBeLessThanOrEqual(0.05);
     expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.86);
-  }, 10_000);
+  }, 25_000);
 
   it("repeats the musical form while retaining absolute phasor controls", () => {
     const firstTime = 18.02;

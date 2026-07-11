@@ -59,9 +59,9 @@ export interface ResidueBloomSceneStats {
 
 const RESIDUE_BLOOM_LOCAL_PARTICLE_COUNTS: Readonly<Record<QualityLevel, number>> = Object.freeze({
   low: 4_000,
-  medium: 8_000,
-  high: 12_000,
-  ultra: 16_000,
+  medium: 7_000,
+  high: 9_000,
+  ultra: 12_000,
 });
 
 const RESIDUE_BLOOM_WEBGL_LOCAL_PARTICLE_COUNTS: Readonly<Record<QualityLevel, number>> =
@@ -225,7 +225,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     if (this.environmentLayer) this.scene.add(this.environmentLayer.group);
     this.createEpicycles();
 
-    this.spokes = makeLine(14, 0xd6f8ff, 0.48);
+    this.spokes = makeLine(14, 0xd6f8ff, 0.62);
     this.epicycleGroup.add(this.spokes.line);
 
     const spokeNodeGeometry = new THREE.BufferGeometry();
@@ -252,7 +252,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       const wave = makeLine(
         720,
         PALETTE[index % PALETTE.length] ?? 0xffffff,
-        index === 0 ? 1 : 0.08 + (8 - index) * 0.017,
+        index === 0 ? 1 : 0.12 + (8 - index) * 0.025,
       );
       if (!poeticLayers && index > 0) wave.line.visible = false;
       this.waveLines.push(wave);
@@ -288,7 +288,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       const organic = makeLine(
         460,
         PALETTE[(index + 2) % PALETTE.length] ?? 0xffffff,
-        0.048 + (index % 4) * 0.016,
+        0.07 + (index % 4) * 0.025,
         true,
       );
       organic.line.visible = poeticLayers;
@@ -300,7 +300,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     (this.connector.line.material as THREE.LineBasicMaterial).transparent = true;
     this.scene.add(this.connector.line);
 
-    const particleData = this.createFlowParticles(16_000);
+    const particleData = this.createFlowParticles(12_000);
     this.particleCloud = particleData.points;
     this.particleBase = particleData.base;
     this.particleCloud.visible = poeticLayers;
@@ -431,7 +431,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     }
     this.environmentLayer?.update(
       timeValue,
-      Math.min(1, response.membraneDisplacement + response.flowEnergy * 0.35),
+      Math.min(1, response.membraneDisplacement + response.flowEnergy * 0.55),
       response.warmth,
       this.camera,
     );
@@ -441,7 +441,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       wave.line.position.y = getWaveTrailVerticalDrift(timeValue, trailIndex);
     });
 
-    this.postProcessor?.setEnergy(Math.min(1, response.bloomBoost + response.flowEnergy * 0.4));
+    this.postProcessor?.setEnergy(Math.min(1, response.bloomBoost + response.flowEnergy * 0.65));
     if (this.postProcessor) this.postProcessor.render();
     else this.renderer.render(this.scene, this.camera);
   }
@@ -522,7 +522,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
       const material = new THREE.LineBasicMaterial({
         color: PALETTE[index % PALETTE.length],
         transparent: true,
-        opacity: Math.max(0.12, 0.58 - index * 0.032),
+        opacity: Math.max(0.18, 0.72 - index * 0.038),
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         toneMapped: false,

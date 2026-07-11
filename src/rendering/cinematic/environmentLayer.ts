@@ -10,12 +10,16 @@ import {
 } from "./model";
 
 const BAND_ROTATION_SPEEDS = [0.0034, -0.0048, 0.0066] as const;
-const BAND_POINT_SIZES = [0.023, 0.04, 0.072] as const;
-const BAND_OPACITIES = [0.24, 0.2, 0.15] as const;
+const BAND_POINT_SIZES = [0.028, 0.052, 0.09] as const;
+const BAND_OPACITIES = [0.27, 0.22, 0.17] as const;
 const NEBULA_TEXTURE_SIZE = 192;
 const NEBULA_VEIL_COUNT = 5;
 const FILAMENT_VEIL_COUNT = 6;
 const FILAMENT_POINT_COUNT = 240;
+const RESONANCE_HALO_COUNT = 7;
+const RESONANCE_HALO_POINTS = 160;
+const FLARE_COUNT = 9;
+const FLARE_TEXTURE_SIZE = 64;
 const WEBGL_PARTICLE_CAP = 8_000;
 
 export interface CinematicEnvironmentLayerOptions {
@@ -33,8 +37,8 @@ export function getCinematicEnvironmentParticleStyle(
 ): Readonly<{ size: number; opacity: number }> {
   if (backend === "webgl") {
     return {
-      size: [0.006, 0.01, 0.015][band]!,
-      opacity: [0.16, 0.13, 0.09][band]!,
+      size: [0.012, 0.022, 0.042][band]!,
+      opacity: [0.2, 0.16, 0.11][band]!,
     };
   }
   return { size: BAND_POINT_SIZES[band], opacity: BAND_OPACITIES[band] };
@@ -50,6 +54,24 @@ interface NebulaLayer {
 interface FilamentVeil {
   line: THREE.Line;
   material: THREE.LineBasicMaterial;
+  baseOpacity: number;
+  phase: number;
+}
+
+interface ResonanceHalo {
+  line: THREE.Line;
+  material: THREE.LineBasicMaterial;
+  baseOpacity: number;
+  phase: number;
+  baseScale: number;
+  rotationOffset: number;
+}
+
+interface CinematicFlare {
+  sprite: THREE.Sprite;
+  material: THREE.SpriteMaterial;
+  baseScale: number;
+  baseY: number;
   baseOpacity: number;
   phase: number;
 }
@@ -146,8 +168,62 @@ function createWebGpuNebulaMaterial(
   const cloud = float(1).sub(smoothstep(0.04, 0.7, distance));
   const coolTone = mix(vec3(...first), vec3(...second), rings);
   material.colorNode = mix(coolTone, vec3(1, 0.62, 0.28), warmth.mul(0.2));
-  material.opacityNode = cloud.mul(rings.mul(0.006).add(0.0035).add(energy.mul(0.01)));
+  material.opacityNode = cloud.mul(rings.mul(0.003).add(0.0015).add(energy.mul(0.005)));
   return material;
+}
+
+function createFlareTexture(): THREE.DataTexture {
+  const data = new Uint8Array(FLARE_TEXTURE_SIZE * FLARE_TEXTURE_SIZE * 4);
+  for (let row = 0; row < FLARE_TEXTURE_SIZE; row += 1) {
+    for (let column = 0; column < FLARE_TEXTURE_SIZE; column += 1) {
+      const x = (column / (FLARE_TEXTURE_SIZE - 1) - 0.5) * 2;
+      const y = (row / (FLARE_TEXTURE_SIZE - 1) - 0.5) * 2;
+      const radial = Math.hypot(x, y);
+      const core = Math.max(0, 1 - radial) ** 3.2;
+      const ray =
+        Math.max(0, 1 - Math.abs(x) * 9) * Math.max(0, 1 - Math.abs(y) * 1.4) +
+        Math.max(0, 1 - Math.abs(y) * 9) * Math.max(0, 1 - Math.abs(x) * 1.4);
+      const alpha = Math.min(1, core + ray * 0.32);
+      const offset = (row * FLARE_TEXTURE_SIZE + column) * 4;
+      data[offset] = 255;
+      data[offset + 1] = 255;
+      data[offset + 2] = 255;
+      data[offset + 3] = Math.round(alpha * 255);
+    }
+  }
+  const texture = new THREE.DataTexture(
+    data,
+    FLARE_TEXTURE_SIZE,
+    FLARE_TEXTURE_SIZE,
+    THREE.RGBAFormat,
+  );
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createResonanceHaloGeometry(
+  chapter: CinematicChapterId,
+  index: number,
+): THREE.BufferGeometry {
+  const positions = new Float32Array((RESONANCE_HALO_POINTS + 1) * 3);
+  const radius = 1.2 + index * 0.52;
+  const aspectX = chapter === "spectral-cathedral" ? 0.42 : chapter === "mobius-choir" ? 1.38 : 1;
+  const aspectY = chapter === "spectral-cathedral" ? 1.7 : chapter === "mobius-choir" ? 0.68 : 1;
+  for (let pointIndex = 0; pointIndex <= RESONANCE_HALO_POINTS; pointIndex += 1) {
+    const angle = (pointIndex / RESONANCE_HALO_POINTS) * Math.PI * 2;
+    const harmonicRipple = 1 + Math.sin(angle * (3 + (index % 4)) + index * 0.7) * 0.018;
+    const offset = pointIndex * 3;
+    positions[offset] = Math.cos(angle) * radius * aspectX * harmonicRipple;
+    positions[offset + 1] = Math.sin(angle) * radius * aspectY * harmonicRipple;
+    positions[offset + 2] = 0;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  return geometry;
 }
 
 function createFilamentGeometry(
@@ -207,6 +283,9 @@ export class CinematicEnvironmentLayer {
   private readonly particleBaseOpacities: readonly [number, number, number];
   private readonly nebulaLayers: NebulaLayer[] = [];
   private readonly filamentVeils: FilamentVeil[] = [];
+  private readonly resonanceHalos: ResonanceHalo[] = [];
+  private readonly flares: CinematicFlare[] = [];
+  private readonly flareTexture = createFlareTexture();
   private readonly sceneTime = uniform(0);
   private readonly sceneEnergy = uniform(0);
   private readonly sceneWarmth = uniform(0);
@@ -273,7 +352,7 @@ export class CinematicEnvironmentLayer {
     for (let index = 0; index < NEBULA_VEIL_COUNT; index += 1) {
       const firstColor = options.palette[index % options.palette.length]!;
       const secondColor = options.palette[(index + 1) % options.palette.length]!;
-      const baseOpacity = 0.042 - index * 0.005;
+      const baseOpacity = 0.018 - index * 0.002;
       const texture =
         options.backend === "webgl"
           ? createNebulaTexture(options.seed + index * 997, firstColor, secondColor)
@@ -321,7 +400,7 @@ export class CinematicEnvironmentLayer {
       const material = new THREE.LineBasicMaterial({
         color: options.palette[index % options.palette.length]!,
         transparent: true,
-        opacity: 0.055,
+        opacity: 0.07,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         toneMapped: false,
@@ -336,8 +415,84 @@ export class CinematicEnvironmentLayer {
       this.filamentVeils.push({
         line,
         material,
-        baseOpacity: 0.03 + index * 0.004,
+        baseOpacity: 0.042 + index * 0.005,
         phase: index * 0.9 + options.seed * 0.0001,
+      });
+    }
+
+    for (let index = 0; index < RESONANCE_HALO_COUNT; index += 1) {
+      const material = new THREE.LineBasicMaterial({
+        color: options.palette[index % options.palette.length]!,
+        transparent: true,
+        opacity: 0.045,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        toneMapped: false,
+      });
+      const line = new THREE.Line(createResonanceHaloGeometry(options.chapter, index), material);
+      const horizontalOffset =
+        options.chapter === "spectral-cathedral"
+          ? (index - (RESONANCE_HALO_COUNT - 1) / 2) * 2.35
+          : options.chapter === "mobius-choir"
+            ? ((index % 3) - 1) * 2.8
+            : -2.8 + index * 0.66;
+      const verticalOffset =
+        options.chapter === "mobius-choir" ? (Math.floor(index / 3) - 1) * 1.8 : -0.25;
+      line.position.set(horizontalOffset, verticalOffset, -5.2 - index * 0.36);
+      line.frustumCulled = false;
+      line.renderOrder = -2 + index;
+      this.group.add(line);
+      this.resonanceHalos.push({
+        line,
+        material,
+        baseOpacity: 0.024 + index * 0.004,
+        phase: index * 0.83 + options.seed * 0.00013,
+        baseScale: 0.82 + index * 0.035,
+        rotationOffset:
+          options.chapter === "mobius-choir"
+            ? index * 0.4
+            : options.chapter === "spectral-cathedral"
+              ? (index - 3) * 0.035
+              : index * 0.13,
+      });
+    }
+
+    for (let index = 0; index < FLARE_COUNT; index += 1) {
+      const material = new THREE.SpriteMaterial({
+        map: this.flareTexture,
+        color: options.palette[index % options.palette.length]!,
+        transparent: true,
+        opacity: 0.25,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        toneMapped: false,
+      });
+      const sprite = new THREE.Sprite(material);
+      const lane = (index / Math.max(1, FLARE_COUNT - 1)) * 2 - 1;
+      const chapterX =
+        options.chapter === "spectral-cathedral"
+          ? lane * options.extent.x * 0.34
+          : options.chapter === "mobius-choir"
+            ? Math.sin(index * 2.21) * options.extent.x * 0.3
+            : -options.extent.x * 0.18 + lane * options.extent.x * 0.28;
+      const chapterY =
+        options.chapter === "spectral-cathedral"
+          ? -options.extent.y * 0.28 + Math.abs(lane) * options.extent.y * 0.15
+          : options.chapter === "mobius-choir"
+            ? Math.cos(index * 1.37) * options.extent.y * 0.28
+            : Math.sin(index * 1.63) * options.extent.y * 0.22;
+      sprite.position.set(chapterX, chapterY, -2.8 - (index % 3) * 1.4);
+      const baseScale = 0.32 + (index % 4) * 0.09;
+      sprite.scale.setScalar(baseScale);
+      sprite.renderOrder = 8 + index;
+      this.group.add(sprite);
+      this.flares.push({
+        sprite,
+        material,
+        baseScale,
+        baseY: chapterY,
+        baseOpacity: 0.08 + (index % 3) * 0.025,
+        phase: index * 1.73 + options.seed * 0.00017,
       });
     }
     this.setParticleCount(this.particleCount);
@@ -385,8 +540,35 @@ export class CinematicEnvironmentLayer {
       veil.line.position.y = Math.cos(timeSeconds * (0.013 + index * 0.004) - veil.phase) * 0.22;
       veil.line.rotation.z = Math.sin(timeSeconds * 0.01 + veil.phase) * 0.035;
       veil.material.opacity = Math.min(
-        0.13,
+        0.19,
         veil.baseOpacity * (0.88 + energy * 0.92 + warmth * 0.26),
+      );
+    });
+    this.resonanceHalos.forEach((halo, index) => {
+      const pulse = 0.5 + 0.5 * Math.sin(timeSeconds * (0.34 + index * 0.021) + halo.phase);
+      const scale = halo.baseScale * (0.985 + pulse * 0.018 + energy * 0.045);
+      halo.line.scale.setScalar(scale);
+      if (camera) {
+        halo.line.quaternion.copy(camera.quaternion);
+        halo.line.rotateZ(halo.rotationOffset + Math.sin(timeSeconds * 0.025 + halo.phase) * 0.08);
+      } else {
+        halo.line.rotation.set(0, 0, halo.rotationOffset);
+      }
+      halo.material.opacity = Math.min(
+        0.18,
+        halo.baseOpacity * (0.72 + pulse * 0.38 + energy * 1.45 + warmth * 0.22),
+      );
+    });
+    this.flares.forEach((flare, index) => {
+      const shimmer = Math.max(0, Math.sin(timeSeconds * (0.82 + index * 0.047) + flare.phase));
+      const accent = Math.max(0, shimmer - 0.72) / 0.28;
+      const scale = flare.baseScale * (0.86 + shimmer * 0.2 + energy * (0.7 + accent * 0.85));
+      flare.sprite.scale.set(scale, scale, 1);
+      flare.sprite.position.y =
+        flare.baseY + Math.sin(timeSeconds * (0.09 + index * 0.003) + flare.phase) * 0.16;
+      flare.material.opacity = Math.min(
+        0.72,
+        flare.baseOpacity * (0.6 + shimmer * 0.55 + energy * 2.2 + accent * 1.4),
       );
     });
   }
@@ -425,12 +607,21 @@ export class CinematicEnvironmentLayer {
     return this.particleBuffers;
   }
 
-  getStats(): { particles: number; depthBands: 3; nebulaVeils: 5; filamentVeils: 6 } {
+  getStats(): {
+    particles: number;
+    depthBands: 3;
+    nebulaVeils: 5;
+    filamentVeils: 6;
+    resonanceHalos: 7;
+    flares: 9;
+  } {
     return {
       particles: this.particleCount,
       depthBands: 3,
       nebulaVeils: NEBULA_VEIL_COUNT,
       filamentVeils: FILAMENT_VEIL_COUNT,
+      resonanceHalos: RESONANCE_HALO_COUNT,
+      flares: FLARE_COUNT,
     };
   }
 
@@ -448,6 +639,12 @@ export class CinematicEnvironmentLayer {
       veil.line.geometry.dispose();
       veil.material.dispose();
     });
+    this.resonanceHalos.forEach((halo) => {
+      halo.line.geometry.dispose();
+      halo.material.dispose();
+    });
+    this.flares.forEach((flare) => flare.material.dispose());
+    this.flareTexture.dispose();
     this.group.clear();
   }
 }

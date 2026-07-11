@@ -94,6 +94,8 @@ function ResidueBloomQaApp() {
       }
     };
     const initialize = async () => {
+      await Promise.resolve();
+      if (disposed) return;
       const nextScene = await createResidueBloomScene({
         canvas,
         seed: QA_OPTIONS.seed,

@@ -381,7 +381,7 @@ describe("AudioEngine initialization", () => {
     ]);
     expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
       { kind: "gain", options: { gain: 0.88 } },
-      { kind: "gain", options: { gain: 0.065 } },
+      { kind: "gain", options: { gain: 0.075 } },
     ]);
     expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
       threshold: -16,
@@ -391,7 +391,7 @@ describe("AudioEngine initialization", () => {
       release: 0.2,
     });
     expect(records.nodes.find((node) => node.kind === "waveshaper")?.options.oversample).toBe("4x");
-    expect(records.bufferLengths).toEqual([950]);
+    expect(records.bufferLengths).toEqual([1_150]);
   });
 });
 

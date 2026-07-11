@@ -127,6 +127,8 @@ function SpectralCathedralQaApp() {
     };
 
     const initialize = async () => {
+      await Promise.resolve();
+      if (disposed) return;
       const nextScene = await createSpectralCathedralScene({
         canvas,
         seed: QA_OPTIONS.seed,

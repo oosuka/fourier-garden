@@ -31,7 +31,7 @@ describe("CinematicEnvironmentLayer", () => {
     }
   });
 
-  it("creates three depth bands, five nebula veils, and six filament veils", () => {
+  it("creates depth, nebula, filament, resonance, and local flare layers", () => {
     const layer = makeLayer("residue-bloom", 40_416);
 
     expect(layer.getStats()).toEqual({
@@ -39,8 +39,10 @@ describe("CinematicEnvironmentLayer", () => {
       depthBands: 3,
       nebulaVeils: 5,
       filamentVeils: 6,
+      resonanceHalos: 7,
+      flares: 9,
     });
-    expect(layer.group.children).toHaveLength(14);
+    expect(layer.group.children).toHaveLength(30);
     layer.dispose();
   });
 
@@ -123,6 +125,8 @@ describe("CinematicEnvironmentLayer", () => {
 
     expect(layer.getStats().nebulaVeils).toBe(5);
     expect(layer.getStats().filamentVeils).toBe(6);
+    expect(layer.getStats().resonanceHalos).toBe(7);
+    expect(layer.getStats().flares).toBe(9);
     expect(() => layer.update(1, 0.4, 0.7)).not.toThrow();
     layer.dispose();
   });

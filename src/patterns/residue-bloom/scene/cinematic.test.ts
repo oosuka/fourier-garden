@@ -19,9 +19,9 @@ describe("Residue Bloom cinematic scene", () => {
     expect(getResidueBloomCinematicCounts("medium").totalParticles).toBe(32_000);
     expect(getResidueBloomCinematicCounts("high").totalParticles).toBe(64_000);
     expect(getResidueBloomCinematicCounts("ultra")).toEqual({
-      localParticles: 16_000,
+      localParticles: 12_000,
       burstParticles: 768,
-      environmentParticles: 79_232,
+      environmentParticles: 83_232,
       totalParticles: 96_000,
     });
   });
@@ -37,7 +37,7 @@ describe("Residue Bloom cinematic scene", () => {
   });
 
   it("caps local poetic flow particles on the WebGL fallback path", () => {
-    expect(getResidueBloomLocalParticleCount("high", "webgpu")).toBe(12_000);
+    expect(getResidueBloomLocalParticleCount("high", "webgpu")).toBe(9_000);
     expect(getResidueBloomLocalParticleCount("high", "webgl")).toBe(7_000);
     expect(getResidueBloomLocalParticleCount("ultra", "webgl")).toBe(9_000);
   });

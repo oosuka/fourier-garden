@@ -113,6 +113,7 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
 
     const initializeScene = async () => {
       factory ??= await pattern.loadScene();
+      if (disposed) return;
       const nextScene = await factory({
         canvas,
         seed: getSceneSeed(),

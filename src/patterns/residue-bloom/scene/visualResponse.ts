@@ -49,17 +49,17 @@ export function getResidueBloomVisualResponse(
   const phasorWarmth = (frame.event.normalizedPhasorY + 1) * 0.5;
 
   return {
-    haloScale: clamp(0.82 + emphasizedImpact * 0.56 + tail * 0.12, 0.82, 1.75),
-    haloOpacity: clamp(0.08 + emphasizedImpact * 0.17 + tail * 0.04, 0.08, 0.34),
-    bloomBoost: clamp(emphasizedImpact * 0.13 + tail * 0.04, 0, 0.22),
-    membraneDisplacement: clamp(emphasizedImpact * 0.1 + tail * 0.035, 0, 0.18),
-    membraneOpacityBoost: clamp(emphasizedImpact * 0.08 + tail * 0.025, 0, 0.13),
-    flowEnergy: clamp(0.15 + emphasizedImpact * 0.45 + tail * 0.2, 0.15, 0.9),
-    burstEnergy: clamp(emphasizedImpact * 0.9 + tail * 0.15, 0, 1.25),
+    haloScale: clamp(0.8 + emphasizedImpact * 0.75 + tail * 0.15, 0.8, 2.05),
+    haloOpacity: clamp(0.09 + emphasizedImpact * 0.26 + tail * 0.055, 0.09, 0.5),
+    bloomBoost: clamp(emphasizedImpact * 0.21 + tail * 0.06, 0, 0.34),
+    membraneDisplacement: clamp(emphasizedImpact * 0.13 + tail * 0.045, 0, 0.23),
+    membraneOpacityBoost: clamp(emphasizedImpact * 0.12 + tail * 0.035, 0, 0.19),
+    flowEnergy: clamp(0.18 + emphasizedImpact * 0.58 + tail * 0.24, 0.18, 1),
+    burstEnergy: clamp(emphasizedImpact * 1.08 + tail * 0.2, 0, 1.45),
     warmth: clamp(phraseWarmth * 0.7 + phasorWarmth * 0.3, 0, 1),
     sectionDensity: getSectionDensity(frame.event.section, frame.event.sectionProgress),
-    coronaStrength: clamp(emphasizedImpact * 0.66 + tail * 0.12, 0, 0.82),
-    spokeNodeOpacity: clamp(emphasizedImpact * 0.74 + tail * 0.1, 0, 0.88),
-    historyPulseOpacity: clamp(emphasizedImpact * 0.78 + tail * 0.14, 0, 0.92),
+    coronaStrength: clamp(emphasizedImpact * 0.84 + tail * 0.16, 0, 1),
+    spokeNodeOpacity: clamp(emphasizedImpact * 0.92 + tail * 0.13, 0, 1),
+    historyPulseOpacity: clamp(emphasizedImpact * 0.98 + tail * 0.18, 0, 1),
   };
 }

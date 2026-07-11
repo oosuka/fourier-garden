@@ -193,9 +193,9 @@ export const MOBIUS_CHOIR_AUDIO_GRAPH: AudioGraphPreset = {
   wetHighPassQ: 0.45,
   wetLowPassHz: 860,
   wetLowPassQ: 0.25,
-  wetGain: 0.065,
-  roomSeconds: 0.95,
-  roomDecay: 2,
+  wetGain: 0.075,
+  roomSeconds: 1.15,
+  roomDecay: 2.35,
   compressor: {
     thresholdDb: -16,
     kneeDb: 12,

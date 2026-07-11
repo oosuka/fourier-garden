@@ -1,178 +1,116 @@
-# Fourier Garden 設計QA
+# Fourier Garden Renewal Design QA
 
-## 文書の位置付け
+実施日: 2026-07-11
 
-この文書は、現行公開状態の視覚、操作、音響、レンダラー、性能に関するQA結果と
-継続観察用の運用QA項目を記録する。数理定義と音響仕様は
-[`docs/mathematical-model.md`](docs/mathematical-model.md)を正本とする。
+対象: 通常公開3章のシネマティック刷新、音画同期、主要操作
+最終ブラウザ: 最新版Chrome、補助確認: Codex in-app Browser
 
-2026年7月5日時点の最新版を正式版として扱う。正式版はChapter 1から3を通常公開し、
-数学・音響仕様を維持したまま、全章のシネマティック背景、粒子密度、星雲、
-フィラメント、光柱、膜、bloomを強化した版である。
+## Source visual truth
 
-2026年6月の詳細設計・実装計画は試行錯誤を含み、現行の正式版音響と矛盾する仕様が
-多かったため、2026年7月2日に削除し、履歴索引だけを
-[`docs/superpowers/README.md`](docs/superpowers/README.md)へ残した。
+- Chapter 1: `/Users/oosuka/Downloads/イメージ画像1.png`
+- Chapter 2: `/Users/oosuka/Downloads/イメージ画像2.png`
+- Chapter 3: `/Users/oosuka/Downloads/イメージ画像3.png`
+- 音響コンセプト: `/Users/oosuka/Downloads/サウンド.mov`
+  - 音質は参照せず、32.8747秒の時間構成と発音間隔だけを参照した。
+  - 解析した知覚的onset間隔は中央値0.13秒、p10 0.09秒、p90 0.20秒だった。
 
-## 現行公開章
+## Implementation evidence
 
-- `Residue Bloom`は解析係数を使う有限Fourier級数であり、DFTやFFTによる係数推定を行わない
-- `Spectral Cathedral`は解析的なDirichlet固有モード12個を有限合成し、数値固有値問題を使用しない
-- `Möbius Choir`はflat quotientの解析的6モードを有限合成し、非等長3次元埋め込みと数学層を区別する
-- 3章とも厳密数学時刻を音楽スコア周期でリセットしない
-- 音声は数学量を中域の短い粒へ写す音楽的ソニフィケーションであり、波動場や係数列の無加工再生ではない
+- Chapter 1: `docs/qa/cinematic/residue-bloom-renewed.webp`
+- Chapter 2: `docs/qa/cinematic/spectral-cathedral-renewed.webp`
+- Chapter 3: `docs/qa/cinematic/mobius-choir-renewed.webp`
+- Full-view comparisons:
+  - `docs/qa/cinematic/residue-bloom-comparison.webp`
+  - `docs/qa/cinematic/spectral-cathedral-comparison.webp`
+  - `docs/qa/cinematic/mobius-choir-comparison.webp`
+- Focused comparison:
+  - `docs/qa/cinematic/residue-bloom-detail-comparison.webp`
 
-## 正式版サウンドQA
+## Viewport and state
 
-実施日: 2026年7月2日
+- 16:10: 1440 × 900、再生中、quality=high、seed=qa
+- 16:9: 1920 × 1080、再生中、quality=high、seed=qa
+- ultrawide: 2560 × 1080、再生中、quality=high、seed=qa
+- WebGPU + bloom と `?renderer=webgl` のWebGL2 + bloomを確認した。
+- Chapter 1は詳細パネルopen、Chapter 2/3はパネルclosedで比較した。
+- QA固定幕はChapter 1 72.000秒、Chapter 2 50.000秒、Chapter 3 42.353秒を使用した。
 
-参照動画の方向性を維持するため、Chapter 1から3は次の共通方針で固定した。
+## Findings
 
-- 一定16分のピコ時計を維持する
-- 低域の量感や長い持続音を主役にしない
-- 400 Hz-3 kHzの中域を主役にする
-- 1 kHz以上を強く抑え、不快な高域装飾を主役にしない
-- 章ごとの数学量は、音程、振幅、定位、局所造形応答へ写す
-- 個々の発音は短い有限包絡で閉じ、低いwet sendで句全体の連続性を補う
+### 解消済み
 
-現行の代表12秒自動セルフチェック結果:
+- [P1] 全画面へ均等に乗る霧で局所コントラストが失われていた。
+  - 修正: 星雲ベールを半減し、bloom thresholdをhighで0.82へ上げた。
+  - 修正後: 黒い余白と局所発光の分離を3章とも確認した。
+- [P1] Chapter 2が小さな模型に見え、参照の垂直性と建築的迫力が不足していた。
+  - 修正: 詩的ヴォールトを1.52倍、垂直方向を2.08倍へ展開し、数学面は透明度0.40で保持した。
+  - 修正後: 柱とアーチが画面外へ連続し、数学面・境界・節線は読み取れる。
+- [P1] Chapter 3の厳密面が不透明な紫の塊に見えていた。
+  - 修正: 厳密面の透明度を0.14へ下げ、境界、継ぎ目、節線、詩的粒子を前景化した。
+  - 修正後: Möbius同一視の読みやすさを保ちながら膜状の奥行きを確認した。
+- [P1] WebGPUが`LineLoop`を拒否し、共鳴ハローごとにconsole errorを出していた。
+  - 修正: 始終点を明示的に閉じた`Line`へ変更した。
+  - 修正後: WebGPU/WebGL2ともconsole error 0件。
+- [P1] React StrictModeの開発時二重初期化が同じcanvasへrendererを競合生成できた。
+  - 修正: 破棄済みeffectはscene factory実行前に中止し、QA経路もmicrotask境界で同じ保証を持たせた。
+  - 修正後: Chromeのクリーン起動でChapter 1 WebGPUがreadyとなり、開始操作が有効化された。
+- [P2] Chapter 1の数学線は正確だが音の局所応答が弱かった。
+  - 修正: 波形残光、軌道流線、コロナ、節点、履歴パルス、環境フレアの応答幅を拡大した。
+  - 修正後: 強拍で局所光が立ち上がり、数学座標や投影倍率は変化しない。
+- [P2] Chapter 2/3の音響差が包絡長と定位だけに寄りすぎていた。
+  - 修正: Chapter 2へ絶対carrier位相を維持した86ms反響と限定的43ms三連を追加し、Chapter 3は追加発音0のまま残響1.15秒とwet gain 0.075へ拡張した。
+  - 修正後: Chapter 2は乾いた格子状、Chapter 3は広く流れる帯状として分離した。
 
-| Chapter | 主なスコア | 安全帯域 | 400 Hz-3 kHz比 | 1.2 kHz以上 | onset中央値 | 最大低RMS連続 |
-| --- | --- | --- | ---: | ---: | ---: | ---: |
-| 1 Residue Bloom | 80 BPM、144秒、ゴースト強弱付き一定16分 | carrier列495/440 Hz基準 | 0.997333 | 0.004453 | 0.180秒 | 0.02秒 |
-| 2 Spectral Cathedral | 72 BPM、75秒、360イベント | 420-980 Hz | 0.999003 | 0.000002 | 0.200秒 | 0.14秒 |
-| 3 Möbius Choir | 68 BPM、56.470588秒、256イベント | 420-920 Hz | 0.993294 | 0.000001 | 0.220秒 | 0.06秒 |
+### Remaining P3
 
-Chapter 1はdry low-pass 2,100 Hz、wet low-pass 1,450 Hz、timbre damping 1.85へ
-丸め、Chapter 2/3と同じ中域ピコ系へ寄せたうえで、sectionごとの4音アクセントと
-小節ごとのアクセントローテーション、3ステップずつ循環する16ステップのゴースト輪郭により、
-一定16分内の重心移動を作る。
-評価済みアクセントは基礎brightnessと減衰倍率にも写し、強拍を明るく長く、
-弱拍を暗く短くして、音量だけでは埋もれないリズム差を固定する。
-Chapter 2は単一部分音、register倍率1、dry low-pass 1,300 Hz、wet low-pass 1,050 Hz、wet send最大0.055、
-stereo spread最大0.38、4 slotアクセント`[1.00, 0.70, 0.96, 0.66]`を使い、
-乾いた幾何学的な粒にする。Chapter 3は単一partial、ノイズ状付加音源ゲイン0、dry low-pass
-1,080 Hz、wet low-pass 860 Hz、pan motion 0.32-0.72、4 slotアクセント
-`[0.78, 1.00, 0.68, 0.92]`、出力ゲイン0.36を使い、Chapter 2より長い包絡と
-広い定位、やや高いwet sendで流れる帯状の粒にする。
+- Chapter 2は参照の写実的な反射床ではなく、厳密なDirichlet固有モード面を床として使う。数学層を偽らないための意図的差分である。
+- Chapter 3は参照より輪郭が規則的だが、厳密なMöbius埋め込みを変形しないための意図的差分である。
+- Chrome拡張制御ではFullscreen APIのブラウザ状態遷移が公開されなかった。ボタン、focus、ショートカット経路は存在し、通常Chromeでの手動全画面確認は残る。
 
-## ブラウザQA
+### 正式版判定
 
-実施日: 2026年7月1日、2026年7月2日追試、2026年7月4日通常URL確認、
-2026年7月5日正式版確認
+- DSP、Chromeの再生状態、ピーク、帯域、RMS、連続性、章間比は自動確認済み。
+- 利用者による最終的な音色評価は2026年7月11日に完了した。
+- P0／P1／P2の未解決項目はなく、通常公開3章を2026年7月11日正式版として承認する。
 
-条件:
+## Required fidelity surfaces
 
-- URL: `http://127.0.0.1:5173/?seed=qa&quality=high`
-- WebGL2強制URL: `http://127.0.0.1:5173/?renderer=webgl&seed=qa&quality=high`
-- 通常URL: `http://127.0.0.1:5173/`
-- ブラウザ: Codex内蔵ブラウザ
-- 操作: 初回開始、Chapter 1から2、Chapter 2から3への切替、WebGPU/WebGL2経路の確認
-- 2026年7月4日は通常URLを開き、初期表示、開始後のChapter 1表示、console warning/errorを確認
-- 2026年7月5日は正式版のシネマティック描画強化後に、通常アプリと章別QA入口を確認
+- Fonts and typography: Cormorant Garamond、Inter、Noto Serif JPのセルフホストを維持。見出し、数式、9px UIの階層と折返しに破綻なし。
+- Spacing and layout rhythm: 16:10、16:9、ultrawideで操作バー、ブランド、数式、詳細パネルが画面内。左右端に固定黒帯なし。
+- Colors and visual tokens: 深い黒、シアン、紫、金の基調を維持。均等な灰色かぶりを除去し、局所HDRだけをbloom対象にした。
+- Image quality and asset fidelity: 参照画像は直接背景へ流用せず、Three.jsのリアルタイム数学・詩的レイヤーとして再構成。拡大時のラスタ背景劣化なし。
+- Copy and content: FFT可視化とは表記せず、解析係数、有限フーリエ級数、固有モード、ソニフィケーションを区別した。
+- Accessibility and controls: Enter、再生／一時停止、音量、章送り、詳細開閉をChromeで操作。focus表示とARIA名を維持。
 
-結果:
+## Browser interaction evidence
 
-- 初期画面で`ENTER FOURIER GARDEN`が1件表示された
-- 開始後に`CHAPTER 01 / 03`と`Residue Bloom`を表示した
-- `次の章`で`CHAPTER 02`と`Spectral Cathedral`を表示した
-- さらに`次の章`で`CHAPTER 03`と`Möbius Choir`を表示した
-- 2026年7月2日の追試では同URLを再読み込みし、開始後に`CHAPTER 01 / 03`と
-  `Residue Bloom`を表示し、console warning/errorは0件だった
-- 2026年7月4日の通常URL確認では、`http://127.0.0.1:5173/`がHTTP 200を返し、
-  初期画面で`ENTER FOURIER GARDEN`とcanvas 1件を表示した
-- 同確認で開始後に`CHAPTER 01 / 03`と`Residue Bloom`、操作UI、canvas 2件を表示した
-- 各段階のconsole error/warningは0件だった
-- 2026年7月5日のWebGPU正式版確認では、1600 x 900の`?seed=qa&quality=high`で
-  Chapter 1、2、3の`canvas.dataset.fps`がすべて`60.0`だった
-- 2026年7月5日のWebGL2強制確認では、1600 x 900の
-  `?renderer=webgl&seed=qa&quality=high`でChapter 1、2、3を表示し、
-  `canvas.dataset.fps`はそれぞれ`50.6`、`53.0`、`44.5`だった
-- WebGL2強制経路のconsole error/warningは0件だった
+- Enter後にChapter 1が自動再生状態へ遷移。
+- pause → play → pause表示へ復帰し、transportが継続。
+- 音量35% → 62%へ変更し、WebGL2再読込後も62%を復元。
+- 詳細パネルopen/close、Chapter 1 → 2 → 3の遷移中も再生状態を維持。
+- WebGPU 3章、WebGL2 Chapter 1、16:10、16:9、ultrawideで未処理error/rejectionなし。
+- Fullscreenボタンの操作は実行したが、Chrome拡張制御ではfullscreen状態を取得できなかった。
 
-内蔵ブラウザ環境では音声試聴と再生ボタン状態を信頼できる証拠として扱わない。
-最終的な快不快はユーザー環境のヘッドホンとMac内蔵スピーカーで確認する。
+## Comparison history
 
-## 視覚QA
+1. 初回比較
+   - 灰色の環境霧、Chapter 2の模型感、Chapter 3の不透明面、局所光不足をP1/P2として記録。
+2. 第2比較
+   - 共鳴ハローと局所フレアを追加後、WebGPUの`LineLoop`非対応errorとChapter 2の白飛びを記録。
+3. 最終比較
+   - 閉じた`Line`、高threshold bloom、露出低減、面透明度、StrictMode初期化を修正。
+   - 3枚のfull-view comparisonとChapter 1 focused detailでP0/P1/P2なしを確認。
 
-2026年7月5日の正式版画像を次に保存している。
+## Implementation checklist
 
-- [`Residue Bloom`](docs/qa/cinematic/residue-bloom-high.webp)
-- [`Spectral Cathedral`](docs/qa/cinematic/spectral-cathedral-high.webp)
-- [`Möbius Choir`](docs/qa/cinematic/mobius-choir-high.webp)
+- [x] 厳密数学層を変形しない
+- [x] 3章の視覚言語を分離
+- [x] 音画の局所同期を強化
+- [x] 音響の章間RMS、ピーク、帯域、連続性を検証
+- [x] WebGPU/WebGL2を検証
+- [x] 16:10、16:9、ultrawideを検証
+- [x] Chrome主要操作とconsoleを検証
+- [x] 比較画像とフォーカス比較を保存
+- [x] 利用者による最終的な音色評価を完了
 
-QA条件:
-
-- 固定seed `qa`
-- `quality=high`
-- WebGPUとWebGL2で厳密数学層を維持する
-- 16:10、16:9、ウルトラワイドで主焦点、数式、章操作UIが画面内に収まる
-- 数学面、境界、節線、解析文字を品質低下で削減しない
-
-正式版のhigh品質QA入口では、総粒子予算が次の値になっている。
-
-| Chapter | QA時刻 | Backend | Post | 総粒子予算 |
-| --- | ---: | --- | --- | ---: |
-| Residue Bloom | 72.000秒 | WebGPU | webgpu-bloom | 64,000 |
-| Spectral Cathedral | 50.000秒 | WebGPU | webgpu-bloom | 86,000 |
-| Möbius Choir | 42.353秒 | WebGPU | webgpu-bloom | 82,000 |
-
-正式版の視覚上の主な更新:
-
-- 共通シネマティック背景を3深度帯粒子、5枚の星雲ベール、6本のフィラメントベールへ拡張した
-- high/ultraの全章粒子予算を増やし、黒い余白を保ちながら周囲空間の奥行きと密度を上げた
-- bloom profileを品質別に調整し、highではstrength 1.05、radius 0.42、threshold 0.72を基準にした
-- WebGL2では環境粒子を8,000点へ上限化し、厳密数学層を落とさずに安定性を確保した
-
-## 性能記録
-
-履歴計測と正式版確認を含む代表値:
-
-| 条件 | 時間・標本 | 平均 | 最小 | 最大 |
-| --- | ---: | ---: | ---: | ---: |
-| WebGPU、1600 x 900、正式版通常アプリ Chapter 1 high | `canvas.dataset.fps` | 60.0 fps | 60.0 fps | 60.0 fps |
-| WebGPU、1600 x 900、正式版通常アプリ Chapter 2 high | `canvas.dataset.fps` | 60.0 fps | 60.0 fps | 60.0 fps |
-| WebGPU、1600 x 900、正式版通常アプリ Chapter 3 high | `canvas.dataset.fps` | 60.0 fps | 60.0 fps | 60.0 fps |
-| WebGL2、1600 x 900、正式版通常アプリ Chapter 1 high | `canvas.dataset.fps` | 50.6 fps | 50.6 fps | 50.6 fps |
-| WebGL2、1600 x 900、正式版通常アプリ Chapter 2 high | `canvas.dataset.fps` | 53.0 fps | 53.0 fps | 53.0 fps |
-| WebGL2、1600 x 900、正式版通常アプリ Chapter 3 high | `canvas.dataset.fps` | 44.5 fps | 44.5 fps | 44.5 fps |
-| WebGPU、3840 x 2160、統合preview | 60秒・30標本 | 60.0 fps | 59.9 fps | 60.1 fps |
-| WebGPU、3840 x 2160、Möbius Choir high | 60秒・31標本 | 59.95 fps | 58.5 fps | 60.0 fps |
-| WebGL2、1600 x 900、Möbius Choir high | 15秒・9標本 | 59.88 fps | 59.0 fps | 60.0 fps |
-| WebGPU、3840 x 2160、Möbius Choir品質再設計 high | 60秒・30標本 | 60.00 fps | 60.0 fps | 60.1 fps |
-| WebGL2、1600 x 900、Möbius Choir品質再設計 high | 16秒・8標本 | 60.0 fps | 60.0 fps | 60.0 fps |
-
-Vite buildは成功しているが、post-processing系chunkが500 kBを超える警告を出す。
-遅延ロードは維持されており、現行音響整理による新規警告ではない。
-
-## ドキュメントQA
-
-実施日: 2026年7月2日、2026年7月5日正式版更新
-
-- `AGENTS.md`へ2026年7月2日音響整理後の一定16分ピコ時計、単一部分音、安全帯域、高域抑制、
-  章別リズムキャラクターの維持条件を追加した
-- `README.md`、`docs/mathematical-model.md`、`docs/chapter-atlas.md`から
-  廃止済み詳細設計への直接リンクを外した
-- `docs/superpowers/specs/`と`docs/superpowers/plans/`の詳細本文を削除し、
-  `docs/superpowers/README.md`へ履歴索引だけを残した
-- 現行仕様はREADME、AGENTS、数理正本、Chapter Atlas、Design QAへ集約した
-- 2026年7月5日に、最新版を正式版として扱う旨、シネマティック描画強化後の粒子予算、
-  WebGPU/WebGL2 QA結果、正式版代表画像をREADME、数理正本、Chapter Atlas、Design QAへ反映した
-
-## 運用QAメモ
-
-以下は公開完了を妨げる未完了検証ではなく、今後の調整時に任意で継続観察する運用QA項目とする。
-
-- ユーザー環境での正式版音響のヘッドホン試聴
-- ユーザー環境での正式版音響のMac内蔵スピーカー試聴
-- 実hidden状態を伴うタブ非表示と復帰
-- 実ウィンドウでのネイティブ全画面の見た目
-- 10分以上の実音声を伴うAudioNode、JS heap、GPUメモリ残留
-- 基準機MacBook Air M2での4K性能再計測
-
-## 現在の公開判定
-
-Chapter 1、Chapter 2、Chapter 3は通常公開済みであり、2026年7月5日時点の最新版を
-正式版として扱う。正式版は数学、スコア、DSP契約、帯域、リズム、通常URL到達、
-WebGPU/WebGL2ブラウザ表示、章切替、console error/warningなし、章別QA代表画像の更新を
-完了扱いとする。実機試聴と長時間実行は運用QA事項として追跡する。
+final result: passed — formal release 2026-07-11

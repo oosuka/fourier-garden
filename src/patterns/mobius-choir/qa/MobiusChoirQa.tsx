@@ -125,6 +125,8 @@ function MobiusChoirQaApp() {
       }
     };
     const initialize = async () => {
+      await Promise.resolve();
+      if (disposed) return;
       const nextScene = await createMobiusChoirScene({
         canvas,
         seed: QA_OPTIONS.seed,

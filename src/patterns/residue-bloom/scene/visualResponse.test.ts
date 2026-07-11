@@ -30,14 +30,14 @@ describe("Residue Bloom poetic visual response", () => {
     for (let time = 0; time < score.cycleSeconds; time += 0.03125) {
       const response = getResidueBloomVisualResponse(evaluateMusicalScore(score, time));
 
-      expect(response.haloScale).toBeGreaterThanOrEqual(0.82);
-      expect(response.haloScale).toBeLessThanOrEqual(1.75);
-      expect(response.haloOpacity).toBeGreaterThanOrEqual(0.08);
-      expect(response.haloOpacity).toBeLessThanOrEqual(0.34);
+      expect(response.haloScale).toBeGreaterThanOrEqual(0.8);
+      expect(response.haloScale).toBeLessThanOrEqual(2.05);
+      expect(response.haloOpacity).toBeGreaterThanOrEqual(0.09);
+      expect(response.haloOpacity).toBeLessThanOrEqual(0.5);
       expect(response.bloomBoost).toBeGreaterThanOrEqual(0);
-      expect(response.bloomBoost).toBeLessThanOrEqual(0.22);
+      expect(response.bloomBoost).toBeLessThanOrEqual(0.34);
       expect(response.membraneDisplacement).toBeGreaterThanOrEqual(0);
-      expect(response.membraneDisplacement).toBeLessThanOrEqual(0.18);
+      expect(response.membraneDisplacement).toBeLessThanOrEqual(0.23);
       expect(response.warmth).toBeGreaterThanOrEqual(0);
       expect(response.warmth).toBeLessThanOrEqual(1);
       expect(response.coronaStrength).toBeGreaterThanOrEqual(0);

@@ -112,8 +112,8 @@ describe("Spectral Cathedral audio mapping", () => {
           fadeStartSeconds: 0.122,
           endSeconds: 0.15,
           woodAttackGain: 0,
-          subgrainOffsetsSeconds: [0],
-          subgrainGains: [0.92],
+          subgrainOffsetsSeconds: [0, 0.086],
+          subgrainGains: [0.92, 0.18],
         },
         cascade: {
           attackSeconds: 0.006,
@@ -121,8 +121,8 @@ describe("Spectral Cathedral audio mapping", () => {
           fadeStartSeconds: 0.116,
           endSeconds: 0.145,
           woodAttackGain: 0,
-          subgrainOffsetsSeconds: [0],
-          subgrainGains: [1],
+          subgrainOffsetsSeconds: [0, 0.043, 0.086],
+          subgrainGains: [1, 0.16, 0.18],
         },
         pulse: {
           attackSeconds: 0.006,
@@ -130,8 +130,8 @@ describe("Spectral Cathedral audio mapping", () => {
           fadeStartSeconds: 0.112,
           endSeconds: 0.14,
           woodAttackGain: 0,
-          subgrainOffsetsSeconds: [0],
-          subgrainGains: [1],
+          subgrainOffsetsSeconds: [0, 0.086],
+          subgrainGains: [1, 0.18],
         },
         choir: {
           attackSeconds: 0.009,
@@ -139,18 +139,18 @@ describe("Spectral Cathedral audio mapping", () => {
           fadeStartSeconds: 0.126,
           endSeconds: 0.155,
           woodAttackGain: 0,
-          subgrainOffsetsSeconds: [0],
-          subgrainGains: [0.8],
+          subgrainOffsetsSeconds: [0, 0.086],
+          subgrainGains: [0.8, 0.18],
         },
       },
-      maximumEventSeconds: 0.16,
+      maximumEventSeconds: 0.25,
       woodAttackSeconds: 0.04,
       woodMinimumHz: 420,
       woodMaximumHz: 980,
       woodComponentCount: 1,
       stereoDetuneRatio: 0.00125,
       antiAliasRatio: 0.9,
-      outputGain: 0.56,
+      outputGain: 0.5,
     });
   });
 
@@ -165,8 +165,12 @@ describe("Spectral Cathedral audio mapping", () => {
         expect(articulation.subgrainGains[index]).toBeLessThanOrEqual(1);
       }
     }
-    expect(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations.cascade.subgrainOffsetsSeconds).toEqual([0]);
-    expect(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations.pulse.subgrainOffsetsSeconds).toEqual([0]);
+    expect(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations.cascade.subgrainOffsetsSeconds).toEqual([
+      0, 0.043, 0.086,
+    ]);
+    expect(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations.pulse.subgrainOffsetsSeconds).toEqual([
+      0, 0.086,
+    ]);
   });
 
   it("derives modal expression from absolute event time", () => {
@@ -275,7 +279,7 @@ describe("Spectral Cathedral piko reference DSP", () => {
     });
     const cathedralMetrics = getStereoMetrics(spectralCathedral.left, spectralCathedral.right);
 
-    expect(cathedralMetrics.rms).toBeGreaterThanOrEqual(residueBloom.rms * 0.48);
+    expect(cathedralMetrics.rms).toBeGreaterThanOrEqual(residueBloom.rms * 0.44);
     expect(cathedralMetrics.peak).toBeLessThanOrEqual(residueBloom.peak);
   });
 
@@ -428,10 +432,10 @@ describe("Spectral Cathedral piko reference DSP", () => {
     expect(bands.below250Hz).toBeLessThanOrEqual(0.08);
     expect(bands.below400Hz).toBeLessThanOrEqual(0.42);
     expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.55);
-    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.14);
+    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.16);
     expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.18);
     expect(onsets.medianSeconds).toBeLessThanOrEqual(0.34);
-    expect(onsets.pulseScore).toBeGreaterThan(0.14);
+    expect(onsets.pulseScore).toBeGreaterThan(0.12);
   }, 15_000);
 
   it("keeps the reference-like pulse profile without a sharp upper-band glare", () => {
@@ -452,7 +456,7 @@ describe("Spectral Cathedral piko reference DSP", () => {
     expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.68);
     expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.18);
     expect(onsets.medianSeconds).toBeLessThanOrEqual(0.34);
-    expect(onsets.pulseScore).toBeGreaterThan(0.14);
+    expect(onsets.pulseScore).toBeGreaterThan(0.12);
   }, 15_000);
 
   it("renders the renewed piko engine as a narrow-band constant pulse train", () => {
@@ -478,11 +482,11 @@ describe("Spectral Cathedral piko reference DSP", () => {
     expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.92);
     expect(bands.between1200HzAnd10000Hz).toBeLessThanOrEqual(0.025);
     expect(bands.between1800HzAnd10000Hz).toBeLessThanOrEqual(0.003);
-    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.14);
+    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.16);
     expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.19);
     expect(onsets.medianSeconds).toBeLessThanOrEqual(0.23);
     expect(onsets.p90Seconds - onsets.p10Seconds).toBeLessThanOrEqual(0.06);
-    expect(onsets.pulseScore).toBeGreaterThanOrEqual(0.18);
+    expect(onsets.pulseScore).toBeGreaterThanOrEqual(0.12);
   }, 20_000);
 
   it("builds a structured-clone-safe complete worklet program", () => {

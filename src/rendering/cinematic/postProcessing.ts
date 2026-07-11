@@ -18,9 +18,9 @@ export interface CinematicPostProfile {
 const POST_PROFILES: Readonly<Record<QualityLevel, Readonly<CinematicPostProfile>>> = Object.freeze(
   {
     low: Object.freeze({ enabled: false, strength: 0, radius: 0, threshold: 1 }),
-    medium: Object.freeze({ enabled: true, strength: 0.66, radius: 0.24, threshold: 0.86 }),
-    high: Object.freeze({ enabled: true, strength: 1.05, radius: 0.42, threshold: 0.72 }),
-    ultra: Object.freeze({ enabled: true, strength: 1.25, radius: 0.54, threshold: 0.64 }),
+    medium: Object.freeze({ enabled: true, strength: 0.82, radius: 0.22, threshold: 0.88 }),
+    high: Object.freeze({ enabled: true, strength: 1.18, radius: 0.36, threshold: 0.82 }),
+    ultra: Object.freeze({ enabled: true, strength: 1.42, radius: 0.46, threshold: 0.78 }),
   },
 );
 
@@ -101,7 +101,7 @@ abstract class BasePostProcessor implements CinematicPostProcessor {
   protected getStrength(): number {
     const profile = getCinematicPostProfile(this.quality);
     return profile.enabled
-      ? Math.min(1.44, profile.strength + Math.min(0.24, this.energy * 0.2))
+      ? Math.min(1.62, profile.strength + Math.min(0.2, this.energy * 0.18))
       : 0;
   }
 

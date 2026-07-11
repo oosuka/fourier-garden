@@ -250,11 +250,12 @@ function createSurface(model: MobiusChoirDrawingModel): {
   geometry.setIndex(new THREE.BufferAttribute(model.indices, 1));
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), MATHEMATICAL_BOUND_RADIUS);
   const material = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(0.58, 0.72, 1),
+    color: new THREE.Color(0.38, 0.56, 1),
     vertexColors: true,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.14,
     side: THREE.DoubleSide,
+    depthWrite: false,
     toneMapped: false,
     polygonOffset: true,
     polygonOffsetFactor: 1,
@@ -414,7 +415,7 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
       backend: this.backend,
       scene: this.scene,
       camera: this.camera,
-      exposure: 1.2,
+      exposure: 1.08,
     });
     this.postProcessor.setQuality(this.quality);
   }

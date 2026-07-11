@@ -317,7 +317,7 @@ export class SpectralCathedralPoeticLayer {
           false,
         );
         const material = new THREE.MeshBasicMaterial({
-          color: new THREE.Color(0.3, 1.16, 1.38),
+          color: new THREE.Color(0.26, 0.94, 1.08),
           transparent: true,
           opacity: 0.06,
           blending: THREE.AdditiveBlending,
@@ -580,9 +580,9 @@ export class SpectralCathedralPoeticLayer {
           ? 0.03 + arch.energy * (0.24 / (filamentIndex + 1)) + arch.afterglow * 0.07
           : 0;
         filamentMaterial.color.setRGB(
-          0.28 + arch.energy * 0.82,
-          1.08 - arch.energy * 0.14,
-          1.34 - arch.energy * 0.24,
+          0.24 + arch.energy * 0.58,
+          0.95 - arch.energy * 0.1,
+          1.02 - arch.energy * 0.18,
         );
       }
       this.archMembraneMaterials[archIndex]!.opacity =

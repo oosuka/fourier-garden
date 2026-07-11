@@ -271,11 +271,12 @@ function createSurface(model: SpectralCathedralDrawingModel): {
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), MATHEMATICAL_BOUND_RADIUS);
 
   const material = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(0.52, 0.72, 1),
+    color: new THREE.Color(0.22, 0.46, 1),
     vertexColors: true,
     transparent: true,
-    opacity: 0.84,
+    opacity: 0.4,
     side: THREE.DoubleSide,
+    depthWrite: false,
     toneMapped: false,
     polygonOffset: true,
     polygonOffsetFactor: 1,
@@ -379,6 +380,8 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
     this.poeticLayer = poeticLayers
       ? new SpectralCathedralPoeticLayer(createSpectralCathedralPoeticModel(seed), backend)
       : null;
+    this.poeticLayer?.group.scale.set(1.52, 1.52, 2.08);
+    if (this.poeticLayer) this.poeticLayer.group.position.z = -0.08;
     if (this.environmentLayer) this.scene.add(this.environmentLayer.group);
     if (this.poeticLayer) this.scene.add(this.poeticLayer.group);
     this.scene.add(this.surface.mesh, this.nodalLines.lines, this.boundary);
@@ -390,7 +393,7 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
       backend: this.backend,
       scene: this.scene,
       camera: this.camera,
-      exposure: 1.22,
+      exposure: 1.1,
     });
     this.postProcessor.setQuality(this.quality);
   }
