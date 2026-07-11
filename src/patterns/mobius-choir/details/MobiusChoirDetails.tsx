@@ -55,7 +55,7 @@ export function MobiusChoirDetails({ pattern }: MobiusChoirDetailsProps) {
           </div>
           <div>
             <dt>数学時刻</dt>
-            <dd>sₘ(t)=0.14t / 絶対transport時刻</dd>
+            <dd>位相 0.14√λₘₙt / 絶対transport時刻</dd>
           </div>
           <div>
             <dt>固定格子</dt>

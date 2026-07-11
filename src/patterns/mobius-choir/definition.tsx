@@ -46,7 +46,7 @@ export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
     annotations: [
       { label: "m+n ODD", value: "6 MODES" },
       { label: "λ ≤ 13", value: "ANALYTIC" },
-      { label: "sₘ(t)", value: "0.14t" },
+      { label: "phase speed", value: "0.14√λₘₙ" },
       { label: "SEAM", value: "x ↦ π−x" },
     ],
     poeticEyebrow: "BREATH / TURN / CONFLUENCE",
@@ -94,7 +94,7 @@ export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
       "帯の端をひねってつなぐと、声は継ぎ目を越えるたびに横向きを反転し、二周して元へ戻ります。56.470588秒・256イベントの一定パルスで、反転と収束を左右交替する短い電子粒として聴き分けます。",
     mathematicalTitle: "Flat Möbius quotient with Dirichlet boundary",
     mathematicalBody:
-      "M₁=(0,π)×[0,π]/((x,0)∼(π−x,π))のflat quotientで、x=0,πにDirichlet条件を課します。m+nが奇数のλ≤13に限る6モードを解析的係数bₘₙで合成し、数学時刻は絶対transport時刻0.14tで進みます。",
+      "M₁=(0,π)×[0,π]/((x,0)∼(π−x,π))のflat quotientで、x=0,πにDirichlet条件を課します。m+nが奇数のλ≤13に限る6モードを解析的係数bₘₙで合成し、位相は絶対transport時刻に対する0.14√λₘₙtで進みます。",
     scopeNotice:
       "3次元の帯はflat quotientと節線を観察する非等長埋め込みです。埋め込み曲面の誘導計量に対するLaplace–Beltrami固有モードではなく、固定した表側・裏側も定義しません。DFT、FFT、数値固有値解析は使用しません。",
     sonificationBody:
