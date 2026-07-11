@@ -135,10 +135,9 @@ export function App() {
       setAudioError("");
       transport.pause();
       transport.reset(0);
-      audio.pause();
 
       try {
-        await audio.dispose();
+        await audio.fadeOutAndDispose();
         if (operation !== playbackOperation.current) return;
 
         const nextAudio = new AudioEngine(

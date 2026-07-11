@@ -39,6 +39,7 @@ function createDeferred(): Deferred {
 function installAudioGraphStubs() {
   const nodes: NodeRecord[] = [];
   const connections: ConnectionRecord[] = [];
+  const lifecycle: string[] = [];
   const workletMessages: unknown[] = [];
   const workletModuleUrls: string[] = [];
   const bufferLengths: number[] = [];
@@ -75,7 +76,9 @@ function installAudioGraphStubs() {
       return destination;
     }
 
-    disconnect = vi.fn<() => void>();
+    disconnect = vi.fn<() => void>(() => {
+      lifecycle.push(`disconnect:${this.kind}`);
+    });
   }
 
   class AudioContextStub {
@@ -87,7 +90,9 @@ function installAudioGraphStubs() {
         workletModuleUrls.push(url);
       },
     };
-    close = vi.fn<() => Promise<void>>(async () => {});
+    close = vi.fn<() => Promise<void>>(async () => {
+      lifecycle.push("close");
+    });
     resume = vi.fn<() => Promise<void>>(async () => {});
 
     createBuffer(numberOfChannels: number, length: number) {
@@ -166,6 +171,7 @@ function installAudioGraphStubs() {
   return {
     nodes,
     connections,
+    lifecycle,
     workletMessages,
     workletModuleUrls,
     bufferLengths,
@@ -179,6 +185,7 @@ function getResidueBloomPattern() {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   localStorage.clear();
   vi.unstubAllGlobals();
 });
@@ -262,6 +269,27 @@ describe("AudioEngine initialization", () => {
     await expect(audio.play(0)).rejects.toThrow(/disposed/i);
   });
 
+  it("lets the master fade finish before disconnecting an active chapter", async () => {
+    vi.useFakeTimers();
+    const records = installAudioGraphStubs();
+    const pattern = getResidueBloomPattern();
+    const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);
+    await audio.play(0);
+
+    const disposal = audio.fadeOutAndDispose();
+
+    expect(records.workletMessages.at(-1)).toEqual({ type: "active", value: false });
+    expect(records.lifecycle).toEqual([]);
+
+    await vi.advanceTimersByTimeAsync(159);
+    expect(records.lifecycle).toEqual([]);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await disposal;
+    expect(records.lifecycle[0]).toBe("disconnect:worklet");
+    expect(records.lifecycle.at(-1)).toBe("close");
+  });
+
   it("builds the rounded Residue Bloom graph with the shared piko-family limiter", async () => {
     const records = installAudioGraphStubs();
     const pattern = getResidueBloomPattern();
@@ -269,7 +297,7 @@ describe("AudioEngine initialization", () => {
 
     await audio.initialize();
 
-    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=18"]);
+    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=19"]);
     expect(records.workletMessages).toEqual([
       expect.objectContaining({
         type: "configure",

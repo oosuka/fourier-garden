@@ -1,6 +1,6 @@
-import { clamp, isFiniteNumber, isPositiveFinite } from "./shared.js?v=18";
+import { clamp, isFiniteNumber, isPositiveFinite } from "./shared.js?v=19";
 
-function evaluateSerializedPhasor(mapping, absoluteTimeSeconds) {
+function evaluateSerializedPhasor(mapping, absoluteTimeSeconds, target) {
   const angle = absoluteTimeSeconds * mapping.visualAngularRate;
   let x = 0;
   let y = 0;
@@ -11,44 +11,74 @@ function evaluateSerializedPhasor(mapping, absoluteTimeSeconds) {
     y += term.amplitude * Math.sin(phase);
   }
 
-  return {
-    normalizedX: clamp(x / mapping.amplitudeBound, -1, 1),
-    normalizedY: clamp(y / mapping.amplitudeBound, -1, 1),
-    normalizedRadius: clamp(Math.hypot(x, y) / mapping.amplitudeBound, 0, 1),
-  };
+  target.normalizedX = clamp(x / mapping.amplitudeBound, -1, 1);
+  target.normalizedY = clamp(y / mapping.amplitudeBound, -1, 1);
+  target.normalizedRadius = clamp(Math.hypot(x, y) / mapping.amplitudeBound, 0, 1);
 }
 
-function evaluateEvent(score, event, cycleIndex) {
+function evaluateEvent(score, event, cycleIndex, phasor, target) {
   const absoluteTimeSeconds =
     cycleIndex * score.cycleSeconds + event.globalStep * score.stepSeconds;
-  const phasor = evaluateSerializedPhasor(score.phasorMapping, absoluteTimeSeconds);
+  evaluateSerializedPhasor(score.phasorMapping, absoluteTimeSeconds, phasor);
   const phasorBrightness = (phasor.normalizedY + 1) * 0.5;
 
-  return {
-    ...event,
-    absoluteTimeSeconds,
-    brightness: clamp(event.baseBrightness * 0.72 + phasorBrightness * 0.28, 0, 1),
-    accent: event.active ? event.baseAccent * (0.9 + phasor.normalizedRadius * 0.2) : 0,
-    normalizedPhasorX: phasor.normalizedX,
-    normalizedPhasorY: phasor.normalizedY,
-    normalizedPhasorRadius: phasor.normalizedRadius,
-  };
+  target.active = event.active;
+  target.carrierHz = event.carrierHz;
+  target.baseGain = event.baseGain;
+  target.baseAccent = event.baseAccent;
+  target.wetSend = event.wetSend;
+  target.stereoSpread = event.stereoSpread;
+  target.absoluteTimeSeconds = absoluteTimeSeconds;
+  target.brightness = clamp(event.baseBrightness * 0.72 + phasorBrightness * 0.28, 0, 1);
+  target.accent = event.active ? event.baseAccent * (0.9 + phasor.normalizedRadius * 0.2) : 0;
+  target.normalizedPhasorX = phasor.normalizedX;
+  target.normalizedPhasorY = phasor.normalizedY;
+  target.normalizedPhasorRadius = phasor.normalizedRadius;
 }
 
 function createResidueBloomState() {
   return {
     filterLeft: 0,
     filterRight: 0,
-    cachedEventKey: "",
-    cachedEvent: null,
+    cachedCycleIndex: -1,
+    cachedGlobalStep: -1,
+    phasor: {
+      normalizedX: 0,
+      normalizedY: 0,
+      normalizedRadius: 0,
+    },
+    cachedEvent: {
+      active: false,
+      carrierHz: 0,
+      baseGain: 0,
+      baseAccent: 0,
+      wetSend: 0,
+      stereoSpread: 0,
+      absoluteTimeSeconds: 0,
+      brightness: 0,
+      accent: 0,
+      normalizedPhasorX: 0,
+      normalizedPhasorY: 0,
+      normalizedPhasorRadius: 0,
+    },
+    sample: {
+      dryLeft: 0,
+      dryRight: 0,
+      wetLeft: 0,
+      wetRight: 0,
+    },
   };
 }
 
 function resetResidueBloomState(state) {
   state.filterLeft = 0;
   state.filterRight = 0;
-  state.cachedEventKey = "";
-  state.cachedEvent = null;
+  state.cachedCycleIndex = -1;
+  state.cachedGlobalStep = -1;
+  state.sample.dryLeft = 0;
+  state.sample.dryRight = 0;
+  state.sample.wetLeft = 0;
+  state.sample.wetRight = 0;
 }
 
 function renderResidueBloomSample(program, state, absoluteTime) {
@@ -57,13 +87,14 @@ function renderResidueBloomSample(program, state, absoluteTime) {
   const cycleIndex = Math.floor(Math.max(0, absoluteTime) / score.cycleSeconds);
   const globalStep = Math.min(score.totalSteps - 1, Math.floor(cycleTime / score.stepSeconds));
   const localTime = cycleTime - globalStep * score.stepSeconds;
-  const eventKey = `${cycleIndex}:${globalStep}`;
-  if (state.cachedEventKey !== eventKey) {
-    state.cachedEventKey = eventKey;
+  if (state.cachedCycleIndex !== cycleIndex || state.cachedGlobalStep !== globalStep) {
+    state.cachedCycleIndex = cycleIndex;
+    state.cachedGlobalStep = globalStep;
     const baseEvent = score.events[globalStep];
-    state.cachedEvent = evaluateEvent(score, baseEvent, cycleIndex);
+    evaluateEvent(score, baseEvent, cycleIndex, state.phasor, state.cachedEvent);
   }
   const event = state.cachedEvent;
+  const sample = state.sample;
   const accentDecayScale = clamp(0.16 + event.baseAccent * 1.08, 0.52, 1.55);
   const decayScale = (0.88 + event.normalizedPhasorRadius * 0.24) * accentDecayScale;
   const attackProgress = Math.min(1, Math.max(0, localTime / score.definition.attackSeconds));
@@ -124,16 +155,19 @@ function renderResidueBloomSample(program, state, absoluteTime) {
   state.filterRight += (unfilteredRight - state.filterRight) * filterCoefficient;
 
   if (!event.active) {
-    return { dryLeft: 0, dryRight: 0, wetLeft: 0, wetRight: 0 };
+    sample.dryLeft = 0;
+    sample.dryRight = 0;
+    sample.wetLeft = 0;
+    sample.wetRight = 0;
+    return sample;
   }
 
   const wetScale = event.wetSend * 0.5;
-  return {
-    dryLeft: state.filterLeft,
-    dryRight: state.filterRight,
-    wetLeft: state.filterLeft * wetScale,
-    wetRight: state.filterRight * wetScale,
-  };
+  sample.dryLeft = state.filterLeft;
+  sample.dryRight = state.filterRight;
+  sample.wetLeft = state.filterLeft * wetScale;
+  sample.wetRight = state.filterRight * wetScale;
+  return sample;
 }
 
 function validateResidueBloomProgram(program) {

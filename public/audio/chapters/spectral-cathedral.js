@@ -4,7 +4,7 @@ import {
   isFiniteNumber,
   isNonnegativeFinite,
   isPositiveFinite,
-} from "./shared.js?v=18";
+} from "./shared.js?v=19";
 
 function hashUnit(eventIndex, modeId, component, salt) {
   const seed =

@@ -1,5 +1,7 @@
+import { Profiler, act } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Transport } from "../core/transport";
 import { patternRegistry } from "../patterns/registry";
@@ -26,6 +28,10 @@ function renderControlBar(patternIndex: number, chapterCount: number, switching 
     />,
   );
 }
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("ControlBar chapter navigation", () => {
   it("does not show chapter navigation for the published single-chapter registry", () => {
@@ -99,5 +105,70 @@ describe("ControlBar chapter navigation", () => {
     );
     expect(fullscreen?.type).toBe("button");
     expect(fullscreen?.getAttribute("aria-keyshortcuts")).toBe("F");
+  });
+
+  it("only rerenders the clock when the displayed whole second changes", async () => {
+    let clockSeconds = 0;
+    let frameCallback: FrameRequestCallback | null = null;
+    let frameId = 0;
+    let renderCount = 0;
+    const transport = new Transport(() => clockSeconds);
+    transport.play();
+    vi.stubGlobal(
+      "requestAnimationFrame",
+      vi.fn<(callback: FrameRequestCallback) => number>((callback) => {
+        frameCallback = callback;
+        frameId += 1;
+        return frameId;
+      }),
+    );
+    vi.stubGlobal("cancelAnimationFrame", vi.fn<(handle: number) => void>());
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <Profiler
+          id="control-bar-clock"
+          onRender={() => {
+            renderCount += 1;
+          }}
+        >
+          <ControlBar
+            playing
+            volume={0.35}
+            detailsOpen={false}
+            fullscreen={false}
+            pattern={patternRegistry[0]!}
+            chapterCount={3}
+            chapterIndex={0}
+            switchingChapter={false}
+            transport={transport}
+            onTogglePlay={vi.fn<() => void>()}
+            onVolume={vi.fn<(value: number) => void>()}
+            onPreviousChapter={vi.fn<() => void>()}
+            onNextChapter={vi.fn<() => void>()}
+            onToggleDetails={vi.fn<() => void>()}
+            onToggleFullscreen={vi.fn<() => void>()}
+          />
+        </Profiler>,
+      );
+    });
+    const initialRenderCount = renderCount;
+
+    clockSeconds = 0.25;
+    await act(async () => {
+      frameCallback?.(250);
+    });
+    expect(renderCount).toBe(initialRenderCount);
+
+    clockSeconds = 1.01;
+    await act(async () => {
+      frameCallback?.(1_010);
+    });
+    expect(renderCount).toBe(initialRenderCount + 1);
+    expect(container.querySelector(".timeDisplay span")?.textContent).toBe("00:01");
+
+    await act(async () => root.unmount());
   });
 });

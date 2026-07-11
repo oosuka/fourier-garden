@@ -3,7 +3,7 @@ import {
   hashUint32,
   isNonnegativeFinite,
   isPositiveFinite,
-} from "./shared.js?v=18";
+} from "./shared.js?v=19";
 
 function smoothstepMobius(value) {
   const clamped = Math.min(1, Math.max(0, value));

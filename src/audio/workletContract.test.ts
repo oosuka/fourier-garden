@@ -9,9 +9,9 @@ const chapterSources = [residueBloomSource, spectralCathedralSource, mobiusChoir
 
 describe("AudioWorklet mathematical contract", () => {
   it("cache-busts every module in the worklet dependency graph", () => {
-    expect(workletSource.match(/from ["'][^"']+\?v=18["']/g) ?? []).toHaveLength(4);
+    expect(workletSource.match(/from ["'][^"']+\?v=19["']/g) ?? []).toHaveLength(4);
     for (const chapterSource of [residueBloomSource, spectralCathedralSource, mobiusChoirSource]) {
-      expect(chapterSource).toMatch(/from ["']\.\/shared\.js\?v=18["']/);
+      expect(chapterSource).toMatch(/from ["']\.\/shared\.js\?v=19["']/);
     }
   });
 
@@ -27,14 +27,22 @@ describe("AudioWorklet mathematical contract", () => {
   it("derives phasor controls from the serialized mapping instead of repeat events", () => {
     expect(residueBloomSource).toContain("evaluateSerializedPhasor");
     expect(residueBloomSource).toContain("const baseEvent = score.events[globalStep]");
-    expect(residueBloomSource).toContain("evaluateEvent(score, baseEvent, cycleIndex)");
+    expect(residueBloomSource).toContain(
+      "evaluateEvent(score, baseEvent, cycleIndex, state.phasor, state.cachedEvent)",
+    );
     expect(residueBloomSource).not.toContain("score.events[globalStep].normalizedPhasorX");
     expect(residueBloomSource).not.toContain("score.events[globalStep].normalizedPhasorRadius");
   });
 
-  it("caches evaluated controls by cycle and global step", () => {
-    expect(residueBloomSource).toContain("cachedEventKey");
-    expect(residueBloomSource).toContain("`${cycleIndex}:${globalStep}`");
+  it("reuses numeric event caches and output storage in the Residue Bloom sample loop", () => {
+    expect(residueBloomSource).toContain("cachedCycleIndex");
+    expect(residueBloomSource).toContain("cachedGlobalStep");
+    expect(residueBloomSource).toContain("const sample = state.sample");
+    const renderStart = residueBloomSource.indexOf("function renderResidueBloomSample");
+    const renderEnd = residueBloomSource.indexOf("function validateResidueBloomProgram");
+    const renderSource = residueBloomSource.slice(renderStart, renderEnd);
+    expect(renderSource).not.toContain("return {");
+    expect(renderSource).not.toContain("`${");
   });
 
   it("guards the maximum detuned frequency", () => {

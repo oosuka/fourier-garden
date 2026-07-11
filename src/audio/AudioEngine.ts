@@ -3,6 +3,7 @@ import { createWorkletConfigureMessage, type AudioEngineProgram } from "./audioP
 
 const VOLUME_KEY = "fourier-garden:volume";
 const DEFAULT_VOLUME = 0.35;
+const MASTER_FADE_OUT_SECONDS = 0.16;
 
 export function createLimiterCurve(ceilingDbfs: number, length = 2_049): Float32Array<ArrayBuffer> {
   if (!Number.isFinite(ceilingDbfs)) {
@@ -26,7 +27,9 @@ export class AudioEngine {
   private analyser: AnalyserNode | null = null;
   private audioNodes: AudioNode[] = [];
   private initialization: Promise<void> | null = null;
+  private fadeOutDisposal: Promise<void> | null = null;
   private volume: number;
+  private active = false;
   private disposed = false;
 
   constructor(
@@ -50,7 +53,7 @@ export class AudioEngine {
   }
 
   initialize(): Promise<void> {
-    if (this.disposed) {
+    if (this.disposed || this.fadeOutDisposal) {
       return Promise.reject(new Error("AudioEngine has been disposed"));
     }
     if (this.context) return Promise.resolve();
@@ -63,7 +66,7 @@ export class AudioEngine {
   private async initializeContext(): Promise<void> {
     const context = new AudioContext({ latencyHint: "interactive" });
     try {
-      await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=18");
+      await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=19");
       if (this.disposed) {
         await context.close();
         return;
@@ -184,11 +187,18 @@ export class AudioEngine {
     });
     this.source?.port.postMessage({ type: "active", value: true });
     this.rampMaster(this.volumeToGain(this.volume), 0.22);
+    this.active = true;
   }
 
   pause(): void {
     this.source?.port.postMessage({ type: "active", value: false });
-    this.rampMaster(0, 0.16);
+    this.rampMaster(0, MASTER_FADE_OUT_SECONDS);
+    this.active = false;
+  }
+
+  fadeOutAndDispose(): Promise<void> {
+    this.fadeOutDisposal ??= this.performFadeOutAndDispose();
+    return this.fadeOutDisposal;
   }
 
   setVolume(volume: number): void {
@@ -212,6 +222,7 @@ export class AudioEngine {
     }
     this.disposed = true;
     await this.initialization?.catch(() => {});
+    this.active = false;
     this.source?.disconnect();
     for (const node of this.audioNodes) {
       node.disconnect();
@@ -230,6 +241,17 @@ export class AudioEngine {
     this.master.gain.cancelScheduledValues(now);
     this.master.gain.setValueAtTime(this.master.gain.value, now);
     this.master.gain.linearRampToValueAtTime(value, now + duration);
+  }
+
+  private async performFadeOutAndDispose(): Promise<void> {
+    const shouldWaitForFade = this.active && this.context !== null && this.master !== null;
+    this.pause();
+    if (shouldWaitForFade) {
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, MASTER_FADE_OUT_SECONDS * 1_000);
+      });
+    }
+    await this.dispose();
   }
 
   private volumeToGain(volume: number): number {

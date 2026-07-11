@@ -45,12 +45,17 @@ export function ControlBar({
   onToggleDetails,
   onToggleFullscreen,
 }: ControlBarProps) {
-  const [time, setTime] = useState(0);
+  const [time, setTime] = useState(() => Math.floor(transport.currentTime));
 
   useEffect(() => {
     let frame = 0;
+    let displayedSecond = Math.floor(transport.currentTime);
     const update = () => {
-      setTime(transport.currentTime);
+      const nextSecond = Math.floor(transport.currentTime);
+      if (nextSecond !== displayedSecond) {
+        displayedSecond = nextSecond;
+        setTime(nextSecond);
+      }
       frame = requestAnimationFrame(update);
     };
     frame = requestAnimationFrame(update);
