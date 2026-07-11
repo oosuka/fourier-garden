@@ -61,7 +61,8 @@ Chapter 10・20・30へ増えても現行章一覧と共通契約だけを更新
 
 音声はブラウザの自動再生制限に従い、`ENTER FOURIER GARDEN`を押した後に開始します。
 初期音量は35%で、変更値はローカル保存されます。章を切り替えると旧sceneと
-旧AudioContextを破棄し、transportを0秒へ戻します。
+旧音声を160 msでフェードアウトしてからAudioContextを破棄し、transportを0秒へ戻します。
+再生中だった場合は次章の初期化後に0秒から再生を継続します。
 
 ## 実行とQA入口
 
@@ -159,7 +160,9 @@ install scriptはバージョン単位で審査し、未審査のものはイン
 AudioWorkletは`public/audio/fourier-worklet.js`を共通dispatcherとし、
 `public/audio/chapters/<chapter-id>.js`へ章別の検証、状態、標本生成を分離します。
 CanvasとAudioEngineは章固有の数学を再定義せず共通transportを渡します。sceneの`dispose()`は
-GPU資源、イベント、タイマーを、AudioEngineはAudioNodeとAudioContextを完全に解放します。
+GPU資源、イベント、タイマーを、AudioEngineは章切替時のフェード完了後にAudioNodeと
+AudioContextを完全に解放します。標本ループの一時割り当てを避けるため、章processorは
+設定時に確保した数値キャッシュ、評価イベント、出力標本を再利用します。
 
 新章は名称だけから実装せず、次の順序で追加します。
 

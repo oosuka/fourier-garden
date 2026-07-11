@@ -69,4 +69,17 @@ describe("current documentation", () => {
     expect(readme).toContain("一定16分ピコ粒");
     expect(superpowersIndex).toContain("実装時の参照先にしてはならない");
   });
+
+  it("documents the allocation-free worklet and graceful chapter transition", () => {
+    const readme = readDoc("README.md");
+    const mathematicalModel = readDoc("docs/mathematical-model.md");
+    const designQa = readDoc("design-qa.md");
+
+    expect(readme).toContain("旧音声を160 msでフェードアウト");
+    expect(readme).toContain("評価イベント、出力標本を再利用");
+    expect(mathematicalModel).toContain("文字列キー、");
+    expect(mathematicalModel).toContain("一時配列、一時オブジェクトを生成せず");
+    expect(designQa).toContain("Review remediation QA");
+    expect(designQa).toContain("console errorは0件");
+  });
 });

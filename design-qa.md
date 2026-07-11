@@ -91,6 +91,19 @@
 - WebGPU 3章、WebGL2 Chapter 1、16:10、16:9、ultrawideで未処理error/rejectionなし。
 - Fullscreenボタンの操作は実行したが、Chrome拡張制御ではfullscreen状態を取得できなかった。
 
+## Review remediation QA
+
+- Chapter 1のAudioWorklet標本ループから文字列キーと一時出力オブジェクトを除去し、
+  数値の周回・stepキャッシュ、フェーザ評価領域、評価済みイベント、出力標本を再利用した。
+- 再生中の章切替では、Worklet共通フェードと160 msのmaster fadeを完了してから旧AudioContextを
+  破棄し、次章を0秒から再生する。フェード完了前にdisconnectしない回帰テストを追加した。
+- ControlBarの時刻表示は整数秒が変化した場合だけReact stateを更新し、再生中の毎フレーム
+  再描画を除去した。
+- 最新版Chromeの`?renderer=webgl&seed=qa&quality=high`でChapter 1 → 2 → 3を再生中に切り替え、
+  Chapter 3でpause/resumeを実行した。全章で再生状態を維持し、音声エラー表示、console warning、
+  console errorは0件だった。
+- `npm run check`でformat、lint、473テスト、型検査、production buildを通過した。
+
 ## Comparison history
 
 1. 初回比較
