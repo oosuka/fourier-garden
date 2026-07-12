@@ -1,8 +1,9 @@
 # Fourier Garden Renewal Design QA
 
 実施日: 2026-07-11
+正式版確定日: 2026-07-12
 
-対象: 通常公開3章のシネマティック刷新、音画同期、主要操作
+対象: 通常公開3章のシネマティック刷新、音画同期、主要操作、レビュー修正
 最終ブラウザ: 最新版Chrome、補助確認: Codex in-app Browser
 
 ## Source visual truth
@@ -71,7 +72,8 @@
 
 - DSP、Chromeの再生状態、ピーク、帯域、RMS、連続性、章間比は自動確認済み。
 - 利用者による最終的な音色評価は2026年7月11日に完了した。
-- P0／P1／P2の未解決項目はなく、通常公開3章を2026年7月11日正式版として承認する。
+- P0／P1／P2の未解決項目はなく、レビュー修正後の現行実装を
+  2026年7月12日の正式版として承認する。
 
 ## Required fidelity surfaces
 
@@ -102,7 +104,7 @@
 - 最新版Chromeの`?renderer=webgl&seed=qa&quality=high`でChapter 1 → 2 → 3を再生中に切り替え、
   Chapter 3でpause/resumeを実行した。全章で再生状態を維持し、音声エラー表示、console warning、
   console errorは0件だった。
-- `npm run check`でformat、lint、473テスト、型検査、production buildを通過した。
+- `npm run check`でformat、lint、475テスト、型検査、production buildを通過した。
 
 ## Comparison history
 
@@ -126,4 +128,4 @@
 - [x] 比較画像とフォーカス比較を保存
 - [x] 利用者による最終的な音色評価を完了
 
-final result: passed — formal release 2026-07-11
+final result: passed — formal release 2026-07-12

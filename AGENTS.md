@@ -39,7 +39,7 @@ UI、README、説明文、コメントでは、この区別を曖昧にしない
 
 ### 2.1 現在の正式版
 
-2026年7月11日時点の最新版を正式版として扱う。正式版の通常公開章は
+2026年7月12日時点の現行実装を正式版として扱う。正式版の通常公開章は
 `Residue Bloom`、`Spectral Cathedral`、`Möbius Choir`の3章であり、
 いずれも`src/patterns/registry.ts`で`publication: "published"`として登録されている。
 正式版は数学・音響仕様を維持したまま、全章のシネマティック背景、粒子密度、

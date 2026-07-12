@@ -82,4 +82,22 @@ describe("current documentation", () => {
     expect(designQa).toContain("Review remediation QA");
     expect(designQa).toContain("console errorは0件");
   });
+
+  it("pins the current formal release while preserving QA history", () => {
+    const agents = readDoc("AGENTS.md");
+    const readme = readDoc("README.md");
+    const mathematicalModel = readDoc("docs/mathematical-model.md");
+    const chapterAtlas = readDoc("docs/chapter-atlas.md");
+    const superpowersIndex = readDoc("docs/superpowers/README.md");
+    const designQa = readDoc("design-qa.md");
+
+    expect(agents).toContain("2026年7月12日時点の現行実装を正式版として扱う");
+    expect(readme).toContain("2026年7月12日時点の現行実装を正式版として扱います");
+    expect(mathematicalModel).toContain("2026年7月12日時点の正式版");
+    expect(chapterAtlas).toContain("2026年7月12日時点の正式版として通常公開");
+    expect(superpowersIndex).toContain("2026年7月12日の正式版");
+    expect(designQa).toContain("正式版確定日: 2026-07-12");
+    expect(designQa).toContain("最終的な音色評価は2026年7月11日に完了");
+    expect(designQa).toContain("formal release 2026-07-12");
+  });
 });
