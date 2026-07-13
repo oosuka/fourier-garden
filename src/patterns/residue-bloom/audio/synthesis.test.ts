@@ -47,24 +47,24 @@ describe("Residue Bloom audio synthesis", () => {
     expect(RESIDUE_BLOOM_AUDIO_GRAPH).toEqual({
       dryHighPassHz: 190,
       dryHighPassQ: 0.45,
-      dryHighShelfHz: 1_250,
-      dryHighShelfGainDb: -16,
-      dryLowPassHz: 2_100,
-      dryLowPassQ: 0.3,
+      dryHighShelfHz: 1_180,
+      dryHighShelfGainDb: -17,
+      dryLowPassHz: 1_650,
+      dryLowPassQ: 0.25,
       dryGain: 0.9,
       wetHighPassHz: 220,
       wetHighPassQ: 0.45,
-      wetLowPassHz: 1_450,
-      wetLowPassQ: 0.3,
-      wetGain: 0.12,
-      roomSeconds: 1.15,
-      roomDecay: 2.1,
+      wetLowPassHz: 1_180,
+      wetLowPassQ: 0.25,
+      wetGain: 0.045,
+      roomSeconds: 0.82,
+      roomDecay: 1.45,
       compressor: {
-        thresholdDb: -14,
+        thresholdDb: -16,
         kneeDb: 12,
         ratio: 3,
         attackSeconds: 0.006,
-        releaseSeconds: 0.18,
+        releaseSeconds: 0.2,
       },
       limiterCeilingDbfs: -1,
     });
@@ -131,7 +131,7 @@ describe("Residue Bloom audio synthesis", () => {
       nominalFrequencyHz: 24_255,
       included: false,
     });
-    expect(at495[1]?.weightedAmplitude).toBeCloseTo(2.5 / 2 ** 1.85, 12);
+    expect(at495[1]?.weightedAmplitude).toBeCloseTo(2.5 / 2 ** 3.2, 12);
   });
 
   it("applies the anti-alias guard to the higher detuned frequency", () => {
@@ -184,7 +184,7 @@ describe("Residue Bloom audio synthesis", () => {
       const attack = rms(samples.slice(start, start + attackWindow));
       const tail = rms(samples.slice(start + stepSamples - tailWindow, start + stepSamples));
 
-      expect(attack).toBeGreaterThan(0.03);
+      expect(attack).toBeGreaterThan(0.02);
       expect(tail).toBeGreaterThan(attack * 0.015);
       expect(tail).toBeLessThan(attack * 0.46);
     }
@@ -216,7 +216,7 @@ describe("Residue Bloom audio synthesis", () => {
     const brightnessValues = activeEvents.map((event) => event.baseBrightness);
     const wetSendValues = activeEvents.map((event) => event.wetSend);
 
-    expect(score.definition.timbreDamping).toBeGreaterThanOrEqual(1.8);
+    expect(score.definition.timbreDamping).toBeGreaterThanOrEqual(3);
     expect(Math.max(...brightnessValues) - Math.min(...brightnessValues)).toBeGreaterThanOrEqual(
       0.78,
     );

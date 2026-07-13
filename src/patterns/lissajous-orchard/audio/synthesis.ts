@@ -1,4 +1,5 @@
 import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 import {
   PIKO_AUDIO_GRAPH,
   type PikoWorkletProgram,
@@ -16,7 +17,7 @@ export function createLissajousOrchardWorkletProgram(): PikoWorkletProgram {
     kind: "lissajous-orchard",
     score: LISSAJOUS_ORCHARD_SCORE,
     detuneRatio: 0.0008,
-    outputGain: 0.34,
+    outputGain: getChapterOutputGain("lissajous-orchard"),
     maximumVoices: 16,
   };
   validatePikoProgram(program);

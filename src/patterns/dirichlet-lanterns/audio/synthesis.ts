@@ -1,4 +1,5 @@
 import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 import {
   PIKO_AUDIO_GRAPH,
   type PikoWorkletProgram,
@@ -17,7 +18,7 @@ export function createDirichletLanternsWorkletProgram(): PikoWorkletProgram {
     kind: "dirichlet-lanterns",
     score: DIRICHLET_LANTERNS_SCORE,
     detuneRatio: 0.001,
-    outputGain: 0.61,
+    outputGain: getChapterOutputGain("dirichlet-lanterns"),
     maximumVoices: 18,
   };
   validatePikoProgram(program);

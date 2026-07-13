@@ -1,4 +1,5 @@
 import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 import {
   PIKO_AUDIO_GRAPH,
   type PikoWorkletProgram,
@@ -17,7 +18,7 @@ export function createWaveletRainWorkletProgram(): PikoWorkletProgram {
     kind: "wavelet-rain",
     score: WAVELET_RAIN_SCORE,
     detuneRatio: 0.0007,
-    outputGain: 0.5,
+    outputGain: getChapterOutputGain("wavelet-rain"),
     maximumVoices: 14,
   };
   validatePikoProgram(program);

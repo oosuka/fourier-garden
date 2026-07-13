@@ -24,7 +24,7 @@ export const primeConstellationPattern: PrimeConstellationPatternDefinition = {
     rhythm: "prime-gap-irregular-phrases",
     time: "ten-second-scan-absolute-phase",
     audio: {
-      onsetPattern: "prime-gap-clusters",
+      onsetPattern: "prime-gap-clusters-with-sixty-second-arc",
       articulation: "hard-short-point",
       pitchMapping: "cube-root-prime-midrange",
       spatialGesture: "prime-phase-pan",
@@ -93,7 +93,7 @@ export const primeConstellationPattern: PrimeConstellationPatternDefinition = {
     scopeNotice:
       "素数間隔列をFFT解析した結果ではなく、既知の素数支持から合成しています。有限星座の見た目から、素数分布、双子素数、乱雑性に関する未証明命題は主張しません。",
     sonificationBody:
-      "素数の昇順と隣接間隔Δⱼを保持し、発音時刻を0.09Δⱼ秒ずつ進めます。素数値は立方根写像で440–920 Hzへ単調圧縮し、絶対イベント時刻の位相pxを定位とphase driftへ使います。短い包絡、EQ、残響は聴取のための演出で、係数1/25は変えません。",
+      "素数の昇順と隣接間隔Δⱼを保持し、発音時刻を0.09Δⱼ秒ずつ進めます。素数値は立方根写像で440–920 Hzへ単調圧縮し、同じ絶対位相を連続定位にも使います。10秒の素数句には60秒を横断する強弱、尾長、wet輪郭を重ねます。短い包絡、EQ、残響は聴取のための演出で、係数1/25は変えません。",
     poeticLayerBody:
       "星塵、放射コロナ、星雲、食の暗部は詩的造形です。対応する位相点とリンクの周囲だけを局所的に照らしますが、追加の素数、係数、位相点として数えません。",
   },

@@ -1,3 +1,5 @@
+import { getLongFormMotion } from "../../../audio/longFormMotion";
+
 export type SpectralCathedralSectionId =
   | "illumination"
   | "procession"
@@ -159,6 +161,14 @@ function buildEvents(): SpectralCathedralScoreEvent[] {
       const modeIds = modeSets[modeSetIndex]!;
       gestureOrdinals[gesture] += 1;
       const phraseAccent = [1, 0.7, 0.96, 0.66][slotInBar % 4]!;
+      const longForm = getLongFormMotion({
+        eventIndex: index,
+        eventCount: 360,
+        stepsPerBar: 20,
+        rotation: 3,
+        phaseOffset: 1,
+        depth: 0.82,
+      });
 
       events.push({
         index,
@@ -168,10 +178,13 @@ function buildEvents(): SpectralCathedralScoreEvent[] {
         gesture,
         modeIds,
         localTimeSeconds: barIndex * BAR_SECONDS + slotInBar * SLOT_SECONDS,
-        baseGain: profile.baseGain * phraseAccent,
-        baseBrightness: profile.brightness,
-        wetSend: profile.wetSend,
-        stereoSpread: profile.stereoSpread,
+        baseGain: profile.baseGain * phraseAccent * longForm.accent,
+        baseBrightness: Math.min(
+          1,
+          Math.max(0, profile.brightness + (longForm.tailScale - 1) * 0.24),
+        ),
+        wetSend: Math.min(0.055, profile.wetSend * longForm.spaceScale),
+        stereoSpread: Math.min(0.38, profile.stereoSpread * longForm.motionScale),
         registerMultiplier: profile.registerMultiplier,
       });
     }

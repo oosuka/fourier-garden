@@ -103,10 +103,10 @@ describe("new chapter mathematical contracts", () => {
         orderIndex * 80,
         orderIndex * 80 + (order + 1) / 2,
       );
-      const fundamentalGain = firstPacket[0]!.gain;
+      const fundamentalGain = firstPacket[0]!.mathematicalGain;
       firstPacket.forEach((event, harmonicIndex) => {
         const harmonic = harmonicIndex * 2 + 1;
-        expect(event.gain / fundamentalGain).toBeCloseTo(1 / harmonic, 12);
+        expect(event.mathematicalGain / fundamentalGain).toBeCloseTo(1 / harmonic, 12);
       });
     });
     expect(DIRICHLET_LANTERNS_SCORE.events).toHaveLength(320);
@@ -132,12 +132,12 @@ describe("new chapter mathematical contracts", () => {
 
   it("keeps the Riemann main voice at the analytic 1/n squared ratio", () => {
     const mainEvents = RIEMANN_VEIL_SCORE.events
-      .filter((event) => event.timeSeconds < 16 && event.wet === 0.1)
-      .toSorted((left, right) => left.phaseDrift - right.phaseDrift);
-    const fundamentalGain = mainEvents[0]!.gain;
+      .filter((event) => event.sourceIndex < 38 && event.sourceIndex % 2 === 0)
+      .toSorted((left, right) => left.sourceIndex - right.sourceIndex);
+    const fundamentalGain = mainEvents[0]!.mathematicalGain;
     for (let indexN = 1; indexN <= 19; indexN += 1) {
       const mainEvent = mainEvents[indexN - 1]!;
-      expect(mainEvent.gain / fundamentalGain).toBeCloseTo(1 / (indexN * indexN), 12);
+      expect(mainEvent.mathematicalGain / fundamentalGain).toBeCloseTo(1 / (indexN * indexN), 12);
     }
   });
 

@@ -1,4 +1,5 @@
 import { MOBIUS_CHOIR_DEFINITION } from "../math/model";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
 import {
   MOBIUS_CHOIR_SCORE,
@@ -178,7 +179,7 @@ export const MOBIUS_CHOIR_SYNTHESIS = {
   breathComponentCount: 1,
   stereoDetuneRatio: 0.00125,
   antiAliasRatio: 0.9,
-  outputGain: 0.36,
+  outputGain: getChapterOutputGain("mobius-choir"),
 } as const satisfies MobiusChoirSynthesisPreset;
 
 export const MOBIUS_CHOIR_AUDIO_GRAPH: AudioGraphPreset = {

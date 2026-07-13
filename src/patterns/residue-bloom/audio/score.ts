@@ -1,4 +1,5 @@
 import type { FourierSeriesDefinition } from "../../../math/fourierSeries";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 
 export type MusicalSectionId = "intro" | "growth" | "bloom" | "hush" | "return";
 
@@ -102,8 +103,8 @@ export const RESIDUE_BLOOM_SCORE_DEFINITION: MusicalScoreDefinition = {
   releaseSeconds: 0.055,
   antiAliasRatio: 0.9,
   stereoDetuneRatio: 0.00125,
-  timbreDamping: 1.85,
-  outputGain: 0.5,
+  timbreDamping: 3.2,
+  outputGain: getChapterOutputGain("residue-bloom"),
   sections: [
     { id: "intro", startBar: 0, barCount: 8 },
     { id: "growth", startBar: 8, barCount: 12 },

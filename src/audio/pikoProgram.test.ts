@@ -46,7 +46,12 @@ describe("shared analytic piko programs", () => {
   it("keeps every detuned carrier in the approved band at common sample rates", () => {
     for (const sampleRate of [44_100, 48_000, 96_000]) {
       for (const program of programs) {
+        expect(new Set(program.score.events.map((event) => event.sourceIndex)).size).toBe(
+          program.score.events.length,
+        );
         for (const event of program.score.events) {
+          expect(event.sourceIndex).toBeGreaterThanOrEqual(0);
+          expect(event.mathematicalGain).toBeGreaterThanOrEqual(0);
           expect(event.frequencyHz).toBeGreaterThanOrEqual(360);
           expect(event.frequencyHz).toBeLessThanOrEqual(1_200);
           expect(event.frequencyHz * (1 + program.detuneRatio)).toBeLessThan(sampleRate * 0.45);
@@ -93,6 +98,30 @@ describe("shared analytic piko programs", () => {
       gaps.push(program.score.cycleSeconds - times.at(-1)! + times[0]!);
       expect(gaps.some((gap) => gap >= 0.09 && gap <= 0.21)).toBe(true);
       expect(Math.max(...gaps)).toBeLessThan(1.6);
+    }
+  });
+
+  it("gives every preview score long-form changes in strength, tail, space, and motion", () => {
+    for (const program of programs) {
+      const gains = program.score.events.map((event) => event.gain);
+      const endings = program.score.events.map((event) => event.endSeconds);
+      const wetSends = program.score.events.map((event) => event.wet);
+      const panMotionDepths = program.score.events.map((event) => event.panMotionDepth);
+
+      expect(Math.max(...gains) / Math.min(...gains.filter((gain) => gain > 0))).toBeGreaterThan(
+        1.5,
+      );
+      expect(Math.max(...endings) - Math.min(...endings)).toBeGreaterThan(0.03);
+      expect(Math.max(...wetSends) - Math.min(...wetSends)).toBeGreaterThan(0.02);
+      expect(Math.min(...panMotionDepths)).toBeGreaterThan(0);
+      expect(Math.max(...panMotionDepths)).toBeGreaterThanOrEqual(0.12);
+
+      for (let period = 1; period <= 32; period += 1) {
+        expect(
+          gains.slice(period).every((gain, index) => gain === gains[index]),
+          `${program.kind} repeats after ${period} events`,
+        ).toBe(false);
+      }
     }
   });
 
@@ -182,8 +211,8 @@ describe("shared analytic piko programs", () => {
       const midEnergyRatio = mid[index]!.rms / mid[index - 1]!.rms;
       expect(fullCycleRatio).toBeGreaterThanOrEqual(0.8);
       expect(fullCycleRatio).toBeLessThanOrEqual(1.25);
-      expect(midEnergyRatio).toBeGreaterThanOrEqual(0.82);
-      expect(midEnergyRatio).toBeLessThanOrEqual(1.18);
+      expect(midEnergyRatio).toBeGreaterThanOrEqual(0.7);
+      expect(midEnergyRatio).toBeLessThanOrEqual(1.4);
     }
 
     const primeMidRms = mid[0]!.rms;

@@ -25,7 +25,7 @@ export const phaseTorusPattern: PhaseTorusPatternDefinition = {
     rhythm: "seven-eight-mode-orbit",
     time: "nonclosing-absolute-flow",
     audio: {
-      onsetPattern: "seven-eight-mode-circulation",
+      onsetPattern: "seven-eight-circulation-with-eighty-four-second-arc",
       articulation: "round-phase-pulse",
       pitchMapping: "combination-angular-speed",
       spatialGesture: "continuous-circular-pan",
@@ -88,7 +88,7 @@ export const phaseTorusPattern: PhaseTorusPatternDefinition = {
     scopeNotice:
       "稠密性は1と√2の有理独立性から得る定理で、有限履歴の見た目を証明とはしません。3D埋め込みの曲率をflat Fourier場へ混ぜず、係数をFFT推定値とも呼びません。",
     sonificationBody:
-      "組合せ角速度|m+n√2|、係数絶対値、複素係数位相を、音高、強度、開始位相へ写します。絶対transport時刻の流を連続定位へ使い、7/8の420イベントが84秒で巡回しても数学軌道は閉じません。位相変調感と回転残響は帯域内の演出です。",
+      "組合せ角速度|m+n√2|、係数絶対値、複素係数位相を、音高、強度、開始位相へ写します。絶対transport時刻の流を連続定位へ使い、その深さ、強弱、尾長、wetを84秒の別位相輪郭で動かします。7/8の420イベントが巡回しても数学軌道は閉じません。位相変調感と回転残響は帯域内の演出です。",
     poeticLayerBody:
       "位相霧、環状ハロー、外側粒子、3Dトーラスの有機シェルは詩的造形です。flat基本領域と同じ局所座標へ対応させますが、24係数、軌道履歴、共役対称性を変形しません。",
   },

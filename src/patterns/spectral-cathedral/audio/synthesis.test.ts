@@ -32,6 +32,7 @@ import {
   renderSpectralCathedralStereo,
   validateSpectralCathedralWorkletProgram,
 } from "./synthesis";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 
 type MetricValues = ArrayLike<number> & Iterable<number>;
 
@@ -150,7 +151,7 @@ describe("Spectral Cathedral audio mapping", () => {
       woodComponentCount: 1,
       stereoDetuneRatio: 0.00125,
       antiAliasRatio: 0.9,
-      outputGain: 0.5,
+      outputGain: getChapterOutputGain("spectral-cathedral"),
     });
   });
 
@@ -280,7 +281,8 @@ describe("Spectral Cathedral piko reference DSP", () => {
     const cathedralMetrics = getStereoMetrics(spectralCathedral.left, spectralCathedral.right);
 
     expect(cathedralMetrics.rms).toBeGreaterThanOrEqual(residueBloom.rms * 0.44);
-    expect(cathedralMetrics.peak).toBeLessThanOrEqual(residueBloom.peak);
+    expect(cathedralMetrics.peak).toBeLessThanOrEqual(0.25);
+    expect(residueBloom.peak).toBeLessThanOrEqual(0.25);
   });
 
   it("uses the approved square-root equal-power pan law", () => {

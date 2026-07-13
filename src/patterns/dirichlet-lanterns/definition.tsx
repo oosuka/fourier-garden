@@ -24,7 +24,7 @@ export const dirichletLanternsPattern: DirichletLanternsPatternDefinition = {
     rhythm: "sparse-main-side-lobe-responses",
     time: "staged-order-accumulation",
     audio: {
-      onsetPattern: "anchor-with-side-lobe-subgrains",
+      onsetPattern: "anchor-side-lobes-with-long-packet-rotation",
       articulation: "reedy-harmonic-packet",
       pitchMapping: "odd-support-midrange",
       spatialGesture: "four-column-pan",
@@ -87,7 +87,7 @@ export const dirichletLanternsPattern: DirichletLanternsPatternDefinition = {
     scopeNotice:
       "有限部分和を無限級数と呼ばず、跳躍点での収束、Gibbs越波、Fejér平均を区別します。側葉を描画誤差として平滑化せず、標本データへのDFT・FFTも行いません。",
     sonificationBody:
-      "矩形波の奇数支持と1/n比を短い中域パケットへ保持し、四つの打切り次数を時間区画と定位へ割り当てます。主発音に側葉の短い応答を重ね、次数上昇を密度として聴かせます。帯域圧縮と短い残響はソニフィケーション層です。",
+      "矩形波の奇数支持と1/n比を短い中域パケットへ保持し、四つの打切り次数を時間区画と定位へ割り当てます。主発音と側葉応答には60秒の強弱、尾長、wet輪郭と、同じ奇数次数から得る小振幅の連続定位を重ねます。帯域圧縮と短い残響はソニフィケーション層です。",
     poeticLayerBody:
       "灯ハロー、煙、残火、奥行き方向の比較柱は核値と別の詩的造形です。発音次数に対応する中心峰または側葉だけを明るくし、厳密曲線と越波量を変形しません。",
   },

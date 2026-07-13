@@ -24,7 +24,7 @@ export const lissajousOrchardPattern: LissajousOrchardPatternDefinition = {
     rhythm: "nine-eight-farey-sequence",
     time: "closed-curves-slow-phase",
     audio: {
-      onsetPattern: "nine-step-left-right-answer",
+      onsetPattern: "nine-step-answer-with-sixty-second-arc",
       articulation: "paired-plucked-piko",
       pitchMapping: "farey-ratio-modulation",
       spatialGesture: "alternating-wide-stereo",
@@ -87,7 +87,7 @@ export const lissajousOrchardPattern: LissajousOrchardPatternDefinition = {
     scopeNotice:
       "曲線パラメータsとtransport時刻tを混同せず、無理比を閉曲線とは呼びません。平面上の自己交差は射影による一致であり、3次元の結び目や上下関係を意味しません。",
     sonificationBody:
-      "比a:bを左右の発音分割とphase driftへ保持し、整数和a+bだけを500–890 Hzの中域へ圧縮します。支持する九比はFarey順で循環し、共有位相差δₗ(t)を開始位相へ使います。交互定位、短い包絡、残響は聴取用の演出です。",
+      "比a:bを左右の発音分割、phase drift、連続定位へ保持し、整数和a+bだけを500–890 Hzの中域へ圧縮します。支持する九比はFarey順で循環し、その上へ60秒の強弱、尾長、wet輪郭を重ねます。交互定位、短い包絡、残響は聴取用の演出です。",
     poeticLayerBody:
       "枝影、花粉、花弁ハロー、奥行き方向の果樹配置は詩的造形です。厳密な選択曲線と同じ局所座標を起点にしますが、Farey比、周期、自己交差座標を変えません。",
   },

@@ -1,8 +1,10 @@
 import type { AudioGraphPreset } from "./audioProgram";
 
 export interface PikoScoreEvent {
+  sourceIndex: number;
   timeSeconds: number;
   frequencyHz: number;
+  mathematicalGain: number;
   gain: number;
   pan: number;
   panMotionDepth: number;
@@ -76,11 +78,14 @@ export function validatePikoProgram(program: PikoWorkletProgram): void {
   for (const event of program.score.events) {
     if (
       !Object.values(event).every(Number.isFinite) ||
+      !Number.isInteger(event.sourceIndex) ||
+      event.sourceIndex < 0 ||
       event.timeSeconds < 0 ||
       event.timeSeconds >= program.score.cycleSeconds ||
       event.timeSeconds < previousTime ||
       event.frequencyHz < 360 ||
       event.frequencyHz > 1_200 ||
+      event.mathematicalGain < 0 ||
       event.gain < 0 ||
       event.pan < -1 ||
       event.pan > 1 ||
@@ -211,6 +216,7 @@ export function createPikoEvents(options: {
   count: number;
   frequency(index: number): number;
   time(index: number): number;
+  mathematicalGain(index: number): number;
   gain(index: number): number;
   pan(index: number): number;
   panMotionDepth?(index: number): number;
@@ -226,8 +232,10 @@ export function createPikoEvents(options: {
   phaseDrift?(index: number): number;
 }): PikoScoreEvent[] {
   return Array.from({ length: options.count }, (_, index) => ({
+    sourceIndex: index,
     timeSeconds: options.time(index),
     frequencyHz: options.frequency(index),
+    mathematicalGain: options.mathematicalGain(index),
     gain: options.gain(index),
     pan: options.pan(index),
     panMotionDepth: options.panMotionDepth?.(index) ?? 0,

@@ -1,4 +1,5 @@
 import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 import {
   PIKO_AUDIO_GRAPH,
   type PikoWorkletProgram,
@@ -16,7 +17,7 @@ export function createPhaseTorusWorkletProgram(): PikoWorkletProgram {
     kind: "phase-torus",
     score: PHASE_TORUS_SCORE,
     detuneRatio: 0.0015,
-    outputGain: 0.552,
+    outputGain: getChapterOutputGain("phase-torus"),
     maximumVoices: 22,
   };
   validatePikoProgram(program);

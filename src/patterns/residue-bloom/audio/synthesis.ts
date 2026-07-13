@@ -40,6 +40,8 @@ interface RhythmicRenderOptions {
   startTimeSeconds?: number;
 }
 
+interface RhythmicStereoRenderOptions extends RhythmicRenderOptions {}
+
 export interface AudioRhythmPreset {
   bpm: number;
   stepsPerBeat: number;
@@ -67,24 +69,24 @@ export type WorkletConfigurationMessage = WorkletConfigureMessage<ResidueBloomWo
 export const RESIDUE_BLOOM_AUDIO_GRAPH: AudioGraphPreset = {
   dryHighPassHz: 190,
   dryHighPassQ: 0.45,
-  dryHighShelfHz: 1_250,
-  dryHighShelfGainDb: -16,
-  dryLowPassHz: 2_100,
-  dryLowPassQ: 0.3,
+  dryHighShelfHz: 1_180,
+  dryHighShelfGainDb: -17,
+  dryLowPassHz: 1_650,
+  dryLowPassQ: 0.25,
   dryGain: 0.9,
   wetHighPassHz: 220,
   wetHighPassQ: 0.45,
-  wetLowPassHz: 1_450,
-  wetLowPassQ: 0.3,
-  wetGain: 0.12,
-  roomSeconds: 1.15,
-  roomDecay: 2.1,
+  wetLowPassHz: 1_180,
+  wetLowPassQ: 0.25,
+  wetGain: 0.045,
+  roomSeconds: 0.82,
+  roomDecay: 1.45,
   compressor: {
-    thresholdDb: -14,
+    thresholdDb: -16,
     kneeDb: 12,
     ratio: 3,
     attackSeconds: 0.006,
-    releaseSeconds: 0.18,
+    releaseSeconds: 0.2,
   },
   limiterCeilingDbfs: -1,
 };
@@ -223,6 +225,85 @@ export function renderRhythmicSeries({
   }
 
   return samples;
+}
+
+export function renderResidueBloomStereo({
+  durationSeconds,
+  sampleRate,
+  score,
+  startTimeSeconds = 0,
+}: RhythmicStereoRenderOptions): Readonly<{ left: Float32Array; right: Float32Array }> {
+  const absoluteStartSeconds = Math.max(0, startTimeSeconds);
+  const carriers = Array.from(
+    new Set(score.events.filter((event) => event.active).map((event) => event.carrierHz)),
+  );
+  const componentsByCarrier = new Map(
+    carriers.map((carrier) => [
+      carrier,
+      getSonificationComponents(score.fundamentalHz, carrier, sampleRate, score.definition).filter(
+        (component) => component.included,
+      ),
+    ]),
+  );
+  const sampleCount = Math.floor(durationSeconds * sampleRate);
+  const left = new Float32Array(sampleCount);
+  const right = new Float32Array(sampleCount);
+  let filterLeft = 0;
+  let filterRight = 0;
+
+  for (let sample = 0; sample < sampleCount; sample += 1) {
+    const frame = evaluateMusicalScore(score, absoluteStartSeconds + sample / sampleRate);
+    const components = frame.event.active
+      ? (componentsByCarrier.get(frame.event.carrierHz) ?? [])
+      : [];
+    const normalization = components.reduce(
+      (sum, component) => sum + component.weightedAmplitude,
+      0,
+    );
+    let leftValue = 0;
+    let rightValue = 0;
+
+    for (const [index, component] of components.entries()) {
+      const eventPan = frame.event.normalizedPhasorX * 0.28;
+      const partialPan = Math.sin(index * 2.399963229728653) * 0.24 * frame.event.stereoSpread;
+      const pan = Math.min(0.92, Math.max(-0.92, eventPan + partialPan));
+      const leftPan = Math.sqrt((1 - pan) / 2);
+      const rightPan = Math.sqrt((1 + pan) / 2);
+      leftValue +=
+        Math.sin(
+          Math.PI * 2 * component.leftFrequencyHz * frame.localStepTimeSeconds +
+            component.sinePhase,
+        ) *
+        component.weightedAmplitude *
+        leftPan;
+      rightValue +=
+        Math.sin(
+          Math.PI * 2 * component.rightFrequencyHz * frame.localStepTimeSeconds +
+            component.sinePhase,
+        ) *
+        component.weightedAmplitude *
+        rightPan;
+    }
+
+    const scale =
+      normalization > 0
+        ? (frame.noteEnvelope *
+            frame.event.baseGain *
+            frame.event.accent *
+            score.definition.outputGain) /
+          normalization
+        : 0;
+    const minimumCutoffHz = 520;
+    const maximumCutoffHz = Math.min(2_050, sampleRate * 0.2);
+    const cutoffHz = minimumCutoffHz + (maximumCutoffHz - minimumCutoffHz) * frame.event.brightness;
+    const filterCoefficient = 1 - Math.exp((-2 * Math.PI * cutoffHz) / sampleRate);
+    filterLeft += (leftValue * scale - filterLeft) * filterCoefficient;
+    filterRight += (rightValue * scale - filterRight) * filterCoefficient;
+    left[sample] = filterLeft;
+    right[sample] = filterRight;
+  }
+
+  return { left, right };
 }
 
 export function renderRawSeries({

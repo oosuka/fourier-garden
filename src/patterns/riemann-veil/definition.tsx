@@ -24,7 +24,7 @@ export const riemannVeilPattern: RiemannVeilPatternDefinition = {
     rhythm: "quadratic-expanding-gaps",
     time: "five-sixteen-second-weaves",
     audio: {
-      onsetPattern: "quadratic-spacing-with-answer",
+      onsetPattern: "quadratic-answer-with-eighty-second-weave",
       articulation: "glass-rounded-finite-tail",
       pitchMapping: "quadratic-index-compressed",
       spatialGesture: "thread-crossing-pan",
@@ -75,7 +75,7 @@ export const riemannVeilPattern: RiemannVeilPatternDefinition = {
     scopeNotice:
       "無限和の微分可能性、自己相似性、極限の正則性を有限画像から主張しません。本章のRiemann型関数はRiemannゼータ関数の零点を表示するものではなく、四層はいずれも有限和です。",
     sonificationBody:
-      "平方数順序、主声部の1/n²強度比、絶対発音時刻のn²位相を中域のガラス質ピコへ写します。二次位置に従う広がる発音間隔には、句の連続性を保つ知覚圧縮した短い応答声部を添え、460–1,020 Hzへ単調圧縮します。丸めた高域と薄い余韻は音色演出です。",
+      "平方数順序、主声部の1/n²強度比、絶対発音時刻のn²位相を中域のガラス質ピコへ写します。広がる発音間隔と短い応答声部には80秒の強弱、尾長、wet輪郭を重ね、n²位相を連続定位にも使います。460–1,020 Hzへの圧縮、丸めた高域、薄い余韻は音色演出です。",
     poeticLayerBody:
       "膜の皺、銀粉、残光、四層間の奥行きは詩的造形です。平方数支持に対応する糸だけが局所発光しますが、膜の折れや粒子を有限和の特異点として扱いません。",
   },

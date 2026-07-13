@@ -1,4 +1,5 @@
 import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 import {
   PIKO_AUDIO_GRAPH,
   type PikoWorkletProgram,
@@ -17,7 +18,7 @@ export function createRiemannVeilWorkletProgram(): PikoWorkletProgram {
     kind: "riemann-veil",
     score: RIEMANN_VEIL_SCORE,
     detuneRatio: 0.0013,
-    outputGain: 1.238,
+    outputGain: getChapterOutputGain("riemann-veil"),
     maximumVoices: 20,
   };
   validatePikoProgram(program);

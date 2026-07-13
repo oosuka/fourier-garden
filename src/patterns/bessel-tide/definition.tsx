@@ -25,7 +25,7 @@ export const besselTidePattern: BesselTidePatternDefinition = {
     rhythm: "slow-six-eight-wave",
     time: "seventy-two-second-tide",
     audio: {
-      onsetPattern: "six-eight-inward-outward",
+      onsetPattern: "six-eight-inward-outward-long-tide",
       articulation: "rounded-expanding-drop",
       pitchMapping: "normalized-bessel-zero",
       spatialGesture: "angular-mode-pan",
@@ -82,7 +82,7 @@ export const besselTidePattern: BesselTidePatternDefinition = {
     scopeNotice:
       "Bessel零点は固定倍精度表で、画像から推定しません。使用するJₘの零点と、Neumann境界で現れる導関数J′ₘの零点を区別し、外側の膜を境界の変形とはみなしません。",
     sonificationBody:
-      "零点順jₘₙを420–940 Hzへ単調写像し、射影係数の絶対値を強度、角度次数とcos/sin成分を定位へ使います。各発音は有限包絡の水滴状ピコで、零点に比例する連続phase driftを持ちます。残響膨張と帯域制限は音楽的変換です。",
+      "零点順jₘₙを420–940 Hzへ単調写像し、射影係数の絶対値を強度、角度次数とcos/sin成分を定位へ使います。零点に比例する連続phase driftと小振幅の定位運動を持ち、72秒の潮汐輪郭で強弱、尾長、wetを別々に変えます。残響膨張と帯域制限は音楽的変換です。",
     poeticLayerBody:
       "外側膜、霧、粒子、波紋ハローは厳密円板を包む詩的造形です。節円・節径に対応する局所だけが発音へ反応し、r=1のDirichlet境界とモード頂点は動かしません。",
   },

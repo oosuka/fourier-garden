@@ -28,6 +28,7 @@ import {
   renderMobiusChoirStereo,
   validateMobiusChoirWorkletProgram,
 } from "./synthesis";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 
 describe("Möbius Choir synthesis", () => {
   it("wraps the six-mode score in the chapter-specific graph", () => {
@@ -46,7 +47,7 @@ describe("Möbius Choir synthesis", () => {
     expect(MOBIUS_CHOIR_SYNTHESIS.partialDamping).toBe(8);
     expect(MOBIUS_CHOIR_SYNTHESIS.maximumEventSeconds).toBe(0.23);
     expect(MOBIUS_CHOIR_SYNTHESIS.formantFloor).toBe(1);
-    expect(MOBIUS_CHOIR_SYNTHESIS.outputGain).toBe(0.36);
+    expect(MOBIUS_CHOIR_SYNTHESIS.outputGain).toBe(getChapterOutputGain("mobius-choir"));
     for (const articulation of Object.values(MOBIUS_CHOIR_SYNTHESIS.articulations)) {
       expect(articulation.breathGain).toBe(0);
       expect(articulation.moraOffsetsSeconds).toEqual([0]);

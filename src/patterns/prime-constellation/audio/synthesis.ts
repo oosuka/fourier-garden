@@ -1,4 +1,5 @@
 import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 import {
   PIKO_AUDIO_GRAPH,
   type PikoWorkletProgram,
@@ -18,7 +19,7 @@ export function createPrimeConstellationWorkletProgram(): PikoWorkletProgram {
     kind: "prime-constellation",
     score: PRIME_CONSTELLATION_SCORE,
     detuneRatio: 0.001,
-    outputGain: 0.43,
+    outputGain: getChapterOutputGain("prime-constellation"),
     maximumVoices: 18,
   };
   validatePikoProgram(program);

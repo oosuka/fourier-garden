@@ -1,9 +1,22 @@
 import { createPikoEvents, type PikoScoreProgram } from "../../../audio/pikoProgram";
+import { getLongFormMotion } from "../../../audio/longFormMotion";
 import { DIRICHLET_ORDERS } from "../math/model";
 
 const EVENTS_PER_ORDER = 80;
 const MAXIMUM_ODD_HARMONIC = DIRICHLET_ORDERS.at(-1)!;
 const PACKET_ACCENTS = [1, 0.56, 0.82, 0.64, 0.9] as const;
+const eventCount = 320;
+
+function motionAt(index: number) {
+  return getLongFormMotion({
+    eventIndex: index,
+    eventCount,
+    stepsPerBar: 16,
+    rotation: 3,
+    phaseOffset: 13,
+    depth: 0.9,
+  });
+}
 
 const harmonicsByOrder = DIRICHLET_ORDERS.map((order) =>
   Object.freeze(
@@ -53,23 +66,38 @@ export const DIRICHLET_LANTERNS_SCORE: PikoScoreProgram = Object.freeze({
   events: Object.freeze(
     createPikoEvents({
       cycleSeconds: 60,
-      count: 320,
+      count: eventCount,
       time: (index) => index * 0.1875,
       frequency: (index) => {
         const { harmonic } = getDirichletAudioMapping(index);
         return 440 + ((harmonic - 1) / (MAXIMUM_ODD_HARMONIC - 1)) * 500;
       },
+      mathematicalGain: (index) => getDirichletAudioMapping(index).coefficientMagnitude,
       gain: (index) => {
         const mapping = getDirichletAudioMapping(index);
         const accent = PACKET_ACCENTS[mapping.packet % PACKET_ACCENTS.length]!;
-        return energyAt(index * 0.1875) * accent * 0.24 * mapping.normalizedCoefficientMagnitude;
+        return (
+          energyAt(index * 0.1875) *
+          accent *
+          0.24 *
+          mapping.normalizedCoefficientMagnitude *
+          motionAt(index).accent
+        );
       },
       pan: (index) => (getDirichletAudioMapping(index).orderIndex - 1.5) / 2.1,
-      wet: (index) => (getDirichletAudioMapping(index).harmonic === 1 ? 0.035 : 0.12),
+      panMotionDepth: (index) => 0.06 + 0.1 * motionAt(index).motionScale,
+      panMotionRateRadiansPerSecond: (index) => getDirichletAudioMapping(index).harmonic * 0.11,
+      wet: (index) =>
+        (getDirichletAudioMapping(index).harmonic === 1 ? 0.035 : 0.12) *
+        motionAt(index).spaceScale,
       articulation: (index) => ({
         attackSeconds: 0.006,
-        decaySeconds: getDirichletAudioMapping(index).harmonic === 1 ? 0.105 : 0.05,
-        endSeconds: getDirichletAudioMapping(index).harmonic === 1 ? 0.24 : 0.125,
+        decaySeconds:
+          (getDirichletAudioMapping(index).harmonic === 1 ? 0.105 : 0.05) *
+          motionAt(index).tailScale,
+        endSeconds:
+          (getDirichletAudioMapping(index).harmonic === 1 ? 0.24 : 0.125) *
+          motionAt(index).tailScale,
       }),
       phaseDrift: (index) => getDirichletAudioMapping(index).harmonic * 0.11,
     }),

@@ -68,6 +68,10 @@ describe("current documentation", () => {
     expect(mathematicalModel).toContain("周期内イベント数は18小節×20 slotの360イベント");
     expect(mathematicalModel).toContain("合計256イベント");
     expect(readme).toContain("一定16分ピコ粒");
+    expect(agents).toContain("stereo RMS `0.023`");
+    expect(mathematicalModel).toContain("全10章の音量基準と長周期輪郭");
+    expect(readme).toContain("全周期stereo RMS `0.023 ±0.05 dB`");
+    expect(superpowersIndex).toContain("全周期の長周期輪郭");
     expect(superpowersIndex).toContain("実装時の参照先にしてはならない");
   });
 

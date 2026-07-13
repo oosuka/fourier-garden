@@ -1,4 +1,5 @@
 import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 import {
   PIKO_AUDIO_GRAPH,
   type PikoWorkletProgram,
@@ -18,7 +19,7 @@ export function createBesselTideWorkletProgram(): PikoWorkletProgram {
     kind: "bessel-tide",
     score: BESSEL_TIDE_SCORE,
     detuneRatio: 0.0014,
-    outputGain: 1.12,
+    outputGain: getChapterOutputGain("bessel-tide"),
     maximumVoices: 24,
   };
   validatePikoProgram(program);

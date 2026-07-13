@@ -24,7 +24,7 @@ export const waveletRainPattern: WaveletRainPatternDefinition = {
     rhythm: "localized-multiscale-bursts",
     time: "sixteen-second-support-scan",
     audio: {
-      onsetPattern: "support-position-bursts",
+      onsetPattern: "support-bursts-with-sixty-four-second-weather",
       articulation: "dry-scale-dependent-drop",
       pitchMapping: "haar-scale-register",
       spatialGesture: "support-position-pan",
@@ -87,7 +87,7 @@ export const waveletRainPattern: WaveletRainPatternDefinition = {
     scopeNotice:
       "時間・スケール係数はFFT周波数スペクトルではなく、P₆gは元関数gと同一ではありません。不連続点の点値とL²同値類を区別し、雨滴を基底関数そのものとは説明しません。",
     sonificationBody:
-      "スケールj、支持位置k/2ʲ、係数絶対値、符号を、それぞれ音高と包絡、左右定位、強度、開始位相0/πへ写します。係数支持の走査順は保ち、440+96j Hzへ離散配置します。短い木片状の音色とcool roomは聴取のための演出です。",
+      "スケールj、支持位置k/2ʲ、係数絶対値、符号を、それぞれ音高と包絡、左右定位、強度、開始位相0/πへ写します。係数支持の走査順を保ったまま、64秒の強弱、尾長、wet輪郭とスケール由来の連続定位を重ねます。短い木片状の音色とcool roomは聴取のための演出です。",
     poeticLayerBody:
       "雨粒、飛沫、残像、奥行きを持つ六段の係数面は詩的造形を含みます。各滴は対応する支持セルからのみ発生し、セル境界、係数符号、区分一定再構成を変形しません。",
   },

@@ -308,24 +308,24 @@ describe("AudioEngine initialization", () => {
       records.nodes.filter((node) => node.kind.startsWith("biquad:")).map((node) => node.options),
     ).toEqual([
       { type: "highpass", frequency: 190, Q: 0.45 },
-      { type: "highshelf", frequency: 1_250, gain: -16 },
-      { type: "lowpass", frequency: 2_100, Q: 0.3 },
+      { type: "highshelf", frequency: 1_180, gain: -17 },
+      { type: "lowpass", frequency: 1_650, Q: 0.25 },
       { type: "highpass", frequency: 220, Q: 0.45 },
-      { type: "lowpass", frequency: 1_450, Q: 0.3 },
+      { type: "lowpass", frequency: 1_180, Q: 0.25 },
     ]);
     expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
       { kind: "gain", options: { gain: 0.9 } },
-      { kind: "gain", options: { gain: 0.12 } },
+      { kind: "gain", options: { gain: 0.045 } },
     ]);
     expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
-      threshold: -14,
+      threshold: -16,
       knee: 12,
       ratio: 3,
       attack: 0.006,
-      release: 0.18,
+      release: 0.2,
     });
     expect(records.nodes.find((node) => node.kind === "waveshaper")?.options.oversample).toBe("4x");
-    expect(records.bufferLengths).toEqual([1_150]);
+    expect(records.bufferLengths).toEqual([820]);
     expect(records.connections).toContainEqual({
       source: "waveshaper",
       destination: "analyser",

@@ -212,7 +212,7 @@ z_e=z(0.31t_e^{\mathrm{abs}})
 基礎知覚重みと左右実周波数を
 
 \[
-w_k=\frac{A_k}{(k+1)^{1.85}},
+w_k=\frac{A_k}{(k+1)^{3.2}},
 \qquad
 f_{k,j}^{L/R}=n_k\nu_j(1\mp d),
 \qquad d=0.00125
@@ -270,7 +270,7 @@ p_r=\operatorname{clamp}\left(\frac{|z_e|}{M},0,1\right)
 基礎知覚重み
 
 \[
-\frac{A_k}{(k+1)^{1.85}}
+\frac{A_k}{(k+1)^{3.2}}
 \]
 
 は変更しない。動的な明るさは部分音合成後の1極ローパスであり、
@@ -278,9 +278,9 @@ p_r=\operatorname{clamp}\left(\frac{|z_e|}{M},0,1\right)
 係数\(A_k\)や基礎知覚重みの変更ではない。動的な空間量は生成済みconvolverへ
 送る区間プロファイル由来のウェット送出であり、\(p_r\)からは得ない。
 さらにステレオデチューン、EQ、コンプレッションを適用する。Chapter 1の
-Web Audioグラフはdry high-pass 190 Hz、high-shelf 1,250 Hz / -16 dB、
-dry low-pass 2,100 Hz、wet high-pass 220 Hz、wet low-pass 1,450 Hz、
-1.15秒残響、threshold -14 dBの圧縮、-1 dBFS limiterを使う。
+Web Audioグラフはdry high-pass 190 Hz、high-shelf 1,180 Hz / -17 dB、
+dry low-pass 1,650 Hz、wet high-pass 220 Hz、wet low-pass 1,180 Hz、
+0.82秒残響、threshold -16 dBの圧縮、-1 dBFS limiterを使う。
 これらは数学層の同一表示ではなく、調波構造を聴覚へ写すための音響演出である。
 
 反復イベント表はTypeScriptで一度だけ生成し、描画とAudioWorkletへ同じ
@@ -318,8 +318,8 @@ DFT、FFTの計算結果として解釈してはならない。
 
 \[
 q_k=
-\frac{A_k/(k+1)^{1.85}}
-{\max_{0\le j\le12}\left(A_j/(j+1)^{1.85}\right)}
+\frac{A_k/(k+1)^{3.2}}
+{\max_{0\le j\le12}\left(A_j/(j+1)^{3.2}\right)}
 \]
 
 として正規化した値から得る。\(q_k\)は別ラインの不透明度へだけ写し、
@@ -561,8 +561,9 @@ afterglow:   15-17小節
 参照動画のような一定リズムを優先し、幕ごとに基礎ゲイン、brightness、wet send、
 stereo spread、gesture配列、選択モードを変える。発音gestureは`toll`、
 `answer`、`cascade`、`pulse`、`choir`の5種類であるが、音色上はすべて短い
-中域ピコ粒へ丸める。4 slotアクセントは`[1.00, 0.70, 0.96, 0.66]`で、
-wet sendは最大0.055、stereo spreadは最大0.38に制限し、Chapter 4より乾いた
+中域ピコ粒へ丸める。4 slotアクセント`[1.00, 0.70, 0.96, 0.66]`は局所基礎形で、
+小節ごとの回転と全75秒を横断する長周期輪郭を乗じる。wet sendは最大0.055、
+stereo spreadは最大0.38に制限し、Chapter 4より乾いた
 格子状のキャラクターを保つ。
 
 イベント表は周期内時刻、幕、gesture、モードID、基礎ゲイン、基礎brightness、
@@ -732,8 +733,9 @@ piecewise-linear contourとして抽出する。Dirichlet境界は一つの閉�
 16小節の周期は\(960/17=56.470588\ldots\)秒で、全小節の16 slotすべてへ
 発音を置き、合計256イベントを5幕へ置く。密度は一定に保ち、幕ごとに基礎ゲイン、
 wet send、定位幅、連続制御depth、gesture配列、選択モードを変える。
-4 slotアクセントは`[0.78, 1.00, 0.68, 0.92]`で、Chapter 2の乾いた格子ではなく、
-2拍目に重心が来る流動的な帯として聴こえるようにする。pan motionは最小0.32、
+4 slotアクセント`[0.78, 1.00, 0.68, 0.92]`は局所基礎形で、全16小節の
+長周期輪郭を乗じる。Chapter 2の乾いた格子ではなく、2拍目に重心が来る流動的な帯として
+聴こえるようにする。pan motionは最小0.32、
 最大0.72以上を不変条件にし、左右運動でChapter 2から分離する。
 
 | 幕 | 小節 | slot | イベント数 | 部分音 | 主gesture |
@@ -771,8 +773,8 @@ DSPで採用するcarrierはevent ageで再始動せず、絶対時刻\(t\)で
 再始動しない短い包絡差であり、数学時刻とモード位相はscore周期でリセットしない。
 包絡終了は0.19-0.21秒、評価窓の最大イベント長は0.23秒で、16分格子上の重なりと
 Chapter 2より広い定位、やや高いwet sendにより、長い無音断絶を作らない。
-全周期stereo RMSはChapter 2の0.85倍以上1.12倍以下、代表10秒区間は0.82倍以上
-1.18倍以下とする。
+全周期stereo RMSは後述する全10章共通のdry bus基準へ一致させ、代表区間は
+同じmaster volumeでA/B試聴する。幕内の静動差は正規化で平坦化しない。
 固有値順序、係数比、奇偶条件、quadrature関係は変更しない。同時発音は単一モードに
 限定する。DSPで採用する部分音は\(r=1\)のみで、register倍率は常に1である。
 左右デチューン後の実周波数が\(0.45F_s\)未満の場合だけ生成する。
@@ -780,7 +782,7 @@ AudioWorklet設定時に周波数、定位、フォルマント重みを事前�
 標本ループでは時間窓内のeventだけを評価する。
 Web Audioグラフはdry high-pass 220 Hz、high-shelf 1,000 Hz / -24 dB、
 dry low-pass 1,080 Hz、wet high-pass 220 Hz、wet low-pass 860 Hz、
-1.15秒残響、音響正規化後の出力ゲイン0.36、threshold -16 dBの圧縮、
+1.15秒残響、音響正規化後の出力ゲイン0.3744778、threshold -16 dBの圧縮、
 4倍oversamplingの-1 dBFS limiterを使う。
 
 息の粒子、六本の声部リボン、継ぎ目のシアン残光は詩的造形である。各発音モードの
@@ -906,3 +908,69 @@ flat torus\(\mathbb T^2\)上で
 固定voice領域と再利用outputを使う。厳密数学層はseed非依存、詩的粒子だけを
 固定seedで変奏する。各章は5幕、3表現軸以上の変化、局所数学写像、
 WebGPU／WebGL2の両経路を持つ。
+
+### 全10章の音量基準と長周期輪郭
+
+章間音量の回帰基準は、8 kHzで決定的に生成する未マスターdry worklet busの全周期
+stereo RMSとし、全章で`0.023`、許容差`±0.05 dB`へ固定する。8 kHzはQA計算量を
+抑えながら共有ピコcarrierとChapter 1の強く減衰した可聴調波を含む参照レートであり、
+公開時のAudioContextサンプルレートを8 kHzへ変更する意味ではない。EQ、convolver、
+compressor、master volume後の知覚差は隣接章A/B試聴で確認する。
+
+| Chapter | worklet output gain |
+| --- | ---: |
+| 1 Residue Bloom | 0.178680376 |
+| 2 Spectral Cathedral | 0.506816908 |
+| 3 Prime Constellation | 0.407581595 |
+| 4 Möbius Choir | 0.374477800 |
+| 5 Bessel Tide | 1.238265678 |
+| 6 Lissajous Orchard | 0.321733775 |
+| 7 Dirichlet Lanterns | 0.665011485 |
+| 8 Wavelet Rain | 0.482362519 |
+| 9 Riemann Veil | 0.998806301 |
+| 10 Phase Torus | 0.571587817 |
+
+Chapter 2から10は短い局所モチーフの上へ、全スコアを横断する決定的な長周期輪郭を
+加える。共有ピコイベントは数学由来の係数を`mathematicalGain`、長周期輪郭と幕別強弱を
+適用した発音量を`gain`として別々に保持し、係数比の検証を演出用ゲインから独立させる。
+イベント番号を\(e\)、全イベント数を\(E\)、小節内slot数を\(S\)、
+小節番号を\(b=\lfloor e/S\rfloor\)、slotを\(s=e\bmod S\)、
+章別回転を\(r\)、offsetを\(o\)、depthを\(d\)とする。基礎輪郭は
+
+\[
+H=[1.16,0.68,0.92,0.74,1.04,0.64,0.84,0.76,
+1.12,0.66,0.90,0.72,1.00,0.62,0.82,0.70],
+\]
+
+\[
+B=[0.90,1.04,0.96,1.10,0.86,1.02,0.92,1.08]
+\]
+
+を小節ごとに異なる位相で参照し、\(u=(e+0.5)/E\)、\(p=0.071o\)に対して
+
+\[
+M_e=1+0.11\sin(2\pi(2u+p))+0.065\sin(2\pi(5u+0.61p)),
+\]
+
+\[
+a_e=\operatorname{clamp}\left(
+1+\left(H_{(s+rb+o)\bmod16}B_{(b+3o)\bmod8}M_e-0.9\right)d,
+0.52,1.34\right)
+\]
+
+とする。\(a_e\)は数学係数から得た基礎ゲインへ乗じるソニフィケーション上の強弱である。
+同じ長周期状態から独立位相の尾長`0.76-1.28`、wet倍率`0.70-1.20`、
+空間運動倍率`0.72-1.14`も得る。数学的な支持、順序、係数比、符号位相、絶対数学時刻は
+変更しない。章別パラメータは次のとおりである。
+
+| Chapter | S | r | o | d |
+| --- | ---: | ---: | ---: | ---: |
+| 2 Spectral Cathedral | 20 | 3 | 1 | 0.82 |
+| 3 Prime Constellation | 25 | 7 | 5 | 0.90 |
+| 4 Möbius Choir | 16 | 5 | 3 | 0.88 |
+| 5 Bessel Tide | 12 | 5 | 7 | 0.88 |
+| 6 Lissajous Orchard | 24 | 5 | 11 | 0.86 |
+| 7 Dirichlet Lanterns | 16 | 3 | 13 | 0.90 |
+| 8 Wavelet Rain | 16 | 5 | 17 | 0.86 |
+| 9 Riemann Veil | 38 | 7 | 19 | 0.90 |
+| 10 Phase Torus | 20 | 7 | 23 | 0.84 |

@@ -9,6 +9,11 @@ Chapter 4へ移動した。現在の表示順と公開状態は`src/patterns/reg
 `docs/chapter-claim-ledger.md`を正とする。本文中の旧Chapter 3/4番号は調査履歴として
 残し、現行表示番号には使用しない。
 
+2026年7月13日の全章音響再設計により、全周期dry bus RMSは`0.023 ±0.05 dB`へ統一し、
+Chapter 1は上側調波と残響を共通ピコ音色へ寄せ、Chapter 2から10は全周期の長周期輪郭を
+持つ。本文中に残る旧4 slot反復、広い章間RMS許容幅、旧output gainは履歴値であり、
+現行仕様には使用しない。
+
 現在の10章順はResidue Bloom、Spectral Cathedral、Prime Constellation、
 Möbius Choir、Bessel Tide、Lissajous Orchard、Dirichlet Lanterns、Wavelet Rain、
 Riemann Veil、Phase Torusである。既存3章は通常レジストリ、新7章はpreviewへ登録し、

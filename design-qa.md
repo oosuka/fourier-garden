@@ -160,7 +160,9 @@ Wavelet Rain、Riemann Veil、Phase Torusのpreview実装、および最終10章
 ### Release status
 
 - 数学、帯域、決定性、レジストリ、Worklet dispatcher、型検査、buildの自動確認を完了した。
-- `npm run check`でformat、lint、523テスト、型検査、production buildを通過した。
+- 全10章の未マスターdry bus全周期RMSを`0.023 ±0.05 dB`へ統一し、各5分割区間の
+  最大／最小RMS比が1.35以上であることを回帰検証した。
+- `npm run check`でformat、lint、528テスト、型検査、production buildを通過した。
 - ヘッドホン、Mac内蔵スピーカーでの連続試聴と利用者承認は未完了である。
 - 上記の人間評価が完了するまで、新7章は`publication: "preview"`を維持する。
 

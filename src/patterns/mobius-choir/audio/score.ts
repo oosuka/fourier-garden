@@ -1,3 +1,5 @@
+import { getLongFormMotion } from "../../../audio/longFormMotion";
+
 export type MobiusChoirSectionId =
   | "breath"
   | "antiphon"
@@ -209,6 +211,14 @@ function buildEvents(): MobiusChoirScoreEvent[] {
       const sectionOrdinal = sectionOrdinals[section.id] - 1;
       const [vowelStart, vowelEnd] = VOWELS_BY_GESTURE[gesture];
       const phraseAccent = [0.78, 1, 0.68, 0.92][slotInBar % 4]!;
+      const longForm = getLongFormMotion({
+        eventIndex: events.length,
+        eventCount: 256,
+        stepsPerBar: 16,
+        rotation: 5,
+        phaseOffset: 3,
+        depth: 0.88,
+      });
       events.push({
         index: events.length,
         barIndex,
@@ -217,14 +227,17 @@ function buildEvents(): MobiusChoirScoreEvent[] {
         gesture,
         modeIds,
         localTimeSeconds: barIndex * BAR_SECONDS + slotInBar * SLOT_SECONDS,
-        baseGain: profile.baseGain * phraseAccent,
-        wetSend: profile.wetSend,
-        stereoSpread: profile.stereoSpread,
+        baseGain: profile.baseGain * phraseAccent * longForm.accent,
+        wetSend: Math.min(0.18, profile.wetSend * longForm.spaceScale),
+        stereoSpread: Math.min(
+          1,
+          Math.max(profile.stereoSpread, profile.stereoSpread * longForm.motionScale),
+        ),
         registerMultiplier: profile.registers[sectionOrdinal % profile.registers.length]!,
         partialCount: profile.partialCount,
-        amplitudeMotionDepth: profile.amplitudeMotionDepth,
-        brightnessMotionDepth: profile.brightnessMotionDepth,
-        panMotion: profile.panMotion,
+        amplitudeMotionDepth: Math.min(0.42, profile.amplitudeMotionDepth * longForm.tailScale),
+        brightnessMotionDepth: Math.min(0.3, profile.brightnessMotionDepth * longForm.spaceScale),
+        panMotion: Math.min(0.84, Math.max(0.32, profile.panMotion * longForm.motionScale)),
         vowelStart,
         vowelEnd,
       });
