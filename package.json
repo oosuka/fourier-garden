@@ -1,0 +1,55 @@
+{
+  "name": "fourier-garden",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "npm@11.17.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "lint": "oxlint --deny-warnings --report-unused-disable-directives .",
+    "lint:fix": "oxlint --fix --deny-warnings --report-unused-disable-directives .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "npm run format:check && npm run lint && npm test && npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "5.2.11",
+    "@fontsource/inter": "5.2.8",
+    "@fontsource/noto-serif-jp": "5.2.8",
+    "katex": "0.17.0",
+    "lucide-react": "1.21.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "three": "0.184.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.0",
+    "@types/katex": "0.16.8",
+    "@types/node": "24.10.14",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@types/three": "0.184.1",
+    "@vitejs/plugin-react": "6.0.2",
+    "jsdom": "28.0.0",
+    "oxlint": "1.70.0",
+    "typescript": "6.0.3",
+    "vite": "8.0.16",
+    "vitest": "4.1.9"
+  },
+  "engines": {
+    "node": "24.x",
+    "npm": "11.x"
+  },
+  "volta": {
+    "node": "24.16.0",
+    "npm": "11.17.0"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
+  }
+}

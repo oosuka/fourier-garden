@@ -1,0 +1,72 @@
+.spectralDetailsAnalysis .spectralPlot {
+  margin-top: 13px;
+}
+
+.spectralDetailsAnalysis .spectralPlotHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+  color: rgba(209, 236, 241, 0.72);
+  font-size: 9px;
+}
+
+.spectralDetailsAnalysis .spectralPlotHeader small {
+  color: rgba(167, 202, 210, 0.48);
+  font-size: 8px;
+  text-align: right;
+}
+
+.spectralDetailsAnalysis .spectralPlot canvas {
+  width: 100%;
+  height: 92px;
+  display: block;
+}
+
+.spectralDetailsAnalysis .spectralModeTableWrap {
+  margin-top: 16px;
+  overflow-x: auto;
+}
+
+.spectralDetailsAnalysis .spectralModeTable {
+  width: 100%;
+  border-collapse: collapse;
+  color: rgba(208, 232, 236, 0.72);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.spectralDetailsAnalysis .spectralModeTable th,
+.spectralDetailsAnalysis .spectralModeTable td {
+  padding: 4px 2px;
+  border-bottom: 1px solid rgba(139, 204, 218, 0.06);
+  text-align: right;
+}
+
+.spectralDetailsAnalysis .spectralModeTable th {
+  color: rgba(165, 201, 209, 0.48);
+  font-weight: 400;
+}
+
+.spectralDetailsAnalysis .spectralModeTable th:first-child,
+.spectralDetailsAnalysis .spectralModeTable td:first-child,
+.spectralDetailsAnalysis .spectralModeTable th:nth-child(2),
+.spectralDetailsAnalysis .spectralModeTable td:nth-child(2) {
+  text-align: left;
+}
+
+.app--spectral-cathedral .mainFormula .katex {
+  font-size: clamp(11px, 0.92vw, 17px);
+}
+
+.spectralDetailsAnalysis .quietNote {
+  margin: 7px 0 0;
+  color: rgba(175, 198, 214, 0.55);
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.app--spectral-cathedral .poeticBlock {
+  color: rgba(235, 243, 245, 0.63);
+}

@@ -1,0 +1,213 @@
+:root {
+  color: rgba(225, 246, 250, 0.9);
+  background: #010308;
+  font-family: "Inter", sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#spectral-cathedral-qa-root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: radial-gradient(circle at 40% 42%, rgba(22, 72, 86, 0.12), transparent 38%), #010308;
+}
+
+.spectralQaShell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 31vw, 520px);
+  width: 100%;
+  height: 100%;
+  min-width: 1100px;
+}
+
+.spectralQaStage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid rgba(154, 218, 229, 0.12);
+}
+
+.spectralQaCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.spectralQaTelemetry {
+  position: absolute;
+  top: 20px;
+  left: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  max-width: min(920px, calc(100% - 44px));
+  padding: 9px 12px;
+  border: 1px solid rgba(143, 219, 232, 0.14);
+  border-radius: 3px;
+  color: rgba(173, 211, 218, 0.68);
+  background: rgba(1, 5, 10, 0.72);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.spectralQaTelemetry output,
+.spectralQaTelemetry strong {
+  color: rgba(225, 249, 252, 0.94);
+  font-weight: 400;
+}
+
+.spectralQaAnalysis {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: rgba(3, 8, 15, 0.94);
+}
+
+.spectralAnalysis {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+  padding: 28px 26px 24px;
+}
+
+.spectralAnalysisHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(151, 215, 226, 0.14);
+}
+
+.spectralAnalysisHeader h1 {
+  margin: 2px 0 0;
+  color: #e7fbff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(28px, 2.2vw, 38px);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 0.96;
+}
+
+.spectralAnalysisHeader p {
+  margin: 5px 0 0;
+  color: rgba(192, 222, 228, 0.6);
+  font-family: "Noto Serif JP", serif;
+  font-size: 10px;
+}
+
+.spectralAnalysisHeader .spectralAnalysisEyebrow {
+  margin: 0;
+  color: rgba(116, 225, 240, 0.72);
+  font-family: "Inter", sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+}
+
+.spectralTime {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  color: rgba(175, 207, 214, 0.56);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.spectralTime output {
+  color: #b8f4ff;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.spectralPlot {
+  display: grid;
+  grid-template-rows: auto 112px;
+  gap: 5px;
+}
+
+.spectralPlotHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(220, 243, 247, 0.82);
+  font-size: 10px;
+}
+
+.spectralPlotHeader small {
+  color: rgba(166, 197, 204, 0.5);
+  font-size: 8px;
+}
+
+.spectralPlot canvas {
+  display: block;
+  width: 100%;
+  height: 112px;
+  border: 1px solid rgba(140, 211, 224, 0.1);
+  background: rgba(2, 8, 14, 0.66);
+}
+
+.spectralModeTableWrap {
+  min-height: 0;
+  overflow: visible;
+}
+
+.spectralModeTable {
+  width: 100%;
+  border-collapse: collapse;
+  color: rgba(204, 230, 235, 0.78);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.spectralModeTable th,
+.spectralModeTable td {
+  padding: 4px 5px;
+  border-bottom: 1px solid rgba(140, 207, 219, 0.08);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.spectralModeTable th {
+  color: rgba(150, 207, 218, 0.58);
+  font-size: 8px;
+  font-weight: 400;
+}
+
+.spectralModeTable th:nth-child(2),
+.spectralModeTable td:nth-child(2) {
+  text-align: center;
+}
+
+@media (max-aspect-ratio: 8 / 5) {
+  .spectralQaShell {
+    grid-template-columns: minmax(0, 1fr) 390px;
+  }
+
+  .spectralAnalysis {
+    padding-inline: 20px;
+  }
+}
+
+@media (min-aspect-ratio: 21 / 9) {
+  .spectralQaShell {
+    grid-template-columns: minmax(0, 1fr) 470px;
+  }
+
+  .spectralAnalysis {
+    padding-inline: 32px;
+  }
+}

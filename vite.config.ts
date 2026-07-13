@@ -1,0 +1,27 @@
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    target: "es2023",
+    sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        residueBloomQa: "residue-bloom-qa.html",
+        spectralCathedralQa: "spectral-cathedral-qa.html",
+        mobiusChoirQa: "mobius-choir-qa.html",
+      },
+    },
+  },
+  test: {
+    environment: "jsdom",
+    maxWorkers: 1,
+    pool: "threads",
+    testTimeout: 10_000,
+    coverage: {
+      reporter: ["text", "html"],
+    },
+  },
+});

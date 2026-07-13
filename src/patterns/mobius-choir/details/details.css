@@ -1,0 +1,21 @@
+.app--mobius-choir .mainFormula .katex {
+  font-size: clamp(10px, 0.82vw, 15px);
+}
+
+.app--mobius-choir .poeticBlock {
+  color: rgba(226, 216, 250, 0.68);
+}
+
+.app--mobius-choir .detailsPanel .detailsFormula .katex {
+  font-size: 0.68em;
+}
+
+.app--mobius-choir .detailsPanel .mathIdentity .katex {
+  font-size: 0.74em;
+}
+
+.app--mobius-choir .detailsPanel .katex-display {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
