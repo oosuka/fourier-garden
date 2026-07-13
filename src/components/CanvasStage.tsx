@@ -154,9 +154,16 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
       }
     };
 
+    const onWebGLContextLost = (event: Event) => {
+      event.preventDefault();
+      cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+      onStatus("loading");
+    };
     const onWebGLContextRestored = () => void recoverScene();
 
     window.addEventListener("resize", resize);
+    canvas.addEventListener("webglcontextlost", onWebGLContextLost);
     canvas.addEventListener("webglcontextrestored", onWebGLContextRestored);
     onStatus("loading");
     void initializeScene().catch(fail);
@@ -165,6 +172,7 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
       disposed = true;
       cancelAnimationFrame(animationFrame);
       window.removeEventListener("resize", resize);
+      canvas.removeEventListener("webglcontextlost", onWebGLContextLost);
       canvas.removeEventListener("webglcontextrestored", onWebGLContextRestored);
       scene?.dispose();
       scene = null;
