@@ -11,7 +11,7 @@ import { Transport } from "./core/transport";
 import { getPatternRegistry } from "./patterns/registry";
 import type { PatternDefinition } from "./patterns/contracts";
 
-const CHAPTER_TRANSITION_MINIMUM_MS = 650;
+const CHAPTER_TRANSITION_MINIMUM_MS = 1_800;
 const CHAPTER_TRANSITION_EXIT_MS = 300;
 
 export function App() {
@@ -39,6 +39,9 @@ export function App() {
   const [transitionLeaving, setTransitionLeaving] = useState(false);
   const sceneReadyResolver = useRef<(() => void) | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsHintVisible, setDetailsHintVisible] = useState(false);
+  const detailsDiscovered = useRef(false);
+  const hintedPatternIds = useRef(new Set<string>());
   const [fullscreen, setFullscreen] = useState(false);
   const [volume, setVolume] = useState(audio.currentVolume);
   const [uiVisible, setUiVisible] = useState(true);
@@ -65,6 +68,20 @@ export function App() {
       }, 4_000);
     }
   }, [detailsOpen, entered, playing]);
+
+  const showDetailsHint = useCallback((patternId: string) => {
+    if (detailsDiscovered.current || hintedPatternIds.current.has(patternId)) return;
+    hintedPatternIds.current.add(patternId);
+    setDetailsHintVisible(true);
+  }, []);
+
+  const dismissDetailsHint = useCallback(() => setDetailsHintVisible(false), []);
+
+  const toggleDetails = useCallback(() => {
+    if (!detailsOpen) detailsDiscovered.current = true;
+    dismissDetailsHint();
+    setDetailsOpen(!detailsOpen);
+  }, [detailsOpen, dismissDetailsHint]);
 
   const playAudio = useCallback(
     async (targetAudio: AudioEngine, position: number, operation: number) => {
@@ -102,9 +119,10 @@ export function App() {
 
   const handleEnter = useCallback(async () => {
     setEntered(true);
+    showDetailsHint(pattern.id);
     await startPlayback();
     revealUi();
-  }, [revealUi, startPlayback]);
+  }, [pattern.id, revealUi, showDetailsHint, startPlayback]);
 
   const togglePlayback = useCallback(() => {
     if (switchingChapter) return;
@@ -141,7 +159,7 @@ export function App() {
       setTransitionPattern(nextPattern);
       setTransitionLeaving(false);
       setPlaying(false);
-      setDetailsOpen(false);
+      dismissDetailsHint();
       setUiVisible(true);
       setSceneStatus("loading");
       setSceneError("");
@@ -188,10 +206,21 @@ export function App() {
           setTransitionPattern(null);
           setTransitionLeaving(false);
           sceneReadyResolver.current = null;
+          showDetailsHint(nextPattern.id);
         }
       }
     },
-    [audio, patternIndex, patterns, playAudio, playing, switchingChapter, transport],
+    [
+      audio,
+      dismissDetailsHint,
+      patternIndex,
+      patterns,
+      playAudio,
+      playing,
+      showDetailsHint,
+      switchingChapter,
+      transport,
+    ],
   );
 
   const handleSceneStatus = useCallback((status: "loading" | "ready" | "error") => {
@@ -254,7 +283,7 @@ export function App() {
         togglePlayback();
       }
       if (event.key.toLowerCase() === "d") {
-        setDetailsOpen((open) => !open);
+        toggleDetails();
       }
       if (event.key.toLowerCase() === "f") {
         void toggleFullscreen();
@@ -263,7 +292,7 @@ export function App() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [entered, revealUi, toggleFullscreen, togglePlayback]);
+  }, [entered, revealUi, toggleDetails, toggleFullscreen, togglePlayback]);
 
   useEffect(() => {
     revealUi();
@@ -278,7 +307,7 @@ export function App() {
 
   useEffect(() => unmountDisposer.mount(), [unmountDisposer]);
 
-  const interfaceHidden = entered && !uiVisible && !detailsOpen;
+  const interfaceHidden = entered && !uiVisible && !detailsOpen && !detailsHintVisible;
 
   return (
     <main
@@ -312,6 +341,11 @@ export function App() {
           <h2>{transitionPattern.title.en}</h2>
           <p>{transitionPattern.title.ja}</p>
           <small>{transitionPattern.subtitle.ja}</small>
+          <div className="chapterTransitionNote">
+            <span>OBSERVATION NOTE</span>
+            <strong>{transitionPattern.education.gentleTitle}</strong>
+            <small>DETAILS · D</small>
+          </div>
         </section>
       )}
 
@@ -382,6 +416,7 @@ export function App() {
               playing={playing}
               volume={volume}
               detailsOpen={detailsOpen}
+              detailsHintVisible={detailsHintVisible}
               fullscreen={fullscreen}
               pattern={pattern}
               chapterCount={patterns.length}
@@ -392,13 +427,13 @@ export function App() {
               onVolume={handleVolume}
               onPreviousChapter={() => void switchChapter(patternIndex - 1)}
               onNextChapter={() => void switchChapter(patternIndex + 1)}
-              onToggleDetails={() => setDetailsOpen((open) => !open)}
+              onToggleDetails={toggleDetails}
+              onDismissDetailsHint={dismissDetailsHint}
               onToggleFullscreen={() => void toggleFullscreen()}
             />
           </div>
 
           <DetailsPanel
-            key={pattern.id}
             open={detailsOpen}
             pattern={pattern}
             audio={audio}

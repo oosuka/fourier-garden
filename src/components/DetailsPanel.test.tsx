@@ -59,4 +59,52 @@ describe("DetailsPanel visibility", () => {
     expect(panelButtons.length).toBeGreaterThan(0);
     expect(panelButtons.every((button) => button.type === "button")).toBe(true);
   });
+
+  it("preserves the selected explanation mode when the chapter changes", async () => {
+    const firstPattern = {
+      ...patternRegistry[0]!,
+      MathematicalDetails: () => <div>first-chapter-math</div>,
+    };
+    const nextPattern = {
+      ...patternRegistry[1]!,
+      MathematicalDetails: () => <div>next-chapter-math</div>,
+    };
+    const firstAudio = new AudioEngine(
+      firstPattern.audio.createProgram(),
+      firstPattern.audio.initialVolume,
+    );
+    const nextAudio = new AudioEngine(
+      nextPattern.audio.createProgram(),
+      nextPattern.audio.initialVolume,
+    );
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <DetailsPanel
+          open
+          pattern={firstPattern}
+          audio={firstAudio}
+          onClose={vi.fn<() => void>()}
+        />,
+      );
+    });
+    const mathematicalTab = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "数学の詳細",
+    );
+    await act(async () => mathematicalTab?.click());
+    await act(async () => {
+      root.render(
+        <DetailsPanel open pattern={nextPattern} audio={nextAudio} onClose={vi.fn<() => void>()} />,
+      );
+    });
+
+    expect(mathematicalTab?.getAttribute("aria-selected")).toBe("true");
+    expect(container.textContent).toContain("next-chapter-math");
+
+    await act(async () => root.unmount());
+    getContext.mockRestore();
+  });
 });

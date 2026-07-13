@@ -8,6 +8,7 @@ interface ControlBarProps {
   playing: boolean;
   volume: number;
   detailsOpen: boolean;
+  detailsHintVisible: boolean;
   fullscreen: boolean;
   pattern: PatternDefinition;
   chapterCount: number;
@@ -19,8 +20,11 @@ interface ControlBarProps {
   onPreviousChapter: () => void;
   onNextChapter: () => void;
   onToggleDetails: () => void;
+  onDismissDetailsHint: () => void;
   onToggleFullscreen: () => void;
 }
+
+const DETAILS_HINT_DURATION_MS = 4_000;
 
 function formatTime(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
@@ -32,6 +36,7 @@ export function ControlBar({
   playing,
   volume,
   detailsOpen,
+  detailsHintVisible,
   fullscreen,
   pattern,
   chapterCount,
@@ -43,9 +48,11 @@ export function ControlBar({
   onPreviousChapter,
   onNextChapter,
   onToggleDetails,
+  onDismissDetailsHint,
   onToggleFullscreen,
 }: ControlBarProps) {
   const [time, setTime] = useState(() => Math.floor(transport.currentTime));
+  const [detailsHintPaused, setDetailsHintPaused] = useState(false);
 
   useEffect(() => {
     let frame = 0;
@@ -61,6 +68,12 @@ export function ControlBar({
     frame = requestAnimationFrame(update);
     return () => cancelAnimationFrame(frame);
   }, [transport]);
+
+  useEffect(() => {
+    if (!detailsHintVisible || detailsHintPaused) return;
+    const timer = window.setTimeout(onDismissDetailsHint, DETAILS_HINT_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [detailsHintPaused, detailsHintVisible, onDismissDetailsHint]);
 
   return (
     <footer className="controlBar" aria-label="再生コントロール">
@@ -141,15 +154,25 @@ export function ControlBar({
       </div>
 
       <button
-        className={`textControl ${detailsOpen ? "isActive" : ""}`}
+        className={`textControl detailsControl ${detailsOpen ? "isActive" : ""} ${
+          detailsHintVisible ? "detailsControl--hint" : ""
+        }`}
         type="button"
         onClick={onToggleDetails}
+        onPointerEnter={() => setDetailsHintPaused(true)}
+        onPointerLeave={() => setDetailsHintPaused(false)}
+        onFocus={() => setDetailsHintPaused(true)}
+        onBlur={() => setDetailsHintPaused(false)}
         aria-label={detailsOpen ? "詳細パネルを閉じる (D)" : "詳細パネルを開く (D)"}
         aria-pressed={detailsOpen}
         aria-keyshortcuts="D"
       >
         <Info aria-hidden="true" />
-        <span>DETAILS</span>
+        <span className="detailsLabel">DETAILS</span>
+        <span className="detailsHintCopy" aria-hidden={!detailsHintVisible}>
+          <strong>OBSERVATION NOTES</strong>
+          <small>この章を知る · D</small>
+        </span>
       </button>
 
       <button

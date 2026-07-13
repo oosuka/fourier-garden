@@ -2,6 +2,7 @@
 
 実施日: 2026-07-11
 正式版確定日: 2026-07-12
+Details UX更新確認日: 2026-07-13
 
 対象: 通常公開3章のシネマティック刷新、音画同期、主要操作、レビュー修正
 最終ブラウザ: 最新版Chrome、補助確認: Codex in-app Browser
@@ -159,7 +160,7 @@ Wavelet Rain、Riemann Veil、Phase Torusのpreview実装、および最終10章
 ### Release status
 
 - 数学、帯域、決定性、レジストリ、Worklet dispatcher、型検査、buildの自動確認を完了した。
-- `npm run check`でformat、lint、510テスト、型検査、production buildを通過した。
+- `npm run check`でformat、lint、523テスト、型検査、production buildを通過した。
 - ヘッドホン、Mac内蔵スピーカーでの連続試聴と利用者承認は未完了である。
 - 上記の人間評価が完了するまで、新7章は`publication: "preview"`を維持する。
 
@@ -169,7 +170,8 @@ Wavelet Rain、Riemann Veil、Phase Torusのpreview実装、および最終10章
 - 同じ35固定時刻を`?renderer=webgl`で確認し、全てWebGL2経路でreadyとなった。
 - 新7章の代表固定時刻を`?poetic=off`で確認し、詩的背景なしでも章固有の数学シルエットを維持した。
 - 1440 × 900、1440 × 810、1680 × 720で横・縦overflowがなく、21:9でも背景粒子とフィラメントが左右端まで続いた。
-- preview入口でChapter 1から10まで順に切り替え、各遷移カードが650 ms以上表示され、遷移先タイトルと数学対象を示した。
+- preview入口でChapter 1から10まで順に切り替え、各遷移カードが1.8秒以上表示され、
+  遷移先タイトル、数学対象、章固有の`OBSERVATION NOTE`を示した。
 - 最新版ChromeでEnter後の自動再生、pause/resume、再生中のChapter 1から10までの遷移を確認した。全章で遷移後にAudioWorkletが再生状態へ復帰した。
 - ChromeのPrime ConstellationはWebGPU、Phase Torusの専用QAは強制WebGL2でreadyとなり、確認中のconsole warning/errorは0件だった。
 - 新7章の全周期dry RMSは公開済み3章の中央値に対して0.93〜0.97倍、隣接する代表10秒は0.82〜1.18倍に収めた。raw peakは`-1 dBFS`以下、DC平均絶対値は`10⁻³`未満で、後段limiterの契約を満たす。
@@ -193,4 +195,17 @@ Wavelet Rain、Riemann Veil、Phase Torusのpreview実装、および最終10章
 - 数学タブの新7章は4〜24本の定量バー、8〜29行の章固有データ、9〜10項目の
   パラメータを持つ。Details内の縦スクロールと横長表の局所スクロールを確認した。
 - Chapter 1から10まで、Detailsの開閉、やさしい説明／数学の詳細切替、章切替後の
-  パネル再表示を確認し、console warning/errorは0件だった。
+  パネル開状態と選択タブの維持を確認し、console warning/errorは0件だった。
+
+### Details discoverability verification
+
+- Details未利用状態でEnter直後と未提示章の初回表示時に、操作バーのDetails入口が
+  `OBSERVATION NOTES`へ4秒間展開し、その後アイコンへ縮小することを確認した。
+- Details入口へホバーまたはキーボードフォーカスがある間は縮小タイマーを停止し、
+  フォーカス解除後に4秒で縮小する回帰テストを追加した。
+- Detailsを一度開いた後は発見ヒントを繰り返さず、時間制表示とは別に常設ボタン、
+  `D`キー、ARIA名が残ることを確認した。自動フォーカスは行わない。
+- Detailsを開き「数学の詳細」を選択した状態でChapter 1から2へ切り替え、次章でも
+  パネル開状態と選択タブを維持した。
+- 固定QA条件のWebGL2経路で1280 × 720と最小対象幅1024 × 680を確認し、
+  展開時の196 px幅Details入口が操作バー内へ収まり、横overflowを発生させなかった。
