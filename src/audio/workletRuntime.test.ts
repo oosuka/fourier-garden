@@ -40,6 +40,7 @@ import { createDirichletLanternsWorkletProgram } from "../patterns/dirichlet-lan
 import { createWaveletRainWorkletProgram } from "../patterns/wavelet-rain/audio/synthesis";
 import { createRiemannVeilWorkletProgram } from "../patterns/riemann-veil/audio/synthesis";
 import { createPhaseTorusWorkletProgram } from "../patterns/phase-torus/audio/synthesis";
+import { renderPikoSample } from "./pikoProgram";
 
 interface WorkletPortStub {
   onmessage: ((event: { data: unknown }) => void) | null;
@@ -160,6 +161,29 @@ describe("AudioWorklet runtime", () => {
     const samples = outputs.flatMap((bus) => bus.flatMap((channel) => [...channel]));
     expect(samples.every(Number.isFinite)).toBe(true);
     expect(samples.some((sample) => Math.abs(sample) > 1e-7)).toBe(true);
+  });
+
+  it("matches continuous Phase Torus panning in the shared reference renderer", () => {
+    const sampleRate = 48_000;
+    const startTimeSeconds = 31.27;
+    const frameCount = 64;
+    const program = createPhaseTorusWorkletProgram();
+    const processor = loadProcessor(sampleRate);
+    const outputs = createOutputs(frameCount);
+
+    send(processor, { type: "configure", program });
+    send(processor, { type: "seek", seconds: startTimeSeconds });
+    send(processor, { type: "active", value: true });
+    processor.fade = 1;
+    processor.process([], outputs);
+
+    for (let frame = 0; frame < frameCount; frame += 1) {
+      const expected = renderPikoSample(program, startTimeSeconds + frame / sampleRate, sampleRate);
+      expect(outputs[0]![0]![frame]).toBeCloseTo(expected.dryLeft, 7);
+      expect(outputs[0]![1]![frame]).toBeCloseTo(expected.dryRight, 7);
+      expect(outputs[1]![0]![frame]).toBeCloseTo(expected.wetLeft, 7);
+      expect(outputs[1]![1]![frame]).toBeCloseTo(expected.wetRight, 7);
+    }
   });
 
   it("initializes the Möbius Choir processor from its declared module dependencies", () => {

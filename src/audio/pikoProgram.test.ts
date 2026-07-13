@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { getStereoMetrics } from "./audioMetrics";
-import { renderPikoSample, renderPikoStereo, type PikoWorkletProgram } from "./pikoProgram";
+import {
+  getPikoPan,
+  renderPikoSample,
+  renderPikoStereo,
+  type PikoWorkletProgram,
+} from "./pikoProgram";
 import { createBesselTideWorkletProgram } from "../patterns/bessel-tide/audio/synthesis";
 import { createDirichletLanternsWorkletProgram } from "../patterns/dirichlet-lanterns/audio/synthesis";
 import { createLissajousOrchardWorkletProgram } from "../patterns/lissajous-orchard/audio/synthesis";
@@ -63,6 +68,18 @@ describe("shared analytic piko programs", () => {
       }
       expect(peak).toBeLessThanOrEqual(0.891251);
     }
+  });
+
+  it("evaluates continuous pan motion from absolute transport time", () => {
+    const event = createPhaseTorusWorkletProgram().score.events[7]!;
+    const first = getPikoPan(event, 12.5);
+    const repeated = getPikoPan(event, 12.5);
+    const later = getPikoPan(event, 14.5);
+
+    expect(repeated).toBe(first);
+    expect(later).not.toBeCloseTo(first, 8);
+    expect(Math.abs(first)).toBeLessThanOrEqual(1);
+    expect(Math.abs(later)).toBeLessThanOrEqual(1);
   });
 
   it("uses five distinct cycle lengths and sufficiently dense finite scores", () => {
@@ -153,7 +170,8 @@ describe("shared analytic piko programs", () => {
       .map((metrics) => metrics.rms)
       .toSorted((left, right) => left - right)[1]!;
 
-    for (const metrics of preview) {
+    for (let index = 0; index < preview.length; index += 1) {
+      const metrics = preview[index]!;
       expect(metrics.rms / publishedMedianRms).toBeGreaterThanOrEqual(0.8);
       expect(metrics.rms / publishedMedianRms).toBeLessThanOrEqual(1.25);
       expect(metrics.peak).toBeLessThanOrEqual(0.891251);

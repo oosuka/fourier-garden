@@ -9,11 +9,17 @@ import type { PatternSceneOptions } from "../../contracts";
 import {
   DIRICHLET_ORDERS,
   dirichletKernel,
+  fejerSquareWave,
   getDirichletObservation,
   squareWavePartialSum,
 } from "../math/model";
 const PALETTE = [0xffc46c, 0xfff3ce, 0x9d284e] as const;
 const SAMPLES = 1_024;
+function smoothstep(edge0: number, edge1: number, value: number): number {
+  const unit = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+  return unit * unit * (3 - 2 * unit);
+}
+
 export function createDirichletLanternsContent() {
   const group = new THREE.Group();
   const curves = DIRICHLET_ORDERS.map((order, index) => {
@@ -31,11 +37,16 @@ export function createDirichletLanternsContent() {
   });
   const partialPositions = new Float32Array(SAMPLES * 3);
   const partial = createLine(partialPositions, 0xfffaf0, 0.55);
-  group.add(partial.line);
+  const fejerPositions = new Float32Array(SAMPLES * 3);
+  const fejer = createLine(fejerPositions, 0xffb05e, 0.48);
+  group.add(partial.line, fejer.line);
   return {
     group,
     update(timeSeconds: number) {
       const selected = Math.floor((timeSeconds % 60) / 15) % 4;
+      const cycleTime = ((timeSeconds % 60) + 60) % 60;
+      const fejerFocus =
+        smoothstep(36.5, 38.5, cycleTime) * (1 - smoothstep(51.5, 53.5, cycleTime));
       curves.forEach((curve, index) => {
         (curve.line.material as THREE.LineBasicMaterial).opacity = index === selected ? 0.98 : 0.28;
         curve.line.scale.y = index === selected ? 1.18 : 0.88;
@@ -47,8 +58,14 @@ export function createDirichletLanternsContent() {
         partialPositions[offset + 1] =
           squareWavePartialSum(DIRICHLET_ORDERS[selected]!, x) * 1.3 - 4.2;
         partialPositions[offset + 2] = 0.2;
+        fejerPositions[offset] = partialPositions[offset]!;
+        fejerPositions[offset + 1] = fejerSquareWave(DIRICHLET_ORDERS[selected]!, x) * 1.3 - 4.2;
+        fejerPositions[offset + 2] = 0.24;
       }
       partial.attribute.needsUpdate = true;
+      fejer.attribute.needsUpdate = true;
+      (partial.line.material as THREE.LineBasicMaterial).opacity = 0.72 - fejerFocus * 0.3;
+      (fejer.line.material as THREE.LineBasicMaterial).opacity = 0.4 + fejerFocus * 0.52;
       const scan = getDirichletObservation(timeSeconds) / Math.PI;
       group.position.x = -scan * 0.12;
       return { energy: evaluateFiveActEnergy(timeSeconds, 60), warmth: 0.88 };

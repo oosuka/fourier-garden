@@ -1,4 +1,4 @@
-import { clamp, isFiniteNumber } from "./shared.js?v=20";
+import { clamp, isFiniteNumber } from "./shared.js?v=21";
 
 const TAU = Math.PI * 2;
 
@@ -14,6 +14,8 @@ function validEvent(event, cycleSeconds) {
     event.gain >= 0 &&
     event.pan >= -1 &&
     event.pan <= 1 &&
+    event.panMotionDepth >= 0 &&
+    event.panMotionDepth <= 1 &&
     event.wet >= 0 &&
     event.wet <= 1 &&
     event.attackSeconds > 0 &&
@@ -28,6 +30,9 @@ function resetVoice(voice) {
   voice.frequency = 0;
   voice.gain = 0;
   voice.pan = 0;
+  voice.panMotionDepth = 0;
+  voice.panMotionRate = 0;
+  voice.panMotionPhase = 0;
   voice.wet = 0;
   voice.attack = 0;
   voice.decay = 0;
@@ -50,6 +55,9 @@ function activateVoice(state, event, eventTime) {
   voice.frequency = event.frequencyHz;
   voice.gain = event.gain;
   voice.pan = event.pan;
+  voice.panMotionDepth = event.panMotionDepth;
+  voice.panMotionRate = event.panMotionRateRadiansPerSecond;
+  voice.panMotionPhase = event.panMotionPhaseRadians;
   voice.wet = event.wet;
   voice.attack = event.attackSeconds;
   voice.decay = event.decaySeconds;
@@ -186,7 +194,12 @@ export function createPikoProcessor(kind) {
             ? 1
             : 0.5 * (1 + Math.cos((Math.PI * (age - fadeStart)) / (voice.end - fadeStart)));
         const gain = voice.gain * body * fade * program.outputGain;
-        const pan = clamp(voice.pan, -1, 1);
+        const panMotion =
+          voice.panMotionDepth === 0
+            ? 0
+            : voice.panMotionDepth *
+              Math.sin(voice.panMotionRate * absoluteTimeSeconds + voice.panMotionPhase);
+        const pan = clamp(voice.pan + panMotion, -1, 1);
         const leftPan = Math.sqrt((1 - pan) / 2);
         const rightPan = Math.sqrt((1 + pan) / 2);
         const phase = voice.phase + voice.phaseDrift * absoluteTimeSeconds;

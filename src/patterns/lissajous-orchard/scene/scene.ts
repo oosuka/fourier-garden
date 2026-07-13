@@ -9,6 +9,15 @@ import type { PatternSceneOptions } from "../../contracts";
 import { LISSAJOUS_RATIOS, evaluateLissajous } from "../math/model";
 const PALETTE = [0xff78c8, 0xc96aff, 0xffc66d] as const;
 const POINTS = 384;
+function smoothstep(edge0: number, edge1: number, value: number): number {
+  const unit = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+  return unit * unit * (3 - 2 * unit);
+}
+
+function mix(left: number, right: number, amount: number): number {
+  return left + (right - left) * amount;
+}
+
 export function createLissajousOrchardContent() {
   const group = new THREE.Group();
   const curves = LISSAJOUS_RATIOS.map((ratio, index) => {
@@ -20,23 +29,43 @@ export function createLissajousOrchardContent() {
   return {
     group,
     update(timeSeconds: number) {
-      const active = Math.floor(timeSeconds / (60 / 9)) % 9;
+      const activePosition = timeSeconds / (60 / 9);
+      const activeCycle = Math.floor(activePosition);
+      const active = ((activeCycle % 9) + 9) % 9;
+      const nextActive = (active + 1) % 9;
+      const transition = smoothstep(0.78, 1, activePosition - activeCycle);
       curves.forEach((curve, index) => {
-        const distance = (index - active + 9) % 9;
-        const hero = index === active;
+        const activeDistance = (index - active + 9) % 9;
+        const nextDistance = (index - nextActive + 9) % 9;
+        const gridX = mix((activeDistance - 4) * 1.45, (nextDistance - 4) * 1.45, transition);
+        const gridY = mix(
+          -3.45 + (activeDistance % 3) * 1.2,
+          -3.45 + (nextDistance % 3) * 1.2,
+          transition,
+        );
+        const gridZ = mix(
+          -2.4 - Math.floor(activeDistance / 3) * 0.7,
+          -2.4 - Math.floor(nextDistance / 3) * 0.7,
+          transition,
+        );
+        const heroWeight =
+          (index === active ? 1 - transition : 0) + (index === nextActive ? transition : 0);
         for (let point = 0; point <= POINTS; point += 1) {
           const parameter = (point / POINTS) * Math.PI * 2;
           const [x, y] = evaluateLissajous(curve.ratio[0], curve.ratio[1], parameter, timeSeconds);
           const offset = point * 3;
-          const scale = hero ? 3.65 : 1.15;
-          curve.positions[offset] = x * scale + (hero ? 0 : (distance - 4) * 1.45);
-          curve.positions[offset + 1] = y * scale + (hero ? 0 : -3.45 + (distance % 3) * 1.2);
-          curve.positions[offset + 2] = hero ? 0.5 : -2.4 - Math.floor(distance / 3) * 0.7;
+          const scale = mix(1.15, 3.65, heroWeight);
+          curve.positions[offset] = x * scale + gridX * (1 - heroWeight);
+          curve.positions[offset + 1] = y * scale + gridY * (1 - heroWeight);
+          curve.positions[offset + 2] = mix(gridZ, 0.5, heroWeight);
         }
         curve.attribute.needsUpdate = true;
-        (curve.line.material as THREE.LineBasicMaterial).opacity = hero
-          ? 0.94
-          : 0.2 + 0.18 * Math.sin(timeSeconds * 0.7 + index) ** 2;
+        const gridOpacity = 0.2 + 0.18 * Math.sin(timeSeconds * 0.7 + index) ** 2;
+        (curve.line.material as THREE.LineBasicMaterial).opacity = mix(
+          gridOpacity,
+          0.94,
+          heroWeight,
+        );
       });
       const energy = evaluateFiveActEnergy(timeSeconds, 60);
       return { energy, warmth: 0.62, cameraX: Math.sin(timeSeconds * 0.03) * 0.18 };

@@ -17,7 +17,7 @@ export function createRiemannVeilWorkletProgram(): PikoWorkletProgram {
     kind: "riemann-veil",
     score: RIEMANN_VEIL_SCORE,
     detuneRatio: 0.0013,
-    outputGain: 0.37,
+    outputGain: 1.238,
     maximumVoices: 20,
   };
   validatePikoProgram(program);

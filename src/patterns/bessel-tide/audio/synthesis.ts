@@ -18,7 +18,7 @@ export function createBesselTideWorkletProgram(): PikoWorkletProgram {
     kind: "bessel-tide",
     score: BESSEL_TIDE_SCORE,
     detuneRatio: 0.0014,
-    outputGain: 0.32,
+    outputGain: 1.12,
     maximumVoices: 24,
   };
   validatePikoProgram(program);

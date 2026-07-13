@@ -5,6 +5,9 @@ export interface PikoScoreEvent {
   frequencyHz: number;
   gain: number;
   pan: number;
+  panMotionDepth: number;
+  panMotionRateRadiansPerSecond: number;
+  panMotionPhaseRadians: number;
   wet: number;
   attackSeconds: number;
   decaySeconds: number;
@@ -81,6 +84,8 @@ export function validatePikoProgram(program: PikoWorkletProgram): void {
       event.gain < 0 ||
       event.pan < -1 ||
       event.pan > 1 ||
+      event.panMotionDepth < 0 ||
+      event.panMotionDepth > 1 ||
       event.wet < 0 ||
       event.wet > 1 ||
       event.attackSeconds <= 0 ||
@@ -103,6 +108,17 @@ export function getPikoEnvelope(event: PikoScoreEvent, ageSeconds: number): numb
   return body * 0.5 * (1 + Math.cos(Math.PI * progress));
 }
 
+export function getPikoPan(event: PikoScoreEvent, absoluteTimeSeconds: number): number {
+  const motion =
+    event.panMotionDepth === 0
+      ? 0
+      : event.panMotionDepth *
+        Math.sin(
+          event.panMotionRateRadiansPerSecond * absoluteTimeSeconds + event.panMotionPhaseRadians,
+        );
+  return Math.max(-1, Math.min(1, event.pan + motion));
+}
+
 export function renderPikoSample(
   program: PikoWorkletProgram,
   absoluteTimeSeconds: number,
@@ -121,8 +137,9 @@ export function renderPikoSample(
       const leftFrequency = event.frequencyHz * (1 - program.detuneRatio);
       const rightFrequency = event.frequencyHz * (1 + program.detuneRatio);
       if (Math.max(leftFrequency, rightFrequency) >= sampleRate * 0.45) continue;
-      const leftPan = Math.sqrt((1 - event.pan) / 2);
-      const rightPan = Math.sqrt((1 + event.pan) / 2);
+      const pan = getPikoPan(event, absoluteTimeSeconds);
+      const leftPan = Math.sqrt((1 - pan) / 2);
+      const rightPan = Math.sqrt((1 + pan) / 2);
       const phaseBase = event.phaseOffset + event.phaseDrift * absoluteTimeSeconds;
       const gain = event.gain * envelope * program.outputGain;
       const left = Math.sin(Math.PI * 2 * leftFrequency * age + phaseBase) * gain * leftPan;
@@ -169,15 +186,15 @@ export function renderPikoStereo(options: {
       const leftFrequency = event.frequencyHz * (1 - program.detuneRatio);
       const rightFrequency = event.frequencyHz * (1 + program.detuneRatio);
       if (Math.max(leftFrequency, rightFrequency) >= sampleRate * 0.45) continue;
-      const leftPan = Math.sqrt((1 - event.pan) / 2);
-      const rightPan = Math.sqrt((1 + event.pan) / 2);
-
       for (let sample = firstSample; sample < lastSample; sample += 1) {
         const absoluteTimeSeconds = startTimeSeconds + sample / sampleRate;
         const ageSeconds = absoluteTimeSeconds - eventTimeSeconds;
         const envelope = getPikoEnvelope(event, ageSeconds);
         const phaseBase = event.phaseOffset + event.phaseDrift * absoluteTimeSeconds;
         const gain = event.gain * envelope * program.outputGain * (1 - event.wet);
+        const pan = getPikoPan(event, absoluteTimeSeconds);
+        const leftPan = Math.sqrt((1 - pan) / 2);
+        const rightPan = Math.sqrt((1 + pan) / 2);
         left[sample] +=
           Math.sin(Math.PI * 2 * leftFrequency * ageSeconds + phaseBase) * gain * leftPan;
         right[sample] +=
@@ -196,6 +213,9 @@ export function createPikoEvents(options: {
   time(index: number): number;
   gain(index: number): number;
   pan(index: number): number;
+  panMotionDepth?(index: number): number;
+  panMotionRateRadiansPerSecond?(index: number): number;
+  panMotionPhaseRadians?(index: number): number;
   wet(index: number): number;
   articulation(index: number): Readonly<{
     attackSeconds: number;
@@ -210,6 +230,9 @@ export function createPikoEvents(options: {
     frequencyHz: options.frequency(index),
     gain: options.gain(index),
     pan: options.pan(index),
+    panMotionDepth: options.panMotionDepth?.(index) ?? 0,
+    panMotionRateRadiansPerSecond: options.panMotionRateRadiansPerSecond?.(index) ?? 0,
+    panMotionPhaseRadians: options.panMotionPhaseRadians?.(index) ?? 0,
     wet: options.wet(index),
     ...options.articulation(index),
     phaseOffset: options.phase?.(index) ?? 0,

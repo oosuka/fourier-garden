@@ -31,13 +31,13 @@ const chapterSources = [
 
 describe("AudioWorklet mathematical contract", () => {
   it("cache-busts every module in the worklet dependency graph", () => {
-    expect(workletSource.match(/from ["'][^"']+\?v=20["']/g) ?? []).toHaveLength(11);
+    expect(workletSource.match(/from ["'][^"']+\?v=21["']/g) ?? []).toHaveLength(11);
     for (const chapterSource of [residueBloomSource, spectralCathedralSource, mobiusChoirSource]) {
-      expect(chapterSource).toMatch(/from ["']\.\/shared\.js\?v=20["']/);
+      expect(chapterSource).toMatch(/from ["']\.\/shared\.js\?v=21["']/);
     }
-    expect(sharedPikoSource).toMatch(/from ["']\.\/shared\.js\?v=20["']/);
+    expect(sharedPikoSource).toMatch(/from ["']\.\/shared\.js\?v=21["']/);
     for (const chapterSource of pikoChapterSources) {
-      expect(chapterSource).toMatch(/from ["']\.\/shared-piko\.js\?v=20["']/);
+      expect(chapterSource).toMatch(/from ["']\.\/shared-piko\.js\?v=21["']/);
     }
   });
 

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { BESSEL_MODES, BESSEL_ZEROS, besselJ } from "./bessel-tide/math/model";
+import { getBesselAudioMapping } from "./bessel-tide/audio/score";
+import {
+  DIRICHLET_LANTERNS_SCORE,
+  getDirichletAudioMapping,
+} from "./dirichlet-lanterns/audio/score";
 import {
   DIRICHLET_ORDERS,
   dirichletKernel,
@@ -13,12 +18,14 @@ import {
   greatestCommonDivisor,
 } from "./lissajous-orchard/math/model";
 import { TORUS_MODES, evaluateTorusField } from "./phase-torus/math/model";
+import { getPhaseTorusAudioMapping } from "./phase-torus/audio/score";
 import { PRIME_SUPPORT, evaluatePrimeSum, isPrime } from "./prime-constellation/math/model";
 import {
   RIEMANN_TRUNCATIONS,
   evaluateRiemannPartial,
   getRiemannSampleCount,
 } from "./riemann-veil/math/model";
+import { RIEMANN_VEIL_SCORE } from "./riemann-veil/audio/score";
 import {
   HAAR_COEFFICIENTS,
   evaluateHaarProjection,
@@ -44,6 +51,19 @@ describe("new chapter mathematical contracts", () => {
     );
   });
 
+  it("maps Bessel coefficient magnitude and angular component into gain and pan", () => {
+    const maximumMagnitude = Math.max(...BESSEL_MODES.map((mode) => Math.abs(mode.coefficient)));
+    BESSEL_MODES.forEach((mode, index) => {
+      const mapping = getBesselAudioMapping(index);
+      expect(mapping.coefficientGain).toBeCloseTo(
+        Math.abs(mode.coefficient) / maximumMagnitude,
+        12,
+      );
+      const expectedPanSign = mode.q === "zero" ? 0 : mode.q === "cos" ? -1 : 1;
+      expect(Math.sign(mapping.pan)).toBe(expectedPanSign);
+    });
+  });
+
   it("uses reduced Farey ratios that close after one common parameter period", () => {
     expect(LISSAJOUS_RATIOS).toHaveLength(9);
     for (const [a, b] of LISSAJOUS_RATIOS) {
@@ -59,6 +79,37 @@ describe("new chapter mathematical contracts", () => {
     for (const order of DIRICHLET_ORDERS) expect(dirichletKernel(order, 0)).toBe(2 * order + 1);
     expect(Math.abs(fejerSquareWave(31, 0.2))).toBeLessThanOrEqual(1);
     expect(squareWavePartialSum(31, 0.2)).not.toBeCloseTo(fejerSquareWave(31, 0.2), 8);
+  });
+
+  it("sonifies each Dirichlet order with its odd support and exact 1/n coefficient ratio", () => {
+    DIRICHLET_ORDERS.forEach((order, orderIndex) => {
+      const mappings = Array.from({ length: 80 }, (_, slot) =>
+        getDirichletAudioMapping(orderIndex * 80 + slot),
+      );
+      expect(mappings.every((mapping) => mapping.order === order)).toBe(true);
+      expect(
+        mappings.every(
+          (mapping) => mapping.harmonic % 2 === 1 && mapping.harmonic <= mapping.order,
+        ),
+      ).toBe(true);
+      const fundamental = mappings.find((mapping) => mapping.harmonic === 1)!;
+      for (const mapping of mappings) {
+        expect(mapping.coefficientMagnitude / fundamental.coefficientMagnitude).toBeCloseTo(
+          1 / mapping.harmonic,
+          12,
+        );
+      }
+      const firstPacket = DIRICHLET_LANTERNS_SCORE.events.slice(
+        orderIndex * 80,
+        orderIndex * 80 + (order + 1) / 2,
+      );
+      const fundamentalGain = firstPacket[0]!.gain;
+      firstPacket.forEach((event, harmonicIndex) => {
+        const harmonic = harmonicIndex * 2 + 1;
+        expect(event.gain / fundamentalGain).toBeCloseTo(1 / harmonic, 12);
+      });
+    });
+    expect(DIRICHLET_LANTERNS_SCORE.events).toHaveLength(320);
   });
 
   it("builds all sixty-three Haar coefficients and an exact V6 cell average", () => {
@@ -79,6 +130,17 @@ describe("new chapter mathematical contracts", () => {
     expect(Number.isFinite(evaluateRiemannPartial(96, 0.37))).toBe(true);
   });
 
+  it("keeps the Riemann main voice at the analytic 1/n squared ratio", () => {
+    const mainEvents = RIEMANN_VEIL_SCORE.events
+      .filter((event) => event.timeSeconds < 16 && event.wet === 0.1)
+      .toSorted((left, right) => left.phaseDrift - right.phaseDrift);
+    const fundamentalGain = mainEvents[0]!.gain;
+    for (let indexN = 1; indexN <= 19; indexN += 1) {
+      const mainEvent = mainEvents[indexN - 1]!;
+      expect(mainEvent.gain / fundamentalGain).toBeCloseTo(1 / (indexN * indexN), 12);
+    }
+  });
+
   it("uses twenty-four conjugate torus modes and a real finite field", () => {
     expect(TORUS_MODES).toHaveLength(24);
     for (const mode of TORUS_MODES) {
@@ -89,5 +151,20 @@ describe("new chapter mathematical contracts", () => {
       expect(conjugate?.imaginary).toBeCloseTo(-mode.imaginary, 12);
     }
     expect(Number.isFinite(evaluateTorusField(0.3, 1.2))).toBe(true);
+  });
+
+  it("maps torus coefficient magnitude and signed mode speed into the audio program", () => {
+    const representatives = TORUS_MODES.filter(
+      (mode) => mode.m > 0 || (mode.m === 0 && mode.n > 0),
+    );
+    const maximumMagnitude = Math.max(...representatives.map((mode) => mode.magnitude));
+    representatives.forEach((mode, index) => {
+      const mapping = getPhaseTorusAudioMapping(index);
+      expect(mapping.coefficientGain).toBeCloseTo(mode.magnitude / maximumMagnitude, 12);
+      expect(mapping.modeRateRadiansPerSecond).toBeCloseTo(
+        0.08 * (mode.m + mode.n * Math.SQRT2),
+        12,
+      );
+    });
   });
 });

@@ -16,7 +16,7 @@ export function createPhaseTorusWorkletProgram(): PikoWorkletProgram {
     kind: "phase-torus",
     score: PHASE_TORUS_SCORE,
     detuneRatio: 0.0015,
-    outputGain: 0.3,
+    outputGain: 0.552,
     maximumVoices: 22,
   };
   validatePikoProgram(program);

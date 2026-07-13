@@ -31,7 +31,7 @@ export function createWaveletRainContent() {
     );
     mesh.scale.y = 0.6 + Math.min(1.4, Math.abs(coefficient.value) * 3);
     group.add(mesh);
-    return { coefficient, mesh, material };
+    return { coefficient, mesh, material, baseY: mesh.position.y };
   });
   const reconstructionPositions = new Float32Array(512 * 3);
   for (let index = 0; index < 512; index += 1) {
@@ -49,13 +49,14 @@ export function createWaveletRainContent() {
     update(timeSeconds: number) {
       const observation = (0.04 * timeSeconds) % 1;
       scan.line.position.x = observation * 9.6;
-      cells.forEach(({ coefficient, mesh, material }, index) => {
+      cells.forEach(({ coefficient, mesh, material, baseY }, index) => {
         const active = observation >= coefficient.start && observation < coefficient.end;
         material.opacity = Math.min(
           0.95,
           (0.16 + Math.abs(coefficient.value) * 1.7) * (active ? 1.8 : 1),
         );
-        mesh.position.y += Math.sin(timeSeconds * (0.32 + coefficient.j * 0.04) + index) * 0.0009;
+        mesh.position.y =
+          baseY + Math.sin(timeSeconds * (0.32 + coefficient.j * 0.04) + index) * 0.17;
       });
       return { energy: evaluateFiveActEnergy(timeSeconds, 64), warmth: 0.12 };
     },

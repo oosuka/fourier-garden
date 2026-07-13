@@ -1,6 +1,29 @@
 import { createPikoEvents, type PikoScoreProgram } from "../../../audio/pikoProgram";
 import { TORUS_MODES } from "../math/model";
 const representatives = TORUS_MODES.filter((mode) => mode.m > 0 || (mode.m === 0 && mode.n > 0));
+const maximumMagnitude = Math.max(...representatives.map((mode) => mode.magnitude));
+
+function energyAt(timeSeconds: number): number {
+  if (timeSeconds < 12) return 0.7;
+  if (timeSeconds < 30) return 0.88;
+  if (timeSeconds < 54) return 1.08;
+  if (timeSeconds < 72) return 0.72;
+  return 0.92;
+}
+
+export function getPhaseTorusAudioMapping(index: number): Readonly<{
+  coefficientGain: number;
+  modePhaseAtOrigin: number;
+  modeRateRadiansPerSecond: number;
+}> {
+  const mode = representatives[index % representatives.length]!;
+  return {
+    coefficientGain: mode.magnitude / maximumMagnitude,
+    modePhaseAtOrigin: -Math.atan2(mode.imaginary, mode.real),
+    modeRateRadiansPerSecond: 0.08 * (mode.m + mode.n * Math.SQRT2),
+  };
+}
+
 export const PHASE_TORUS_SCORE: PikoScoreProgram = Object.freeze({
   cycleSeconds: 84,
   events: Object.freeze(
@@ -13,8 +36,15 @@ export const PHASE_TORUS_SCORE: PikoScoreProgram = Object.freeze({
         const speed = Math.abs(mode.m + mode.n * Math.SQRT2);
         return 440 + Math.min(1, speed / 7) * 520;
       },
-      gain: (index) => (index % 15 === 0 ? 0.82 : 0.44) * (index > 50 && index < 360 ? 1 : 0.7),
-      pan: (index) => Math.sin(index * 0.2 * 0.08 * Math.SQRT2) * 0.82,
+      gain: (index) =>
+        (index % 15 === 0 ? 0.82 : 0.44) *
+        energyAt(index * 0.2) *
+        getPhaseTorusAudioMapping(index).coefficientGain,
+      pan: () => 0,
+      panMotionDepth: () => 0.82,
+      panMotionRateRadiansPerSecond: (index) =>
+        getPhaseTorusAudioMapping(index).modeRateRadiansPerSecond,
+      panMotionPhaseRadians: (index) => getPhaseTorusAudioMapping(index).modePhaseAtOrigin,
       wet: (index) => 0.09 + 0.06 * Math.abs(Math.sin(index * 0.17)),
       articulation: (index) => ({
         attackSeconds: 0.009,
@@ -27,8 +57,7 @@ export const PHASE_TORUS_SCORE: PikoScoreProgram = Object.freeze({
           representatives[index % representatives.length]!.real,
         ),
       phaseDrift: (index) => {
-        const mode = representatives[index % representatives.length]!;
-        return 0.08 * (mode.m + mode.n * Math.SQRT2);
+        return getPhaseTorusAudioMapping(index).modeRateRadiansPerSecond;
       },
     }),
   ),

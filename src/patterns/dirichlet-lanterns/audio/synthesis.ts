@@ -17,7 +17,7 @@ export function createDirichletLanternsWorkletProgram(): PikoWorkletProgram {
     kind: "dirichlet-lanterns",
     score: DIRICHLET_LANTERNS_SCORE,
     detuneRatio: 0.001,
-    outputGain: 0.33,
+    outputGain: 0.61,
     maximumVoices: 18,
   };
   validatePikoProgram(program);
