@@ -1,0 +1,1 @@
+export const LISSAJOUS_ORCHARD_QA_TIME_SECONDS = 36;

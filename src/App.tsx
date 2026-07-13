@@ -9,6 +9,10 @@ import { DetailsPanel } from "./components/DetailsPanel";
 import { DeferredDisposer } from "./core/deferredDisposer";
 import { Transport } from "./core/transport";
 import { getPatternRegistry } from "./patterns/registry";
+import type { PatternDefinition } from "./patterns/contracts";
+
+const CHAPTER_TRANSITION_MINIMUM_MS = 650;
+const CHAPTER_TRANSITION_EXIT_MS = 300;
 
 export function App() {
   const patterns = useMemo(() => getPatternRegistry(window.location.search), []);
@@ -31,6 +35,9 @@ export function App() {
   const [entered, setEntered] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [switchingChapter, setSwitchingChapter] = useState(false);
+  const [transitionPattern, setTransitionPattern] = useState<PatternDefinition | null>(null);
+  const [transitionLeaving, setTransitionLeaving] = useState(false);
+  const sceneReadyResolver = useRef<(() => void) | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [volume, setVolume] = useState(audio.currentVolume);
@@ -126,7 +133,13 @@ export function App() {
       const operation = ++playbackOperation.current;
       const resumeAfterSwitch = playing;
       const nextPattern = patterns[nextIndex]!;
+      const transitionStarted = performance.now();
+      const sceneReady = new Promise<void>((resolve) => {
+        sceneReadyResolver.current = resolve;
+      });
       setSwitchingChapter(true);
+      setTransitionPattern(nextPattern);
+      setTransitionLeaving(false);
       setPlaying(false);
       setDetailsOpen(false);
       setUiVisible(true);
@@ -149,9 +162,20 @@ export function App() {
         setAudio(nextAudio);
         setVolume(nextAudio.currentVolume);
 
+        const elapsed = performance.now() - transitionStarted;
+        const minimumDelay = new Promise<void>((resolve) => {
+          window.setTimeout(resolve, Math.max(0, CHAPTER_TRANSITION_MINIMUM_MS - elapsed));
+        });
+        await Promise.all([sceneReady, minimumDelay]);
+        if (operation !== playbackOperation.current) return;
+
         if (resumeAfterSwitch) {
           await playAudio(nextAudio, 0, operation);
         }
+        setTransitionLeaving(true);
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, CHAPTER_TRANSITION_EXIT_MS);
+        });
       } catch (error) {
         if (operation === playbackOperation.current) {
           setAudioError(
@@ -161,11 +185,22 @@ export function App() {
       } finally {
         if (operation === playbackOperation.current) {
           setSwitchingChapter(false);
+          setTransitionPattern(null);
+          setTransitionLeaving(false);
+          sceneReadyResolver.current = null;
         }
       }
     },
     [audio, patternIndex, patterns, playAudio, playing, switchingChapter, transport],
   );
+
+  const handleSceneStatus = useCallback((status: "loading" | "ready" | "error") => {
+    setSceneStatus(status);
+    if (status === "ready" || status === "error") {
+      sceneReadyResolver.current?.();
+      sceneReadyResolver.current = null;
+    }
+  }, []);
 
   const handleVolume = useCallback(
     (value: number) => {
@@ -235,6 +270,12 @@ export function App() {
     return () => window.clearTimeout(hideTimer.current);
   }, [revealUi]);
 
+  useEffect(() => {
+    for (const candidate of [patterns[patternIndex - 1], patterns[patternIndex + 1]]) {
+      if (candidate) void candidate.loadScene().catch(() => undefined);
+    }
+  }, [patternIndex, patterns]);
+
   useEffect(() => unmountDisposer.mount(), [unmountDisposer]);
 
   const interfaceHidden = entered && !uiVisible && !detailsOpen;
@@ -252,11 +293,27 @@ export function App() {
         pattern={pattern}
         transport={transport}
         playing={playing}
-        onStatus={setSceneStatus}
+        onStatus={handleSceneStatus}
         onError={setSceneError}
       />
 
       <div className="edgeVignette" aria-hidden="true" />
+
+      {transitionPattern && (
+        <section
+          className={`chapterTransition ${transitionLeaving ? "chapterTransition--leaving" : ""}`}
+          aria-live="polite"
+          aria-label="章を切り替えています"
+        >
+          <span>
+            CHAPTER {String(transitionPattern.order).padStart(2, "0")} /{" "}
+            {String(patterns.length).padStart(2, "0")}
+          </span>
+          <h2>{transitionPattern.title.en}</h2>
+          <p>{transitionPattern.title.ja}</p>
+          <small>{transitionPattern.subtitle.ja}</small>
+        </section>
+      )}
 
       <header className="brandBlock interfaceLayer">
         <h1>FOURIER GARDEN</h1>

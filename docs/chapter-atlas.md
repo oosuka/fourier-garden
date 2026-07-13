@@ -2,7 +2,20 @@
 
 ## 文書の位置付け
 
-この文書はChapter 2からChapter 10の概要設計を比較する計画資料である。
+この文書はChapter 2からChapter 10の概要設計を比較した調査資料である。
+2026年7月13日の実装ではPrime ConstellationをChapter 3へ挿入し、Möbius Choirを
+Chapter 4へ移動した。現在の表示順と公開状態は`src/patterns/registry.ts`、
+実装後の数理正本は`docs/mathematical-model.md`、主張と根拠の対応は
+`docs/chapter-claim-ledger.md`を正とする。本文中の旧Chapter 3/4番号は調査履歴として
+残し、現行表示番号には使用しない。
+
+現在の10章順はResidue Bloom、Spectral Cathedral、Prime Constellation、
+Möbius Choir、Bessel Tide、Lissajous Orchard、Dirichlet Lanterns、Wavelet Rain、
+Riemann Veil、Phase Torusである。既存3章は通常レジストリ、新7章はpreviewへ登録し、
+各新章は60-84秒の5幕、丸い中域ピコ、局所数学写像を持つ。利用者の連続試聴と
+視覚確認を通過した章だけ、番号の連続性を保って順次通常公開へ昇格する。
+
+旧AtlasはChapter 10までの概要設計を比較する計画資料である。
 Chapter 10はこの版の調査範囲であり、作品の章数上限ではない。Chapter 11以降は、
 既存章とのコントラストと同じ入口条件を満たす独立したAtlas拡張として追加する。
 現行実装の数理正本ではなく、各章の段階1「数理仕様」で個別に承認された定義だけが

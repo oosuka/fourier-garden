@@ -39,9 +39,12 @@ UI、README、説明文、コメントでは、この区別を曖昧にしない
 
 ### 2.1 現在の正式版
 
-2026年7月12日時点の現行実装を正式版として扱う。正式版の通常公開章は
-`Residue Bloom`、`Spectral Cathedral`、`Möbius Choir`の3章であり、
-いずれも`src/patterns/registry.ts`で`publication: "published"`として登録されている。
+2026年7月12日時点の3章実装を正式版として扱う。通常公開章は
+`Residue Bloom`、`Spectral Cathedral`、`Möbius Choir`である。2026年7月13日に
+`Prime Constellation`、`Bessel Tide`、`Lissajous Orchard`、`Dirichlet Lanterns`、
+`Wavelet Rain`、`Riemann Veil`、`Phase Torus`をpreview実装し、previewでは
+PrimeをChapter 3へ挿入してMöbiusをChapter 4へ移した全10章順を使う。
+新7章は利用者による連続試聴と視覚確認が完了するまで`publication: "preview"`を維持する。
 正式版は数学・音響仕様を維持したまま、全章のシネマティック背景、粒子密度、
 星雲、フィラメント、光柱、膜、局所フレア、共鳴ハロー、bloomを強化し、
 章別のリズム、連続感、定位、音色差を再設計した版である。利用者による最終的な
@@ -252,7 +255,7 @@ Chapter 1の音響モデルは次のとおりである。
 - ステレオデチューン比: `d = 0.00125`
 - 帯域条件: `max(n_k ν_j(1-d), n_k ν_j(1+d)) < 0.45 F_s`
 - 共通音質: dry high-shelf `1,250 Hz / -16 dB`、dry low-pass `2,100 Hz`、
-  wet low-pass `1,450 Hz`、`-1 dBFS` limiterを使い、Chapter 2/3と同じ
+  wet low-pass `1,450 Hz`、`-1 dBFS` limiterを使い、Chapter 2/4と同じ
   丸い中域ピコ系へ寄せる
 - 4音アクセントはsectionごとに変える。`intro`は`[1.00, 0.64, 0.90, 0.72]`、
   `growth`は`[0.90, 0.74, 1.08, 0.66]`、`bloom`は`[1.10, 0.70, 0.94, 0.82]`、
@@ -291,9 +294,9 @@ register倍率は1、最大部分音数は1、左右デチューン後の各生�
 `0.45 F_s`未満に制限する。Chapter 2は
 dry high-shelf 1,200 Hz / -18 dB、dry low-pass 1,300 Hz、wet low-pass
 1,050 Hz、短い包絡、低いwet gainを基準にし、乾いた幾何学的なピコ粒として
-Chapter 3より短く中央寄りに保つ。スコア上のwet sendは最大0.055、stereo spreadは
+Chapter 4より短く中央寄りに保つ。スコア上のwet sendは最大0.055、stereo spreadは
 最大0.38、4 slotアクセントは`[1.00, 0.70, 0.96, 0.66]`を基準にし、
-Chapter 3の流動的な定位と混同しない乾いた格子感を保つ。高域抑制を弱める場合は参照動画方向の
+Chapter 4の流動的な定位と混同しない乾いた格子感を保つ。高域抑制を弱める場合は参照動画方向の
 セルフチェック数値と実機試聴で証明する。
 数学時刻は75秒周期でリセットせず、前周期の余韻は絶対イベント時刻から評価する。
 
@@ -304,9 +307,17 @@ Chapter 3の流動的な定位と混同しない乾いた格子感を保つ。�
 `src/audio/AudioEngine.ts`の責務を確認し、TypeScript参照実装とAudioWorkletの同じ定義が
 食い違わないようにすること。
 
-### 6.3 Möbius Choir
+### 6.3 Prime Constellation
 
-Chapter 3は68 BPM、16小節、56.470588秒、256イベントの5幕スコアを使う。
+Chapter 3は97以下の25素数を支持とする有限指数和を扱い、60秒の5幕スコアを使う。
+素数順序、24個の素数間隔、係数1/25、絶対イベント時刻の位相凝集度を保持し、
+440-920 Hzの中域へ単調圧縮した硬めで短いピコ粒へ写す。10秒ごとの素数走査は
+反復してよいが、数学時刻`x(t)=0.06t`はリセットしない。星塵と星雲を素数として
+数えず、25位相点、24リンク、係数支持と詩的造形を分離する。
+
+### 6.4 Möbius Choir
+
+Chapter 4は68 BPM、16小節、56.470588秒、256イベントの5幕スコアを使う。
 全小節の全16分slotを発音し、密度変化でなく一定リズムを不変条件にする。
 固有値平方根の順序、基礎振幅比、許容条件、`n>0`の正弦・余弦対の位相関係を
 保持し、420-920 Hzの安全な中域へ正規化した単一部分音の短いピコ粒へ写す。
@@ -323,6 +334,15 @@ flat quotientのモード変位と速度を振幅、定位、詩的造形の局�
 個々の発音は有限包絡で閉じ、前周期の余韻は絶対イベント時刻から評価する。
 TypeScript参照DSPとAudioWorkletを標本単位で一致させ、左右デチューン後の
 全生成周波数を`0.45 F_s`未満に制限する。
+
+### 6.5 Chapter 5から10
+
+Chapter 5から10は共通の丸い中域ピコ文法を維持しながら、発音規則、包絡、
+音高写像、定位、残響のうち3軸以上を隣接章で変更する。周期は順に
+72、60、60、64、80、84秒で、すべて5幕、絶対数学時刻、有限包絡、
+左右デチューン後`0.45 F_s`未満を不変条件とする。各章の中心対象は
+Fourier–Bessel円板固有モード、Farey比の有理トーラス流、Dirichlet核とFejér平均、
+Haar多重解像度、Riemann型有限部分和、T²上のKronecker流である。
 
 音響式またはDSPを変える場合は、`src/patterns/mobius-choir/audio/score.ts`、
 `src/patterns/mobius-choir/audio/runtime.ts`、

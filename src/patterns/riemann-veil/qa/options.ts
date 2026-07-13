@@ -1,0 +1,1 @@
+export const RIEMANN_VEIL_QA_TIME_SECONDS = 48;

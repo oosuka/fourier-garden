@@ -16,7 +16,7 @@ describe("pattern registry", () => {
     }
   });
 
-  it("publishes the first three chapters in chapter order", () => {
+  it("publishes the three formally approved chapters in compatible order", () => {
     expect(patternRegistry.map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
@@ -26,11 +26,18 @@ describe("pattern registry", () => {
     expect(getPatternRegistry("?seed=qa")).toBe(patternRegistry);
   });
 
-  it("keeps the preview registry compatible after Möbius Choir publication", () => {
+  it("exposes all ten chapters in the final preview order", () => {
     expect(patternPreviewRegistry.map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
+      "prime-constellation",
       "mobius-choir",
+      "bessel-tide",
+      "lissajous-orchard",
+      "dirichlet-lanterns",
+      "wavelet-rain",
+      "riemann-veil",
+      "phase-torus",
     ]);
     expect(getPatternRegistry("?chapters=preview")).toBe(patternPreviewRegistry);
     expect(getPatternRegistry("?chapters=PREVIEW")).toBe(patternRegistry);

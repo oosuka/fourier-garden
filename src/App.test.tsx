@@ -13,7 +13,7 @@ describe("App entry gate", () => {
     expect(playbackControl === null || playbackControl.closest("[inert]") !== null).toBe(true);
   });
 
-  it("exposes Chapters 2 and 3 without a preview query", () => {
+  it("keeps three formal chapters and exposes the final ten-chapter preview order", () => {
     expect(getPatternRegistry("").map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
@@ -22,7 +22,14 @@ describe("App entry gate", () => {
     expect(getPatternRegistry("?chapters=preview").map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
+      "prime-constellation",
       "mobius-choir",
+      "bessel-tide",
+      "lissajous-orchard",
+      "dirichlet-lanterns",
+      "wavelet-rain",
+      "riemann-veil",
+      "phase-torus",
     ]);
   });
 });

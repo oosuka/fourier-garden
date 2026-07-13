@@ -35,6 +35,22 @@ export const residueBloomPattern: ResidueBloomPatternDefinition = {
     ja: "4で割って1余る倍音の観測所",
   },
   formulaLatex: "f(x)=5\\sum_{k=0}^{12}\\frac{1}{k+1}\\sin((4k+1)x)",
+  contrastProfile: {
+    composition: "phasor-chain-waveform",
+    motion: "unidirectional-rotation-projection",
+    space: "split-complex-plane-history",
+    palette: "cyan-violet-gold",
+    timbre: "rounded-harmonic-piko",
+    rhythm: "ghosted-four-four-sixteenths",
+    time: "absolute-phasor-long-form",
+    audio: {
+      onsetPattern: "constant-sixteenth-with-ghost-rotation",
+      articulation: "rounded-harmonic-grain",
+      pitchMapping: "residue-harmonics-on-alternating-carriers",
+      spatialGesture: "phasor-position-pan",
+      wetCharacter: "section-bloom-room",
+    },
+  },
   dramaturgy: {
     cycleSeconds: 144,
     expressiveAxes: ["density", "dynamics", "timbre", "space", "motion", "color"],

@@ -30,6 +30,22 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
   },
   formulaLatex:
     "u_C(x,y,t)=\\sum_{(m,n)\\in\\mathcal K_C}a_{mn}\\cos(c_C\\sqrt{\\lambda_{mn}}t)\\phi_{mn}(x,y)",
+  contrastProfile: {
+    composition: "rectangular-wave-surface-columns",
+    motion: "standing-wave-vertical-propagation",
+    space: "deep-cathedral-vault",
+    palette: "cyan-silver-low-gold",
+    timbre: "dry-faceted-single-mode-piko",
+    rhythm: "five-four-constant-grid",
+    time: "standing-breath-seventy-five",
+    audio: {
+      onsetPattern: "constant-five-four-sixteenths",
+      articulation: "dry-short-single-partial",
+      pitchMapping: "normalized-square-root-eigenvalue",
+      spatialGesture: "central-faceted-pan",
+      wetCharacter: "short-low-wet-room",
+    },
+  },
   dramaturgy: {
     cycleSeconds: 75,
     expressiveAxes: ["density", "dynamics", "register", "timbre", "space", "motion", "color"],

@@ -1,13 +1,28 @@
-import { mobiusChoirProcessor } from "./chapters/mobius-choir.js?v=19";
-import { residueBloomProcessor } from "./chapters/residue-bloom.js?v=19";
-import { isFiniteNumber } from "./chapters/shared.js?v=19";
-import { spectralCathedralProcessor } from "./chapters/spectral-cathedral.js?v=19";
+import { besselTideProcessor } from "./chapters/bessel-tide.js?v=20";
+import { dirichletLanternsProcessor } from "./chapters/dirichlet-lanterns.js?v=20";
+import { lissajousOrchardProcessor } from "./chapters/lissajous-orchard.js?v=20";
+import { mobiusChoirProcessor } from "./chapters/mobius-choir.js?v=20";
+import { phaseTorusProcessor } from "./chapters/phase-torus.js?v=20";
+import { primeConstellationProcessor } from "./chapters/prime-constellation.js?v=20";
+import { residueBloomProcessor } from "./chapters/residue-bloom.js?v=20";
+import { riemannVeilProcessor } from "./chapters/riemann-veil.js?v=20";
+import { isFiniteNumber } from "./chapters/shared.js?v=20";
+import { spectralCathedralProcessor } from "./chapters/spectral-cathedral.js?v=20";
+import { waveletRainProcessor } from "./chapters/wavelet-rain.js?v=20";
 
 const PROCESSORS = new Map(
-  [residueBloomProcessor, spectralCathedralProcessor, mobiusChoirProcessor].map((processor) => [
-    processor.kind,
-    processor,
-  ]),
+  [
+    residueBloomProcessor,
+    spectralCathedralProcessor,
+    primeConstellationProcessor,
+    mobiusChoirProcessor,
+    besselTideProcessor,
+    lissajousOrchardProcessor,
+    dirichletLanternsProcessor,
+    waveletRainProcessor,
+    riemannVeilProcessor,
+    phaseTorusProcessor,
+  ].map((processor) => [processor.kind, processor]),
 );
 const SILENT_SAMPLE = { dryLeft: 0, dryRight: 0, wetLeft: 0, wetRight: 0 };
 

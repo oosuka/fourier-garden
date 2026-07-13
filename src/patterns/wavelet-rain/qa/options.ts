@@ -1,0 +1,1 @@
+export const WAVELET_RAIN_QA_TIME_SECONDS = 32;

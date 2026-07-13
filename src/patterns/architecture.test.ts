@@ -3,6 +3,15 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const chapterRoot = "src/patterns/residue-bloom";
+const analyticChapters = [
+  ["prime-constellation", "PrimeConstellationDetails"],
+  ["bessel-tide", "BesselTideDetails"],
+  ["lissajous-orchard", "LissajousOrchardDetails"],
+  ["dirichlet-lanterns", "DirichletLanternsDetails"],
+  ["wavelet-rain", "WaveletRainDetails"],
+  ["riemann-veil", "RiemannVeilDetails"],
+  ["phase-torus", "PhaseTorusDetails"],
+] as const;
 
 function sourceFiles(root: string): string[] {
   return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
@@ -51,6 +60,25 @@ describe("chapter vertical slices", () => {
     expect(existsSync(`${root}/qa/MobiusChoirQa.tsx`)).toBe(true);
   });
 
+  it("co-locates every analytic chapter vertical slice", () => {
+    for (const [id, details] of analyticChapters) {
+      const root = `src/patterns/${id}`;
+      for (const file of [
+        "definition.tsx",
+        "types.ts",
+        "validate.ts",
+        "math/model.ts",
+        "audio/score.ts",
+        "audio/synthesis.ts",
+        "scene/scene.ts",
+        `details/${details}.tsx`,
+        "qa/options.ts",
+      ]) {
+        expect(existsSync(`${root}/${file}`), `${id}/${file}`).toBe(true);
+      }
+    }
+  });
+
   it("does not let shared modules import chapter implementations", () => {
     const sharedRoots = ["src/audio", "src/math", "src/components", "src/core"];
     const source = sharedRoots
@@ -62,7 +90,18 @@ describe("chapter vertical slices", () => {
   });
 
   it("does not let one chapter implementation import another chapter", () => {
-    const ids = ["residue-bloom", "spectral-cathedral", "mobius-choir"];
+    const ids = [
+      "residue-bloom",
+      "spectral-cathedral",
+      "prime-constellation",
+      "mobius-choir",
+      "bessel-tide",
+      "lissajous-orchard",
+      "dirichlet-lanterns",
+      "wavelet-rain",
+      "riemann-veil",
+      "phase-torus",
+    ];
     for (const id of ids) {
       const source = implementationFiles(`src/patterns/${id}`)
         .map((file) => readFileSync(file, "utf8"))

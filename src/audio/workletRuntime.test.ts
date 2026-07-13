@@ -3,10 +3,18 @@
 import vm from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 
+import besselTideSource from "../../public/audio/chapters/bessel-tide.js?raw";
+import dirichletLanternsSource from "../../public/audio/chapters/dirichlet-lanterns.js?raw";
+import lissajousOrchardSource from "../../public/audio/chapters/lissajous-orchard.js?raw";
 import mobiusChoirSource from "../../public/audio/chapters/mobius-choir.js?raw";
+import phaseTorusSource from "../../public/audio/chapters/phase-torus.js?raw";
+import primeConstellationSource from "../../public/audio/chapters/prime-constellation.js?raw";
 import residueBloomSource from "../../public/audio/chapters/residue-bloom.js?raw";
+import riemannVeilSource from "../../public/audio/chapters/riemann-veil.js?raw";
+import sharedPikoSource from "../../public/audio/chapters/shared-piko.js?raw";
 import sharedSource from "../../public/audio/chapters/shared.js?raw";
 import spectralCathedralSource from "../../public/audio/chapters/spectral-cathedral.js?raw";
+import waveletRainSource from "../../public/audio/chapters/wavelet-rain.js?raw";
 import workletSource from "../../public/audio/fourier-worklet.js?raw";
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
@@ -25,6 +33,13 @@ import {
   createSpectralCathedralWorkletProgram,
   renderSpectralCathedralSample,
 } from "../patterns/spectral-cathedral/audio/synthesis";
+import { createPrimeConstellationWorkletProgram } from "../patterns/prime-constellation/audio/synthesis";
+import { createBesselTideWorkletProgram } from "../patterns/bessel-tide/audio/synthesis";
+import { createLissajousOrchardWorkletProgram } from "../patterns/lissajous-orchard/audio/synthesis";
+import { createDirichletLanternsWorkletProgram } from "../patterns/dirichlet-lanterns/audio/synthesis";
+import { createWaveletRainWorkletProgram } from "../patterns/wavelet-rain/audio/synthesis";
+import { createRiemannVeilWorkletProgram } from "../patterns/riemann-veil/audio/synthesis";
+import { createPhaseTorusWorkletProgram } from "../patterns/phase-torus/audio/synthesis";
 
 interface WorkletPortStub {
   onmessage: ((event: { data: unknown }) => void) | null;
@@ -50,9 +65,17 @@ function composeWorkletSource(...sources: readonly string[]): string {
 
 const executableWorkletSource = composeWorkletSource(
   sharedSource,
+  sharedPikoSource,
   residueBloomSource,
   spectralCathedralSource,
+  primeConstellationSource,
   mobiusChoirSource,
+  besselTideSource,
+  lissajousOrchardSource,
+  dirichletLanternsSource,
+  waveletRainSource,
+  riemannVeilSource,
+  phaseTorusSource,
   workletSource,
 );
 
@@ -120,6 +143,25 @@ function createOutputs(frameCount: number): Float32Array[][] {
 }
 
 describe("AudioWorklet runtime", () => {
+  it.each([
+    createPrimeConstellationWorkletProgram(),
+    createBesselTideWorkletProgram(),
+    createLissajousOrchardWorkletProgram(),
+    createDirichletLanternsWorkletProgram(),
+    createWaveletRainWorkletProgram(),
+    createRiemannVeilWorkletProgram(),
+    createPhaseTorusWorkletProgram(),
+  ])("renders finite $kind samples through the shared piko processor", (program) => {
+    const processor = loadProcessor(48_000);
+    send(processor, { type: "configure", program });
+    send(processor, { type: "active", value: true });
+    const outputs = createOutputs(512);
+    expect(processor.process([], outputs)).toBe(true);
+    const samples = outputs.flatMap((bus) => bus.flatMap((channel) => [...channel]));
+    expect(samples.every(Number.isFinite)).toBe(true);
+    expect(samples.some((sample) => Math.abs(sample) > 1e-7)).toBe(true);
+  });
+
   it("initializes the Möbius Choir processor from its declared module dependencies", () => {
     const processor = loadChapterProcessor(mobiusChoirSource, "mobiusChoirProcessor", 48_000);
 

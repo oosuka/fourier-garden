@@ -5,8 +5,11 @@ import type { RendererBackend } from "../../core/rendererBackend";
 import { createSeededRandom } from "../../core/seed";
 import {
   createCinematicParticleField,
+  createCinematicParticleFieldFromProfile,
+  CINEMATIC_ENVIRONMENT_PROFILES,
   getCinematicViewportSpan,
   type CinematicChapterId,
+  type CinematicEnvironmentProfile,
 } from "./model";
 
 const BAND_ROTATION_SPEEDS = [0.0034, -0.0048, 0.0066] as const;
@@ -24,7 +27,8 @@ const WEBGL_PARTICLE_CAP = 8_000;
 
 export interface CinematicEnvironmentLayerOptions {
   backend: RendererBackend;
-  chapter: CinematicChapterId;
+  chapter?: CinematicChapterId;
+  profile?: CinematicEnvironmentProfile;
   seed: number;
   maximumParticleCount: number;
   palette: readonly [number, number, number];
@@ -206,13 +210,12 @@ function createFlareTexture(): THREE.DataTexture {
 }
 
 function createResonanceHaloGeometry(
-  chapter: CinematicChapterId,
+  profile: CinematicEnvironmentProfile,
   index: number,
 ): THREE.BufferGeometry {
   const positions = new Float32Array((RESONANCE_HALO_POINTS + 1) * 3);
   const radius = 1.2 + index * 0.52;
-  const aspectX = chapter === "spectral-cathedral" ? 0.42 : chapter === "mobius-choir" ? 1.38 : 1;
-  const aspectY = chapter === "spectral-cathedral" ? 1.7 : chapter === "mobius-choir" ? 0.68 : 1;
+  const [aspectX, aspectY] = profile.haloAspect;
   for (let pointIndex = 0; pointIndex <= RESONANCE_HALO_POINTS; pointIndex += 1) {
     const angle = (pointIndex / RESONANCE_HALO_POINTS) * Math.PI * 2;
     const harmonicRipple = 1 + Math.sin(angle * (3 + (index % 4)) + index * 0.7) * 0.018;
@@ -228,21 +231,19 @@ function createResonanceHaloGeometry(
 
 function createFilamentGeometry(
   seed: number,
-  chapter: CinematicChapterId,
+  profile: CinematicEnvironmentProfile,
   index: number,
   extent: Readonly<{ x: number; y: number; z: number }>,
 ): THREE.BufferGeometry {
   const random = createSeededRandom(seed ^ Math.imul(index + 17, 0x45d9f3b));
   const positions = new Float32Array(FILAMENT_POINT_COUNT * 3);
-  const chapterPhase =
-    chapter === "spectral-cathedral" ? 0.25 : chapter === "mobius-choir" ? 1.45 : 2.4;
   const lane = (index / Math.max(1, FILAMENT_VEIL_COUNT - 1)) * 2 - 1;
   const amplitudeY = extent.y * (0.11 + random() * 0.08);
   const amplitudeZ = extent.z * (0.08 + random() * 0.06);
   const baseY = lane * extent.y * 0.34 + (random() - 0.5) * extent.y * 0.18;
   const baseZ = -extent.z * (0.7 + random() * 0.35);
   const frequency = 1.25 + random() * 1.75;
-  const phase = random() * Math.PI * 2 + chapterPhase;
+  const phase = random() * Math.PI * 2 + profile.filamentPhase;
 
   for (let pointIndex = 0; pointIndex < FILAMENT_POINT_COUNT; pointIndex += 1) {
     const progress = pointIndex / (FILAMENT_POINT_COUNT - 1);
@@ -308,11 +309,13 @@ export class CinematicEnvironmentLayer {
     ];
     this.particleCount = this.maximumParticleCount;
     this.extent = options.extent;
-    const field = createCinematicParticleField(
-      options.seed,
-      options.chapter,
-      this.maximumParticleCount,
-    );
+    const profile =
+      options.profile ??
+      (options.chapter ? CINEMATIC_ENVIRONMENT_PROFILES[options.chapter] : undefined);
+    if (!profile) throw new Error("Cinematic environment profile is required");
+    const field = options.profile
+      ? createCinematicParticleFieldFromProfile(options.seed, profile, this.maximumParticleCount)
+      : createCinematicParticleField(options.seed, options.chapter!, this.maximumParticleCount);
     this.particleBuffers = splitBand(field.positions, field.bands, 3);
     const colorBuffers = splitBand(field.colors, field.bands, 3);
     const createPointsForBand = (band: 0 | 1 | 2): THREE.Points => {
@@ -406,7 +409,7 @@ export class CinematicEnvironmentLayer {
         toneMapped: false,
       });
       const line = new THREE.Line(
-        createFilamentGeometry(options.seed, options.chapter, index, options.extent),
+        createFilamentGeometry(options.seed, profile, index, options.extent),
         material,
       );
       line.frustumCulled = false;
@@ -429,15 +432,15 @@ export class CinematicEnvironmentLayer {
         depthWrite: false,
         toneMapped: false,
       });
-      const line = new THREE.Line(createResonanceHaloGeometry(options.chapter, index), material);
+      const line = new THREE.Line(createResonanceHaloGeometry(profile, index), material);
       const horizontalOffset =
-        options.chapter === "spectral-cathedral"
+        profile.layout === "cathedral"
           ? (index - (RESONANCE_HALO_COUNT - 1) / 2) * 2.35
-          : options.chapter === "mobius-choir"
+          : profile.layout === "ribbon"
             ? ((index % 3) - 1) * 2.8
             : -2.8 + index * 0.66;
       const verticalOffset =
-        options.chapter === "mobius-choir" ? (Math.floor(index / 3) - 1) * 1.8 : -0.25;
+        profile.layout === "ribbon" ? (Math.floor(index / 3) - 1) * 1.8 : -0.25;
       line.position.set(horizontalOffset, verticalOffset, -5.2 - index * 0.36);
       line.frustumCulled = false;
       line.renderOrder = -2 + index;
@@ -449,9 +452,9 @@ export class CinematicEnvironmentLayer {
         phase: index * 0.83 + options.seed * 0.00013,
         baseScale: 0.82 + index * 0.035,
         rotationOffset:
-          options.chapter === "mobius-choir"
+          profile.layout === "ribbon"
             ? index * 0.4
-            : options.chapter === "spectral-cathedral"
+            : profile.layout === "cathedral"
               ? (index - 3) * 0.035
               : index * 0.13,
       });
@@ -470,15 +473,15 @@ export class CinematicEnvironmentLayer {
       const sprite = new THREE.Sprite(material);
       const lane = (index / Math.max(1, FLARE_COUNT - 1)) * 2 - 1;
       const chapterX =
-        options.chapter === "spectral-cathedral"
+        profile.layout === "cathedral"
           ? lane * options.extent.x * 0.34
-          : options.chapter === "mobius-choir"
+          : profile.layout === "ribbon"
             ? Math.sin(index * 2.21) * options.extent.x * 0.3
             : -options.extent.x * 0.18 + lane * options.extent.x * 0.28;
       const chapterY =
-        options.chapter === "spectral-cathedral"
+        profile.layout === "cathedral"
           ? -options.extent.y * 0.28 + Math.abs(lane) * options.extent.y * 0.15
-          : options.chapter === "mobius-choir"
+          : profile.layout === "ribbon"
             ? Math.cos(index * 1.37) * options.extent.y * 0.28
             : Math.sin(index * 1.63) * options.extent.y * 0.22;
       sprite.position.set(chapterX, chapterY, -2.8 - (index % 3) * 1.4);

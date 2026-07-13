@@ -16,7 +16,7 @@ function MobiusChoirMathematicalDetails() {
 export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
   kind: "mobius-choir",
   id: "mobius-choir",
-  order: 3,
+  order: 4,
   publication: "published",
   title: { en: "Möbius Choir", ja: "メビウスの合唱" },
   subtitle: {
@@ -25,6 +25,22 @@ export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
   },
   formulaLatex:
     "u_M(x,y,t)=\\sum_{(m,n)\\in\\mathcal K_M}b_{mn}\\sin(mx)\\cos\\!\\left(ny-\\sqrt{\\lambda_{mn}}\\,0.14t\\right)",
+  contrastProfile: {
+    composition: "single-mobius-band-seam",
+    motion: "traveling-wave-orientation-reversal",
+    space: "floating-closed-ribbon",
+    palette: "violet-blue-purple",
+    timbre: "soft-flowing-single-mode-piko",
+    rhythm: "four-four-continuous-grid",
+    time: "two-turn-return",
+    audio: {
+      onsetPattern: "constant-sixteenth-flow",
+      articulation: "soft-long-piko",
+      pitchMapping: "normalized-mobius-eigenvalue",
+      spatialGesture: "wide-seam-crossing-pan",
+      wetCharacter: "long-wide-room-tail",
+    },
+  },
   dramaturgy: {
     cycleSeconds: MOBIUS_CHOIR_SCORE.cycleSeconds,
     sections: MOBIUS_CHOIR_DRAMATURGY_SECTIONS,

@@ -129,3 +129,68 @@
 - [x] 利用者による最終的な音色評価を完了
 
 final result: passed — formal release 2026-07-12
+
+## 2026-07-13 Ten-chapter preview expansion
+
+対象: Prime Constellation、Bessel Tide、Lissajous Orchard、Dirichlet Lanterns、
+Wavelet Rain、Riemann Veil、Phase Torusのpreview実装、および最終10章順。
+
+### Reference direction
+
+- 初期設計画像3点から、巨大な主数学構造、3深度以上の粒子・膜、局所HDR、
+  暗いガラス状UI、シアン・バイオレット・金の階調を品質基準として採用した。
+- 32.874667秒、48 kHz stereoの参照音源は音質を模倣せず、密な区間の短いピコ反復、
+  4秒単位の密度変化、中域中心の時間構成だけを参照した。
+- 参照画像に含まれるDFT表記、自由位相、周波数値は各章の正本と一致しないため、
+  数式・係数・境界条件には使用していない。
+
+### Implemented QA entrances
+
+- `prime-constellation-qa.html?seed=qa&quality=high&time=30`
+- `bessel-tide-qa.html?seed=qa&quality=high&time=38`
+- `lissajous-orchard-qa.html?seed=qa&quality=high&time=36`
+- `dirichlet-lanterns-qa.html?seed=qa&quality=high&time=30`
+- `wavelet-rain-qa.html?seed=qa&quality=high&time=32`
+- `riemann-veil-qa.html?seed=qa&quality=high&time=48`
+- `phase-torus-qa.html?seed=qa&quality=high&time=42`
+- `chapter-audio-ab-qa.html`（隣接章の音量整合済み代表20秒A/B）
+- `docs/sound-shape-causality.md`（全10章の発音・局所造形対応表）
+
+### Release status
+
+- 数学、帯域、決定性、レジストリ、Worklet dispatcher、型検査、buildの自動確認を完了した。
+- `npm run check`でformat、lint、510テスト、型検査、production buildを通過した。
+- ヘッドホン、Mac内蔵スピーカーでの連続試聴と利用者承認は未完了である。
+- 上記の人間評価が完了するまで、新7章は`publication: "preview"`を維持する。
+
+### Browser verification
+
+- 新7章の各5幕、合計35固定時刻をWebGPUで初期化し、全て5秒以内にreadyとなった。
+- 同じ35固定時刻を`?renderer=webgl`で確認し、全てWebGL2経路でreadyとなった。
+- 新7章の代表固定時刻を`?poetic=off`で確認し、詩的背景なしでも章固有の数学シルエットを維持した。
+- 1440 × 900、1440 × 810、1680 × 720で横・縦overflowがなく、21:9でも背景粒子とフィラメントが左右端まで続いた。
+- preview入口でChapter 1から10まで順に切り替え、各遷移カードが650 ms以上表示され、遷移先タイトルと数学対象を示した。
+- 最新版ChromeでEnter後の自動再生、pause/resume、再生中のChapter 1から10までの遷移を確認した。全章で遷移後にAudioWorkletが再生状態へ復帰した。
+- ChromeのPrime ConstellationはWebGPU、Phase Torusの専用QAは強制WebGL2でreadyとなり、確認中のconsole warning/errorは0件だった。
+- 新7章の全周期dry RMSは公開済み3章の中央値に対して0.93〜0.97倍、隣接する代表10秒は0.82〜1.18倍に収めた。raw peakは`-1 dBFS`以下、DC平均絶対値は`10⁻³`未満で、後段limiterの契約を満たす。
+- Fullscreen APIとタブ非表示時の自動pause/resumeはブラウザ制御から状態を確定できなかったため、通常Chromeでの手動確認を残す。
+
+### Visual remediation
+
+- Prime Constellationは25位相点へ二重の局所ハローを加え、24リンクと全高の素数支持を背景粒子から分離した。
+- Bessel Tideは面の白飛びを抑え、選択モードのDirichlet境界、Bessel零点由来の節円、角モード由来の節径を厳密数学層として前景化した。
+- Phase Torusは係数場の色域を深いシアン／ブルーへ戻し、同じ厳密トーラス上へFourier文字格子を重ねた。軌道履歴と面形状は変形していない。
+
+### Details parity verification
+
+- 新7章の数学タブへ、3〜4本の正本数式、9〜10項目の仕様、章固有の定量プロファイル、
+  係数・モード・打切り表、数学・映像・音響の因果台帳を追加した。
+- Primeは25素数と24間隔、Besselは17実モード、Lissajousは9既約比、Dirichletは
+  4打切り、Waveletは6スケールと上位14係数、Riemannは4打切りと12平方支持、
+  Torusは12共役対と有理・無理流比較を表示する。
+- 全10章のやさしい説明は4段落、本文長294〜335文字となり、既存3章と新7章で
+  情報量を揃えた。全章で横overflowは0だった。
+- 数学タブの新7章は4〜24本の定量バー、8〜29行の章固有データ、9〜10項目の
+  パラメータを持つ。Details内の縦スクロールと横長表の局所スクロールを確認した。
+- Chapter 1から10まで、Detailsの開閉、やさしい説明／数学の詳細切替、章切替後の
+  パネル再表示を確認し、console warning/errorは0件だった。

@@ -2,10 +2,10 @@
 
 ## 文書の位置付け
 
-この文書は2026年7月12日時点の正式版で通常公開済みのChapter 1
-`Residue Bloom`、Chapter 2 `Spectral Cathedral`、Chapter 3
-`Möbius Choir`の数学、時間、解析表示、ソニフィケーション規約の正本である。
-Chapter 4以降のAtlas案は、個別数理仕様の承認と実装が完了するまで本書へ追加しない。
+この文書は2026年7月13日時点で実装済みのChapter 1から10の数学、時間、
+解析表示、ソニフィケーション規約の正本である。新7章はpreviewであり、
+preview順ではChapter 3へ`Prime Constellation`を挿入し、`Möbius Choir`は
+Chapter 4へ移動する。通常URLは2026年7月12日正式版の3章を維持する。
 
 ## プロダクトの定義
 
@@ -562,7 +562,7 @@ afterglow:   15-17小節
 stereo spread、gesture配列、選択モードを変える。発音gestureは`toll`、
 `answer`、`cascade`、`pulse`、`choir`の5種類であるが、音色上はすべて短い
 中域ピコ粒へ丸める。4 slotアクセントは`[1.00, 0.70, 0.96, 0.66]`で、
-wet sendは最大0.055、stereo spreadは最大0.38に制限し、Chapter 3より乾いた
+wet sendは最大0.055、stereo spreadは最大0.38に制限し、Chapter 4より乾いた
 格子状のキャラクターを保つ。
 
 イベント表は周期内時刻、幕、gesture、モードID、基礎ゲイン、基礎brightness、
@@ -646,7 +646,7 @@ v_{mn}(t_e)=|\sin(c_C\sqrt{\lambda_{mn}}t_e)|
 集団的な連続性は、短い粒を16分格子で常時重ね、gesture固有の決定的な二連・三連の
 微小反響と低いwet sendで隙間を埋めて作る。微小反響はcarrier位相を再始動せず、
 同じ絶対時刻carrierへ別の有限包絡を掛けるため、数学的な固有周波数写像を変更しない。
-Chapter 2は乾いた幾何学的な輪郭を持つため、Chapter 3より短い包絡、
+Chapter 2は乾いた幾何学的な輪郭を持つため、Chapter 4より短い包絡、
 低いwet send、狭い定位幅を使う。
 
 Chapter 2のWeb Audioグラフはdry high-pass 220 Hz、high-shelf 1,200 Hz /
@@ -657,9 +657,9 @@ threshold -16 dBのコンプレッサーを使う。コンプレッサー後に�
 この音声は波動場の無加工再生ではなく、固有値、係数比、符号位相、
 絶対数学時刻を保った音楽的ソニフィケーションである。
 
-## Chapter 3: Möbius Choir（通常公開）
+## Chapter 4: Möbius Choir（通常公開）
 
-Chapter 3はflat quotient
+Chapter 4はflat quotient
 
 \[
 M_1=(0,\pi)\times[0,\pi]/((x,0)\sim(\pi-x,\pi))
@@ -707,7 +707,7 @@ u_M(x,y,t)=\sum_{(m,n)\in\mathcal K_M}b_{mn}\sin(mx)
 位相線は正の\(y\)方向へ進む。\(n=0\)は単一余弦位相、\(n>0\)は余弦・正弦の
 quadrature pairとして扱う。DFT、FFT、数値Laplace–Beltrami固有値解析は使用しない。
 
-### Chapter 3の表示写像と厳密描画
+### Chapter 4の表示写像と厳密描画
 
 \(w=x-\pi/2\)、\(R=2.4\)として
 
@@ -726,7 +726,7 @@ piecewise-linear contourとして抽出する。Dirichlet境界は一つの閉�
 同一視辺は境界と区別した継ぎ目として表示する。有限三角形や線分を連続曲面・節線
 そのものとは説明しない。品質低下では厳密面、境界、継ぎ目、節線、解析文字を削減しない。
 
-### Chapter 3の反復スコアとソニフィケーション
+### Chapter 4の反復スコアとソニフィケーション
 
 テンポは4分音符68 BPM、1小節は4拍を16分音符16 slotへ分ける。
 16小節の周期は\(960/17=56.470588\ldots\)秒で、全小節の16 slotすべてへ
@@ -803,3 +803,105 @@ X方向10%・Y方向8%の注視点移動を行う。WebGPUとWebGL2のbloom、�
 2026年7月11日のQAでWebGPU／WebGL2の通常アプリと章別QA入口を確認し、
 利用者による最終的な音色評価とレビュー修正後の再検証を経て、
 2026年7月12日の正式版として通常公開している。
+
+## Chapter 3: Prime Constellation（preview実装）
+
+97以下の素数集合を\(\mathcal P_{97}\)とし、
+
+\[
+z_P(x)=\frac1{25}\sum_{p\in\mathcal P_{97}}e^{ipx},\qquad x(t)=0.06t
+\]
+
+を直接評価する。係数は素数支持で1/25、その他で0、初期位相は0である。
+25位相点の水平座標は\(e^{ipx}\)、垂直座標は素数値の線形正規化、24リンクは
+昇順で隣接する素数を結ぶ。10秒の素数間隔句を60秒の5幕へ再配列するが、
+数学位相はリセットしない。素数順序、間隔、位相凝集度を440-920 Hzの短い
+ピコ粒へ写す。DFT、FFT、確率的素数推定は使用しない。
+
+## Chapter 5: Bessel Tide（preview実装）
+
+単位円板上で
+
+\[
+R_{m,n}(r)=\frac{\sqrt2J_m(j_{m,n}r)}{|J_{m+1}(j_{m,n})|},\qquad
+-\Delta\phi_{m,n}^q=j_{m,n}^2\phi_{m,n}^q
+\]
+
+とし、\(m\le4\)、\(j_{m,n}\le10\)の10径方向クラス、17実モードを採用する。
+初期変位の角度積分は解析的に、半径積分は64点Gauss–Legendre求積で評価し、
+係数絶対値和を1へ正規化する。円板面、境界、節円、節径が厳密数学層で、
+外側膜と霧は詩的造形である。零点順と係数比を420-940 Hzへ正規化した
+6/8の滴状ピコへ写す。Dirichlet零点とNeumann零点を混同しない。
+
+## Chapter 6: Lissajous Orchard（preview実装）
+
+第5次Farey列由来の9既約比\((a,b)\)について
+
+\[
+\Gamma_{a,b}(s,t)=\left(\sin(as+\delta_L(t)),\sin(bs)\right),\qquad
+\delta_L(t)=\frac\pi2+\frac\pi3\sin(0.025t)
+\]
+
+を表示する。\(\gcd(a,b)=1\)なので\(s\in[0,2\pi]\)で閉じる。
+これはflat torus上の有理線形流の平面射影であり、自己交差を結び目とはみなさない。
+比\(a:b\)は左右の発音分割と位相関係へ保持し、carrierは中域へ置く。
+曲線パラメータ\(s\)と絶対transport時刻\(t\)を分離する。
+
+## Chapter 7: Dirichlet Lanterns（preview実装）
+
+次数集合\(N\in\{3,7,15,31\}\)について
+
+\[
+D_N(x)=\sum_{n=-N}^{N}e^{inx},\qquad
+S_Ng(x)=\frac4\pi\sum_{1\le n\le N,\ n\text{ odd}}\frac{\sin(nx)}n
+\]
+
+とFejér平均を比較する。\(x=0\)では連続延長\(D_N(0)=2N+1\)を使う。
+Gibbs振動は有限部分和の数学構造として維持し、描画誤差として平滑化しない。
+奇数支持と1/n比を短い中域パケットへ保持する。FFT畳み込みは使用しない。
+
+## Chapter 8: Wavelet Rain（preview実装）
+
+Haar母ウェーブレットから\(0\le j\le5\)の63個の\(\psi_{j,k}\)を作り、
+
+\[
+P_6g=c_0\phi+\sum_{j=0}^{5}\sum_{k=0}^{2^j-1}d_{j,k}\psi_{j,k},\qquad
+d_{j,k}=\langle g,\psi_{j,k}\rangle
+\]
+
+を解析的区間積分から構成する。表示は時間・スケール係数セルと64半開区間の
+区分一定再構成であり、FFTスペクトルではない。スケール、支持位置、係数絶対値、
+符号を包絡、定位、強度、開始位相へ写す。
+
+## Chapter 9: Riemann Veil（preview実装）
+
+\[
+R_M(x)=\sum_{n=1}^{M}\frac{\sin(n^2x)}{n^2},\qquad
+M\in\{12,24,48,96\}
+\]
+
+の4有限部分和を直接評価する。主曲線\(M=96\)は最高指数\(96^2\)に対し
+32,768標本を使う。各\(R_M\)は滑らかな有限三角多項式であり、有限画像から
+無限和の微分可能性、自己相似性、ゼータ零点を主張しない。平方数順序、1/n²比、
+絶対位相を中域のガラス質ピコへ圧縮する。
+
+## Chapter 10: Phase Torus（preview実装）
+
+flat torus\(\mathbb T^2\)上で
+
+\[
+\theta_I(t)=(0.08t+\pi/5,0.08\sqrt2t+\pi/7)\bmod2\pi
+\]
+
+とし、\(1\le|m|+|n|\le3\)の24格子点へ熱核型係数を置いた有限Fourier場を使う。
+共役対称性により場は実数である。3Dトーラスはflat位相空間を観察する非等長埋め込みで、
+有限履歴を稠密性の証明とはみなさない。組合せ角速度、係数比、絶対モード位相を
+7/8の位相変調ピコと回転定位へ写す。
+
+## Chapter 3から10の共通音響・描画規約
+
+新章のcarrierは360-1,200 Hz、左右デチューン後の実周波数は\(0.45F_s\)未満、
+出力は-1 dBFS limiter以下とする。全イベントは有限包絡を持ち、AudioWorkletは
+固定voice領域と再利用outputを使う。厳密数学層はseed非依存、詩的粒子だけを
+固定seedで変奏する。各章は5幕、3表現軸以上の変化、局所数学写像、
+WebGPU／WebGL2の両経路を持つ。

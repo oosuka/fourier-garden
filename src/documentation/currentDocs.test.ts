@@ -6,6 +6,7 @@ const currentDocPaths = [
   "README.md",
   "docs/mathematical-model.md",
   "docs/chapter-atlas.md",
+  "docs/chapter-claim-ledger.md",
   "design-qa.md",
 ] as const;
 
@@ -59,9 +60,9 @@ describe("current documentation", () => {
 
     expect(compactAgents).toContain("Chapter2は72BPM、5/4拍子、18小節、75秒、360イベント");
     expect(compactAgents).toContain("420-980Hzの安全な中域へ正規化した単一部分音");
-    expect(compactAgents).toContain("Chapter3は68BPM、16小節、56.470588秒、256イベント");
+    expect(compactAgents).toContain("Chapter4は68BPM、16小節、56.470588秒、256イベント");
     expect(compactAgents).toContain("420-920Hzの安全な中域へ正規化した単一部分音");
-    expect(agents).toContain("Chapter 3より短く中央寄り");
+    expect(agents).toContain("Chapter 4より短く中央寄り");
     expect(agents).toContain("ノイズ状付加音源とフォルマント系付加音のゲインは0");
 
     expect(mathematicalModel).toContain("周期内イベント数は18小節×20 slotの360イベント");
@@ -91,9 +92,9 @@ describe("current documentation", () => {
     const superpowersIndex = readDoc("docs/superpowers/README.md");
     const designQa = readDoc("design-qa.md");
 
-    expect(agents).toContain("2026年7月12日時点の現行実装を正式版として扱う");
-    expect(readme).toContain("2026年7月12日時点の現行実装を正式版として扱います");
-    expect(mathematicalModel).toContain("2026年7月12日時点の正式版");
+    expect(agents).toContain("2026年7月12日時点の3章実装を正式版として扱う");
+    expect(readme).toContain("2026年7月12日正式版の3章を通常公開");
+    expect(mathematicalModel).toContain("2026年7月13日時点で実装済みのChapter 1から10");
     expect(chapterAtlas).toContain("2026年7月12日時点の正式版として通常公開");
     expect(superpowersIndex).toContain("2026年7月12日の正式版");
     expect(designQa).toContain("正式版確定日: 2026-07-12");

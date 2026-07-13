@@ -36,6 +36,8 @@
     {
       "files": [
         "src/main.tsx",
+        "src/qa/AnalyticChapterQa.tsx",
+        "src/qa/ChapterAudioAbQa.tsx",
         "src/patterns/spectral-cathedral/definition.tsx",
         "src/patterns/mobius-choir/definition.tsx",
         "src/patterns/residue-bloom/qa/ResidueBloomQa.tsx",

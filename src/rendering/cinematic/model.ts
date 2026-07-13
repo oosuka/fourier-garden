@@ -3,6 +3,13 @@ import type { QualityLevel } from "../../patterns/contracts";
 
 export type CinematicChapterId = "residue-bloom" | "spectral-cathedral" | "mobius-choir";
 
+export interface CinematicEnvironmentProfile {
+  particlePalette: readonly [number, number, number];
+  haloAspect: readonly [number, number];
+  filamentPhase: number;
+  layout: "chain" | "cathedral" | "ribbon" | "field";
+}
+
 export const CINEMATIC_PARTICLE_BUDGETS: Readonly<
   Record<CinematicChapterId, Readonly<Record<QualityLevel, number>>>
 > = Object.freeze({
@@ -31,6 +38,29 @@ const CHAPTER_PALETTES: Readonly<Record<CinematicChapterId, readonly [number, nu
   "spectral-cathedral": [0x62eaff, 0xb678ff, 0xffb56e],
   "mobius-choir": [0x76efff, 0xa766ff, 0xffbd78],
 };
+
+export const CINEMATIC_ENVIRONMENT_PROFILES: Readonly<
+  Record<CinematicChapterId, CinematicEnvironmentProfile>
+> = Object.freeze({
+  "residue-bloom": Object.freeze({
+    particlePalette: CHAPTER_PALETTES["residue-bloom"],
+    haloAspect: [1, 1] as const,
+    filamentPhase: 2.4,
+    layout: "chain",
+  }),
+  "spectral-cathedral": Object.freeze({
+    particlePalette: CHAPTER_PALETTES["spectral-cathedral"],
+    haloAspect: [0.42, 1.7] as const,
+    filamentPhase: 0.25,
+    layout: "cathedral",
+  }),
+  "mobius-choir": Object.freeze({
+    particlePalette: CHAPTER_PALETTES["mobius-choir"],
+    haloAspect: [1.38, 0.68] as const,
+    filamentPhase: 1.45,
+    layout: "ribbon",
+  }),
+});
 
 const BAND_RANGES = [
   { spanX: 44, spanY: 27, minimumZ: -24, maximumZ: -10, minimumSize: 0.35, maximumSize: 0.8 },
@@ -107,6 +137,57 @@ export function createCinematicParticleField(
     bands[index] = band;
   }
 
+  return { positions, colors, sizes, phases, bands };
+}
+
+export function createCinematicParticleFieldFromProfile(
+  seed: number,
+  profile: CinematicEnvironmentProfile,
+  count: number,
+): CinematicParticleField {
+  if (!Number.isInteger(count) || count < 0) {
+    throw new Error("Cinematic particle count must be a nonnegative integer");
+  }
+  const random = createSeededRandom(seed);
+  const palette = profile.particlePalette;
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const phases = new Float32Array(count);
+  const bands = new Uint8Array(count);
+
+  for (let index = 0; index < count; index += 1) {
+    const band = getBand(index, count);
+    const range = BAND_RANGES[band];
+    const positionOffset = index * 3;
+    const radialBias = 0.22 + 0.78 * random() ** 0.62;
+    const streamPhase = random() * Math.PI * 2;
+    const streamDepth = random() ** 0.72;
+    const streamOffset = (band + 1) * 0.58;
+    positions[positionOffset] =
+      (random() - 0.5) * range.spanX * radialBias +
+      Math.sin(streamPhase * 1.7 + streamOffset) * range.spanX * 0.12 * streamDepth;
+    positions[positionOffset + 1] =
+      (random() - 0.5) * range.spanY +
+      Math.cos(streamPhase * 1.13 - streamOffset) * range.spanY * 0.08 * streamDepth;
+    positions[positionOffset + 2] = range.minimumZ + random() * (range.maximumZ - range.minimumZ);
+
+    const firstColorIndex = Math.floor(random() * palette.length);
+    const secondColorIndex = (firstColorIndex + 1) % palette.length;
+    const firstColor = palette[firstColorIndex]!;
+    const secondColor = palette[secondColorIndex]!;
+    const colorMix = random();
+    const brightness = 0.14 + random() * 0.62;
+    for (let channel = 0; channel < 3; channel += 1) {
+      const shift = (2 - channel) * 8;
+      const first = colorChannel(firstColor, shift);
+      const second = colorChannel(secondColor, shift);
+      colors[positionOffset + channel] = (first + (second - first) * colorMix) * brightness;
+    }
+    sizes[index] = range.minimumSize + random() * (range.maximumSize - range.minimumSize);
+    phases[index] = random() * Math.PI * 2;
+    bands[index] = band;
+  }
   return { positions, colors, sizes, phases, bands };
 }
 
