@@ -104,14 +104,22 @@ class ImmersiveAnalyticScene implements PatternScene {
   update(frame: { time: number }): void {
     if (this.disposed) throw new Error("Analytic scene has been disposed");
     const response = this.content.update(frame.time);
-    const cameraDistance = this.config.camera.distance * (this.aspect > 2 ? 1.06 : 1);
-    const orbit = Math.sin(frame.time * 0.035) * 0.16;
+    const cameraDistance =
+      this.config.camera.distance * (this.aspect > 2 ? 1.06 : 1) +
+      Math.cos(frame.time * 0.031) * 0.24;
+    const orbit = Math.sin(frame.time * 0.071) * 0.36 + Math.sin(frame.time * 0.019 + 1.2) * 0.18;
     this.camera.position.set(
       (response.cameraX ?? 0) + orbit,
-      this.config.camera.height + (response.cameraY ?? 0),
+      this.config.camera.height +
+        (response.cameraY ?? 0) +
+        Math.sin(frame.time * 0.049 + 0.7) * 0.16,
       cameraDistance,
     );
-    this.camera.lookAt(0, this.config.camera.targetY, 0);
+    this.camera.lookAt(
+      Math.sin(frame.time * 0.023) * 0.14,
+      this.config.camera.targetY + Math.cos(frame.time * 0.027) * 0.1,
+      0,
+    );
     this.environment?.update(frame.time, response.energy, response.warmth, this.camera);
     this.postProcessor?.setEnergy(response.energy);
     if (this.postProcessor) this.postProcessor.render();

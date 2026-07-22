@@ -3,11 +3,24 @@ import type { QualityLevel } from "../../patterns/contracts";
 
 export type CinematicChapterId = "residue-bloom" | "spectral-cathedral" | "mobius-choir";
 
+export type CinematicEnvironmentLayout =
+  | "chain"
+  | "cathedral"
+  | "constellation"
+  | "ribbon"
+  | "tidal"
+  | "orchard"
+  | "lanterns"
+  | "rain"
+  | "veil"
+  | "torus"
+  | "field";
+
 export interface CinematicEnvironmentProfile {
   particlePalette: readonly [number, number, number];
   haloAspect: readonly [number, number];
   filamentPhase: number;
-  layout: "chain" | "cathedral" | "ribbon" | "field";
+  layout: CinematicEnvironmentLayout;
 }
 
 export const CINEMATIC_PARTICLE_BUDGETS: Readonly<

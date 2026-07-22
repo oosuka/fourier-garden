@@ -41,8 +41,11 @@ describe("CinematicEnvironmentLayer", () => {
       filamentVeils: 6,
       resonanceHalos: 7,
       flares: 9,
+      auroraVeils: 5,
+      lightPillars: 11,
+      luminanceWells: 4,
     });
-    expect(layer.group.children).toHaveLength(30);
+    expect(layer.group.children).toHaveLength(50);
     layer.dispose();
   });
 

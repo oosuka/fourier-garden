@@ -12,21 +12,21 @@ describe("cinematic post processing", () => {
     });
     expect(getCinematicPostProfile("medium")).toEqual({
       enabled: true,
-      strength: 0.82,
-      radius: 0.22,
-      threshold: 0.88,
+      strength: 0.86,
+      radius: 0.26,
+      threshold: 0.82,
     });
     expect(getCinematicPostProfile("high")).toEqual({
       enabled: true,
-      strength: 1.18,
-      radius: 0.36,
-      threshold: 0.82,
+      strength: 1.2,
+      radius: 0.38,
+      threshold: 0.76,
     });
     expect(getCinematicPostProfile("ultra")).toEqual({
       enabled: true,
-      strength: 1.42,
+      strength: 1.48,
       radius: 0.46,
-      threshold: 0.78,
+      threshold: 0.7,
     });
   });
 

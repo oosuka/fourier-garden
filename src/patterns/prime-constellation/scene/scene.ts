@@ -11,22 +11,45 @@ import type { PatternSceneOptions } from "../../contracts";
 import { PRIME_GAPS, PRIME_SUPPORT, PRIME_VISUAL_RATE, evaluatePrimeSum } from "../math/model";
 
 const PALETTE = [0xffc46f, 0xff8c52, 0xf5f7ff] as const;
+const LINK_ECHO_COUNT = 5;
 
 export function createPrimeConstellationContent() {
   const group = new THREE.Group();
   const positions = new Float32Array(PRIME_SUPPORT.length * 3);
   const linkPositions = new Float32Array((PRIME_SUPPORT.length - 1) * 6);
-  const pointCloud = createPoints(positions, PALETTE[0], 0.24);
-  const pointHalos = createPoints(positions, PALETTE[1], 0.5);
-  (pointHalos.points.material as THREE.PointsMaterial).opacity = 0.42;
-  const links = createLine(linkPositions, PALETTE[1], 0.72);
+  const pointCloud = createPoints(positions, PALETTE[0], 0.38);
+  const pointHalos = createPoints(positions, PALETTE[1], 0.86);
+  (pointHalos.points.material as THREE.PointsMaterial).opacity = 0.5;
+  const pointAuras = createPoints(positions, PALETTE[2], 1.45);
+  (pointAuras.points.material as THREE.PointsMaterial).opacity = 0.12;
+  const links = createLine(linkPositions, PALETTE[1], 0.82);
+  const linkEchoes = Array.from({ length: LINK_ECHO_COUNT }, (_, echoIndex) => {
+    const echoPositions = new Float32Array(linkPositions.length);
+    const echo = createLine(
+      echoPositions,
+      PALETTE[echoIndex % PALETTE.length]!,
+      0.09 + echoIndex * 0.018,
+    );
+    group.add(echo.line);
+    return { positions: echoPositions, ...echo };
+  });
   const centroidPosition = new Float32Array(3);
-  const centroid = createPoints(centroidPosition, PALETTE[2], 0.42);
+  const centroid = createPoints(centroidPosition, PALETTE[2], 0.58);
+  const centroidHalo = createPoints(centroidPosition, PALETTE[0], 1.7);
+  (centroidHalo.points.material as THREE.PointsMaterial).opacity = 0.2;
   const highlightPosition = new Float32Array(3);
-  const highlight = createPoints(highlightPosition, 0xffffff, 0.36);
+  const highlight = createPoints(highlightPosition, 0xffffff, 0.72);
   const phraseTimes = [0];
   for (const gap of PRIME_GAPS) phraseTimes.push(phraseTimes.at(-1)! + gap * 0.09);
-  group.add(links.line, pointHalos.points, pointCloud.points, centroid.points, highlight.points);
+  group.add(
+    links.line,
+    pointAuras.points,
+    pointHalos.points,
+    pointCloud.points,
+    centroidHalo.points,
+    centroid.points,
+    highlight.points,
+  );
   return {
     group,
     update(timeSeconds: number) {
@@ -61,13 +84,29 @@ export function createPrimeConstellationContent() {
       highlightPosition[2] = positions[activeIndex * 3 + 2]!;
       pointCloud.attribute.needsUpdate = true;
       pointHalos.attribute.needsUpdate = true;
+      pointAuras.attribute.needsUpdate = true;
       links.attribute.needsUpdate = true;
+      linkEchoes.forEach((echo, echoIndex) => {
+        for (let coordinate = 0; coordinate < linkPositions.length; coordinate += 3) {
+          const phase = timeSeconds * (0.08 + echoIndex * 0.007) + coordinate * 0.013;
+          echo.positions[coordinate] = linkPositions[coordinate]! + Math.sin(phase) * 0.035;
+          echo.positions[coordinate + 1] =
+            linkPositions[coordinate + 1]! + Math.cos(phase * 0.83) * 0.045;
+          echo.positions[coordinate + 2] = linkPositions[coordinate + 2]! - 0.12 - echoIndex * 0.16;
+        }
+        echo.attribute.needsUpdate = true;
+        echo.line.rotation.y = Math.sin(timeSeconds * 0.024 + echoIndex) * 0.025;
+      });
       centroid.attribute.needsUpdate = true;
+      centroidHalo.attribute.needsUpdate = true;
       highlight.attribute.needsUpdate = true;
       const energy = evaluateFiveActEnergy(timeSeconds, 60);
-      (pointCloud.points.material as THREE.PointsMaterial).size = 0.24 + energy * 0.13;
-      (pointHalos.points.material as THREE.PointsMaterial).size = 0.5 + energy * 0.2;
-      group.rotation.y = Math.sin(timeSeconds * 0.025) * 0.18;
+      (pointCloud.points.material as THREE.PointsMaterial).size = 0.36 + energy * 0.2;
+      (pointHalos.points.material as THREE.PointsMaterial).size = 0.76 + energy * 0.34;
+      (pointAuras.points.material as THREE.PointsMaterial).size = 1.28 + energy * 0.54;
+      (centroidHalo.points.material as THREE.PointsMaterial).size = 1.5 + energy * 0.8;
+      group.rotation.y = Math.sin(timeSeconds * 0.052) * 0.26;
+      group.rotation.z = Math.sin(timeSeconds * 0.031 + 0.8) * 0.055;
       return { energy, warmth: 0.82, cameraX: Math.sin(timeSeconds * 0.02) * 0.28 };
     },
   };
@@ -75,7 +114,7 @@ export function createPrimeConstellationContent() {
 
 export function createPrimeConstellationScene(options: PatternSceneOptions) {
   return createImmersiveAnalyticScene(options, {
-    profile: createAnalyticProfile(PALETTE, [0.68, 1.4], 0.8),
+    profile: createAnalyticProfile(PALETTE, [0.68, 1.4], 0.8, "constellation"),
     palette: PALETTE,
     particleBudgets: { low: 6_000, medium: 18_000, high: 40_000, ultra: 60_000 },
     extent: { x: 24, y: 17, z: 22 },

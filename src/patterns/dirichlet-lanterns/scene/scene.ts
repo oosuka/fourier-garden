@@ -35,6 +35,29 @@ export function createDirichletLanternsContent() {
     group.add(line.line);
     return { order, ...line };
   });
+  const curveEchoes = curves.flatMap((curve, curveIndex) =>
+    Array.from({ length: 5 }, (_, echoIndex) => {
+      const material = new THREE.LineBasicMaterial({
+        color: PALETTE[(curveIndex + echoIndex) % PALETTE.length]!,
+        transparent: true,
+        opacity: 0.08,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        toneMapped: false,
+      });
+      const line = new THREE.Line(curve.line.geometry, material);
+      line.frustumCulled = false;
+      line.position.z = -0.18 - echoIndex * 0.24;
+      group.add(line);
+      return { curveIndex, echoIndex, line, material };
+    }),
+  );
+  const lanternColumns = DIRICHLET_ORDERS.map((_, index) => {
+    const x = (index - 1.5) * 3.1;
+    const column = createLine(new Float32Array([x, -4.8, -0.6, x, 5.1, -0.6]), 0xffd69a, 0.16);
+    group.add(column.line);
+    return column.line;
+  });
   const partialPositions = new Float32Array(SAMPLES * 3);
   const partial = createLine(partialPositions, 0xfffaf0, 0.55);
   const fejerPositions = new Float32Array(SAMPLES * 3);
@@ -50,6 +73,21 @@ export function createDirichletLanternsContent() {
       curves.forEach((curve, index) => {
         (curve.line.material as THREE.LineBasicMaterial).opacity = index === selected ? 0.98 : 0.28;
         curve.line.scale.y = index === selected ? 1.18 : 0.88;
+      });
+      curveEchoes.forEach(({ curveIndex, echoIndex, line, material }) => {
+        const selectedWeight = curveIndex === selected ? 1 : 0.24;
+        const drift = Math.sin(timeSeconds * (0.073 + echoIndex * 0.008) + curveIndex * 1.4);
+        line.scale.y = (curveIndex === selected ? 1.18 : 0.88) * (0.985 + drift * 0.018);
+        line.position.y = drift * (0.05 + echoIndex * 0.025);
+        line.position.z =
+          -0.18 - echoIndex * 0.24 + Math.cos(timeSeconds * 0.04 + curveIndex) * 0.08;
+        material.opacity = (0.045 + echoIndex * 0.014) * (0.72 + selectedWeight * 1.35);
+      });
+      lanternColumns.forEach((column, index) => {
+        const pulse = 0.5 + 0.5 * Math.sin(timeSeconds * (0.39 + index * 0.031) + index * 1.7);
+        (column.material as THREE.LineBasicMaterial).opacity =
+          0.08 + pulse * 0.12 + (index === selected ? 0.22 : 0);
+        column.scale.y = 0.9 + pulse * 0.18;
       });
       for (let sample = 0; sample < SAMPLES; sample += 1) {
         const x = -Math.PI + (sample / (SAMPLES - 1)) * Math.PI * 2;
@@ -68,13 +106,15 @@ export function createDirichletLanternsContent() {
       (fejer.line.material as THREE.LineBasicMaterial).opacity = 0.4 + fejerFocus * 0.52;
       const scan = getDirichletObservation(timeSeconds) / Math.PI;
       group.position.x = -scan * 0.12;
+      group.rotation.y = Math.sin(timeSeconds * 0.035) * 0.08;
+      group.rotation.z = Math.sin(timeSeconds * 0.022 + 0.7) * 0.025;
       return { energy: evaluateFiveActEnergy(timeSeconds, 60), warmth: 0.88 };
     },
   };
 }
 export function createDirichletLanternsScene(options: PatternSceneOptions) {
   return createImmersiveAnalyticScene(options, {
-    profile: createAnalyticProfile(PALETTE, [0.46, 1.75], 0.15),
+    profile: createAnalyticProfile(PALETTE, [0.46, 1.75], 0.15, "lanterns"),
     palette: PALETTE,
     particleBudgets: { low: 3_000, medium: 9_000, high: 18_000, ultra: 28_000 },
     extent: { x: 25, y: 17, z: 21 },

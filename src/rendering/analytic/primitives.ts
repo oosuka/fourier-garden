@@ -1,6 +1,7 @@
 import * as THREE from "three/webgpu";
 
 import type { CinematicEnvironmentProfile } from "../cinematic/model";
+import type { CinematicEnvironmentLayout } from "../cinematic/model";
 
 const FIVE_ACT_ENERGY_KEYFRAMES = [
   { progress: 0, energy: 0.48 },
@@ -18,8 +19,9 @@ export function createAnalyticProfile(
   palette: readonly [number, number, number],
   haloAspect: readonly [number, number],
   filamentPhase: number,
+  layout: CinematicEnvironmentLayout = "field",
 ): CinematicEnvironmentProfile {
-  return { particlePalette: palette, haloAspect, filamentPhase, layout: "field" };
+  return { particlePalette: palette, haloAspect, filamentPhase, layout };
 }
 
 export function createLine(

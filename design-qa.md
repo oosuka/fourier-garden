@@ -211,3 +211,96 @@ Wavelet Rain、Riemann Veil、Phase Torusのpreview実装、および最終10章
   パネル開状態と選択タブを維持した。
 - 固定QA条件のWebGL2経路で1280 × 720と最小対象幅1024 × 680を確認し、
   展開時の196 px幅Details入口が操作バー内へ収まり、横overflowを発生させなかった。
+
+## 2026-07-14 Ten-chapter cinematic and organic motion overhaul
+
+対象: 全10章の共通環境、局所bloom、カメラ、後半7章の章固有構図と絶対時刻運動。
+数学式、係数、支持、境界条件、投影規約、音響DSPは変更していない。
+
+### Source visual truth
+
+- 利用者提供の参照画像3点から、巨大な主構図、深い黒、局所HDR、シアン・バイオレット・金、
+  非同期の粒子・膜・光柱、画面外へ連続する奥行きを視覚基準として再採用した。
+- 参照内の周波数値、DFT表記、自由曲面は各章の数学定義ではないため転用していない。
+
+### Implementation evidence
+
+- 全10章固定シード一覧: `docs/qa/cinematic/ten-chapter-cinematic-preview.webp`
+- 後半7章の同一章 `t=0` / `t=18` 比較:
+  `docs/qa/cinematic/late-chapter-motion-comparison.webp`
+- Full-view source / implementation comparison:
+  - `docs/qa/cinematic/cinematic-overhaul-residue-comparison.webp`
+  - `docs/qa/cinematic/cinematic-overhaul-cathedral-comparison.webp`
+  - `docs/qa/cinematic/cinematic-overhaul-organic-comparison.webp`
+- Focused central-art comparison:
+  `docs/qa/cinematic/cinematic-overhaul-focused-comparison.webp`
+
+### Viewport and state
+
+- Full-view comparisonは1488 × 1058、`chapters=preview`、`seed=qa`、
+  `quality=high`、Details closed、停止中0秒、WebGPUを使用した。
+- 動勢比較は各章の専用QA入口で絶対transport時刻0秒と18秒を固定した。
+  Prime、Bessel、Lissajous、Dirichlet、WaveletはWebGPU、RiemannとPhase Torusは
+  強制WebGL2で同じ時刻を確認した。
+- Phase TorusのWebGL2経路は`data-renderer-backend=webgl`、未処理warning/error 0件を確認した。
+- Codex in-app BrowserではAudioWorklet開始が再生状態へ遷移しなかったため、
+  ブラウザ上の連続再生は完了扱いにしていない。絶対時刻固定フレームと回帰テストで
+  運動差を確認し、通常Chromeでの全10章連続観察を公開前の人間QAとして残す。
+
+### Implemented changes
+
+- 共通環境を章別レイアウトへ分岐し、5枚の有機aurora veil、11本の奥行き光柱、
+  4個の局所glow well、星雲、filament、resonance haloを別位相で動かした。
+- Primeは25支持点と24リンクを維持し、リンク由来の多層残光と重心ハローを追加した。
+- Besselは厳密な円板固有モード面を維持し、同一geometryのwireとsparkle、
+  呼吸する視点・傾斜を追加した。
+- Lissajousは9本の厳密曲線を中心heroと周回satelliteへ再構成し、選択境界の連続補間を維持した。
+- Dirichletは厳密な部分和とFejér平均を保持し、同じ曲線から5層のlantern echoと光柱を生成した。
+- Waveletは63係数セルを保持し、係数支持と符号から長さ・色・位置を決める雨糸と
+  再構成残光を追加した。
+- Riemannは4本の有限部分和を保持し、同一geometryの多層veil、局所drift、
+  奥行き差を追加した。
+- Phase Torusは厳密トーラス、24 Fourier文字、軌道履歴を変形せず、別geometryの
+  Fourier場変位膜、wire echo、surface sparkle、球状の局所位相ハローを詩的造形として分離した。
+
+### Findings and remediation
+
+- [P1 解消] 初回の共通auroraが画面全体を灰色にし、数学線の局所コントラストを奪った。
+  veil幅、opacity、glow well、nebulaを低減し、黒い負空間を復元した。
+- [P1 解消] BesselとPhase Torusの面が白く飽和していた。
+  面・wire・sparkleのopacity、露出、bloomを分離し、節線とFourier格子を読める範囲へ戻した。
+- [P1 解消] Phase TorusのWebGL2位相ハローが大きな正方形として描画された。
+  `PointsMaterial`を小さな加算合成sphereへ置換し、両rendererで円形の局所光へ統一した。
+- [P2 解消] 後半章が0秒と18秒でほぼ同じ構図に見えた。
+  数学標本だけでなく、カメラ、背景、粒子、膜、echoの3軸以上を絶対transport時刻で
+  連続評価し、7章すべての変化を比較画像と回帰テストで確認した。
+- [P2 解消] 章間で同じ星雲配置に見えた。
+  constellation、tidal、orchard、lanterns、rain、veil、torusの空間layoutを分離した。
+
+### Remaining P3
+
+- 参照画像の自由曲面と写実的な体積光をそのまま複製せず、リアルタイム描画と厳密数学線の
+  可読性を優先した。自由変形は別の詩的膜に限定しているため、参照より輪郭は規則的である。
+- 48 kHz AudioWorkletを伴う通常Chromeの全10章連続再生、ヘッドホン試聴、
+  M2基準機での60秒performance計測は今回のin-app Browser固定フレームQAの範囲外である。
+  新7章はこの人間評価が完了するまで`publication: "preview"`を維持する。
+
+### Comparison history
+
+1. 初回比較: 共通背景が灰色に寄り、BesselとTorusが白飛びし、章固有シルエットが弱かった。
+2. 第2比較: 深い黒と章別layoutを復元したが、Phase TorusのWebGL2位相点が正方形になった。
+3. 最終比較: 球状ハロー、面opacity、局所bloom、絶対時刻運動を修正し、full-view、
+   focused central-art、後半7章motion pairを同一画像内で比較した。
+
+### Implementation checklist
+
+- [x] 10章すべてへ共通シネマティック環境の改善を適用
+- [x] 後半7章を章固有の有機構図へ分岐
+- [x] 厳密数学geometryと詩的geometryを分離
+- [x] 絶対transport時刻の非同期運動を回帰テスト
+- [x] WebGPU全10章のfull-viewを固定シードで確認
+- [x] Riemann / Phase TorusのWebGL2固定時刻を確認
+- [x] source / implementationのfull-viewとfocused comparisonを作成
+- [ ] 通常Chromeで全10章を連続再生し、実機試聴と60秒performance計測を実施
+
+final result: passed

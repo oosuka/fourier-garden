@@ -50,6 +50,33 @@ export function createBesselTideContent() {
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
+  const surfaceWire = new THREE.Mesh(
+    geometry,
+    new THREE.MeshBasicMaterial({
+      color: PALETTE[0],
+      transparent: true,
+      opacity: 0.055,
+      wireframe: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      toneMapped: false,
+    }),
+  );
+  surfaceWire.frustumCulled = false;
+  const surfaceSparkles = new THREE.Points(
+    geometry,
+    new THREE.PointsMaterial({
+      color: 0xd9ffff,
+      size: 0.016,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: 0.16,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      toneMapped: false,
+    }),
+  );
+  surfaceSparkles.frustumCulled = false;
   for (let radialIndex = 0; radialIndex <= RADIAL; radialIndex += 1) {
     const radius = radialIndex / RADIAL;
     for (let angularIndex = 0; angularIndex < ANGULAR; angularIndex += 1) {
@@ -92,8 +119,9 @@ export function createBesselTideContent() {
   });
   const markerPosition = new Float32Array(3);
   const marker = createPoints(markerPosition, 0xffffff, 0.24);
-  group.add(mesh, boundary.line, marker.points);
-  group.rotation.x = -0.68;
+  group.add(mesh, surfaceWire, surfaceSparkles, boundary.line, marker.points);
+  group.rotation.x = -0.94;
+  group.scale.setScalar(0.94);
   return {
     group,
     update(timeSeconds: number) {
@@ -113,12 +141,13 @@ export function createBesselTideContent() {
         const offset = vertex * 3;
         positions[offset] = Math.cos(theta) * radius * 4.4;
         positions[offset + 1] = Math.sin(theta) * radius * 4.4;
-        positions[offset + 2] = value * 1.15;
+        positions[offset + 2] = value * 2.2;
         const positive = Math.max(0, value);
         const negative = Math.max(0, -value);
-        colors[offset] = 0.01 + positive * 0.42;
-        colors[offset + 1] = 0.06 + Math.abs(value) * 0.5;
-        colors[offset + 2] = 0.18 + negative * 0.62;
+        const magnitude = Math.min(1, Math.abs(value) * 1.8);
+        colors[offset] = 0.015 + positive * 0.58 + magnitude * 0.04;
+        colors[offset + 1] = 0.055 + magnitude * 0.52 + positive * 0.16;
+        colors[offset + 2] = 0.16 + negative * 0.78 + magnitude * 0.22;
       }
       positionAttribute.needsUpdate = true;
       colorAttribute.needsUpdate = true;
@@ -147,10 +176,17 @@ export function createBesselTideContent() {
       const markerTheta = mode.m === 0 ? timeSeconds * 0.16 : (timeSeconds * 0.16) / mode.m;
       markerPosition[0] = Math.cos(markerTheta) * markerRadius;
       markerPosition[1] = Math.sin(markerTheta) * markerRadius;
-      markerPosition[2] = evaluateBesselField(markerRadius / 4.4, markerTheta, timeSeconds) * 1.15;
+      markerPosition[2] = evaluateBesselField(markerRadius / 4.4, markerTheta, timeSeconds) * 2.2;
       marker.attribute.needsUpdate = true;
       const energy = evaluateFiveActEnergy(timeSeconds, 72);
-      group.rotation.z = Math.sin(timeSeconds * 0.018) * 0.08;
+      group.rotation.x = -0.94 + Math.sin(timeSeconds * 0.071) * 0.095;
+      group.rotation.y = Math.sin(timeSeconds * 0.043 + 1.1) * 0.12;
+      group.rotation.z = Math.sin(timeSeconds * 0.052) * 0.16;
+      group.position.y = Math.sin(timeSeconds * 0.038 + 0.4) * 0.16;
+      (surfaceWire.material as THREE.MeshBasicMaterial).opacity = 0.032 + energy * 0.042;
+      (surfaceSparkles.material as THREE.PointsMaterial).size = 0.013 + energy * 0.009;
+      (surfaceSparkles.material as THREE.PointsMaterial).opacity = 0.11 + energy * 0.14;
+      material.opacity = 0.18 + energy * 0.1;
       return { energy, warmth: 0.16, cameraY: -0.1 };
     },
   };
@@ -158,12 +194,12 @@ export function createBesselTideContent() {
 
 export function createBesselTideScene(options: PatternSceneOptions) {
   return createImmersiveAnalyticScene(options, {
-    profile: createAnalyticProfile(PALETTE, [1.4, 0.72], 1.8),
+    profile: createAnalyticProfile(PALETTE, [1.4, 0.72], 1.8, "tidal"),
     palette: PALETTE,
     particleBudgets: { low: 5_000, medium: 14_000, high: 30_000, ultra: 46_000 },
     extent: { x: 23, y: 15, z: 22 },
-    camera: { distance: 11.2, height: 1.2, targetY: 0, fovDegrees: 48 },
-    exposure: 1.04,
+    camera: { distance: 11.6, height: 1.55, targetY: -0.2, fovDegrees: 48 },
+    exposure: 0.94,
     createContent: createBesselTideContent,
   });
 }
