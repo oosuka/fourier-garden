@@ -101,7 +101,7 @@ describe("shared analytic piko programs", () => {
     }
   });
 
-  it("gives every preview score long-form changes in strength, tail, space, and motion", () => {
+  it("gives every piko score long-form changes in strength, tail, space, and motion", () => {
     for (const program of programs) {
       const gains = program.score.events.map((event) => event.gain);
       const endings = program.score.events.map((event) => event.endSeconds);
@@ -125,7 +125,7 @@ describe("shared analytic piko programs", () => {
     }
   });
 
-  it("normalizes full cycles to the published median and adjacent mid-energy passages", () => {
+  it("normalizes full cycles to the established median and adjacent mid-energy passages", () => {
     const sampleRate = 4_000;
     const published = [
       (() => {
@@ -163,7 +163,7 @@ describe("shared analytic piko programs", () => {
         });
       })(),
     ].map(({ left, right }) => getStereoMetrics(left, right));
-    const preview = programs.map((program) => {
+    const laterChapters = programs.map((program) => {
       const rendered = renderPikoStereo({
         program,
         startTimeSeconds: 0,
@@ -199,15 +199,15 @@ describe("shared analytic piko programs", () => {
       .map((metrics) => metrics.rms)
       .toSorted((left, right) => left - right)[1]!;
 
-    for (let index = 0; index < preview.length; index += 1) {
-      const metrics = preview[index]!;
+    for (let index = 0; index < laterChapters.length; index += 1) {
+      const metrics = laterChapters[index]!;
       expect(metrics.rms / publishedMedianRms).toBeGreaterThanOrEqual(0.8);
       expect(metrics.rms / publishedMedianRms).toBeLessThanOrEqual(1.25);
       expect(metrics.peak).toBeLessThanOrEqual(0.891251);
       expect(Math.abs(metrics.mean)).toBeLessThan(1e-3);
     }
-    for (let index = 1; index < preview.length; index += 1) {
-      const fullCycleRatio = preview[index]!.rms / preview[index - 1]!.rms;
+    for (let index = 1; index < laterChapters.length; index += 1) {
+      const fullCycleRatio = laterChapters[index]!.rms / laterChapters[index - 1]!.rms;
       const midEnergyRatio = mid[index]!.rms / mid[index - 1]!.rms;
       expect(fullCycleRatio).toBeGreaterThanOrEqual(0.8);
       expect(fullCycleRatio).toBeLessThanOrEqual(1.25);

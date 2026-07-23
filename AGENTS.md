@@ -39,16 +39,17 @@ UI、README、説明文、コメントでは、この区別を曖昧にしない
 
 ### 2.1 現在の正式版
 
-2026年7月12日時点の3章実装を正式版として扱う。通常公開章は
-`Residue Bloom`、`Spectral Cathedral`、`Möbius Choir`である。2026年7月13日に
-`Prime Constellation`、`Bessel Tide`、`Lissajous Orchard`、`Dirichlet Lanterns`、
-`Wavelet Rain`、`Riemann Veil`、`Phase Torus`をpreview実装し、previewでは
-PrimeをChapter 3へ挿入してMöbiusをChapter 4へ移した全10章順を使う。
-新7章は利用者による連続試聴と視覚確認が完了するまで`publication: "preview"`を維持する。
+2026年7月23日時点の全10章実装を正式版として扱う。通常公開順は
+`Residue Bloom`、`Spectral Cathedral`、`Prime Constellation`、`Möbius Choir`、
+`Bessel Tide`、`Lissajous Orchard`、`Dirichlet Lanterns`、`Wavelet Rain`、
+`Riemann Veil`、`Phase Torus`である。追加7章は2026年7月13日のpreview実装と
+全章QAを経て、2026年7月23日の利用者による正式版化指示に基づき
+`publication: "published"`へ昇格した。過去QA URLとの互換性のため
+`chapters=preview`は維持するが、現在は通常URLと同じ全10章順を返す。
 正式版は数学・音響仕様を維持したまま、全章のシネマティック背景、粒子密度、
 星雲、フィラメント、光柱、膜、局所フレア、共鳴ハロー、bloomを強化し、
-章別のリズム、連続感、定位、音色差を再設計した版である。利用者による最終的な
-音色評価は完了している。
+章別のリズム、連続感、定位、音色差を再設計した版である。先行3章の利用者による
+最終的な音色評価は完了している。
 
 正式版の利用者向け概要は`README.md`、数理・音響正本は
 `docs/mathematical-model.md`、候補章と比較は`docs/chapter-atlas.md`、
@@ -474,8 +475,9 @@ interface PatternScene {
 - `validatePatternDefinition()` の登録時検証を通す
 - やさしい説明と数学の詳細を両方用意する
 
-将来章の候補はREADMEに記載されているが、名称だけを根拠に数学的内容を実装しない。
-各章について数理定義を先に確定してから制作する。
+将来章の候補はChapter Atlasで入口条件を管理し、READMEには承認前の固定一覧を
+掲載しない。名称だけを根拠に数学的内容を実装せず、各章の数理定義を先に確定してから
+制作する。
 
 ## 10. 描画品質
 

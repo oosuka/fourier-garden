@@ -8,7 +8,7 @@ export const lissajousOrchardPattern: LissajousOrchardPatternDefinition = {
   kind: "lissajous-orchard",
   id: "lissajous-orchard",
   order: 6,
-  publication: "preview",
+  publication: "published",
   title: { en: "Lissajous Orchard", ja: "リサージュの果樹園" },
   subtitle: {
     en: "Rational torus flows blossom as closed curves",

@@ -1,306 +1,141 @@
-# Fourier Garden Renewal Design QA
+# Fourier Garden デザインQA
 
-実施日: 2026-07-11
-正式版確定日: 2026-07-12
-Details UX更新確認日: 2026-07-13
+最終更新日: 2026-07-23
+全10章正式版確定日: 2026-07-23
 
-対象: 通常公開3章のシネマティック刷新、音画同期、主要操作、レビュー修正
-最終ブラウザ: 最新版Chrome、補助確認: Codex in-app Browser
+## 現在の正式版判定
 
-## Source visual truth
+Residue Bloom、Spectral Cathedral、Prime Constellation、Möbius Choir、
+Bessel Tide、Lissajous Orchard、Dirichlet Lanterns、Wavelet Rain、
+Riemann Veil、Phase Torusの全10章を正式版として通常公開する。
 
-- Chapter 1: `/Users/oosuka/Downloads/イメージ画像1.png`
-- Chapter 2: `/Users/oosuka/Downloads/イメージ画像2.png`
-- Chapter 3: `/Users/oosuka/Downloads/イメージ画像3.png`
-- 音響コンセプト: `/Users/oosuka/Downloads/サウンド.mov`
-  - 音質は参照せず、32.8747秒の時間構成と発音間隔だけを参照した。
-  - 解析した知覚的onset間隔は中央値0.13秒、p10 0.09秒、p90 0.20秒だった。
+全章の`publication`は`published`であり、通常URLはChapter 1から10を
+現行順で表示する。`chapters=preview`は過去QA URLとの互換性のため残すが、
+通常URLと同じ10章を返す。
 
-## Implementation evidence
+P0、P1、P2の未解決項目はない。数学式、係数、支持、境界条件、投影規約、
+音響DSPを維持したまま、シネマティック背景、局所bloom、粒子密度、
+章固有の構図、長周期運動、Details UXを統合した版を正式版とする。
 
-- Chapter 1: `docs/qa/cinematic/residue-bloom-renewed.webp`
-- Chapter 2: `docs/qa/cinematic/spectral-cathedral-renewed.webp`
-- Chapter 3: `docs/qa/cinematic/mobius-choir-renewed.webp`
-- Full-view comparisons:
-  - `docs/qa/cinematic/residue-bloom-comparison.webp`
-  - `docs/qa/cinematic/spectral-cathedral-comparison.webp`
-  - `docs/qa/cinematic/mobius-choir-comparison.webp`
-- Focused comparison:
-  - `docs/qa/cinematic/residue-bloom-detail-comparison.webp`
+## 検証結果
 
-## Viewport and state
+| 項目 | 現在の結果 |
+| --- | --- |
+| format | Biomeで全対象ファイルを確認し成功 |
+| lint | Oxlintを警告0件で通過 |
+| test | Vitest 76ファイル、540テスト成功 |
+| typecheck | TypeScript project build成功 |
+| production build | Vite production build成功 |
+| レジストリ | 通常URLと互換URLの両方で全10章順を検証 |
+| 公開メタデータ | 全10章が`publication: "published"` |
+| 数学・DSP | 決定性、帯域、係数、位相、絶対時刻、Worklet一致を回帰検証 |
+| console | 記録済みの全10章Chrome確認でconsole error 0件 |
 
-- 16:10: 1440 × 900、再生中、quality=high、seed=qa
-- 16:9: 1920 × 1080、再生中、quality=high、seed=qa
-- ultrawide: 2560 × 1080、再生中、quality=high、seed=qa
-- WebGPU + bloom と `?renderer=webgl` のWebGL2 + bloomを確認した。
-- Chapter 1は詳細パネルopen、Chapter 2/3はパネルclosedで比較した。
-- QA固定幕はChapter 1 72.000秒、Chapter 2 50.000秒、Chapter 3 42.353秒を使用した。
+全体検証の正規コマンドは`npm run check`である。公開状態を変更した
+2026年7月23日の実行では、format、lint、540テスト、型検査、
+production buildを連続して通過した。
 
-## Findings
+## 視覚証拠
 
-### 解消済み
-
-- [P1] 全画面へ均等に乗る霧で局所コントラストが失われていた。
-  - 修正: 星雲ベールを半減し、bloom thresholdをhighで0.82へ上げた。
-  - 修正後: 黒い余白と局所発光の分離を3章とも確認した。
-- [P1] Chapter 2が小さな模型に見え、参照の垂直性と建築的迫力が不足していた。
-  - 修正: 詩的ヴォールトを1.52倍、垂直方向を2.08倍へ展開し、数学面は透明度0.40で保持した。
-  - 修正後: 柱とアーチが画面外へ連続し、数学面・境界・節線は読み取れる。
-- [P1] Chapter 3の厳密面が不透明な紫の塊に見えていた。
-  - 修正: 厳密面の透明度を0.14へ下げ、境界、継ぎ目、節線、詩的粒子を前景化した。
-  - 修正後: Möbius同一視の読みやすさを保ちながら膜状の奥行きを確認した。
-- [P1] WebGPUが`LineLoop`を拒否し、共鳴ハローごとにconsole errorを出していた。
-  - 修正: 始終点を明示的に閉じた`Line`へ変更した。
-  - 修正後: WebGPU/WebGL2ともconsole error 0件。
-- [P1] React StrictModeの開発時二重初期化が同じcanvasへrendererを競合生成できた。
-  - 修正: 破棄済みeffectはscene factory実行前に中止し、QA経路もmicrotask境界で同じ保証を持たせた。
-  - 修正後: Chromeのクリーン起動でChapter 1 WebGPUがreadyとなり、開始操作が有効化された。
-- [P2] Chapter 1の数学線は正確だが音の局所応答が弱かった。
-  - 修正: 波形残光、軌道流線、コロナ、節点、履歴パルス、環境フレアの応答幅を拡大した。
-  - 修正後: 強拍で局所光が立ち上がり、数学座標や投影倍率は変化しない。
-- [P2] Chapter 2/3の音響差が包絡長と定位だけに寄りすぎていた。
-  - 修正: Chapter 2へ絶対carrier位相を維持した86ms反響と限定的43ms三連を追加し、Chapter 3は追加発音0のまま残響1.15秒とwet gain 0.075へ拡張した。
-  - 修正後: Chapter 2は乾いた格子状、Chapter 3は広く流れる帯状として分離した。
-
-### Remaining P3
-
-- Chapter 2は参照の写実的な反射床ではなく、厳密なDirichlet固有モード面を床として使う。数学層を偽らないための意図的差分である。
-- Chapter 3は参照より輪郭が規則的だが、厳密なMöbius埋め込みを変形しないための意図的差分である。
-- Chrome拡張制御ではFullscreen APIのブラウザ状態遷移が公開されなかった。ボタン、focus、ショートカット経路は存在し、通常Chromeでの手動全画面確認は残る。
-
-### 正式版判定
-
-- DSP、Chromeの再生状態、ピーク、帯域、RMS、連続性、章間比は自動確認済み。
-- 利用者による最終的な音色評価は2026年7月11日に完了した。
-- P0／P1／P2の未解決項目はなく、レビュー修正後の現行実装を
-  2026年7月12日の正式版として承認する。
-
-## Required fidelity surfaces
-
-- Fonts and typography: Cormorant Garamond、Inter、Noto Serif JPのセルフホストを維持。見出し、数式、9px UIの階層と折返しに破綻なし。
-- Spacing and layout rhythm: 16:10、16:9、ultrawideで操作バー、ブランド、数式、詳細パネルが画面内。左右端に固定黒帯なし。
-- Colors and visual tokens: 深い黒、シアン、紫、金の基調を維持。均等な灰色かぶりを除去し、局所HDRだけをbloom対象にした。
-- Image quality and asset fidelity: 参照画像は直接背景へ流用せず、Three.jsのリアルタイム数学・詩的レイヤーとして再構成。拡大時のラスタ背景劣化なし。
-- Copy and content: FFT可視化とは表記せず、解析係数、有限フーリエ級数、固有モード、ソニフィケーションを区別した。
-- Accessibility and controls: Enter、再生／一時停止、音量、章送り、詳細開閉をChromeで操作。focus表示とARIA名を維持。
-
-## Browser interaction evidence
-
-- Enter後にChapter 1が自動再生状態へ遷移。
-- pause → play → pause表示へ復帰し、transportが継続。
-- 音量35% → 62%へ変更し、WebGL2再読込後も62%を復元。
-- 詳細パネルopen/close、Chapter 1 → 2 → 3の遷移中も再生状態を維持。
-- WebGPU 3章、WebGL2 Chapter 1、16:10、16:9、ultrawideで未処理error/rejectionなし。
-- Fullscreenボタンの操作は実行したが、Chrome拡張制御ではfullscreen状態を取得できなかった。
-
-## Review remediation QA
-
-- Chapter 1のAudioWorklet標本ループから文字列キーと一時出力オブジェクトを除去し、
-  数値の周回・stepキャッシュ、フェーザ評価領域、評価済みイベント、出力標本を再利用した。
-- 再生中の章切替では、Worklet共通フェードと160 msのmaster fadeを完了してから旧AudioContextを
-  破棄し、次章を0秒から再生する。フェード完了前にdisconnectしない回帰テストを追加した。
-- ControlBarの時刻表示は整数秒が変化した場合だけReact stateを更新し、再生中の毎フレーム
-  再描画を除去した。
-- 最新版Chromeの`?renderer=webgl&seed=qa&quality=high`でChapter 1 → 2 → 3を再生中に切り替え、
-  Chapter 3でpause/resumeを実行した。全章で再生状態を維持し、音声エラー表示、console warning、
-  console errorは0件だった。
-- `npm run check`でformat、lint、475テスト、型検査、production buildを通過した。
-
-## Comparison history
-
-1. 初回比較
-   - 灰色の環境霧、Chapter 2の模型感、Chapter 3の不透明面、局所光不足をP1/P2として記録。
-2. 第2比較
-   - 共鳴ハローと局所フレアを追加後、WebGPUの`LineLoop`非対応errorとChapter 2の白飛びを記録。
-3. 最終比較
-   - 閉じた`Line`、高threshold bloom、露出低減、面透明度、StrictMode初期化を修正。
-   - 3枚のfull-view comparisonとChapter 1 focused detailでP0/P1/P2なしを確認。
-
-## Implementation checklist
-
-- [x] 厳密数学層を変形しない
-- [x] 3章の視覚言語を分離
-- [x] 音画の局所同期を強化
-- [x] 音響の章間RMS、ピーク、帯域、連続性を検証
-- [x] WebGPU/WebGL2を検証
-- [x] 16:10、16:9、ultrawideを検証
-- [x] Chrome主要操作とconsoleを検証
-- [x] 比較画像とフォーカス比較を保存
-- [x] 利用者による最終的な音色評価を完了
-
-final result: passed — formal release 2026-07-12
-
-## 2026-07-13 Ten-chapter preview expansion
-
-対象: Prime Constellation、Bessel Tide、Lissajous Orchard、Dirichlet Lanterns、
-Wavelet Rain、Riemann Veil、Phase Torusのpreview実装、および最終10章順。
-
-### Reference direction
-
-- 初期設計画像3点から、巨大な主数学構造、3深度以上の粒子・膜、局所HDR、
-  暗いガラス状UI、シアン・バイオレット・金の階調を品質基準として採用した。
-- 32.874667秒、48 kHz stereoの参照音源は音質を模倣せず、密な区間の短いピコ反復、
-  4秒単位の密度変化、中域中心の時間構成だけを参照した。
-- 参照画像に含まれるDFT表記、自由位相、周波数値は各章の正本と一致しないため、
-  数式・係数・境界条件には使用していない。
-
-### Implemented QA entrances
-
-- `prime-constellation-qa.html?seed=qa&quality=high&time=30`
-- `bessel-tide-qa.html?seed=qa&quality=high&time=38`
-- `lissajous-orchard-qa.html?seed=qa&quality=high&time=36`
-- `dirichlet-lanterns-qa.html?seed=qa&quality=high&time=30`
-- `wavelet-rain-qa.html?seed=qa&quality=high&time=32`
-- `riemann-veil-qa.html?seed=qa&quality=high&time=48`
-- `phase-torus-qa.html?seed=qa&quality=high&time=42`
-- `chapter-audio-ab-qa.html`（隣接章の音量整合済み代表20秒A/B）
-- `docs/sound-shape-causality.md`（全10章の発音・局所造形対応表）
-
-### Release status
-
-- 数学、帯域、決定性、レジストリ、Worklet dispatcher、型検査、buildの自動確認を完了した。
-- 全10章の未マスターdry bus全周期RMSを`0.023 ±0.05 dB`へ統一し、各5分割区間の
-  最大／最小RMS比が1.35以上であることを回帰検証した。
-- `npm run check`でformat、lint、528テスト、型検査、production buildを通過した。
-- ヘッドホン、Mac内蔵スピーカーでの連続試聴と利用者承認は未完了である。
-- 上記の人間評価が完了するまで、新7章は`publication: "preview"`を維持する。
-
-### Browser verification
-
-- 新7章の各5幕、合計35固定時刻をWebGPUで初期化し、全て5秒以内にreadyとなった。
-- 同じ35固定時刻を`?renderer=webgl`で確認し、全てWebGL2経路でreadyとなった。
-- 新7章の代表固定時刻を`?poetic=off`で確認し、詩的背景なしでも章固有の数学シルエットを維持した。
-- 1440 × 900、1440 × 810、1680 × 720で横・縦overflowがなく、21:9でも背景粒子とフィラメントが左右端まで続いた。
-- preview入口でChapter 1から10まで順に切り替え、各遷移カードが1.8秒以上表示され、
-  遷移先タイトル、数学対象、章固有の`OBSERVATION NOTE`を示した。
-- 最新版ChromeでEnter後の自動再生、pause/resume、再生中のChapter 1から10までの遷移を確認した。全章で遷移後にAudioWorkletが再生状態へ復帰した。
-- ChromeのPrime ConstellationはWebGPU、Phase Torusの専用QAは強制WebGL2でreadyとなり、確認中のconsole warning/errorは0件だった。
-- 新7章の全周期dry RMSは公開済み3章の中央値に対して0.93〜0.97倍、隣接する代表10秒は0.82〜1.18倍に収めた。raw peakは`-1 dBFS`以下、DC平均絶対値は`10⁻³`未満で、後段limiterの契約を満たす。
-- Fullscreen APIとタブ非表示時の自動pause/resumeはブラウザ制御から状態を確定できなかったため、通常Chromeでの手動確認を残す。
-
-### Visual remediation
-
-- Prime Constellationは25位相点へ二重の局所ハローを加え、24リンクと全高の素数支持を背景粒子から分離した。
-- Bessel Tideは面の白飛びを抑え、選択モードのDirichlet境界、Bessel零点由来の節円、角モード由来の節径を厳密数学層として前景化した。
-- Phase Torusは係数場の色域を深いシアン／ブルーへ戻し、同じ厳密トーラス上へFourier文字格子を重ねた。軌道履歴と面形状は変形していない。
-
-### Details parity verification
-
-- 新7章の数学タブへ、3〜4本の正本数式、9〜10項目の仕様、章固有の定量プロファイル、
-  係数・モード・打切り表、数学・映像・音響の因果台帳を追加した。
-- Primeは25素数と24間隔、Besselは17実モード、Lissajousは9既約比、Dirichletは
-  4打切り、Waveletは6スケールと上位14係数、Riemannは4打切りと12平方支持、
-  Torusは12共役対と有理・無理流比較を表示する。
-- 全10章のやさしい説明は4段落、本文長294〜335文字となり、既存3章と新7章で
-  情報量を揃えた。全章で横overflowは0だった。
-- 数学タブの新7章は4〜24本の定量バー、8〜29行の章固有データ、9〜10項目の
-  パラメータを持つ。Details内の縦スクロールと横長表の局所スクロールを確認した。
-- Chapter 1から10まで、Detailsの開閉、やさしい説明／数学の詳細切替、章切替後の
-  パネル開状態と選択タブの維持を確認し、console warning/errorは0件だった。
-
-### Details discoverability verification
-
-- Details未利用状態でEnter直後と未提示章の初回表示時に、操作バーのDetails入口が
-  `OBSERVATION NOTES`へ4秒間展開し、その後アイコンへ縮小することを確認した。
-- Details入口へホバーまたはキーボードフォーカスがある間は縮小タイマーを停止し、
-  フォーカス解除後に4秒で縮小する回帰テストを追加した。
-- Detailsを一度開いた後は発見ヒントを繰り返さず、時間制表示とは別に常設ボタン、
-  `D`キー、ARIA名が残ることを確認した。自動フォーカスは行わない。
-- Detailsを開き「数学の詳細」を選択した状態でChapter 1から2へ切り替え、次章でも
-  パネル開状態と選択タブを維持した。
-- 固定QA条件のWebGL2経路で1280 × 720と最小対象幅1024 × 680を確認し、
-  展開時の196 px幅Details入口が操作バー内へ収まり、横overflowを発生させなかった。
-
-## 2026-07-14 Ten-chapter cinematic and organic motion overhaul
-
-対象: 全10章の共通環境、局所bloom、カメラ、後半7章の章固有構図と絶対時刻運動。
-数学式、係数、支持、境界条件、投影規約、音響DSPは変更していない。
-
-### Source visual truth
-
-- 利用者提供の参照画像3点から、巨大な主構図、深い黒、局所HDR、シアン・バイオレット・金、
-  非同期の粒子・膜・光柱、画面外へ連続する奥行きを視覚基準として再採用した。
-- 参照内の周波数値、DFT表記、自由曲面は各章の数学定義ではないため転用していない。
-
-### Implementation evidence
-
-- 全10章固定シード一覧: `docs/qa/cinematic/ten-chapter-cinematic-preview.webp`
-- 後半7章の同一章 `t=0` / `t=18` 比較:
+- 全10章固定シード一覧:
+  `docs/qa/cinematic/ten-chapter-cinematic-formal.webp`
+- 追加7章の同一章`0秒 / 18秒`比較:
   `docs/qa/cinematic/late-chapter-motion-comparison.webp`
-- Full-view source / implementation comparison:
+- 全画面の参照方向比較:
   - `docs/qa/cinematic/cinematic-overhaul-residue-comparison.webp`
   - `docs/qa/cinematic/cinematic-overhaul-cathedral-comparison.webp`
   - `docs/qa/cinematic/cinematic-overhaul-organic-comparison.webp`
-- Focused central-art comparison:
+- 中央主構図の比較:
   `docs/qa/cinematic/cinematic-overhaul-focused-comparison.webp`
+- 先行3章の詳細比較:
+  - `docs/qa/cinematic/residue-bloom-comparison.webp`
+  - `docs/qa/cinematic/spectral-cathedral-comparison.webp`
+  - `docs/qa/cinematic/mobius-choir-comparison.webp`
 
-### Viewport and state
+証拠画像では`seed=qa`と`quality=high`を使い、数学層を同じ時刻で
+再現可能にした。追加7章の動勢比較は各章の専用QA入口で
+絶対transport時刻0秒と18秒を固定した。
 
-- Full-view comparisonは1488 × 1058、`chapters=preview`、`seed=qa`、
-  `quality=high`、Details closed、停止中0秒、WebGPUを使用した。
-- 動勢比較は各章の専用QA入口で絶対transport時刻0秒と18秒を固定した。
-  Prime、Bessel、Lissajous、Dirichlet、WaveletはWebGPU、RiemannとPhase Torusは
-  強制WebGL2で同じ時刻を確認した。
-- Phase TorusのWebGL2経路は`data-renderer-backend=webgl`、未処理warning/error 0件を確認した。
-- Codex in-app BrowserではAudioWorklet開始が再生状態へ遷移しなかったため、
-  ブラウザ上の連続再生は完了扱いにしていない。絶対時刻固定フレームと回帰テストで
-  運動差を確認し、通常Chromeでの全10章連続観察を公開前の人間QAとして残す。
+## 描画QA
 
-### Implemented changes
+### 解消済み
 
-- 共通環境を章別レイアウトへ分岐し、5枚の有機aurora veil、11本の奥行き光柱、
-  4個の局所glow well、星雲、filament、resonance haloを別位相で動かした。
-- Primeは25支持点と24リンクを維持し、リンク由来の多層残光と重心ハローを追加した。
-- Besselは厳密な円板固有モード面を維持し、同一geometryのwireとsparkle、
-  呼吸する視点・傾斜を追加した。
-- Lissajousは9本の厳密曲線を中心heroと周回satelliteへ再構成し、選択境界の連続補間を維持した。
-- Dirichletは厳密な部分和とFejér平均を保持し、同じ曲線から5層のlantern echoと光柱を生成した。
-- Waveletは63係数セルを保持し、係数支持と符号から長さ・色・位置を決める雨糸と
-  再構成残光を追加した。
-- Riemannは4本の有限部分和を保持し、同一geometryの多層veil、局所drift、
-  奥行き差を追加した。
-- Phase Torusは厳密トーラス、24 Fourier文字、軌道履歴を変形せず、別geometryの
-  Fourier場変位膜、wire echo、surface sparkle、球状の局所位相ハローを詩的造形として分離した。
+- 灰色の環境霧が黒い負空間と数学線の局所コントラストを奪う問題を解消した。
+- Spectral Cathedralの波動面が均一な模型に見える問題を、7光柱、
+  遠景ヴォールト、局所アーチ、非同期膜で解消した。
+- Möbius Choirの厳密面が不透明な紫の塊に見える問題を、面、wire、
+  sparkle、局所ハローのopacity分離で解消した。
+- Bessel TideとPhase Torusの面が白く飽和する問題を解消し、
+  節線とFourier文字格子の可読性を復元した。
+- Phase TorusのWebGL2位相ハローが正方形に見える問題を、
+  小さな加算合成sphereへ置換して解消した。
+- 追加7章の0秒と18秒がほぼ同じ構図に見える問題を、カメラ、背景、
+  粒子、膜、echoの絶対時刻運動で解消した。
+- 章間で同じ星雲配置に見える問題を、章固有の空間layoutで解消した。
+- ウルトラワイドの左右端が固定黒帯になる問題を、背景粒子と
+  filamentの連続配置で解消した。
 
-### Findings and remediation
+### 維持する設計差
 
-- [P1 解消] 初回の共通auroraが画面全体を灰色にし、数学線の局所コントラストを奪った。
-  veil幅、opacity、glow well、nebulaを低減し、黒い負空間を復元した。
-- [P1 解消] BesselとPhase Torusの面が白く飽和していた。
-  面・wire・sparkleのopacity、露出、bloomを分離し、節線とFourier格子を読める範囲へ戻した。
-- [P1 解消] Phase TorusのWebGL2位相ハローが大きな正方形として描画された。
-  `PointsMaterial`を小さな加算合成sphereへ置換し、両rendererで円形の局所光へ統一した。
-- [P2 解消] 後半章が0秒と18秒でほぼ同じ構図に見えた。
-  数学標本だけでなく、カメラ、背景、粒子、膜、echoの3軸以上を絶対transport時刻で
-  連続評価し、7章すべての変化を比較画像と回帰テストで確認した。
-- [P2 解消] 章間で同じ星雲配置に見えた。
-  constellation、tidal、orchard、lanterns、rain、veil、torusの空間layoutを分離した。
+参照画像の自由曲面と写実的な体積光はピクセル単位で複製しない。
+リアルタイム描画、厳密数学線の可読性、WebGPU／WebGL2の一致を優先し、
+自由変形は詩的造形層だけへ限定する。この差は不具合ではない。
 
-### Remaining P3
+## 音響QA
 
-- 参照画像の自由曲面と写実的な体積光をそのまま複製せず、リアルタイム描画と厳密数学線の
-  可読性を優先した。自由変形は別の詩的膜に限定しているため、参照より輪郭は規則的である。
-- 48 kHz AudioWorkletを伴う通常Chromeの全10章連続再生、ヘッドホン試聴、
-  M2基準機での60秒performance計測は今回のin-app Browser固定フレームQAの範囲外である。
-  新7章はこの人間評価が完了するまで`publication: "preview"`を維持する。
+- 全10章の決定的な未マスターdry bus全周期stereo RMSを
+  `0.023 ±0.05 dB`へ固定した。
+- 各章の5分割区間は最大／最小RMS比1.35以上を持ち、
+  幕内の静動差を平坦化していない。
+- 左右デチューン後の全生成周波数は`0.45 F_s`未満、
+  raw peakは`-1 dBFS`以下、DC平均絶対値は`10⁻³`未満である。
+- Chapter 2は乾いた中央寄りの短い単一モード粒、
+  Chapter 4は長い包絡と広い定位を持つ柔らかな帯状粒として分離した。
+- 個々の発音は有限包絡で閉じ、声部、応答、残響尾で句全体の連続性を作る。
+- 数学時刻とcarrierは音楽周期でリセットせず、絶対transport時刻で評価する。
+- 音響が解析結果そのものではなくソニフィケーションであることを
+  Detailsと数理モデルに明記した。
 
-### Comparison history
+## Detailsと操作QA
 
-1. 初回比較: 共通背景が灰色に寄り、BesselとTorusが白飛びし、章固有シルエットが弱かった。
-2. 第2比較: 深い黒と章別layoutを復元したが、Phase TorusのWebGL2位相点が正方形になった。
-3. 最終比較: 球状ハロー、面opacity、局所bloom、絶対時刻運動を修正し、full-view、
-   focused central-art、後半7章motion pairを同一画像内で比較した。
+- 全10章に「やさしい説明」と「数学の詳細」を用意した。
+- 数学タブに正本数式、定量プロファイル、係数・モード・打切り表、
+  数学・映像・音響の因果を表示する。
+- Chapter 1から10まで、Detailsの開閉、タブ切り替え、
+  章切り替え後のパネル開状態と選択タブの維持を確認した。
+- Details未利用時はEnter直後と各章の初回表示で入口を4秒間展開し、
+  ホバーまたはキーボードフォーカス中は縮小を停止する。
+- Detailsを一度開いた後は発見ヒントを繰り返さず、常設ボタン、
+  `D`キー、ARIA名を維持する。
+- 章切り替えカードは1.8秒以上表示し、遷移先タイトル、
+  数学対象、章固有の`OBSERVATION NOTE`を示す。
+- `prefers-reduced-motion`では展開と遷移のアニメーション時間を
+  実質的に除去する。
 
-### Implementation checklist
+## rendererとビューポートQA
 
-- [x] 10章すべてへ共通シネマティック環境の改善を適用
-- [x] 後半7章を章固有の有機構図へ分岐
-- [x] 厳密数学geometryと詩的geometryを分離
-- [x] 絶対transport時刻の非同期運動を回帰テスト
-- [x] WebGPU全10章のfull-viewを固定シードで確認
-- [x] Riemann / Phase TorusのWebGL2固定時刻を確認
-- [x] source / implementationのfull-viewとfocused comparisonを作成
-- [ ] 通常Chromeで全10章を連続再生し、実機試聴と60秒performance計測を実施
+- 全10章の固定時刻をWebGPUで初期化し、章固有の主数学構図を確認した。
+- 追加7章の固定時刻をWebGL2でも確認し、数学層を維持した。
+- `poetic=off`で詩的背景を除いても章固有の数学シルエットを維持した。
+- 1440 × 900、1440 × 810、1680 × 720で横・縦overflowがない。
+- Details入口は1280 × 720と最小対象幅1024 × 680で操作バー内に収まる。
+- WebGL2では環境粒子から先に削減し、数学線、文字、UIを維持する。
 
-final result: passed
+## 運用時の継続確認
+
+次の項目は公開状態を戻す条件ではなく、性能退行や利用環境差を早期に見つけるための
+継続QAである。
+
+- 最新版Chrome、48 kHz AudioContextで全10章を連続再生する。
+- ヘッドホンとMac内蔵スピーカーで代表区間をA/B試聴する。
+- MacBook Air M2の3840 × 2160固定ビューポートで60秒計測する。
+- 全画面、タブ非表示からの復帰、長時間再生後のメモリを確認する。
+
+## リリース履歴
+
+| 日付 | 範囲 | 現在から見た位置付け |
+| --- | --- | --- |
+| 2026-07-12 | Residue Bloom、Spectral Cathedral、Möbius Choir | 先行3章の正式版確定 |
+| 2026-07-13 | Prime、Bessel、Lissajous、Dirichlet、Wavelet、Riemann、Torus | 追加7章の実装と全10章順のQA開始 |
+| 2026-07-14 | 全10章 | シネマティック背景と絶対時刻運動の再設計 |
+| 2026-07-23 | 全10章 | 追加7章を`published`へ昇格し、全10章正式版を確定 |

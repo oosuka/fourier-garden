@@ -8,7 +8,7 @@ export const phaseTorusPattern: PhaseTorusPatternDefinition = {
   kind: "phase-torus",
   id: "phase-torus",
   order: 10,
-  publication: "preview",
+  publication: "published",
   title: { en: "Phase Torus", ja: "位相トーラス" },
   subtitle: {
     en: "An irrational flow closes the garden without repeating",

@@ -59,7 +59,7 @@ describe("ControlBar chapter navigation", () => {
     expect(container.textContent).toContain("Spectral Cathedral");
   });
 
-  it("shows published Möbius Choir without a preview label", () => {
+  it("shows published Prime Constellation without a preview label", () => {
     const container = document.createElement("div");
     container.innerHTML = renderControlBar(2, 3);
 
@@ -70,7 +70,7 @@ describe("ControlBar chapter navigation", () => {
       true,
     );
     expect(container.textContent).not.toContain("PREVIEW");
-    expect(container.textContent).toContain("Möbius Choir");
+    expect(container.textContent).toContain("Prime Constellation");
   });
 
   it("disables both directions while switching chapters", () => {

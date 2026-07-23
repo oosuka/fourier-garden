@@ -13,11 +13,18 @@ describe("App entry gate", () => {
     expect(playbackControl === null || playbackControl.closest("[inert]") !== null).toBe(true);
   });
 
-  it("keeps three formal chapters and exposes the final ten-chapter preview order", () => {
+  it("exposes all ten formal chapters from the default and legacy preview URLs", () => {
     expect(getPatternRegistry("").map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
+      "prime-constellation",
       "mobius-choir",
+      "bessel-tide",
+      "lissajous-orchard",
+      "dirichlet-lanterns",
+      "wavelet-rain",
+      "riemann-veil",
+      "phase-torus",
     ]);
     expect(getPatternRegistry("?chapters=preview").map((pattern) => pattern.id)).toEqual([
       "residue-bloom",

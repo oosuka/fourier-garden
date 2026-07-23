@@ -8,7 +8,7 @@ export const primeConstellationPattern: PrimeConstellationPatternDefinition = {
   kind: "prime-constellation",
   id: "prime-constellation",
   order: 3,
-  publication: "preview",
+  publication: "published",
   title: { en: "Prime Constellation", ja: "素数星座" },
   subtitle: {
     en: "Sparse frequencies gather into a moving arithmetic sky",

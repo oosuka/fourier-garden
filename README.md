@@ -5,10 +5,11 @@ Fourier Gardenは、有限Fourier展開とその周辺の数学的構造から�
 章ごとに異なる数学的対象を扱いながら、同じtransport、品質制御、章切替、詳細表示、
 WebGPU／WebGL2描画基盤を共有します。
 
-2026年7月13日時点では、2026年7月12日正式版の3章を通常公開し、7つの新章を
-`chapters=preview`で実装しています。previewではPrime ConstellationをChapter 3へ
-挿入し、Möbius ChoirをChapter 4へ移した全10章順になります。新章は同じ丸い中域
-ピコ文法を共有しながら、数学対象、主構図、発音規則、定位、残響を分離しています。
+2026年7月23日時点では、実装済みの全10章を正式版として通常公開しています。
+Prime ConstellationをChapter 3へ挿入し、Möbius ChoirをChapter 4へ移した
+最終10章順です。各章は同じ丸い中域ピコ文法を共有しながら、数学対象、主構図、
+発音規則、定位、残響を分離しています。過去QA URLとの互換性のため
+`chapters=preview`も残していますが、現在は通常URLと同じ全10章を表示します。
 全10章の未マスターdry busは全周期stereo RMS `0.023 ±0.05 dB`へ校正し、
 Chapter 2から10には全スコアを横断する強弱、尾長、wet、空間運動の長周期輪郭を
 加えています。章内の5幕の静動差は音量校正で平坦化しません。
@@ -25,23 +26,23 @@ Chapter 2から10には全スコアを横断する強弱、尾長、wet、空間
 | --- | --- | --- | --- | --- |
 | 1 `Residue Bloom / 剰余の花` | 通常公開 | `n=4k+1`の13項からなる解析的有限Fourier級数と複素フェーザ | 80 BPM、48小節、144秒、5状態、ゴースト強弱付き一定16分パルス | 上側調波と残響を抑えた丸い中域調波粒、円鎖、主履歴波形、発音コロナ、星雲と深度粒子庭園 |
 | 2 `Spectral Cathedral / スペクトルの聖堂` | 通常公開 | 長方形領域上の12個の解析的Dirichlet固有モード | 72 BPM、5/4、18小節、75秒、360イベント、長周期強弱付き一定16分ピコ粒 | 中域電子粒、波動面、7光柱、立体アーチ、遠景ヴォールト、光膜 |
-| 3 `Prime Constellation / 素数星座` | preview | 97以下の25素数を支持とする有限複素指数和 | 60秒、5幕、素数間隔による不均等ピコ列 | 金・琥珀の25位相点、隣接リンク、凝集点、星塵 |
-| 4 `Möbius Choir / メビウスの合唱` | 通常公開／previewでは4 | flat Möbius quotient上の6個の解析的進行波モード | 68 BPM、16小節、56.470588秒、256イベント、長周期強弱付き一定16分ピコ粒 | 中域電子粒、単一Möbius帯、発光膜、声部リボン、周囲粒子流 |
-| 5 `Bessel Tide / ベッセルの潮` | preview | 円板上の17個のFourier–Bessel実固有モード | 72秒、5幕、6/8の往復ピコ句 | 円形水盤、節円、節径、外側膜 |
-| 6 `Lissajous Orchard / リサージュの果樹園` | preview | Farey列由来の9既約比と有理トーラス流 | 60秒、5幕、左右応答する9/8ピコ | 巨大選択曲線と奥行きのある8曲線群 |
-| 7 `Dirichlet Lanterns / ディリクレの灯` | preview | Dirichlet核、矩形波部分和、Gibbs現象、Fejér平均 | 60秒、5幕、主発音と側葉応答 | 4列の核、巨大中心峰、部分和曲線 |
-| 8 `Wavelet Rain / ウェーブレットの雨` | preview | Haar V₆の63係数と64区間直交射影 | 64秒、5幕、局在する滴状ピコ群 | 6段の時間・スケールセルと再構成 |
-| 9 `Riemann Veil / リーマンの帳` | preview | 二次周波数を持つRiemann型関数の4有限部分和 | 80秒、5幕、二次位置で間隔が広がるピコ | 奥行きに重なる4枚の有限曲線膜 |
-| 10 `Phase Torus / 位相トーラス` | preview | T²上のKronecker流と24点Fourier文字 | 84秒、5幕、7/8の回転ピコ | 巨大トーラス、無理比軌道、係数格子 |
+| 3 `Prime Constellation / 素数星座` | 通常公開 | 97以下の25素数を支持とする有限複素指数和 | 60秒、5幕、素数間隔による不均等ピコ列 | 金・琥珀の25位相点、隣接リンク、凝集点、星塵 |
+| 4 `Möbius Choir / メビウスの合唱` | 通常公開 | flat Möbius quotient上の6個の解析的進行波モード | 68 BPM、16小節、56.470588秒、256イベント、長周期強弱付き一定16分ピコ粒 | 中域電子粒、単一Möbius帯、発光膜、声部リボン、周囲粒子流 |
+| 5 `Bessel Tide / ベッセルの潮` | 通常公開 | 円板上の17個のFourier–Bessel実固有モード | 72秒、5幕、6/8の往復ピコ句 | 円形水盤、節円、節径、外側膜 |
+| 6 `Lissajous Orchard / リサージュの果樹園` | 通常公開 | Farey列由来の9既約比と有理トーラス流 | 60秒、5幕、左右応答する9/8ピコ | 巨大選択曲線と奥行きのある8曲線群 |
+| 7 `Dirichlet Lanterns / ディリクレの灯` | 通常公開 | Dirichlet核、矩形波部分和、Gibbs現象、Fejér平均 | 60秒、5幕、主発音と側葉応答 | 4列の核、巨大中心峰、部分和曲線 |
+| 8 `Wavelet Rain / ウェーブレットの雨` | 通常公開 | Haar V₆の63係数と64区間直交射影 | 64秒、5幕、局在する滴状ピコ群 | 6段の時間・スケールセルと再構成 |
+| 9 `Riemann Veil / リーマンの帳` | 通常公開 | 二次周波数を持つRiemann型関数の4有限部分和 | 80秒、5幕、二次位置で間隔が広がるピコ | 奥行きに重なる4枚の有限曲線膜 |
+| 10 `Phase Torus / 位相トーラス` | 通常公開 | T²上のKronecker流と24点Fourier文字 | 84秒、5幕、7/8の回転ピコ | 巨大トーラス、無理比軌道、係数格子 |
 
-通常URLでは正式版3章を互換順序のChapter 1から3として選択できます。
-`chapters=preview`では最終順序のChapter 1から10を選択できます。
+通常URLで正式版のChapter 1から10を選択できます。
+`chapters=preview`も互換入口として同じ10章順を返します。
 
 章固有の数式、係数、位相、投影、スコア、音響写像は
 [`docs/mathematical-model.md`](docs/mathematical-model.md)を参照してください。
-未実装章の候補、隣接章とのコントラスト、入口条件、実装順は
+現行10章の比較、隣接章とのコントラスト、将来章の入口条件は
 [`docs/chapter-atlas.md`](docs/chapter-atlas.md)で管理します。READMEには将来章を固定列挙せず、
-Chapter 10・20・30へ増えても現行章一覧と共通契約だけを更新します。
+章数が増えても現行章一覧と共通契約だけを更新します。
 
 ## 全章共通の表現レイヤー
 
@@ -56,7 +57,7 @@ Chapter 10・20・30へ増えても現行章一覧と共通契約だけを更新
 音楽周期でリセットしません。30秒を超える章は3幕以上、3表現軸以上の認識可能な変化と、
 数学要素から局所的な音響・造形への説明可能な因果を必要とします。
 
-既存3章のhigh品質では、QA入口上の総粒子予算をChapter 1、2、4の順に
+先行3章のhigh品質では、QA入口上の総粒子予算をChapter 1、2、4の順に
 `64,000 / 86,000 / 82,000`とし、ultra品質では`96,000 / 128,000 / 112,000`まで
 増やします。WebGL2経路では厳密数学層を維持したまま、全画面環境粒子だけを
 8,000点へ抑え、局所粒子、膜、線、bloomの見え方で奥行きを保ちます。
@@ -92,7 +93,7 @@ npm run dev
 http://localhost:5173/?seed=qa&quality=high
 ```
 
-将来の検証中章と過去QA URLに対する互換preview入口:
+過去QA URLに対する互換preview入口:
 
 ```text
 http://localhost:5173/?chapters=preview&seed=qa&quality=high
@@ -103,8 +104,8 @@ http://localhost:5173/?chapters=preview&seed=qa&quality=high
 ```text
 http://localhost:5173/residue-bloom-qa.html?seed=qa&quality=high&time=72
 http://localhost:5173/spectral-cathedral-qa.html?seed=qa&quality=high&time=50
-http://localhost:5173/mobius-choir-qa.html?seed=qa&quality=high&time=42.353
 http://localhost:5173/prime-constellation-qa.html?seed=qa&quality=high&time=30
+http://localhost:5173/mobius-choir-qa.html?seed=qa&quality=high&time=42.353
 http://localhost:5173/bessel-tide-qa.html?seed=qa&quality=high&time=38
 http://localhost:5173/lissajous-orchard-qa.html?seed=qa&quality=high&time=36
 http://localhost:5173/dirichlet-lanterns-qa.html?seed=qa&quality=high&time=30
@@ -128,7 +129,7 @@ http://localhost:5173/chapter-audio-ab-qa.html
 - `quality=low|medium|high|ultra`: 品質を固定
 - `time=<seconds>`: 章別QA入口の絶対transport時刻を固定
 - `poetic=off`: 章別QA入口で詩的造形層を無効化
-- `chapters=preview`: 新7章を含む最終順序の10章レジストリを使用
+- `chapters=preview`: 通常URLと同じ全10章を返す互換入口
 
 `quality`を省略した場合は`high`から適応品質制御を開始します。描画、音響、UIを変更した
 場合は単体テストだけで完了扱いにせず、WebGPUとWebGL2、16:10・16:9・21:9、
@@ -204,6 +205,6 @@ AudioContextを完全に解放します。標本ループの一時割り当て�
 
 - [`AGENTS.md`](AGENTS.md): 開発時の数学・音響・描画・QA不変条件
 - [`docs/mathematical-model.md`](docs/mathematical-model.md): 実装済み章の数理・音響正本
-- [`docs/chapter-atlas.md`](docs/chapter-atlas.md): 候補章、比較、依存関係、入口条件
+- [`docs/chapter-atlas.md`](docs/chapter-atlas.md): 現行10章の比較、コントラスト、将来章の入口条件
 - [`design-qa.md`](design-qa.md): 実測QA、履歴、運用QA項目
 - [`docs/superpowers/README.md`](docs/superpowers/README.md): 廃止済み設計・実装計画の履歴索引

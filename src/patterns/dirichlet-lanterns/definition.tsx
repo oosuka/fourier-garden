@@ -8,7 +8,7 @@ export const dirichletLanternsPattern: DirichletLanternsPatternDefinition = {
   kind: "dirichlet-lanterns",
   id: "dirichlet-lanterns",
   order: 7,
-  publication: "preview",
+  publication: "published",
   title: { en: "Dirichlet Lanterns", ja: "ディリクレの灯" },
   subtitle: {
     en: "Finite kernels illuminate convergence and overshoot",

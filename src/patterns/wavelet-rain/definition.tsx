@@ -8,7 +8,7 @@ export const waveletRainPattern: WaveletRainPatternDefinition = {
   kind: "wavelet-rain",
   id: "wavelet-rain",
   order: 8,
-  publication: "preview",
+  publication: "published",
   title: { en: "Wavelet Rain", ja: "ウェーブレットの雨" },
   subtitle: {
     en: "Localized scales fall through a finite multiresolution field",

@@ -2,10 +2,10 @@
 
 ## 文書の位置付け
 
-この文書は2026年7月13日時点で実装済みのChapter 1から10の数学、時間、
-解析表示、ソニフィケーション規約の正本である。新7章はpreviewであり、
-preview順ではChapter 3へ`Prime Constellation`を挿入し、`Möbius Choir`は
-Chapter 4へ移動する。通常URLは2026年7月12日正式版の3章を維持する。
+この文書は2026年7月23日時点で正式公開しているChapter 1から10の数学、時間、
+解析表示、ソニフィケーション規約の正本である。Chapter 3へ
+`Prime Constellation`を挿入し、`Möbius Choir`をChapter 4へ移動した
+全10章順を通常URLと互換preview URLの両方で使用する。
 
 ## プロダクトの定義
 
@@ -658,6 +658,20 @@ threshold -16 dBのコンプレッサーを使う。コンプレッサー後に�
 この音声は波動場の無加工再生ではなく、固有値、係数比、符号位相、
 絶対数学時刻を保った音楽的ソニフィケーションである。
 
+## Chapter 3: Prime Constellation（通常公開）
+
+97以下の素数集合を\(\mathcal P_{97}\)とし、
+
+\[
+z_P(x)=\frac1{25}\sum_{p\in\mathcal P_{97}}e^{ipx},\qquad x(t)=0.06t
+\]
+
+を直接評価する。係数は素数支持で1/25、その他で0、初期位相は0である。
+25位相点の水平座標は\(e^{ipx}\)、垂直座標は素数値の線形正規化、24リンクは
+昇順で隣接する素数を結ぶ。10秒の素数間隔句を60秒の5幕へ再配列するが、
+数学位相はリセットしない。素数順序、間隔、位相凝集度を440-920 Hzの短い
+ピコ粒へ写す。DFT、FFT、確率的素数推定は使用しない。
+
 ## Chapter 4: Möbius Choir（通常公開）
 
 Chapter 4はflat quotient
@@ -806,21 +820,7 @@ X方向10%・Y方向8%の注視点移動を行う。WebGPUとWebGL2のbloom、�
 利用者による最終的な音色評価とレビュー修正後の再検証を経て、
 2026年7月12日の正式版として通常公開している。
 
-## Chapter 3: Prime Constellation（preview実装）
-
-97以下の素数集合を\(\mathcal P_{97}\)とし、
-
-\[
-z_P(x)=\frac1{25}\sum_{p\in\mathcal P_{97}}e^{ipx},\qquad x(t)=0.06t
-\]
-
-を直接評価する。係数は素数支持で1/25、その他で0、初期位相は0である。
-25位相点の水平座標は\(e^{ipx}\)、垂直座標は素数値の線形正規化、24リンクは
-昇順で隣接する素数を結ぶ。10秒の素数間隔句を60秒の5幕へ再配列するが、
-数学位相はリセットしない。素数順序、間隔、位相凝集度を440-920 Hzの短い
-ピコ粒へ写す。DFT、FFT、確率的素数推定は使用しない。
-
-## Chapter 5: Bessel Tide（preview実装）
+## Chapter 5: Bessel Tide（通常公開）
 
 単位円板上で
 
@@ -835,7 +835,7 @@ R_{m,n}(r)=\frac{\sqrt2J_m(j_{m,n}r)}{|J_{m+1}(j_{m,n})|},\qquad
 外側膜と霧は詩的造形である。零点順と係数比を420-940 Hzへ正規化した
 6/8の滴状ピコへ写す。Dirichlet零点とNeumann零点を混同しない。
 
-## Chapter 6: Lissajous Orchard（preview実装）
+## Chapter 6: Lissajous Orchard（通常公開）
 
 第5次Farey列由来の9既約比\((a,b)\)について
 
@@ -849,7 +849,7 @@ R_{m,n}(r)=\frac{\sqrt2J_m(j_{m,n}r)}{|J_{m+1}(j_{m,n})|},\qquad
 比\(a:b\)は左右の発音分割と位相関係へ保持し、carrierは中域へ置く。
 曲線パラメータ\(s\)と絶対transport時刻\(t\)を分離する。
 
-## Chapter 7: Dirichlet Lanterns（preview実装）
+## Chapter 7: Dirichlet Lanterns（通常公開）
 
 次数集合\(N\in\{3,7,15,31\}\)について
 
@@ -862,7 +862,7 @@ S_Ng(x)=\frac4\pi\sum_{1\le n\le N,\ n\text{ odd}}\frac{\sin(nx)}n
 Gibbs振動は有限部分和の数学構造として維持し、描画誤差として平滑化しない。
 奇数支持と1/n比を短い中域パケットへ保持する。FFT畳み込みは使用しない。
 
-## Chapter 8: Wavelet Rain（preview実装）
+## Chapter 8: Wavelet Rain（通常公開）
 
 Haar母ウェーブレットから\(0\le j\le5\)の63個の\(\psi_{j,k}\)を作り、
 
@@ -875,7 +875,7 @@ d_{j,k}=\langle g,\psi_{j,k}\rangle
 区分一定再構成であり、FFTスペクトルではない。スケール、支持位置、係数絶対値、
 符号を包絡、定位、強度、開始位相へ写す。
 
-## Chapter 9: Riemann Veil（preview実装）
+## Chapter 9: Riemann Veil（通常公開）
 
 \[
 R_M(x)=\sum_{n=1}^{M}\frac{\sin(n^2x)}{n^2},\qquad
@@ -888,7 +888,7 @@ M\in\{12,24,48,96\}
 1/n²比、絶対位相を中域のガラス質ピコへ写し、句の連続性を保つ応答声部だけは
 知覚圧縮した強度を使う。
 
-## Chapter 10: Phase Torus（preview実装）
+## Chapter 10: Phase Torus（通常公開）
 
 flat torus\(\mathbb T^2\)上で
 
@@ -903,7 +903,7 @@ flat torus\(\mathbb T^2\)上で
 
 ## Chapter 3から10の共通音響・描画規約
 
-新章のcarrierは360-1,200 Hz、左右デチューン後の実周波数は\(0.45F_s\)未満、
+各章のcarrierは360-1,200 Hz、左右デチューン後の実周波数は\(0.45F_s\)未満、
 出力は-1 dBFS limiter以下とする。全イベントは有限包絡を持ち、AudioWorkletは
 固定voice領域と再利用outputを使う。厳密数学層はseed非依存、詩的粒子だけを
 固定seedで変奏する。各章は5幕、3表現軸以上の変化、局所数学写像、

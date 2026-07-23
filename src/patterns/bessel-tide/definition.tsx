@@ -8,7 +8,7 @@ export const besselTidePattern: BesselTidePatternDefinition = {
   kind: "bessel-tide",
   id: "bessel-tide",
   order: 5,
-  publication: "preview",
+  publication: "published",
   title: { en: "Bessel Tide", ja: "ベッセルの潮" },
   subtitle: {
     en: "Circular eigenmodes breathe between rings and rays",

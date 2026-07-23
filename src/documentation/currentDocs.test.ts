@@ -4,10 +4,12 @@ import { describe, expect, it } from "vitest";
 const currentDocPaths = [
   "AGENTS.md",
   "README.md",
-  "docs/mathematical-model.md",
+  "design-qa.md",
   "docs/chapter-atlas.md",
   "docs/chapter-claim-ledger.md",
-  "design-qa.md",
+  "docs/mathematical-model.md",
+  "docs/sound-shape-causality.md",
+  "docs/superpowers/README.md",
 ] as const;
 
 function readDoc(path: string): string {
@@ -20,14 +22,12 @@ function withoutWhitespace(text: string): string {
 
 describe("current documentation", () => {
   it("does not link current docs to removed detailed spec or plan files", () => {
-    const docs = [...currentDocPaths, "docs/superpowers/README.md"]
-      .map((path) => readDoc(path))
-      .join("\n");
+    const docs = currentDocPaths.map((path) => readDoc(path)).join("\n");
 
     expect(docs).not.toMatch(/docs\/superpowers\/(?:specs|plans)\/20\d{2}-/);
   });
 
-  it("keeps obsolete chapter 2 and 3 sound specs out of current docs", () => {
+  it("keeps obsolete sound specs and local-only paths out of every Markdown document", () => {
     const docs = currentDocPaths.map((path) => readDoc(path)).join("\n");
     const obsoleteSpecPatterns = [
       /95イベント/,
@@ -49,6 +49,7 @@ describe("current documentation", () => {
     for (const pattern of obsoleteSpecPatterns) {
       expect(docs).not.toMatch(pattern);
     }
+    expect(docs).not.toMatch(/\/Users\/|\/home\/|file:\/\//);
   });
 
   it("pins the current constant midrange piko sound direction", () => {
@@ -84,11 +85,11 @@ describe("current documentation", () => {
     expect(readme).toContain("評価イベント、出力標本を再利用");
     expect(mathematicalModel).toContain("文字列キー、");
     expect(mathematicalModel).toContain("一時配列、一時オブジェクトを生成せず");
-    expect(designQa).toContain("Review remediation QA");
-    expect(designQa).toContain("console errorは0件");
+    expect(designQa).toContain("console error 0件");
+    expect(designQa).toContain("全画面、タブ非表示からの復帰");
   });
 
-  it("pins the current formal release while preserving QA history", () => {
+  it("pins the current ten-chapter formal release and chapter order", () => {
     const agents = readDoc("AGENTS.md");
     const readme = readDoc("README.md");
     const mathematicalModel = readDoc("docs/mathematical-model.md");
@@ -96,13 +97,31 @@ describe("current documentation", () => {
     const superpowersIndex = readDoc("docs/superpowers/README.md");
     const designQa = readDoc("design-qa.md");
 
-    expect(agents).toContain("2026年7月12日時点の3章実装を正式版として扱う");
-    expect(readme).toContain("2026年7月12日正式版の3章を通常公開");
-    expect(mathematicalModel).toContain("2026年7月13日時点で実装済みのChapter 1から10");
-    expect(chapterAtlas).toContain("2026年7月12日時点の正式版として通常公開");
-    expect(superpowersIndex).toContain("2026年7月12日の正式版");
-    expect(designQa).toContain("正式版確定日: 2026-07-12");
-    expect(designQa).toContain("最終的な音色評価は2026年7月11日に完了");
-    expect(designQa).toContain("formal release 2026-07-12");
+    expect(agents).toContain("2026年7月23日時点の全10章実装を正式版として扱う");
+    expect(readme).toContain("実装済みの全10章を正式版として通常公開");
+    expect(mathematicalModel).toContain("2026年7月23日時点で正式公開しているChapter 1から10");
+    expect(chapterAtlas).toContain("2026年7月23日時点で正式公開している全10章");
+    expect(chapterAtlas).toContain("| 3 | Prime Constellation");
+    expect(chapterAtlas).toContain("| 4 | Möbius Choir");
+    expect(chapterAtlas).not.toContain("## Chapter 3: Möbius Choir");
+    expect(superpowersIndex).toContain("2026年7月23日の全10章正式版");
+    expect(designQa).toContain("最終更新日: 2026-07-23");
+    expect(designQa).toContain("全10章正式版確定日: 2026-07-23");
+    expect(designQa).toContain("全10章を正式版として通常公開する");
+
+    const primeIndex = mathematicalModel.indexOf("## Chapter 3: Prime Constellation");
+    const mobiusIndex = mathematicalModel.indexOf("## Chapter 4: Möbius Choir");
+    expect(primeIndex).toBeGreaterThan(0);
+    expect(mobiusIndex).toBeGreaterThan(primeIndex);
+  });
+
+  it("does not present superseded preview conditions as current status", () => {
+    const docs = currentDocPaths.map((path) => readDoc(path)).join("\n");
+
+    expect(docs).not.toMatch(/新7章は.*publication:\s*"preview".*維持/s);
+    expect(docs).not.toMatch(/通常URLは.*正式版の3章/s);
+    expect(docs).not.toMatch(/既存3章は通常レジストリ、新7章はpreview/);
+    expect(docs).not.toMatch(/公開前の人間QAとして残す/);
+    expect(docs).not.toMatch(/現行の残り実装順/);
   });
 });

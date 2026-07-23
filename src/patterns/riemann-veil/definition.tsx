@@ -8,7 +8,7 @@ export const riemannVeilPattern: RiemannVeilPatternDefinition = {
   kind: "riemann-veil",
   id: "riemann-veil",
   order: 9,
-  publication: "preview",
+  publication: "published",
   title: { en: "Riemann Veil", ja: "リーマンの帳" },
   subtitle: {
     en: "Quadratic frequencies weave four finite layers",
