@@ -6,6 +6,7 @@ import "@fontsource/cormorant-garamond/500.css";
 import "@fontsource/noto-serif-jp/400.css";
 import "katex/dist/katex.min.css";
 import "./styles.css";
+import "./styles/responsive.css";
 
 import { StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";

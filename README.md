@@ -71,7 +71,7 @@ Chapter 3と5から10は、帯域内の基音を失わずに、章ごとに異�
 帳の水平膜、トーラスの周回環として初期配置と局所レイヤー強度を章別に定義します。
 厳密数学層は変形せず、背景、粒子、カメラの詩的造形だけで空間上の独立性を作ります。
 
-先行3章のhigh品質では、QA入口上の総粒子予算をChapter 1、2、4の順に
+個別sceneを持つChapter 1、2、4のhigh品質では、QA入口上の総粒子予算を順に
 `64,000 / 86,000 / 82,000`とし、ultra品質では`96,000 / 128,000 / 112,000`まで
 増やします。WebGL2経路では厳密数学層を維持したまま、全画面環境粒子だけを
 8,000点へ抑え、局所粒子、膜、線、bloomの見え方で奥行きを保ちます。
@@ -210,7 +210,7 @@ install scriptはバージョン単位で審査し、未審査のものはイン
 
 ## 章アーキテクチャ
 
-`src/patterns/registry.ts`がpublished/preview章の登録点、`src/patterns/contracts.ts`が
+`src/patterns/registry.ts`が正式10章と互換クエリの登録点、`src/patterns/contracts.ts`が
 全章共通契約です。各`PatternDefinition`は表示メタデータ、数学的来歴、
 `PatternDramaturgy`、音響program factory、教育コンテンツ、数学詳細コンポーネント、
 章固有validator、遅延ロードするscene factoryをまとめます。
@@ -218,7 +218,11 @@ install scriptはバージョン単位で審査し、未審査のものはイン
 章固有実装は`src/patterns/<chapter-id>/`へ縦割りで集約します。各章は`definition.tsx`、
 `types.ts`、`validate.ts`、`math/`、`audio/`、`scene/`、`details/`、必要な`qa/`とテストを
 所有します。`src/math/`は複数章で同じ意味を持つ純粋演算、`src/audio/`はAudioEngineと
-章非依存の契約、`src/components/`は共通UIだけを保持します。共有実装から章実装をimportせず、
+章非依存の契約、`src/app/`は再生・章切替・Details制御と表示、`src/components/`は共通UIを
+保持します。シネマティック環境は`src/rendering/cinematic/`で粒子、大気、共鳴、オーロラ、
+光構造へ分割し、公開する`CinematicEnvironmentLayer`が同じ生成順とlifecycleを統括します。
+共通CSSは`src/styles/`へ責務別に分割し、entry pointでcascade順を固定します。
+共有実装から章実装をimportせず、
 ある章から別の章をimportしません。
 
 AudioWorkletは`public/audio/fourier-worklet.js`を共通dispatcherとし、

@@ -10,7 +10,7 @@ import {
 describe("chapter audio A/B page shell", () => {
   it("keeps the long listening form vertically scrollable", () => {
     const html = readFileSync("chapter-audio-ab-qa.html", "utf8");
-    const styles = readFileSync("src/styles.css", "utf8");
+    const styles = readFileSync("src/styles/app-shell.css", "utf8");
 
     expect(html).toContain('class="audioAbQaDocument"');
     expect(html).toContain('class="audioAbQaPage"');

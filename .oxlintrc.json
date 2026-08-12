@@ -22,7 +22,7 @@
   },
   "settings": {
     "react": {
-      "version": "19.2.7"
+      "version": "19.2.8"
     },
     "vitest": {
       "typecheck": false
@@ -73,7 +73,11 @@
       }
     },
     {
-      "files": ["src/audio/workletContract.test.ts", "src/audio/workletRuntime.test.ts"],
+      "files": [
+        "src/audio/workletContract.test.ts",
+        "src/audio/workletRuntime.test.ts",
+        "src/test-support/workletHarness.ts"
+      ],
       "rules": {
         "import/default": "off"
       }

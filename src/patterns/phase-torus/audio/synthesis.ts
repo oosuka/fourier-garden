@@ -1,10 +1,5 @@
-import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
-import { getChapterOutputGain } from "../../../audio/chapterLoudness";
-import {
-  PIKO_AUDIO_GRAPH,
-  type PikoWorkletProgram,
-  validatePikoProgram,
-} from "../../../audio/pikoProgram";
+import type { AudioGraphPreset } from "../../../audio/audioProgram";
+import { definePikoChapterAudio, PIKO_AUDIO_GRAPH } from "../../../audio/pikoProgram";
 import { PHASE_TORUS_SCORE } from "./score";
 export const PHASE_TORUS_AUDIO_GRAPH: AudioGraphPreset = {
   ...PIKO_AUDIO_GRAPH,
@@ -14,22 +9,18 @@ export const PHASE_TORUS_AUDIO_GRAPH: AudioGraphPreset = {
   wetGain: 0.082,
   roomSeconds: 1.18,
 };
-export function createPhaseTorusWorkletProgram(): PikoWorkletProgram {
-  const program = {
-    kind: "phase-torus",
-    score: PHASE_TORUS_SCORE,
-    detuneRatio: 0.0015,
-    outputGain: getChapterOutputGain("phase-torus"),
-    maximumVoices: 22,
-    timbre: {
-      partialRatio: (1 + Math.sqrt(5)) / 2,
-      partialGain: 0.055,
-      chirpRatio: 0.022,
-    },
-  };
-  validatePikoProgram(program);
-  return program;
-}
-export function createPhaseTorusAudioProgram(): AudioEngineProgram {
-  return { worklet: createPhaseTorusWorkletProgram(), graph: PHASE_TORUS_AUDIO_GRAPH };
-}
+const phaseTorusAudio = definePikoChapterAudio({
+  kind: "phase-torus",
+  score: PHASE_TORUS_SCORE,
+  detuneRatio: 0.0015,
+  maximumVoices: 22,
+  timbre: {
+    partialRatio: (1 + Math.sqrt(5)) / 2,
+    partialGain: 0.055,
+    chirpRatio: 0.022,
+  },
+  graph: PHASE_TORUS_AUDIO_GRAPH,
+});
+
+export const createPhaseTorusWorkletProgram = phaseTorusAudio.createWorkletProgram;
+export const createPhaseTorusAudioProgram = phaseTorusAudio.createAudioProgram;

@@ -26,7 +26,7 @@ P0、P1、P2の未解決項目はない。数学式、係数、支持、境界�
 | --- | --- |
 | format | Biomeで全対象ファイルを確認し成功 |
 | lint | Oxlintを警告0件で通過 |
-| test | Vitest 82ファイル、589テスト成功 |
+| test | Vitest 82ファイル、595テスト成功 |
 | typecheck | TypeScript project build成功 |
 | production build | Vite production build成功 |
 | レジストリ | 通常URLと互換URLの両方で全10章順を検証 |
@@ -35,8 +35,9 @@ P0、P1、P2の未解決項目はない。数学式、係数、支持、境界�
 | console | 全10章のWebGPU／WebGL2固定時刻確認でwarning／error 0件 |
 
 全体検証の正規コマンドは`npm run check`である。公開状態を変更した
-2026年8月13日の音響再調整後は、format、lint、589テスト、型検査、
-production buildを通過した。
+2026年8月13日の音響再調整と構造整理、依存更新後は、format、lint、595テスト、型検査、
+production buildを通過した。TypeScript 7、Three.js r185、Vite 8.2を含む更新後も、
+数学、DSP、固定seed粒子、章切替、GPU資源解放の回帰はすべて成功している。
 
 ## 視覚証拠
 
@@ -159,15 +160,15 @@ WebGL2 highの1440 × 900 bloom描画である。ブラウザの証拠取得上�
 | Chapter | p95 |
 | --- | ---: |
 | Residue Bloom | 0.224 ms |
-| Spectral Cathedral | 0.624 ms |
-| Prime Constellation | 0.266 ms |
-| Möbius Choir | 0.579 ms |
-| Bessel Tide | 0.250 ms |
-| Lissajous Orchard | 0.220 ms |
-| Dirichlet Lanterns | 0.197 ms |
+| Spectral Cathedral | 0.609 ms |
+| Prime Constellation | 0.259 ms |
+| Möbius Choir | 0.571 ms |
+| Bessel Tide | 0.277 ms |
+| Lissajous Orchard | 0.217 ms |
+| Dirichlet Lanterns | 0.188 ms |
 | Wavelet Rain | 0.325 ms |
-| Riemann Veil | 0.722 ms |
-| Phase Torus | 0.337 ms |
+| Riemann Veil | 0.729 ms |
+| Phase Torus | 0.333 ms |
 
 - Residue Bloomの13調波と共有ピコの左右基音・部分音は、発音境界で位相差を
   事前計算し、標本ループ内では複素回転の漸化式で更新する。参照DSPとの
@@ -284,7 +285,7 @@ Dirichlet Lanternsから分離した。Riemann Veilは最大carrierを760 Hzへ�
 修正後は章差、Riemann上側中域、全10章RMS、長時間疲労指標を自動回帰へ追加した。
 試聴保存revision `v4:r3`は任意の回帰確認用として旧記録を復元しない。利用者は
 8月12日の比較を最後の試聴とすること、以後の完成判断をCodexへ委任することを明示した。
-この委任、全指摘への実装修正、589テスト、決定的音響指標、Worklet性能検証を根拠に、
+この委任、全指摘への実装修正、595テスト、決定的音響指標、Worklet性能検証を根拠に、
 再調整版の物理試聴ゲートを完了し、正式完成と判定する。
 
 最上部の`試聴を開始 · Aを30秒再生`は、1操作でAudioContextを開始する。

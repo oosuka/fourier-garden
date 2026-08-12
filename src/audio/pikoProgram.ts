@@ -1,4 +1,5 @@
-import type { AudioGraphPreset } from "./audioProgram";
+import type { AudioEngineProgram, AudioGraphPreset } from "./audioProgram";
+import { getChapterOutputGain, type CalibratedChapterId } from "./chapterLoudness";
 
 export interface PikoScoreEvent {
   sourceIndex: number;
@@ -45,6 +46,26 @@ export interface PikoStereoSample {
   wetRight: number;
 }
 
+export type PikoChapterId = Exclude<
+  CalibratedChapterId,
+  "residue-bloom" | "spectral-cathedral" | "mobius-choir"
+>;
+
+export interface PikoChapterAudioDefinition {
+  kind: PikoChapterId;
+  score: PikoScoreProgram;
+  graph: AudioGraphPreset;
+  detuneRatio: number;
+  maximumVoices: number;
+  timbre: PikoTimbreProfile;
+}
+
+export interface PikoChapterAudioFactory {
+  graph: AudioGraphPreset;
+  createWorkletProgram(): PikoWorkletProgram;
+  createAudioProgram(): AudioEngineProgram<PikoWorkletProgram>;
+}
+
 export const PIKO_AUDIO_GRAPH: AudioGraphPreset = {
   dryHighPassHz: 190,
   dryHighPassQ: 0.45,
@@ -69,6 +90,29 @@ export const PIKO_AUDIO_GRAPH: AudioGraphPreset = {
   },
   limiterCeilingDbfs: -1,
 };
+
+export function definePikoChapterAudio(
+  definition: PikoChapterAudioDefinition,
+): PikoChapterAudioFactory {
+  const createWorkletProgram = (): PikoWorkletProgram => {
+    const program: PikoWorkletProgram = {
+      kind: definition.kind,
+      score: definition.score,
+      detuneRatio: definition.detuneRatio,
+      outputGain: getChapterOutputGain(definition.kind),
+      maximumVoices: definition.maximumVoices,
+      timbre: definition.timbre,
+    };
+    validatePikoProgram(program);
+    return program;
+  };
+
+  return Object.freeze({
+    graph: definition.graph,
+    createWorkletProgram,
+    createAudioProgram: () => ({ worklet: createWorkletProgram(), graph: definition.graph }),
+  });
+}
 
 export function validatePikoProgram(program: PikoWorkletProgram): void {
   if (

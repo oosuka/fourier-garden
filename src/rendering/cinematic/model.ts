@@ -105,52 +105,11 @@ export function createCinematicParticleField(
   chapter: CinematicChapterId,
   count: number,
 ): CinematicParticleField {
-  if (!Number.isInteger(count) || count < 0) {
-    throw new Error("Cinematic particle count must be a nonnegative integer");
-  }
-  const random = createSeededRandom(seed);
-  const palette = CHAPTER_PALETTES[chapter];
-  const positions = new Float32Array(count * 3);
-  const colors = new Float32Array(count * 3);
-  const sizes = new Float32Array(count);
-  const phases = new Float32Array(count);
-  const bands = new Uint8Array(count);
-
-  for (let index = 0; index < count; index += 1) {
-    const band = getBand(index, count);
-    const range = BAND_RANGES[band];
-    const positionOffset = index * 3;
-    const radialBias = 0.22 + 0.78 * random() ** 0.62;
-    const streamPhase = random() * Math.PI * 2;
-    const streamDepth = random() ** 0.72;
-    const streamOffset = (band + 1) * 0.58;
-    positions[positionOffset] =
-      (random() - 0.5) * range.spanX * radialBias +
-      Math.sin(streamPhase * 1.7 + streamOffset) * range.spanX * 0.12 * streamDepth;
-    positions[positionOffset + 1] =
-      (random() - 0.5) * range.spanY +
-      Math.cos(streamPhase * 1.13 - streamOffset) * range.spanY * 0.08 * streamDepth;
-    positions[positionOffset + 2] = range.minimumZ + random() * (range.maximumZ - range.minimumZ);
-
-    const firstColorIndex = Math.floor(random() * palette.length);
-    const secondColorIndex = (firstColorIndex + 1) % palette.length;
-    const firstColor = palette[firstColorIndex]!;
-    const secondColor = palette[secondColorIndex]!;
-    const colorMix = random();
-    const brightness = 0.14 + random() * 0.62;
-    for (let channel = 0; channel < 3; channel += 1) {
-      const shift = (2 - channel) * 8;
-      const first = colorChannel(firstColor, shift);
-      const second = colorChannel(secondColor, shift);
-      colors[positionOffset + channel] = (first + (second - first) * colorMix) * brightness;
-    }
-
-    sizes[index] = range.minimumSize + random() * (range.maximumSize - range.minimumSize);
-    phases[index] = random() * Math.PI * 2;
-    bands[index] = band;
-  }
-
-  return { positions, colors, sizes, phases, bands };
+  return createCinematicParticleFieldFromProfile(
+    seed,
+    CINEMATIC_ENVIRONMENT_PROFILES[chapter],
+    count,
+  );
 }
 
 export function createCinematicParticleFieldFromProfile(

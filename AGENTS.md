@@ -379,8 +379,8 @@ Haar多重解像度、Riemann型有限部分和、T²上のKronecker流である
 - Node.js: `24.19.0`
 - パッケージ管理: npm `11.19.0`
 - ビルド: Vite 8
-- UI: React 19、TypeScript 6
-- 描画: Three.js r184、WebGPURenderer、TSL
+- UI: React 19、TypeScript 7
+- 描画: Three.js r185、WebGPURenderer、TSL
 - フォールバック: WebGL2
 - 数式表示: KaTeX
 - 音声: Web Audio API、AudioWorklet
@@ -414,6 +414,7 @@ Node.jsとnpmのバージョンは `package.json` の `volta` フィールドを
 
 - `src/math/`: 複数章で意味が同じ級数、係数、フェーザなどの純粋数学演算
 - `src/audio/`: `AudioEngine`、章非依存のAudioGraphとWorklet program契約
+- `src/app/`: アプリ全体の再生・章切替・Details制御hookと表示コンポーネント
 - `public/audio/fourier-worklet.js`: AudioWorkletの共通lifecycleと章processor dispatcher
 - `public/audio/chapters/`: AudioWorkletの章別検証、状態、標本processor
 - `src/core/`: トランスポート、品質制御、シード、レンダラーバックエンド
@@ -421,7 +422,10 @@ Node.jsとnpmのバージョンは `package.json` の `volta` フィールドを
 - `src/patterns/registry.ts`: published/preview章の登録点
 - `src/patterns/<chapter-id>/`: 章固有のdefinition、数学、音響、scene、詳細UI、QA、テスト
 - `src/components/`: 章非依存のReact UIと表示用キャンバス
-- `src/styles.css`: 全体レイアウト、タイポグラフィ、共通UI表現
+- `src/rendering/cinematic/`: 共通シネマティック環境の粒子、大気、共鳴、オーロラ、
+  光構造サブレイヤー
+- `src/styles.css`と`src/styles/`: 読込順を固定した全体レイアウト、操作、Details、
+  entry、QA、レスポンシブ表現
 - `.oxlintrc.json`: Oxlintの規則、環境、ファイル単位の例外
 - `biome.json`: Biomeのフォーマッター設定
 - `docs/mathematical-model.md`: 数学とソニフィケーションの正本
@@ -604,9 +608,11 @@ Detailsの発見性と利用者の選択状態について次を維持する。
 - formatとlintの責務が重複する規則を追加しない
 - Oxlintの例外は誤検知する最小のファイルと規則へ限定し、理由を説明可能にする
 
-現行のOxlint type-aware lintingはTypeScript 7以上を必要とするため、
-TypeScript 6を使用している間は有効化しない。型検査は `tsc -b` で行う。
-TypeScript 7へ更新するときに `oxlint-tsgolint` の安定性と互換性を再評価する。
+Oxlintのtype-aware lintingはTypeScript 7移行時に再評価済みである。現行コード全体へ
+一括適用すると、Three.js境界や回帰テストを含む既存コードに多数の診断が生じ、
+ロジック不変条件のもとで安全に一括修正できないため、通常lintには含めない。
+型安全性の正規ゲートはstrict設定の`tsc -b`とし、type-aware規則は対象領域を限定して
+段階導入する。
 
 生成物、キャッシュ、ローカル専用ファイル、巨大な録画をリポジトリへ追加しない。
 秘密情報、APIキー、個人情報、ローカル絶対パスをソースへ埋め込まない。

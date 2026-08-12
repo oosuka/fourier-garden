@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CINEMATIC_ENVIRONMENT_PROFILES,
   CINEMATIC_PARTICLE_BUDGETS,
   createCinematicParticleField,
   createCinematicParticleFieldFromProfile,
@@ -32,6 +33,23 @@ describe("cinematic environment model", () => {
     expect(first.sizes).toEqual(second.sizes);
     expect(first.phases).toEqual(second.phases);
     expect(first.bands).toEqual(second.bands);
+  });
+
+  it("keeps chapter and profile particle entrypoints byte-identical", () => {
+    for (const chapter of ["residue-bloom", "spectral-cathedral", "mobius-choir"] as const) {
+      const chapterField = createCinematicParticleField(41_041, chapter, 2_000);
+      const profileField = createCinematicParticleFieldFromProfile(
+        41_041,
+        CINEMATIC_ENVIRONMENT_PROFILES[chapter],
+        2_000,
+      );
+
+      expect(profileField.positions).toEqual(chapterField.positions);
+      expect(profileField.colors).toEqual(chapterField.colors);
+      expect(profileField.sizes).toEqual(chapterField.sizes);
+      expect(profileField.phases).toEqual(chapterField.phases);
+      expect(profileField.bands).toEqual(chapterField.bands);
+    }
   });
 
   it("changes decorative attributes for another seed", () => {

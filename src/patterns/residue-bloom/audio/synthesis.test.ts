@@ -153,19 +153,20 @@ describe("Residue Bloom audio synthesis", () => {
     expect(fundamental.included).toBe(false);
   });
 
-  it.each([
-    44_100, 48_000, 96_000,
-  ])("keeps every included detuned component below 0.45 Fs at %i Hz", (sampleRate) => {
-    for (const carrierHz of [440, 495]) {
-      const components = getSonificationComponents(55, carrierHz, sampleRate, score.definition);
+  it.each([44_100, 48_000, 96_000])(
+    "keeps every included detuned component below 0.45 Fs at %i Hz",
+    (sampleRate) => {
+      for (const carrierHz of [440, 495]) {
+        const components = getSonificationComponents(55, carrierHz, sampleRate, score.definition);
 
-      for (const component of components.filter((candidate) => candidate.included)) {
-        expect(Math.max(component.leftFrequencyHz, component.rightFrequencyHz)).toBeLessThan(
-          sampleRate * 0.45,
-        );
+        for (const component of components.filter((candidate) => candidate.included)) {
+          expect(Math.max(component.leftFrequencyHz, component.rightFrequencyHz)).toBeLessThan(
+            sampleRate * 0.45,
+          );
+        }
       }
-    }
-  });
+    },
+  );
 
   it("renders finite rounded plucks with a soft overlap instead of a low drone", () => {
     const sampleRate = 48_000;

@@ -1,0 +1,160 @@
+.entryScreen {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(1, 3, 8, 0.7);
+  backdrop-filter: blur(10px) saturate(90%);
+  text-align: center;
+  animation: entryReveal 1.4s ease both;
+}
+
+.entryMark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(164, 231, 242, 0.55);
+  font-family: "Cormorant Garamond", serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.entryMark i {
+  width: 52px;
+  height: 1px;
+  background: rgba(111, 231, 249, 0.45);
+  box-shadow: 0 0 10px rgba(98, 234, 255, 0.4);
+}
+
+.entryEyebrow {
+  margin: 28px 0 7px;
+  color: var(--cyan);
+  font-size: 9px;
+  letter-spacing: 0.38em;
+}
+
+.entryScreen h2 {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(54px, 6.1vw, 108px);
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-shadow: 0 0 32px rgba(93, 223, 255, 0.22);
+}
+
+.entryJapanese {
+  margin: 20px 0 28px;
+  color: rgba(232, 245, 244, 0.74);
+  font-family: "Noto Serif JP", serif;
+  font-size: clamp(13px, 1.05vw, 19px);
+  line-height: 2.1;
+  letter-spacing: 0.13em;
+}
+
+.enterButton {
+  min-width: 310px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 1px solid rgba(114, 239, 255, 0.58);
+  border-radius: 30px;
+  padding: 12px 25px;
+  background: rgba(4, 17, 25, 0.72);
+  box-shadow:
+    0 0 28px rgba(73, 217, 255, 0.1),
+    inset 0 0 25px rgba(73, 217, 255, 0.05);
+  color: #eaffff;
+  cursor: pointer;
+  transition:
+    border-color 250ms ease,
+    box-shadow 250ms ease,
+    transform 250ms ease;
+}
+
+.enterButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(153, 249, 255, 0.95);
+  box-shadow:
+    0 0 45px rgba(73, 217, 255, 0.2),
+    inset 0 0 25px rgba(73, 217, 255, 0.08);
+}
+
+.enterButton:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.enterButton svg {
+  width: 22px;
+}
+
+.enterButton span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10px;
+  letter-spacing: 0.17em;
+}
+
+.enterButton small {
+  color: rgba(181, 216, 223, 0.55);
+  font-family: "Noto Serif JP", serif;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.entryHint {
+  margin-top: 17px;
+  color: rgba(161, 194, 201, 0.4);
+  font-size: 7px;
+  letter-spacing: 0.13em;
+}
+
+.sceneStatus {
+  position: absolute;
+  z-index: 21;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translate(-50%, -50%);
+  color: rgba(186, 232, 240, 0.62);
+  font-size: 9px;
+  letter-spacing: 0.17em;
+}
+
+.sceneStatus svg {
+  width: 17px;
+}
+
+.spin {
+  animation: spin 1.5s linear infinite;
+}
+
+.audioNotice {
+  position: absolute;
+  z-index: 8;
+  top: 3vh;
+  right: 3vw;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 212, 157, 0.72);
+  font-size: 9px;
+}
+
+.audioNotice svg {
+  width: 15px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

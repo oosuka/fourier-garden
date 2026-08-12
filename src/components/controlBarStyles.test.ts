@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 describe("ControlBar styles", () => {
   it("keeps chapter arrows at a forgiving pointer target size", () => {
-    const styles = readFileSync("src/styles.css", "utf8");
+    const styles = readFileSync("src/styles/control-bar.css", "utf8");
     const chapterArrowBlock = styles.match(/\.chapterArrow\s*\{(?<body>[^}]+)\}/)?.groups?.body;
 
     expect(chapterArrowBlock).toBeDefined();

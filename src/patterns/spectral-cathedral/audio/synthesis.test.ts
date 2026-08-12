@@ -238,21 +238,22 @@ describe("Spectral Cathedral audio mapping", () => {
     expect(partials[0]?.rightFrequencyHz).toBeCloseTo(limitHz, 9);
   });
 
-  it.each([
-    44_100, 48_000, 96_000,
-  ])("keeps every included detuned partial below 0.45 Fs at %i Hz", (sampleRate) => {
-    for (const mode of createSpectralCathedralAudioModes()) {
-      for (const partial of getSpectralCathedralPartials(
-        mode,
-        sampleRate,
-        SPECTRAL_CATHEDRAL_SYNTHESIS,
-      ).filter((candidate) => candidate.included)) {
-        expect(Math.max(partial.leftFrequencyHz, partial.rightFrequencyHz)).toBeLessThan(
-          sampleRate * 0.45,
-        );
+  it.each([44_100, 48_000, 96_000])(
+    "keeps every included detuned partial below 0.45 Fs at %i Hz",
+    (sampleRate) => {
+      for (const mode of createSpectralCathedralAudioModes()) {
+        for (const partial of getSpectralCathedralPartials(
+          mode,
+          sampleRate,
+          SPECTRAL_CATHEDRAL_SYNTHESIS,
+        ).filter((candidate) => candidate.included)) {
+          expect(Math.max(partial.leftFrequencyHz, partial.rightFrequencyHz)).toBeLessThan(
+            sampleRate * 0.45,
+          );
+        }
       }
-    }
-  });
+    },
+  );
 });
 
 describe("Spectral Cathedral piko reference DSP", () => {

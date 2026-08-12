@@ -2,6 +2,8 @@ import "@fontsource/inter/400.css";
 import "@fontsource/cormorant-garamond/400.css";
 import "@fontsource/noto-serif-jp/400.css";
 import "../styles.css";
+import "../styles/audio-ab-qa.css";
+import "../styles/responsive.css";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";

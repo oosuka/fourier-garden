@@ -1,0 +1,81 @@
+@keyframes entryReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (min-aspect-ratio: 2 / 1) {
+  .brandBlock {
+    left: 3vw;
+  }
+
+  .formulaBlock {
+    left: 3vw;
+    width: 31vw;
+  }
+
+  .annotation--one {
+    left: 35%;
+  }
+
+  .annotation--two {
+    left: 27%;
+  }
+
+  .annotation--three {
+    left: 39%;
+  }
+
+  .annotation--four {
+    left: 32%;
+  }
+
+  .detailsPanel {
+    width: min(410px, 23vw);
+  }
+}
+
+@media (max-width: 1280px) {
+  .controlBar {
+    grid-template-columns: auto 1px minmax(190px, 0.7fr) 1px minmax(180px, 0.9fr) auto auto;
+    gap: 15px;
+  }
+
+  .timeDisplay {
+    display: none;
+  }
+
+  .textControl span {
+    display: none;
+  }
+
+  .detailsControl--hint .detailsHintCopy {
+    display: flex;
+  }
+
+  .detailsPanel {
+    width: 35vw;
+  }
+
+  .chapterControl {
+    min-width: 150px;
+  }
+
+  .chapterArrow {
+    width: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

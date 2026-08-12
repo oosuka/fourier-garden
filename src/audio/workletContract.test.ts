@@ -1,27 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import besselTideSource from "../../public/audio/chapters/bessel-tide.js?raw";
-import dirichletLanternsSource from "../../public/audio/chapters/dirichlet-lanterns.js?raw";
-import lissajousOrchardSource from "../../public/audio/chapters/lissajous-orchard.js?raw";
-import mobiusChoirSource from "../../public/audio/chapters/mobius-choir.js?raw";
-import phaseTorusSource from "../../public/audio/chapters/phase-torus.js?raw";
-import primeConstellationSource from "../../public/audio/chapters/prime-constellation.js?raw";
-import residueBloomSource from "../../public/audio/chapters/residue-bloom.js?raw";
-import riemannVeilSource from "../../public/audio/chapters/riemann-veil.js?raw";
-import sharedPikoSource from "../../public/audio/chapters/shared-piko.js?raw";
-import spectralCathedralSource from "../../public/audio/chapters/spectral-cathedral.js?raw";
-import waveletRainSource from "../../public/audio/chapters/wavelet-rain.js?raw";
-import workletSource from "../../public/audio/fourier-worklet.js?raw";
+import { PIKO_CHAPTER_WORKLET_SOURCES, WORKLET_SOURCES } from "../test-support/workletHarness";
 
-const pikoChapterSources = [
-  primeConstellationSource,
-  besselTideSource,
-  lissajousOrchardSource,
-  dirichletLanternsSource,
-  waveletRainSource,
-  riemannVeilSource,
-  phaseTorusSource,
-];
+const {
+  mobiusChoir: mobiusChoirSource,
+  residueBloom: residueBloomSource,
+  sharedPiko: sharedPikoSource,
+  spectralCathedral: spectralCathedralSource,
+  worklet: workletSource,
+} = WORKLET_SOURCES;
+const pikoChapterSources = PIKO_CHAPTER_WORKLET_SOURCES;
 const chapterSources = [
   residueBloomSource,
   spectralCathedralSource,

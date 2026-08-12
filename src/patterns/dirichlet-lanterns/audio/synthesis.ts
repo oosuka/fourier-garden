@@ -1,10 +1,5 @@
-import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
-import { getChapterOutputGain } from "../../../audio/chapterLoudness";
-import {
-  PIKO_AUDIO_GRAPH,
-  type PikoWorkletProgram,
-  validatePikoProgram,
-} from "../../../audio/pikoProgram";
+import type { AudioGraphPreset } from "../../../audio/audioProgram";
+import { definePikoChapterAudio, PIKO_AUDIO_GRAPH } from "../../../audio/pikoProgram";
 import { DIRICHLET_LANTERNS_SCORE } from "./score";
 export const DIRICHLET_LANTERNS_AUDIO_GRAPH: AudioGraphPreset = {
   ...PIKO_AUDIO_GRAPH,
@@ -13,21 +8,14 @@ export const DIRICHLET_LANTERNS_AUDIO_GRAPH: AudioGraphPreset = {
   wetGain: 0.04,
   roomSeconds: 0.74,
 };
-export function createDirichletLanternsWorkletProgram(): PikoWorkletProgram {
-  const program = {
-    kind: "dirichlet-lanterns",
-    score: DIRICHLET_LANTERNS_SCORE,
-    detuneRatio: 0.001,
-    outputGain: getChapterOutputGain("dirichlet-lanterns"),
-    maximumVoices: 18,
-    timbre: { partialRatio: 3, partialGain: 0.045, chirpRatio: 0 },
-  };
-  validatePikoProgram(program);
-  return program;
-}
-export function createDirichletLanternsAudioProgram(): AudioEngineProgram {
-  return {
-    worklet: createDirichletLanternsWorkletProgram(),
-    graph: DIRICHLET_LANTERNS_AUDIO_GRAPH,
-  };
-}
+const dirichletLanternsAudio = definePikoChapterAudio({
+  kind: "dirichlet-lanterns",
+  score: DIRICHLET_LANTERNS_SCORE,
+  detuneRatio: 0.001,
+  maximumVoices: 18,
+  timbre: { partialRatio: 3, partialGain: 0.045, chirpRatio: 0 },
+  graph: DIRICHLET_LANTERNS_AUDIO_GRAPH,
+});
+
+export const createDirichletLanternsWorkletProgram = dirichletLanternsAudio.createWorkletProgram;
+export const createDirichletLanternsAudioProgram = dirichletLanternsAudio.createAudioProgram;

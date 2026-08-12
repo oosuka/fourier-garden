@@ -7,15 +7,8 @@ import {
   getPikoPan,
   renderPikoSample,
   renderPikoStereo,
-  type PikoWorkletProgram,
 } from "./pikoProgram";
-import { createBesselTideWorkletProgram } from "../patterns/bessel-tide/audio/synthesis";
-import { createDirichletLanternsWorkletProgram } from "../patterns/dirichlet-lanterns/audio/synthesis";
-import { createLissajousOrchardWorkletProgram } from "../patterns/lissajous-orchard/audio/synthesis";
 import { createPhaseTorusWorkletProgram } from "../patterns/phase-torus/audio/synthesis";
-import { createPrimeConstellationWorkletProgram } from "../patterns/prime-constellation/audio/synthesis";
-import { createRiemannVeilWorkletProgram } from "../patterns/riemann-veil/audio/synthesis";
-import { createWaveletRainWorkletProgram } from "../patterns/wavelet-rain/audio/synthesis";
 import {
   createSpectralCathedralWorkletProgram,
   renderSpectralCathedralStereo,
@@ -33,16 +26,9 @@ import {
   RESIDUE_BLOOM_SERIES,
   RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
 } from "../patterns/residue-bloom/math/model";
+import { createPikoChapterPrograms } from "../test-support/pikoChapterPrograms";
 
-const programs: readonly PikoWorkletProgram[] = [
-  createPrimeConstellationWorkletProgram(),
-  createBesselTideWorkletProgram(),
-  createLissajousOrchardWorkletProgram(),
-  createDirichletLanternsWorkletProgram(),
-  createWaveletRainWorkletProgram(),
-  createRiemannVeilWorkletProgram(),
-  createPhaseTorusWorkletProgram(),
-];
+const programs = createPikoChapterPrograms();
 
 describe("shared analytic piko programs", () => {
   it("keeps every detuned carrier in the approved band at common sample rates", () => {

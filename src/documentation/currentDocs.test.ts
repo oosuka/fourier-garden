@@ -35,10 +35,37 @@ describe("current documentation", () => {
     expect(docs).not.toMatch(/24\.16\.0|11\.17\.0|npm@11\.17\.0/);
   });
 
+  it("keeps the current toolchain and validation totals in the formal-release docs", () => {
+    const packageJson = JSON.parse(readDoc("package.json")) as {
+      dependencies: { react: string; three: string };
+      devDependencies: { typescript: string; vite: string; vitest: string };
+    };
+    const agents = readDoc("AGENTS.md");
+    const designQa = readDoc("design-qa.md");
+
+    expect(packageJson.dependencies.react).toBe("19.2.8");
+    expect(packageJson.dependencies.three).toBe("0.185.1");
+    expect(packageJson.devDependencies.typescript).toBe("7.0.2");
+    expect(packageJson.devDependencies.vite).toBe("8.2.1");
+    expect(packageJson.devDependencies.vitest).toBe("4.1.10");
+    expect(agents).toContain("React 19、TypeScript 7");
+    expect(agents).toContain("Three.js r185");
+    expect(designQa).toContain("Vitest 82ファイル、595テスト成功");
+    expect(`${agents}\n${designQa}`).not.toMatch(
+      /TypeScript 6|Three\.js r184|589テスト|593テスト|594テスト/,
+    );
+  });
+
   it("does not link current docs to removed detailed spec or plan files", () => {
     const docs = currentDocPaths.map((path) => readDoc(path)).join("\n");
 
     expect(docs).not.toMatch(/docs\/superpowers\/(?:specs|plans)\/20\d{2}-/);
+  });
+
+  it("contains no work-in-progress release markers", () => {
+    const docs = currentDocPaths.map((path) => readDoc(path)).join("\n");
+
+    expect(docs).not.toMatch(/\b(?:TODO|TBD|WIP)\b|開発中|未実装|暫定版/i);
   });
 
   it("keeps obsolete sound specs and local-only paths out of every Markdown document", () => {
