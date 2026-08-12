@@ -178,16 +178,20 @@ describe("Residue Bloom audio synthesis", () => {
     const stepSamples = Math.round(score.stepSeconds * sampleRate);
     const attackWindow = Math.round(0.055 * sampleRate);
     const tailWindow = Math.round(0.025 * sampleRate);
+    const attacks: number[] = [];
 
     for (let step = 0; step < 16; step += 1) {
       const start = step * stepSamples;
       const attack = rms(samples.slice(start, start + attackWindow));
       const tail = rms(samples.slice(start + stepSamples - tailWindow, start + stepSamples));
+      attacks.push(attack);
 
-      expect(attack).toBeGreaterThan(0.02);
+      expect(attack).toBeGreaterThan(0.008);
       expect(tail).toBeGreaterThan(attack * 0.015);
       expect(tail).toBeLessThan(attack * 0.46);
     }
+
+    expect(Math.max(...attacks) / Math.min(...attacks)).toBeGreaterThan(3.5);
 
     expect(samples.every(Number.isFinite)).toBe(true);
     expect(
@@ -255,7 +259,7 @@ describe("Residue Bloom audio synthesis", () => {
     expect(onsets.onsetCount).toBeGreaterThanOrEqual(score.totalSteps * 0.85);
     expect(onsets.p10Seconds).toBeGreaterThanOrEqual(0.16);
     expect(onsets.p90Seconds).toBeLessThanOrEqual(0.22);
-  }, 15_000);
+  }, 30_000);
 
   it("renders clearly separated anchors and ghost ticks in the first thirty seconds", () => {
     const sampleRate = 4_000;

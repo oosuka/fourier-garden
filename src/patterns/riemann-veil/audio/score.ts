@@ -1,13 +1,24 @@
-import { createPikoEvents, type PikoScoreProgram } from "../../../audio/pikoProgram";
+import {
+  createEnergyBalancedPikoScore,
+  createPikoEvents,
+  type PikoScoreProgram,
+} from "../../../audio/pikoProgram";
 import { getLongFormMotion } from "../../../audio/longFormMotion";
-const baseTimes = Array.from({ length: 19 }, (_, index) => (16 * index * index) / (19 * 19));
-const eventCount = 190;
+
+const RIEMANN_ACT_SECONDS = 16;
+const RIEMANN_INDEX_COUNT = 19;
+const RIEMANN_EVENTS_PER_INDEX = 3;
+const baseTimes = Array.from(
+  { length: RIEMANN_INDEX_COUNT },
+  (_, index) => (RIEMANN_ACT_SECONDS * index * index) / (RIEMANN_INDEX_COUNT * RIEMANN_INDEX_COUNT),
+);
+const eventCount = 285;
 
 function motionAt(index: number) {
   return getLongFormMotion({
     eventIndex: index,
     eventCount,
-    stepsPerBar: 38,
+    stepsPerBar: 57,
     rotation: 7,
     phaseOffset: 19,
     depth: 0.9,
@@ -19,54 +30,78 @@ function getRiemannEventMapping(index: number): Readonly<{
   eventTimeSeconds: number;
   indexN: number;
   response: boolean;
+  responseStep: 0 | 1 | 2;
 }> {
-  const act = Math.floor(index / 38);
-  const localIndex = index % 38;
-  const indexN = Math.floor(localIndex / 2) + 1;
-  const response = localIndex % 2 === 1;
+  const eventsPerAct = RIEMANN_INDEX_COUNT * RIEMANN_EVENTS_PER_INDEX;
+  const act = Math.floor(index / eventsPerAct);
+  const localIndex = index % eventsPerAct;
+  const indexN = Math.floor(localIndex / RIEMANN_EVENTS_PER_INDEX) + 1;
+  const responseStep = (localIndex % RIEMANN_EVENTS_PER_INDEX) as 0 | 1 | 2;
+  const mainTimeSeconds = baseTimes[indexN - 1]!;
+  const nextMainTimeSeconds =
+    indexN < RIEMANN_INDEX_COUNT ? baseTimes[indexN]! : RIEMANN_ACT_SECONDS;
   return {
     act,
-    eventTimeSeconds: act * 16 + baseTimes[indexN - 1]! + (response ? 0.096 : 0),
+    eventTimeSeconds:
+      act * RIEMANN_ACT_SECONDS +
+      mainTimeSeconds +
+      (responseStep / RIEMANN_EVENTS_PER_INDEX) * (nextMainTimeSeconds - mainTimeSeconds),
     indexN,
-    response,
+    response: responseStep > 0,
+    responseStep,
   };
 }
 
-const actEnergy = [0.7, 0.82, 1.284, 0.78, 0.92] as const;
+const actEnergy = [0.72, 0.86, 1.02, 0.7, 0.9] as const;
 
-export const RIEMANN_VEIL_SCORE: PikoScoreProgram = Object.freeze({
-  cycleSeconds: 80,
-  events: Object.freeze(
-    createPikoEvents({
-      cycleSeconds: 80,
-      count: eventCount,
-      time: (index) => getRiemannEventMapping(index).eventTimeSeconds,
-      frequency: (index) => 460 + ((getRiemannEventMapping(index).indexN - 1) / 18) * 560,
-      mathematicalGain: (index) => 1 / getRiemannEventMapping(index).indexN ** 2,
-      gain: (index) => {
-        const mapping = getRiemannEventMapping(index);
-        const energy = actEnergy[mapping.act]!;
-        const mathematicalGain = mapping.response
-          ? energy * (0.18 + 0.08 / Math.sqrt(mapping.indexN))
-          : (energy * 0.72) / (mapping.indexN * mapping.indexN);
-        return mathematicalGain * motionAt(index).accent;
-      },
-      pan: (index) => {
-        const mapping = getRiemannEventMapping(index);
-        return Math.sin(mapping.indexN * mapping.indexN * 0.037 * mapping.eventTimeSeconds) * 0.72;
-      },
-      panMotionDepth: (index) => 0.08 + 0.12 * motionAt(index).motionScale,
-      panMotionRateRadiansPerSecond: (index) => getRiemannEventMapping(index).indexN ** 2 * 0.037,
-      wet: (index) =>
-        (getRiemannEventMapping(index).response ? 0.16 : 0.1) * motionAt(index).spaceScale,
-      articulation: (index) => ({
-        attackSeconds: 0.008,
-        decaySeconds:
-          (getRiemannEventMapping(index).response ? 0.075 : 0.115) * motionAt(index).tailScale,
-        endSeconds:
-          (getRiemannEventMapping(index).response ? 0.18 : 0.28) * motionAt(index).tailScale,
+function getRiemannFrequencyHz(index: number): number {
+  const mapping = getRiemannEventMapping(index);
+  const mainFrequencyHz = 460 + ((mapping.indexN - 1) / 18) ** 0.72 * 300;
+  const responseRatio = [1, 0.875, 0.75][mapping.responseStep]!;
+  return Math.max(380, mainFrequencyHz * responseRatio);
+}
+
+export const RIEMANN_VEIL_SCORE: PikoScoreProgram = createEnergyBalancedPikoScore(
+  Object.freeze({
+    cycleSeconds: 80,
+    events: Object.freeze(
+      createPikoEvents({
+        cycleSeconds: 80,
+        count: eventCount,
+        time: (index) => getRiemannEventMapping(index).eventTimeSeconds,
+        frequency: getRiemannFrequencyHz,
+        mathematicalGain: (index) => 1 / getRiemannEventMapping(index).indexN ** 2,
+        gain: (index) => {
+          const mapping = getRiemannEventMapping(index);
+          const energy = actEnergy[mapping.act]!;
+          const mathematicalGain = mapping.response
+            ? energy * (0.06 + 0.17 / Math.sqrt(mapping.indexN))
+            : (energy * 0.28) / (mapping.indexN * mapping.indexN);
+          return mathematicalGain * motionAt(index).accent;
+        },
+        pan: (index) => {
+          const mapping = getRiemannEventMapping(index);
+          return (
+            Math.sin(mapping.indexN * mapping.indexN * 0.037 * mapping.eventTimeSeconds) * 0.58
+          );
+        },
+        panMotionDepth: (index) => 0.06 + 0.1 * motionAt(index).motionScale,
+        panMotionRateRadiansPerSecond: (index) => getRiemannEventMapping(index).indexN ** 2 * 0.037,
+        wet: (index) =>
+          (getRiemannEventMapping(index).response
+            ? 0.13 + getRiemannEventMapping(index).responseStep * 0.02
+            : 0.1) * motionAt(index).spaceScale,
+        articulation: (index) => ({
+          attackSeconds: getRiemannEventMapping(index).response ? 0.024 : 0.018,
+          decaySeconds:
+            (getRiemannEventMapping(index).response ? 0.2 : 0.17) * motionAt(index).tailScale,
+          endSeconds: Math.min(
+            0.49,
+            (getRiemannEventMapping(index).response ? 0.4 : 0.36) * motionAt(index).tailScale,
+          ),
+        }),
+        phaseDrift: (index) => getRiemannEventMapping(index).indexN ** 2 * 0.037,
       }),
-      phaseDrift: (index) => getRiemannEventMapping(index).indexN ** 2 * 0.037,
-    }),
-  ),
-});
+    ),
+  }),
+);

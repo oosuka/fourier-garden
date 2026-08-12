@@ -17,9 +17,19 @@ import {
   evaluateLissajous,
   greatestCommonDivisor,
 } from "./lissajous-orchard/math/model";
+import { LISSAJOUS_ORCHARD_SCORE, getLissajousAudioMapping } from "./lissajous-orchard/audio/score";
 import { TORUS_MODES, evaluateTorusField } from "./phase-torus/math/model";
 import { getPhaseTorusAudioMapping } from "./phase-torus/audio/score";
-import { PRIME_SUPPORT, evaluatePrimeSum, isPrime } from "./prime-constellation/math/model";
+import { PRIME_CONSTELLATION_SCORE } from "./prime-constellation/audio/score";
+import {
+  PRIME_GAPS,
+  PRIME_GAP_TIME_SCALE_SECONDS,
+  PRIME_PHRASE_SECONDS,
+  PRIME_PHRASE_TIMES,
+  PRIME_SUPPORT,
+  evaluatePrimeSum,
+  isPrime,
+} from "./prime-constellation/math/model";
 import {
   RIEMANN_TRUNCATIONS,
   evaluateRiemannPartial,
@@ -38,6 +48,23 @@ describe("new chapter mathematical contracts", () => {
     expect(PRIME_SUPPORT.every(isPrime)).toBe(true);
     expect(PRIME_SUPPORT.at(-1)).toBe(97);
     expect(evaluatePrimeSum(0)).toEqual({ real: 1, imaginary: 0 });
+  });
+
+  it("preserves prime-gap ratios while keeping each ten-second phrase continuous", () => {
+    PRIME_GAPS.forEach((gap, index) => {
+      expect(PRIME_PHRASE_TIMES[index + 1]! - PRIME_PHRASE_TIMES[index]!).toBeCloseTo(
+        gap * PRIME_GAP_TIME_SCALE_SECONDS,
+        12,
+      );
+    });
+    const firstPhrase = PRIME_CONSTELLATION_SCORE.events
+      .slice(0, PRIME_SUPPORT.length)
+      .map((event) => event.timeSeconds);
+    const cyclicGaps = firstPhrase.map((time, index) => {
+      const next = firstPhrase[index + 1] ?? PRIME_PHRASE_SECONDS;
+      return next - time;
+    });
+    expect(Math.max(...cyclicGaps)).toBeLessThanOrEqual(0.9);
   });
 
   it("keeps the fixed Dirichlet Bessel zeros and seventeen normalized real modes", () => {
@@ -73,6 +100,16 @@ describe("new chapter mathematical contracts", () => {
       expect(end[0]).toBeCloseTo(start[0], 12);
       expect(end[1]).toBeCloseTo(start[1], 12);
     }
+  });
+
+  it("keeps each Lissajous sonic phrase on the curve currently staged as the visual hero", () => {
+    LISSAJOUS_ORCHARD_SCORE.events.forEach((event, index) => {
+      const mapping = getLissajousAudioMapping(index);
+      const visualHeroIndex = Math.floor(event.timeSeconds / (60 / LISSAJOUS_RATIOS.length));
+
+      expect(mapping.ratioIndex).toBe(visualHeroIndex);
+      expect(mapping.ratio).toBe(LISSAJOUS_RATIOS[visualHeroIndex]);
+    });
   });
 
   it("evaluates Dirichlet kernels by continuous extension and separates Fejer averaging", () => {
@@ -132,13 +169,40 @@ describe("new chapter mathematical contracts", () => {
 
   it("keeps the Riemann main voice at the analytic 1/n squared ratio", () => {
     const mainEvents = RIEMANN_VEIL_SCORE.events
-      .filter((event) => event.sourceIndex < 38 && event.sourceIndex % 2 === 0)
+      .filter((event) => event.sourceIndex < 57 && event.sourceIndex % 3 === 0)
       .toSorted((left, right) => left.sourceIndex - right.sourceIndex);
     const fundamentalGain = mainEvents[0]!.mathematicalGain;
     for (let indexN = 1; indexN <= 19; indexN += 1) {
       const mainEvent = mainEvents[indexN - 1]!;
       expect(mainEvent.mathematicalGain / fundamentalGain).toBeCloseTo(1 / (indexN * indexN), 12);
     }
+  });
+
+  it("keeps exact quadratic main onsets and trisects each interval with two responses", () => {
+    const firstAct = RIEMANN_VEIL_SCORE.events
+      .filter((event) => event.sourceIndex < 57)
+      .toSorted((left, right) => left.timeSeconds - right.timeSeconds);
+    for (let indexN = 1; indexN <= 19; indexN += 1) {
+      const mainEvent = RIEMANN_VEIL_SCORE.events[indexN * 3 - 3]!;
+      const firstResponse = RIEMANN_VEIL_SCORE.events[indexN * 3 - 2]!;
+      const secondResponse = RIEMANN_VEIL_SCORE.events[indexN * 3 - 1]!;
+      const expectedMain = (16 * (indexN - 1) ** 2) / 19 ** 2;
+      const nextMain = indexN < 19 ? (16 * indexN ** 2) / 19 ** 2 : 16;
+      expect(mainEvent.timeSeconds).toBeCloseTo(expectedMain, 12);
+      expect(firstResponse.timeSeconds).toBeCloseTo(
+        expectedMain + (nextMain - expectedMain) / 3,
+        12,
+      );
+      expect(secondResponse.timeSeconds).toBeCloseTo(
+        expectedMain + (2 * (nextMain - expectedMain)) / 3,
+        12,
+      );
+    }
+    const cyclicGaps = firstAct.map((event, index) => {
+      const next = firstAct[index + 1]?.timeSeconds ?? 16;
+      return next - event.timeSeconds;
+    });
+    expect(Math.max(...cyclicGaps)).toBeLessThanOrEqual(0.55);
   });
 
   it("uses twenty-four conjugate torus modes and a real finite field", () => {

@@ -21,6 +21,7 @@ export function createPrimeConstellationWorkletProgram(): PikoWorkletProgram {
     detuneRatio: 0.001,
     outputGain: getChapterOutputGain("prime-constellation"),
     maximumVoices: 18,
+    timbre: { partialRatio: 1.5, partialGain: 0.055, chirpRatio: 0.012 },
   };
   validatePikoProgram(program);
   return program;

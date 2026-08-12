@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { getCinematicPostMode, getCinematicPostProfile } from "./postProcessing";
+import {
+  getCinematicPostMode,
+  getCinematicPostProfile,
+  getWebGlViewportPostMode,
+} from "./postProcessing";
 
 describe("cinematic post processing", () => {
   it("uses the approved bloom profiles", () => {
@@ -35,6 +39,13 @@ describe("cinematic post processing", () => {
     expect(getCinematicPostMode("webgl", false)).toBe("direct");
     expect(getCinematicPostMode("webgpu", true)).toBe("webgpu-bloom");
     expect(getCinematicPostMode("webgl", true)).toBe("webgl-bloom");
+  });
+
+  it("keeps native mathematical resolution by bypassing WebGL bloom only above the safe raster", () => {
+    expect(getWebGlViewportPostMode(1_440, 900, 2, true)).toBe("webgl-bloom");
+    expect(getWebGlViewportPostMode(2_880, 1_864, 1, true)).toBe("webgl-bloom");
+    expect(getWebGlViewportPostMode(3_840, 2_160, 1, true)).toBe("direct");
+    expect(getWebGlViewportPostMode(1_920, 1_080, 1, false)).toBe("direct");
   });
 
   it("returns immutable profiles", () => {

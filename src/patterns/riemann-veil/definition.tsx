@@ -20,13 +20,13 @@ export const riemannVeilPattern: RiemannVeilPatternDefinition = {
     motion: "horizontal-focus-thread",
     space: "deep-wide-layered-membranes",
     palette: "silver-pale-violet-indigo",
-    timbre: "rounded-glass-thread-piko",
+    timbre: "soft-descending-quadratic-thread",
     rhythm: "quadratic-expanding-gaps",
     time: "five-sixteen-second-weaves",
     audio: {
-      onsetPattern: "quadratic-answer-with-eighty-second-weave",
-      articulation: "glass-rounded-finite-tail",
-      pitchMapping: "quadratic-index-compressed",
+      onsetPattern: "quadratic-descending-answer-with-eighty-second-weave",
+      articulation: "soft-rounded-finite-tail",
+      pitchMapping: "quadratic-index-compressed-with-downward-responses",
       spatialGesture: "thread-crossing-pan",
       wetCharacter: "thin-longer-veil-room",
     },
@@ -75,7 +75,7 @@ export const riemannVeilPattern: RiemannVeilPatternDefinition = {
     scopeNotice:
       "無限和の微分可能性、自己相似性、極限の正則性を有限画像から主張しません。本章のRiemann型関数はRiemannゼータ関数の零点を表示するものではなく、四層はいずれも有限和です。",
     sonificationBody:
-      "平方数順序、主声部の1/n²強度比、絶対発音時刻のn²位相を中域のガラス質ピコへ写します。広がる発音間隔と短い応答声部には80秒の強弱、尾長、wet輪郭を重ね、n²位相を連続定位にも使います。460–1,020 Hzへの圧縮、丸めた高域、薄い余韻は音色演出です。",
+      "平方数順序、主声部の1/n²強度比、各16秒幕の厳密な二次発音時刻16(n−1)²/19²、絶対発音時刻のn²位相を中域のガラス質ピコへ写します。各主時刻から次の主時刻（n=19では幕境界）までを3等分し、1/3点と2/3点に有限の応答声部を置きます。二次間隔の拡大を保ったまま最大発音間隔を0.55秒以下にし、全周期のエネルギー重心も中央へ補正します。80秒の強弱、尾長、wet輪郭、460–1,020 Hzへの圧縮、丸めた高域、薄い余韻は音色演出です。",
     poeticLayerBody:
       "膜の皺、銀粉、残光、四層間の奥行きは詩的造形です。平方数支持に対応する糸だけが局所発光しますが、膜の折れや粒子を有限和の特異点として扱いません。",
   },

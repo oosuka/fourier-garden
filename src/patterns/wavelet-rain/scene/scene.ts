@@ -6,8 +6,54 @@ import {
   evaluateFiveActEnergy,
 } from "../../../rendering/analytic/primitives";
 import type { PatternSceneOptions } from "../../contracts";
+import { WAVELET_RAIN_SCORE } from "../audio/score";
 import { HAAR_COEFFICIENTS, evaluateHaarProjection } from "../math/model";
 const PALETTE = [0x54eaff, 0x4b84ff, 0xa55cff] as const;
+
+function findScoreEventIndex(localTimeSeconds: number): number {
+  let lower = 0;
+  let upper = WAVELET_RAIN_SCORE.events.length;
+  while (lower < upper) {
+    const middle = Math.floor((lower + upper) / 2);
+    if (WAVELET_RAIN_SCORE.events[middle]!.timeSeconds <= localTimeSeconds) {
+      lower = middle + 1;
+    } else {
+      upper = middle;
+    }
+  }
+  return Math.max(0, lower - 1);
+}
+
+export function getWaveletRainVisualEvent(timeSeconds: number): Readonly<{
+  eventIndex: number;
+  coefficientIndex: number;
+  supportPosition: number;
+  pulse: number;
+  progress: number;
+}> {
+  const localTime =
+    ((timeSeconds % WAVELET_RAIN_SCORE.cycleSeconds) + WAVELET_RAIN_SCORE.cycleSeconds) %
+    WAVELET_RAIN_SCORE.cycleSeconds;
+  const scoreIndex = findScoreEventIndex(localTime);
+  const event = WAVELET_RAIN_SCORE.events[scoreIndex]!;
+  const nextEventTimeSeconds =
+    scoreIndex + 1 < WAVELET_RAIN_SCORE.events.length
+      ? WAVELET_RAIN_SCORE.events[scoreIndex + 1]!.timeSeconds
+      : WAVELET_RAIN_SCORE.cycleSeconds;
+  const eventDurationSeconds = nextEventTimeSeconds - event.timeSeconds;
+  const coefficientIndex = event.sourceIndex % HAAR_COEFFICIENTS.length;
+  const coefficient = HAAR_COEFFICIENTS[coefficientIndex]!;
+  const progress = Math.max(0, Math.min(1, (localTime - event.timeSeconds) / eventDurationSeconds));
+  const pulse = Math.sin(Math.PI * progress) ** 0.72;
+  return {
+    eventIndex: event.sourceIndex,
+    coefficientIndex,
+    supportPosition: (coefficient.start + coefficient.end) / 2,
+    pulse,
+    progress,
+  };
+}
+
 export function createWaveletRainContent() {
   const group = new THREE.Group();
   const cells = HAAR_COEFFICIENTS.map((coefficient) => {
@@ -32,6 +78,38 @@ export function createWaveletRainContent() {
     mesh.scale.y = 0.6 + Math.min(1.4, Math.abs(coefficient.value) * 3);
     group.add(mesh);
     return { coefficient, mesh, material, baseY: mesh.position.y };
+  });
+  const dropGeometry = new THREE.SphereGeometry(1, 10, 7);
+  const positiveDropMaterial = new THREE.MeshBasicMaterial({
+    color: PALETTE[0],
+    transparent: true,
+    opacity: 0.32,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  const negativeDropMaterial = new THREE.MeshBasicMaterial({
+    color: PALETTE[2],
+    transparent: true,
+    opacity: 0.28,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  const coefficientDrops = HAAR_COEFFICIENTS.map((coefficient, index) => {
+    const centerX = ((coefficient.start + coefficient.end) / 2 - 0.5) * 9.6;
+    const baseY = 3.2 - coefficient.j * 1.05;
+    const radius = 0.055 + Math.sqrt(Math.abs(coefficient.value)) * 0.13;
+    const mesh = new THREE.Mesh(
+      dropGeometry,
+      coefficient.value >= 0 ? positiveDropMaterial : negativeDropMaterial,
+    );
+    mesh.position.set(centerX, baseY, 0.4 + coefficient.j * 0.09);
+    mesh.scale.set(radius * 0.62, radius * 1.65, radius * 0.62);
+    mesh.userData.layer = "poetic-coefficient-drop";
+    mesh.userData.coefficientIndex = index;
+    group.add(mesh);
+    return { coefficient, index, mesh, centerX, baseY, radius };
   });
   const rainThreads = HAAR_COEFFICIENTS.map((coefficient, index) => {
     const centerX = ((coefficient.start + coefficient.end) / 2 - 0.5) * 9.6;
@@ -75,21 +153,52 @@ export function createWaveletRainContent() {
   group.add(reconstruction.line);
   const scanPositions = new Float32Array([-4.8, -4.6, 0.4, -4.8, 4.1, 0.4]);
   const scan = createLine(scanPositions, 0xffffff, 0.7);
-  group.add(scan.line);
+  const impactRingPositions = new Float32Array(65 * 3);
+  for (let index = 0; index <= 64; index += 1) {
+    const angle = (index / 64) * Math.PI * 2;
+    impactRingPositions[index * 3] = Math.cos(angle);
+    impactRingPositions[index * 3 + 1] = Math.sin(angle) * 0.28;
+    impactRingPositions[index * 3 + 2] = 0;
+  }
+  const impactRing = createLine(impactRingPositions, 0xd9fbff, 0.36);
+  group.add(scan.line, impactRing.line);
   return {
     group,
     update(timeSeconds: number) {
-      const observation = (0.04 * timeSeconds) % 1;
+      const visualEvent = getWaveletRainVisualEvent(timeSeconds);
+      const observation = visualEvent.supportPosition;
       scan.line.position.x = observation * 9.6;
       cells.forEach(({ coefficient, mesh, material, baseY }, index) => {
-        const active = observation >= coefficient.start && observation < coefficient.end;
+        const active = index === visualEvent.coefficientIndex;
         material.opacity = Math.min(
           0.68,
-          (0.1 + Math.abs(coefficient.value) * 1.12) * (active ? 1.28 : 1),
+          (0.1 + Math.abs(coefficient.value) * 1.12) *
+            (active ? 1.28 + visualEvent.pulse * 0.48 : 1),
         );
         mesh.position.y =
-          baseY + Math.sin(timeSeconds * (0.32 + coefficient.j * 0.04) + index) * 0.17;
+          baseY +
+          Math.sin(timeSeconds * (0.32 + coefficient.j * 0.04) + index) * 0.17 +
+          (active ? visualEvent.pulse * 0.12 : 0);
         mesh.rotation.z = Math.sin(timeSeconds * 0.09 + index * 0.73) * 0.018;
+      });
+      coefficientDrops.forEach(({ coefficient, index, mesh, centerX, baseY, radius }) => {
+        const ambientProgress =
+          (((timeSeconds * (0.032 + coefficient.j * 0.004) + index * 0.173) % 1) + 1) % 1;
+        const active = index === visualEvent.coefficientIndex;
+        const fallProgress = active
+          ? 1 - (1 - visualEvent.progress) ** 2.2
+          : ambientProgress * 0.72;
+        mesh.position.x =
+          centerX + Math.sin(timeSeconds * 0.21 + index * 1.17) * (0.025 + coefficient.j * 0.006);
+        mesh.position.y = baseY - fallProgress * (baseY + 3.55);
+        mesh.position.z =
+          0.4 + coefficient.j * 0.09 + Math.sin(timeSeconds * 0.16 + index * 0.53) * 0.12;
+        const response = active ? 1 + visualEvent.pulse * 1.45 : 0.72 + ambientProgress * 0.2;
+        mesh.scale.set(
+          radius * (0.56 + response * 0.12),
+          radius * (1.25 + response * 0.8),
+          radius * (0.56 + response * 0.12),
+        );
       });
       rainThreads.forEach(
         ({ coefficient, index, centerX, startY, length, positions, attribute, line }) => {
@@ -104,7 +213,7 @@ export function createWaveletRainContent() {
           (line.material as THREE.LineBasicMaterial).opacity =
             0.12 +
             Math.min(0.44, Math.abs(coefficient.value) * 1.4) +
-            (observation >= coefficient.start && observation < coefficient.end ? 0.18 : 0);
+            (index === visualEvent.coefficientIndex ? 0.18 + visualEvent.pulse * 0.26 : 0);
         },
       );
       reconstructionEchoes.forEach(({ line, material, index }) => {
@@ -115,6 +224,10 @@ export function createWaveletRainContent() {
       });
       group.rotation.y = Math.sin(timeSeconds * 0.031) * 0.07;
       group.rotation.z = Math.sin(timeSeconds * 0.019 + 0.6) * 0.018;
+      impactRing.line.position.set((observation - 0.5) * 9.6, -3.72, 0.46);
+      impactRing.line.scale.setScalar(0.18 + visualEvent.progress * 0.92);
+      (impactRing.line.material as THREE.LineBasicMaterial).opacity =
+        0.12 + visualEvent.pulse * 0.72;
       return { energy: evaluateFiveActEnergy(timeSeconds, 64), warmth: 0.12 };
     },
   };

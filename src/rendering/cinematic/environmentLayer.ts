@@ -9,6 +9,7 @@ import {
   CINEMATIC_ENVIRONMENT_PROFILES,
   getCinematicViewportSpan,
   type CinematicChapterId,
+  type CinematicEnvironmentLayout,
   type CinematicEnvironmentProfile,
 } from "./model";
 
@@ -31,6 +32,99 @@ const LIGHT_PILLAR_TEXTURE_HEIGHT = 128;
 const LUMINANCE_WELL_COUNT = 4;
 const GLOW_TEXTURE_SIZE = 96;
 const WEBGL_PARTICLE_CAP = 8_000;
+
+interface CinematicLayerArtDirection {
+  nebula: number;
+  filament: number;
+  halo: number;
+  flare: number;
+  aurora: number;
+  pillar: number;
+  well: number;
+}
+
+export function getCinematicLayerArtDirection(
+  layout: CinematicEnvironmentLayout,
+): CinematicLayerArtDirection {
+  if (layout === "constellation") {
+    return {
+      nebula: 0.56,
+      filament: 0.42,
+      halo: 1.34,
+      flare: 1.34,
+      aurora: 0.7,
+      pillar: 0.12,
+      well: 0.68,
+    };
+  }
+  if (layout === "tidal") {
+    return {
+      nebula: 0.82,
+      filament: 0.42,
+      halo: 1.18,
+      flare: 0.82,
+      aurora: 1.2,
+      pillar: 0.2,
+      well: 1.22,
+    };
+  }
+  if (layout === "orchard") {
+    return {
+      nebula: 1.08,
+      filament: 1.24,
+      halo: 0.66,
+      flare: 1.18,
+      aurora: 1.28,
+      pillar: 0.28,
+      well: 0.92,
+    };
+  }
+  if (layout === "lanterns") {
+    return {
+      nebula: 0.72,
+      filament: 0.52,
+      halo: 0.48,
+      flare: 0.92,
+      aurora: 0.7,
+      pillar: 1.3,
+      well: 0.82,
+    };
+  }
+  if (layout === "rain") {
+    return {
+      nebula: 0.68,
+      filament: 0.24,
+      halo: 0.42,
+      flare: 0.82,
+      aurora: 1.48,
+      pillar: 0.52,
+      well: 0.74,
+    };
+  }
+  if (layout === "veil") {
+    return {
+      nebula: 1.12,
+      filament: 1.38,
+      halo: 0.72,
+      flare: 0.68,
+      aurora: 1.16,
+      pillar: 0.08,
+      well: 1.04,
+    };
+  }
+  if (layout === "torus") {
+    return {
+      nebula: 0.72,
+      filament: 0.3,
+      halo: 1.42,
+      flare: 0.88,
+      aurora: 1.08,
+      pillar: 0.08,
+      well: 1.36,
+    };
+  }
+  return { nebula: 1, filament: 1, halo: 1, flare: 1, aurora: 1, pillar: 1, well: 1 };
+}
 
 export interface CinematicEnvironmentLayerOptions {
   backend: RendererBackend;
@@ -193,6 +287,7 @@ function createWebGpuNebulaMaterial(
   time: THREE.UniformNode<"float", number>,
   energy: THREE.UniformNode<"float", number>,
   warmth: THREE.UniformNode<"float", number>,
+  opacityScale: number,
 ): THREE.MeshBasicNodeMaterial {
   const first = colorChannels(firstColor);
   const second = colorChannels(secondColor);
@@ -211,7 +306,9 @@ function createWebGpuNebulaMaterial(
   const cloud = float(1).sub(smoothstep(0.04, 0.7, distance));
   const coolTone = mix(vec3(...first), vec3(...second), rings);
   material.colorNode = mix(coolTone, vec3(1, 0.62, 0.28), warmth.mul(0.2));
-  material.opacityNode = cloud.mul(rings.mul(0.003).add(0.0015).add(energy.mul(0.0045)));
+  material.opacityNode = cloud
+    .mul(rings.mul(0.003).add(0.0015).add(energy.mul(0.0045)))
+    .mul(float(opacityScale));
   return material;
 }
 
@@ -514,6 +611,7 @@ export class CinematicEnvironmentLayer {
       (options.chapter ? CINEMATIC_ENVIRONMENT_PROFILES[options.chapter] : undefined);
     if (!profile) throw new Error("Cinematic environment profile is required");
     this.profile = profile;
+    const artDirection = getCinematicLayerArtDirection(profile.layout);
     const field = options.profile
       ? createCinematicParticleFieldFromProfile(options.seed, profile, this.maximumParticleCount)
       : createCinematicParticleField(options.seed, options.chapter!, this.maximumParticleCount);
@@ -556,7 +654,7 @@ export class CinematicEnvironmentLayer {
     for (let index = 0; index < NEBULA_VEIL_COUNT; index += 1) {
       const firstColor = options.palette[index % options.palette.length]!;
       const secondColor = options.palette[(index + 1) % options.palette.length]!;
-      const baseOpacity = 0.03 - index * 0.0035;
+      const baseOpacity = (0.03 - index * 0.0035) * artDirection.nebula;
       const texture =
         options.backend === "webgl"
           ? createNebulaTexture(options.seed + index * 997, firstColor, secondColor)
@@ -570,6 +668,7 @@ export class CinematicEnvironmentLayer {
               this.sceneTime,
               this.sceneEnergy,
               this.sceneWarmth,
+              artDirection.nebula,
             )
           : new THREE.MeshBasicMaterial({
               map: texture,
@@ -619,7 +718,7 @@ export class CinematicEnvironmentLayer {
       this.filamentVeils.push({
         line,
         material,
-        baseOpacity: 0.068 + index * 0.007,
+        baseOpacity: (0.068 + index * 0.007) * artDirection.filament,
         phase: index * 0.9 + options.seed * 0.0001,
       });
     }
@@ -649,7 +748,7 @@ export class CinematicEnvironmentLayer {
       this.resonanceHalos.push({
         line,
         material,
-        baseOpacity: 0.04 + index * 0.006,
+        baseOpacity: (0.04 + index * 0.006) * artDirection.halo,
         phase: index * 0.83 + options.seed * 0.00013,
         baseScale: 0.82 + index * 0.035,
         rotationOffset:
@@ -695,7 +794,7 @@ export class CinematicEnvironmentLayer {
         material,
         baseScale,
         baseY: chapterY,
-        baseOpacity: 0.13 + (index % 3) * 0.04,
+        baseOpacity: (0.13 + (index % 3) * 0.04) * artDirection.flare,
         phase: index * 1.73 + options.seed * 0.00017,
       });
     }
@@ -722,7 +821,7 @@ export class CinematicEnvironmentLayer {
         positions,
         phase: profile.filamentPhase + index * 1.27 + options.seed * 0.00011,
         index,
-        baseOpacity: 0.004 + index * 0.0015,
+        baseOpacity: (0.004 + index * 0.0015) * artDirection.aurora,
         baseWidth: 0.012 + index * 0.006,
       });
     }
@@ -733,7 +832,7 @@ export class CinematicEnvironmentLayer {
         map: this.pillarTexture,
         color: options.palette[index % options.palette.length]!,
         transparent: true,
-        opacity: placement.opacity,
+        opacity: placement.opacity * artDirection.pillar,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         toneMapped: false,
@@ -751,7 +850,7 @@ export class CinematicEnvironmentLayer {
         baseY: placement.y,
         baseWidth: placement.width,
         baseHeight: placement.height,
-        baseOpacity: placement.opacity,
+        baseOpacity: placement.opacity * artDirection.pillar,
         phase: index * 1.91 + options.seed * 0.00019,
       });
     }
@@ -791,7 +890,7 @@ export class CinematicEnvironmentLayer {
         baseX,
         baseY,
         baseScale,
-        baseOpacity: 0.006 + index * 0.002,
+        baseOpacity: (0.006 + index * 0.002) * artDirection.well,
         phase: angle + options.seed * 0.00007,
       });
     }

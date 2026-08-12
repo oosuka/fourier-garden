@@ -2,7 +2,7 @@
   "name": "fourier-garden",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "npm@11.17.0",
+  "packageManager": "npm@11.19.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
@@ -12,6 +12,7 @@
     "lint:fix": "oxlint --fix --deny-warnings --report-unused-disable-directives .",
     "format": "biome format --write .",
     "format:check": "biome format .",
+    "qa:audio-performance": "FOURIER_GARDEN_REPORT_WORKLET_PERFORMANCE=1 vitest run src/audio/workletRuntime.test.ts --reporter=verbose",
     "check": "npm run format:check && npm run lint && npm test && npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -46,8 +47,8 @@
     "npm": "11.x"
   },
   "volta": {
-    "node": "24.16.0",
-    "npm": "11.17.0"
+    "node": "24.19.0",
+    "npm": "11.19.0"
   },
   "allowScripts": {
     "fsevents@2.3.3": true

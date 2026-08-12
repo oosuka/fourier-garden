@@ -92,10 +92,20 @@ const VOWELS_BY_GESTURE = {
   Record<MobiusChoirGesture, readonly [MobiusChoirVowel, MobiusChoirVowel]>
 >;
 
+const PULSE_BY_SECTION = {
+  breath: [0.74, 1, 0.68, 0.88],
+  antiphon: [1, 0.7, 0.9, 0.74],
+  inversion: [0.72, 0.92, 0.7, 1],
+  interweave: [0.9, 0.68, 1, 0.72],
+  confluence: [0.7, 1, 0.66, 0.88],
+} as const satisfies Readonly<
+  Record<MobiusChoirSectionId, readonly [number, number, number, number]>
+>;
+
 const SECTION_PROFILES = {
   breath: {
-    baseGain: 0.52,
-    wetSend: 0.12,
+    baseGain: 0.5,
+    wetSend: 0.15,
     stereoSpread: 0.64,
     registers: [1],
     partialCount: 1,
@@ -104,8 +114,8 @@ const SECTION_PROFILES = {
     panMotion: 0.32,
   },
   antiphon: {
-    baseGain: 0.6,
-    wetSend: 0.1,
+    baseGain: 0.62,
+    wetSend: 0.14,
     stereoSpread: 0.86,
     registers: [1],
     partialCount: 1,
@@ -115,8 +125,8 @@ const SECTION_PROFILES = {
   },
   inversion: {
     baseGain: 0.71,
-    wetSend: 0.09,
-    stereoSpread: 0.98,
+    wetSend: 0.13,
+    stereoSpread: 0.94,
     registers: [1],
     partialCount: 1,
     amplitudeMotionDepth: 0.3,
@@ -125,8 +135,8 @@ const SECTION_PROFILES = {
   },
   interweave: {
     baseGain: 0.75,
-    wetSend: 0.11,
-    stereoSpread: 1,
+    wetSend: 0.16,
+    stereoSpread: 0.96,
     registers: [1],
     partialCount: 1,
     amplitudeMotionDepth: 0.34,
@@ -134,8 +144,8 @@ const SECTION_PROFILES = {
     panMotion: 0.72,
   },
   confluence: {
-    baseGain: 0.56,
-    wetSend: 0.14,
+    baseGain: 0.6,
+    wetSend: 0.18,
     stereoSpread: 0.76,
     registers: [1],
     partialCount: 1,
@@ -210,7 +220,7 @@ function buildEvents(): MobiusChoirScoreEvent[] {
       if (barIndex === 15 && slotInBar === 15) modeIds = [1];
       const sectionOrdinal = sectionOrdinals[section.id] - 1;
       const [vowelStart, vowelEnd] = VOWELS_BY_GESTURE[gesture];
-      const phraseAccent = [0.78, 1, 0.68, 0.92][slotInBar % 4]!;
+      const phraseAccent = PULSE_BY_SECTION[section.id][slotInBar % 4]!;
       const longForm = getLongFormMotion({
         eventIndex: events.length,
         eventCount: 256,

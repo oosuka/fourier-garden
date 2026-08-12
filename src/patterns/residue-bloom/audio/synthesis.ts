@@ -57,6 +57,7 @@ export interface AudioRhythmPreset {
 }
 
 export interface SonificationComponent extends AudioPartial {
+  sourceIndex: number;
   nominalFrequencyHz: number;
   leftFrequencyHz: number;
   rightFrequencyHz: number;
@@ -155,6 +156,7 @@ export function getSonificationComponents(
     const maximumGeneratedFrequencyHz = Math.max(leftFrequencyHz, rightFrequencyHz);
 
     return {
+      sourceIndex: index,
       harmonic: partial.harmonic,
       sourceFrequencyHz: partial.sourceFrequencyHz,
       sourceAmplitude: partial.sourceAmplitude,
@@ -263,9 +265,10 @@ export function renderResidueBloomStereo({
     let leftValue = 0;
     let rightValue = 0;
 
-    for (const [index, component] of components.entries()) {
+    for (const component of components) {
       const eventPan = frame.event.normalizedPhasorX * 0.28;
-      const partialPan = Math.sin(index * 2.399963229728653) * 0.24 * frame.event.stereoSpread;
+      const partialPan =
+        Math.sin(component.sourceIndex * 2.399963229728653) * 0.24 * frame.event.stereoSpread;
       const pan = Math.min(0.92, Math.max(-0.92, eventPan + partialPan));
       const leftPan = Math.sqrt((1 - pan) / 2);
       const rightPan = Math.sqrt((1 + pan) / 2);

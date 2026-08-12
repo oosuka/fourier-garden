@@ -8,9 +8,11 @@ import {
 import { PHASE_TORUS_SCORE } from "./score";
 export const PHASE_TORUS_AUDIO_GRAPH: AudioGraphPreset = {
   ...PIKO_AUDIO_GRAPH,
-  dryLowPassHz: 1_560,
-  wetGain: 0.068,
-  roomSeconds: 1.08,
+  dryHighShelfGainDb: -21,
+  dryLowPassHz: 1_320,
+  wetLowPassHz: 900,
+  wetGain: 0.082,
+  roomSeconds: 1.18,
 };
 export function createPhaseTorusWorkletProgram(): PikoWorkletProgram {
   const program = {
@@ -19,6 +21,11 @@ export function createPhaseTorusWorkletProgram(): PikoWorkletProgram {
     detuneRatio: 0.0015,
     outputGain: getChapterOutputGain("phase-torus"),
     maximumVoices: 22,
+    timbre: {
+      partialRatio: (1 + Math.sqrt(5)) / 2,
+      partialGain: 0.055,
+      chirpRatio: 0.022,
+    },
   };
   validatePikoProgram(program);
   return program;

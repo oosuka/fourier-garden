@@ -20,7 +20,10 @@ import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   buildMusicalScoreProgram,
 } from "../patterns/residue-bloom/audio/score";
-import { createResidueBloomAudioProgram } from "../patterns/residue-bloom/audio/synthesis";
+import {
+  createResidueBloomAudioProgram,
+  renderResidueBloomStereo,
+} from "../patterns/residue-bloom/audio/synthesis";
 import {
   RESIDUE_BLOOM_SERIES,
   RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
@@ -440,5 +443,96 @@ describe("AudioWorklet runtime", () => {
 
     expect(outputs[0]![0]!.some((sample) => sample !== 0)).toBe(true);
     expect(outputs.flat().every((channel) => channel.every(Number.isFinite))).toBe(true);
+  });
+
+  it.each(
+    [44_100, 48_000, 96_000].flatMap((sampleRate) =>
+      [0.01, 30.123, 72.001, 143.99, 144.01].map(
+        (startTimeSeconds) => [sampleRate, startTimeSeconds] as const,
+      ),
+    ),
+  )("matches the optimized Residue Bloom renderer at %i Hz and %s seconds", (sampleRate, startTimeSeconds) => {
+    const score = buildMusicalScoreProgram(
+      RESIDUE_BLOOM_SCORE_DEFINITION,
+      RESIDUE_BLOOM_SERIES,
+      55,
+      RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+    );
+    const frameCount = 128;
+    const processor = loadProcessor(sampleRate);
+    const outputs = createOutputs(frameCount);
+    send(processor, { type: "configure", program: createResidueBloomAudioProgram(score).worklet });
+    send(processor, { type: "seek", seconds: startTimeSeconds });
+    send(processor, { type: "active", value: true });
+    processor.fade = 1;
+    processor.process([], outputs);
+
+    const expected = renderResidueBloomStereo({
+      score,
+      startTimeSeconds: Math.round(startTimeSeconds * sampleRate) / sampleRate,
+      durationSeconds: frameCount / sampleRate,
+      sampleRate,
+    });
+    for (let frame = 0; frame < frameCount; frame += 1) {
+      expect(Math.abs(outputs[0]![0]![frame]! - expected.left[frame]!)).toBeLessThanOrEqual(1e-6);
+      expect(Math.abs(outputs[0]![1]![frame]! - expected.right[frame]!)).toBeLessThanOrEqual(1e-6);
+    }
+  });
+
+  it("keeps representative 128-sample blocks below half of the 48 kHz deadline", () => {
+    const residueScore = buildMusicalScoreProgram(
+      RESIDUE_BLOOM_SCORE_DEFINITION,
+      RESIDUE_BLOOM_SERIES,
+      55,
+      RESIDUE_BLOOM_VISUAL_ANGULAR_RATE,
+    );
+    const cases = [
+      { timeSeconds: 72, program: createResidueBloomAudioProgram(residueScore).worklet },
+      { timeSeconds: 50, program: createSpectralCathedralWorkletProgram() },
+      { timeSeconds: 30, program: createPrimeConstellationWorkletProgram() },
+      { timeSeconds: 42.353, program: createMobiusChoirWorkletProgram() },
+      { timeSeconds: 38, program: createBesselTideWorkletProgram() },
+      { timeSeconds: 36, program: createLissajousOrchardWorkletProgram() },
+      { timeSeconds: 30, program: createDirichletLanternsWorkletProgram() },
+      { timeSeconds: 32, program: createWaveletRainWorkletProgram() },
+      { timeSeconds: 48, program: createRiemannVeilWorkletProgram() },
+      { timeSeconds: 42, program: createPhaseTorusWorkletProgram() },
+    ];
+    const sampleRate = 48_000;
+    const blockSamples = 128;
+    const halfDeadlineMilliseconds = ((blockSamples / sampleRate) * 1_000) / 2;
+    const measurements: Array<{ chapter: string; p95Milliseconds: number }> = [];
+
+    for (const { timeSeconds, program } of cases) {
+      const processor = loadProcessor(sampleRate);
+      const outputs = createOutputs(blockSamples);
+      send(processor, { type: "configure", program });
+      send(processor, { type: "seek", seconds: timeSeconds });
+      send(processor, { type: "active", value: true });
+      processor.fade = 1;
+      for (let block = 0; block < 32; block += 1) processor.process([], outputs);
+
+      const batchAverages: number[] = [];
+      for (let batch = 0; batch < 32; batch += 1) {
+        const startMilliseconds = performance.now();
+        for (let block = 0; block < 16; block += 1) processor.process([], outputs);
+        batchAverages.push((performance.now() - startMilliseconds) / 16);
+      }
+      batchAverages.sort((left, right) => left - right);
+      const p95Milliseconds = batchAverages[Math.floor(batchAverages.length * 0.95)]!;
+      measurements.push({
+        chapter: program.kind,
+        p95Milliseconds: Number(p95Milliseconds.toFixed(3)),
+      });
+
+      expect(
+        p95Milliseconds,
+        `${program.kind} p95 block ${p95Milliseconds.toFixed(3)} ms exceeds ${halfDeadlineMilliseconds.toFixed(3)} ms`,
+      ).toBeLessThanOrEqual(halfDeadlineMilliseconds);
+    }
+
+    if (process.env.FOURIER_GARDEN_REPORT_WORKLET_PERFORMANCE === "1") {
+      console.table(measurements);
+    }
   });
 });

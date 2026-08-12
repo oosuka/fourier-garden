@@ -4,6 +4,8 @@ export const PRIME_SUPPORT = Object.freeze([
 
 export const PRIME_CONSTELLATION_CYCLE_SECONDS = 60;
 export const PRIME_VISUAL_RATE = 0.06;
+export const PRIME_PHRASE_SECONDS = 10;
+export const PRIME_ACTIVE_PHRASE_SECONDS = 9.2;
 
 export function isPrime(value: number): boolean {
   if (!Number.isInteger(value) || value < 2) return false;
@@ -29,4 +31,17 @@ export function getPrimePhasePoint(prime: number, x: number): readonly [number, 
 
 export const PRIME_GAPS = Object.freeze(
   PRIME_SUPPORT.slice(1).map((prime, index) => prime - PRIME_SUPPORT[index]!),
+);
+
+export const PRIME_GAP_TIME_SCALE_SECONDS =
+  PRIME_ACTIVE_PHRASE_SECONDS / (PRIME_SUPPORT.at(-1)! - PRIME_SUPPORT[0]!);
+
+export const PRIME_PHRASE_TIMES = Object.freeze(
+  (() => {
+    const times = [0];
+    for (const gap of PRIME_GAPS) {
+      times.push(times.at(-1)! + gap * PRIME_GAP_TIME_SCALE_SECONDS);
+    }
+    return times;
+  })(),
 );

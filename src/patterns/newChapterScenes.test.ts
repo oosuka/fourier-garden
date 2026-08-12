@@ -7,7 +7,8 @@ import { createLissajousOrchardContent } from "./lissajous-orchard/scene/scene";
 import { createPhaseTorusContent } from "./phase-torus/scene/scene";
 import { createPrimeConstellationContent } from "./prime-constellation/scene/scene";
 import { createRiemannVeilContent } from "./riemann-veil/scene/scene";
-import { createWaveletRainContent } from "./wavelet-rain/scene/scene";
+import { WAVELET_RAIN_SCORE } from "./wavelet-rain/audio/score";
+import { createWaveletRainContent, getWaveletRainVisualEvent } from "./wavelet-rain/scene/scene";
 
 function getPositions(object: THREE.Object3D): Float32Array {
   const geometry = (object as THREE.Line).geometry;
@@ -73,6 +74,26 @@ describe("new chapter scene continuity", () => {
     const repeated = content.group.children.slice(0, 63).map((cell) => cell.position.y);
 
     expect(repeated).toEqual(first);
+  });
+
+  it("maps each Wavelet Rain onset to the same coefficient in sound and local rain", () => {
+    for (const event of WAVELET_RAIN_SCORE.events.filter((_, index) => index % 29 === 0)) {
+      const visual = getWaveletRainVisualEvent(event.timeSeconds + 0.02);
+
+      expect(visual.eventIndex).toBe(event.sourceIndex);
+      expect(visual.coefficientIndex).toBe(event.sourceIndex % 63);
+      expect(visual.pulse).toBeGreaterThan(0);
+      expect(visual.pulse).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("keeps exact Wavelet cells separate from coefficient-linked poetic droplets", () => {
+    const content = createWaveletRainContent();
+    const droplets = content.group.children.filter(
+      (child) => child.userData.layer === "poetic-coefficient-drop",
+    );
+
+    expect(droplets).toHaveLength(63);
   });
 
   it("crossfades the Lissajous hero layout across selection boundaries", () => {

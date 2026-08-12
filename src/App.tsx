@@ -468,7 +468,7 @@ export function App() {
             </span>
           </button>
           <p className="entryHint">
-            Headphones recommended · Space: pause · D: details · F: fullscreen
+            Mac built-in speakers · Space: pause · D: details · F: fullscreen
           </p>
         </section>
       )}

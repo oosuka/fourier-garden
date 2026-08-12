@@ -48,6 +48,10 @@ export class AudioEngine {
     return this.volume;
   }
 
+  get sampleRateHz(): number | null {
+    return this.context?.sampleRate ?? null;
+  }
+
   get initialized(): boolean {
     return this.context !== null;
   }
@@ -66,7 +70,7 @@ export class AudioEngine {
   private async initializeContext(): Promise<void> {
     const context = new AudioContext({ latencyHint: "interactive" });
     try {
-      await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=21");
+      await context.audioWorklet.addModule("/audio/fourier-worklet.js?v=24");
       if (this.disposed) {
         await context.close();
         return;

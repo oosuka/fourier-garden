@@ -65,7 +65,9 @@ export function RiemannVeilDetails() {
         { label: "最大指数", value: "96²=9,216" },
         { label: "最大描画標本", value: "32,768点" },
         { label: "観測点", value: "x(t)=0.037t mod 2π / 絶対時刻" },
-        { label: "音楽構成", value: "80秒 / 190イベント / 5幕" },
+        { label: "音楽構成", value: "80秒 / 285イベント / 5幕" },
+        { label: "主発音時刻", value: "tₙ=16(n−1)²/19² / 各幕" },
+        { label: "応答時刻", value: "tₙ+q(tₙ₊₁−tₙ)/3、q=1,2" },
         { label: "変換アルゴリズム", value: "直接有限和・FFT不使用" },
       ]}
       profile={{
@@ -121,7 +123,7 @@ export function RiemannVeilDetails() {
           quantity: "平方数支持n²",
           status: "保持",
           visual: "指数軸で平方数だけを発光",
-          audio: "二次位置に従う発音間隔",
+          audio: "二次主時刻と三等分応答",
         },
         {
           id: "riemann-amplitude",

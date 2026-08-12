@@ -5,7 +5,7 @@ import "katex/dist/katex.min.css";
 import "../styles.css";
 
 import { useMemo, useState } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 
 import { CanvasStage } from "../components/CanvasStage";
 import { Transport } from "../core/transport";
@@ -56,6 +56,9 @@ function AnalyticChapterQa() {
   );
 }
 
-const root = document.getElementById("analytic-qa-root");
-if (!root) throw new Error("Analytic QA root is missing");
-createRoot(root).render(<AnalyticChapterQa />);
+const rootElement = document.getElementById("analytic-qa-root");
+if (!rootElement) throw new Error("Analytic QA root is missing");
+const analyticQaRoot =
+  (import.meta.hot?.data.analyticQaRoot as Root | undefined) ?? createRoot(rootElement);
+if (import.meta.hot) import.meta.hot.data.analyticQaRoot = analyticQaRoot;
+analyticQaRoot.render(<AnalyticChapterQa />);

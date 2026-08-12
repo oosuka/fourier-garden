@@ -1,5 +1,6 @@
 import * as THREE from "three/webgpu";
 
+import type { RendererBackend } from "../../../core/rendererBackend";
 import { createImmersiveAnalyticScene } from "../../../rendering/analytic/immersiveScene";
 import {
   createAnalyticProfile,
@@ -14,7 +15,7 @@ const PALETTE = [0x55f1e1, 0x3f9dff, 0x193b9e] as const;
 const RADIAL = 56;
 const ANGULAR = 128;
 
-export function createBesselTideContent() {
+export function createBesselTideContent(backend: RendererBackend = "webgpu") {
   const group = new THREE.Group();
   const positions = new Float32Array((RADIAL + 1) * ANGULAR * 3);
   const colors = new Float32Array(positions.length);
@@ -118,7 +119,7 @@ export function createBesselTideContent() {
     return diameter;
   });
   const markerPosition = new Float32Array(3);
-  const marker = createPoints(markerPosition, 0xffffff, 0.24);
+  const marker = createPoints(markerPosition, 0xffffff, 0.24, backend);
   group.add(mesh, surfaceWire, surfaceSparkles, boundary.line, marker.points);
   group.rotation.x = -0.94;
   group.scale.setScalar(0.94);

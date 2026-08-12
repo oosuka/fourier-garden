@@ -21,6 +21,7 @@ export function createBesselTideWorkletProgram(): PikoWorkletProgram {
     detuneRatio: 0.0014,
     outputGain: getChapterOutputGain("bessel-tide"),
     maximumVoices: 24,
+    timbre: { partialRatio: 2, partialGain: 0.1, chirpRatio: -0.032 },
   };
   validatePikoProgram(program);
   return program;

@@ -135,17 +135,27 @@ describe("Spectral Cathedral poetic particles", () => {
     const model = createSpectralCathedralPoeticModel(41_041);
     updateSpectralCathedralParticles(model, 90, [1, 0.8, 0.6, 0.4, 0.2, 0.7, 0.9], 52_000);
 
-    for (const value of model.particlePositions) {
-      expect(Number.isFinite(value)).toBe(true);
-    }
+    let allParticlesStayInsideVolume = true;
     for (let index = 0; index < 52_000; index += 1) {
-      expect(model.particlePositions[index * 3]!).toBeGreaterThanOrEqual(-1.95);
-      expect(model.particlePositions[index * 3]!).toBeLessThanOrEqual(1.95);
-      expect(model.particlePositions[index * 3 + 1]!).toBeGreaterThanOrEqual(-1.42);
-      expect(model.particlePositions[index * 3 + 1]!).toBeLessThanOrEqual(1.42);
-      expect(model.particlePositions[index * 3 + 2]!).toBeGreaterThanOrEqual(-0.28);
-      expect(model.particlePositions[index * 3 + 2]!).toBeLessThanOrEqual(1.72);
+      const x = model.particlePositions[index * 3]!;
+      const y = model.particlePositions[index * 3 + 1]!;
+      const z = model.particlePositions[index * 3 + 2]!;
+      if (
+        !Number.isFinite(x) ||
+        !Number.isFinite(y) ||
+        !Number.isFinite(z) ||
+        x < -1.95 ||
+        x > 1.95 ||
+        y < -1.42 ||
+        y > 1.42 ||
+        z < -0.28 ||
+        z > 1.72
+      ) {
+        allParticlesStayInsideVolume = false;
+        break;
+      }
     }
+    expect(allParticlesStayInsideVolume).toBe(true);
   });
 
   it("evaluates seven current field magnitudes without score wrapping", () => {

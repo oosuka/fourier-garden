@@ -8,11 +8,16 @@ import "katex/dist/katex.min.css";
 import "./styles.css";
 
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 
 import { App } from "./App";
 
-createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Application root is missing");
+const applicationRoot =
+  (import.meta.hot?.data.applicationRoot as Root | undefined) ?? createRoot(rootElement);
+if (import.meta.hot) import.meta.hot.data.applicationRoot = applicationRoot;
+applicationRoot.render(
   <StrictMode>
     <App />
   </StrictMode>,

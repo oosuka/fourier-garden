@@ -1,14 +1,14 @@
-import { besselTideProcessor } from "./chapters/bessel-tide.js?v=21";
-import { dirichletLanternsProcessor } from "./chapters/dirichlet-lanterns.js?v=21";
-import { lissajousOrchardProcessor } from "./chapters/lissajous-orchard.js?v=21";
-import { mobiusChoirProcessor } from "./chapters/mobius-choir.js?v=21";
-import { phaseTorusProcessor } from "./chapters/phase-torus.js?v=21";
-import { primeConstellationProcessor } from "./chapters/prime-constellation.js?v=21";
-import { residueBloomProcessor } from "./chapters/residue-bloom.js?v=21";
-import { riemannVeilProcessor } from "./chapters/riemann-veil.js?v=21";
-import { isFiniteNumber } from "./chapters/shared.js?v=21";
-import { spectralCathedralProcessor } from "./chapters/spectral-cathedral.js?v=21";
-import { waveletRainProcessor } from "./chapters/wavelet-rain.js?v=21";
+import { besselTideProcessor } from "./chapters/bessel-tide.js?v=24";
+import { dirichletLanternsProcessor } from "./chapters/dirichlet-lanterns.js?v=24";
+import { lissajousOrchardProcessor } from "./chapters/lissajous-orchard.js?v=24";
+import { mobiusChoirProcessor } from "./chapters/mobius-choir.js?v=24";
+import { phaseTorusProcessor } from "./chapters/phase-torus.js?v=24";
+import { primeConstellationProcessor } from "./chapters/prime-constellation.js?v=24";
+import { residueBloomProcessor } from "./chapters/residue-bloom.js?v=24";
+import { riemannVeilProcessor } from "./chapters/riemann-veil.js?v=24";
+import { isFiniteNumber } from "./chapters/shared.js?v=24";
+import { spectralCathedralProcessor } from "./chapters/spectral-cathedral.js?v=24";
+import { waveletRainProcessor } from "./chapters/wavelet-rain.js?v=24";
 
 const PROCESSORS = new Map(
   [

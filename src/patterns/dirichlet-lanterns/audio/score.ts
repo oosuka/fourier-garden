@@ -1,4 +1,8 @@
-import { createPikoEvents, type PikoScoreProgram } from "../../../audio/pikoProgram";
+import {
+  createEnergyBalancedPikoScore,
+  createPikoEvents,
+  type PikoScoreProgram,
+} from "../../../audio/pikoProgram";
 import { getLongFormMotion } from "../../../audio/longFormMotion";
 import { DIRICHLET_ORDERS } from "../math/model";
 
@@ -61,45 +65,47 @@ function energyAt(timeSeconds: number): number {
   return 0.84;
 }
 
-export const DIRICHLET_LANTERNS_SCORE: PikoScoreProgram = Object.freeze({
-  cycleSeconds: 60,
-  events: Object.freeze(
-    createPikoEvents({
-      cycleSeconds: 60,
-      count: eventCount,
-      time: (index) => index * 0.1875,
-      frequency: (index) => {
-        const { harmonic } = getDirichletAudioMapping(index);
-        return 440 + ((harmonic - 1) / (MAXIMUM_ODD_HARMONIC - 1)) * 500;
-      },
-      mathematicalGain: (index) => getDirichletAudioMapping(index).coefficientMagnitude,
-      gain: (index) => {
-        const mapping = getDirichletAudioMapping(index);
-        const accent = PACKET_ACCENTS[mapping.packet % PACKET_ACCENTS.length]!;
-        return (
-          energyAt(index * 0.1875) *
-          accent *
-          0.24 *
-          mapping.normalizedCoefficientMagnitude *
-          motionAt(index).accent
-        );
-      },
-      pan: (index) => (getDirichletAudioMapping(index).orderIndex - 1.5) / 2.1,
-      panMotionDepth: (index) => 0.06 + 0.1 * motionAt(index).motionScale,
-      panMotionRateRadiansPerSecond: (index) => getDirichletAudioMapping(index).harmonic * 0.11,
-      wet: (index) =>
-        (getDirichletAudioMapping(index).harmonic === 1 ? 0.035 : 0.12) *
-        motionAt(index).spaceScale,
-      articulation: (index) => ({
-        attackSeconds: 0.006,
-        decaySeconds:
-          (getDirichletAudioMapping(index).harmonic === 1 ? 0.105 : 0.05) *
-          motionAt(index).tailScale,
-        endSeconds:
-          (getDirichletAudioMapping(index).harmonic === 1 ? 0.24 : 0.125) *
-          motionAt(index).tailScale,
+export const DIRICHLET_LANTERNS_SCORE: PikoScoreProgram = createEnergyBalancedPikoScore(
+  Object.freeze({
+    cycleSeconds: 60,
+    events: Object.freeze(
+      createPikoEvents({
+        cycleSeconds: 60,
+        count: eventCount,
+        time: (index) => index * 0.1875,
+        frequency: (index) => {
+          const { harmonic } = getDirichletAudioMapping(index);
+          return 440 + ((harmonic - 1) / (MAXIMUM_ODD_HARMONIC - 1)) * 500;
+        },
+        mathematicalGain: (index) => getDirichletAudioMapping(index).coefficientMagnitude,
+        gain: (index) => {
+          const mapping = getDirichletAudioMapping(index);
+          const accent = PACKET_ACCENTS[mapping.packet % PACKET_ACCENTS.length]!;
+          return (
+            energyAt(index * 0.1875) *
+            accent *
+            0.24 *
+            mapping.normalizedCoefficientMagnitude *
+            motionAt(index).accent
+          );
+        },
+        pan: (index) => (getDirichletAudioMapping(index).orderIndex - 1.5) / 2.1,
+        panMotionDepth: (index) => 0.06 + 0.1 * motionAt(index).motionScale,
+        panMotionRateRadiansPerSecond: (index) => getDirichletAudioMapping(index).harmonic * 0.11,
+        wet: (index) =>
+          (getDirichletAudioMapping(index).harmonic === 1 ? 0.035 : 0.12) *
+          motionAt(index).spaceScale,
+        articulation: (index) => ({
+          attackSeconds: 0.006,
+          decaySeconds:
+            (getDirichletAudioMapping(index).harmonic === 1 ? 0.105 : 0.05) *
+            motionAt(index).tailScale,
+          endSeconds:
+            (getDirichletAudioMapping(index).harmonic === 1 ? 0.24 : 0.125) *
+            motionAt(index).tailScale,
+        }),
+        phaseDrift: (index) => getDirichletAudioMapping(index).harmonic * 0.11,
       }),
-      phaseDrift: (index) => getDirichletAudioMapping(index).harmonic * 0.11,
-    }),
-  ),
-});
+    ),
+  }),
+);

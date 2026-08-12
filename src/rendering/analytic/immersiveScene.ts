@@ -38,7 +38,7 @@ export interface ImmersiveAnalyticSceneConfig {
   extent: Readonly<{ x: number; y: number; z: number }>;
   camera: Readonly<{ distance: number; height: number; targetY: number; fovDegrees: number }>;
   exposure: number;
-  createContent(): AnalyticSceneContent;
+  createContent(backend: RendererBackend): AnalyticSceneContent;
 }
 
 function disposeObject(root: THREE.Object3D): void {
@@ -53,7 +53,15 @@ function disposeObject(root: THREE.Object3D): void {
       : renderable.material
         ? [renderable.material]
         : [];
-    for (const material of materials) material.dispose();
+    for (const material of materials) {
+      const texturedMaterial = material as THREE.Material & {
+        alphaMap?: THREE.Texture | null;
+        map?: THREE.Texture | null;
+      };
+      texturedMaterial.map?.dispose();
+      if (texturedMaterial.alphaMap !== texturedMaterial.map) texturedMaterial.alphaMap?.dispose();
+      material.dispose();
+    }
   });
 }
 
@@ -75,7 +83,7 @@ class ImmersiveAnalyticScene implements PatternScene {
     poeticLayers: boolean,
   ) {
     this.scene.background = new THREE.Color(0x010208);
-    this.content = config.createContent();
+    this.content = config.createContent(backend);
     this.environment = poeticLayers
       ? new CinematicEnvironmentLayer({
           backend,

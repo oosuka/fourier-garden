@@ -23,12 +23,19 @@ export interface PikoScoreProgram {
   events: readonly PikoScoreEvent[];
 }
 
+export interface PikoTimbreProfile {
+  partialRatio: number;
+  partialGain: number;
+  chirpRatio: number;
+}
+
 export interface PikoWorkletProgram {
   kind: string;
   score: PikoScoreProgram;
   detuneRatio: number;
   outputGain: number;
   maximumVoices: number;
+  timbre: PikoTimbreProfile;
 }
 
 export interface PikoStereoSample {
@@ -67,7 +74,13 @@ export function validatePikoProgram(program: PikoWorkletProgram): void {
   if (
     !program.kind ||
     !Number.isFinite(program.score.cycleSeconds) ||
-    program.score.cycleSeconds <= 0
+    program.score.cycleSeconds <= 0 ||
+    !Object.values(program.timbre).every(Number.isFinite) ||
+    program.timbre.partialRatio < 1 ||
+    program.timbre.partialRatio > 3 ||
+    program.timbre.partialGain < 0 ||
+    program.timbre.partialGain > 0.18 ||
+    Math.abs(program.timbre.chirpRatio) > 0.045
   ) {
     throw new Error("Piko program identity and cycle must be valid");
   }
@@ -124,6 +137,69 @@ export function getPikoPan(event: PikoScoreEvent, absoluteTimeSeconds: number): 
   return Math.max(-1, Math.min(1, event.pan + motion));
 }
 
+/**
+ * Removes full-score energy-weighted spatial bias while preserving every local
+ * pan difference. Mathematical coordinates remain in the chapter mapping before
+ * this final sonification-layer mastering offset.
+ */
+export function createEnergyBalancedPikoScore(score: PikoScoreProgram): PikoScoreProgram {
+  let weightedPan = 0;
+  let totalWeight = 0;
+  const sampleCount = 16;
+
+  for (const event of score.events) {
+    const eventGain = event.gain * (1 - event.wet);
+    for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
+      const ageSeconds = (event.endSeconds * (sampleIndex + 0.5)) / sampleCount;
+      const envelope = getPikoEnvelope(event, ageSeconds);
+      const weight = eventGain * eventGain * envelope * envelope;
+      weightedPan += getPikoPan(event, event.timeSeconds + ageSeconds) * weight;
+      totalWeight += weight;
+    }
+  }
+
+  const panBias = totalWeight > 0 ? weightedPan / totalWeight : 0;
+  const centeredPans = score.events.map((event) => event.pan - panBias);
+  const scale = 1 / Math.max(1, ...centeredPans.map(Math.abs));
+  return Object.freeze({
+    ...score,
+    events: Object.freeze(
+      score.events.map((event, index) =>
+        Object.freeze({
+          ...event,
+          pan: centeredPans[index]! * scale,
+        }),
+      ),
+    ),
+  });
+}
+
+function getPikoOscillator(
+  program: PikoWorkletProgram,
+  event: PikoScoreEvent,
+  ageSeconds: number,
+  frequencyHz: number,
+  phaseBase: number,
+  partialAllowed: boolean,
+): number {
+  const chirpTime =
+    ageSeconds +
+    program.timbre.chirpRatio * (ageSeconds - (ageSeconds * ageSeconds) / (2 * event.endSeconds));
+  const carrierPhase = Math.PI * 2 * frequencyHz * chirpTime;
+  const fundamental = Math.sin(carrierPhase + phaseBase);
+  const partialGain = partialAllowed ? program.timbre.partialGain : 0;
+  if (partialGain === 0) return fundamental;
+  const partial = Math.sin(carrierPhase * program.timbre.partialRatio + phaseBase);
+  return (fundamental + partialGain * partial) / Math.sqrt(1 + partialGain * partialGain);
+}
+
+function getPikoMaximumGeneratedFrequency(
+  program: PikoWorkletProgram,
+  frequencyHz: number,
+): number {
+  return frequencyHz * (1 + program.detuneRatio);
+}
+
 export function renderPikoSample(
   program: PikoWorkletProgram,
   absoluteTimeSeconds: number,
@@ -141,14 +217,26 @@ export function renderPikoSample(
       if (envelope === 0) continue;
       const leftFrequency = event.frequencyHz * (1 - program.detuneRatio);
       const rightFrequency = event.frequencyHz * (1 + program.detuneRatio);
-      if (Math.max(leftFrequency, rightFrequency) >= sampleRate * 0.45) continue;
+      if (getPikoMaximumGeneratedFrequency(program, event.frequencyHz) >= sampleRate * 0.45)
+        continue;
+      const partialAllowed =
+        Math.max(leftFrequency, rightFrequency) *
+          program.timbre.partialRatio *
+          (1 + Math.max(0, program.timbre.chirpRatio)) <
+        sampleRate * 0.45;
       const pan = getPikoPan(event, absoluteTimeSeconds);
       const leftPan = Math.sqrt((1 - pan) / 2);
       const rightPan = Math.sqrt((1 + pan) / 2);
       const phaseBase = event.phaseOffset + event.phaseDrift * absoluteTimeSeconds;
       const gain = event.gain * envelope * program.outputGain;
-      const left = Math.sin(Math.PI * 2 * leftFrequency * age + phaseBase) * gain * leftPan;
-      const right = Math.sin(Math.PI * 2 * rightFrequency * age + phaseBase) * gain * rightPan;
+      const left =
+        getPikoOscillator(program, event, age, leftFrequency, phaseBase, partialAllowed) *
+        gain *
+        leftPan;
+      const right =
+        getPikoOscillator(program, event, age, rightFrequency, phaseBase, partialAllowed) *
+        gain *
+        rightPan;
       output.dryLeft += left * (1 - event.wet);
       output.dryRight += right * (1 - event.wet);
       output.wetLeft += left * event.wet;
@@ -190,7 +278,13 @@ export function renderPikoStereo(options: {
       if (firstSample >= lastSample) continue;
       const leftFrequency = event.frequencyHz * (1 - program.detuneRatio);
       const rightFrequency = event.frequencyHz * (1 + program.detuneRatio);
-      if (Math.max(leftFrequency, rightFrequency) >= sampleRate * 0.45) continue;
+      if (getPikoMaximumGeneratedFrequency(program, event.frequencyHz) >= sampleRate * 0.45)
+        continue;
+      const partialAllowed =
+        Math.max(leftFrequency, rightFrequency) *
+          program.timbre.partialRatio *
+          (1 + Math.max(0, program.timbre.chirpRatio)) <
+        sampleRate * 0.45;
       for (let sample = firstSample; sample < lastSample; sample += 1) {
         const absoluteTimeSeconds = startTimeSeconds + sample / sampleRate;
         const ageSeconds = absoluteTimeSeconds - eventTimeSeconds;
@@ -201,9 +295,13 @@ export function renderPikoStereo(options: {
         const leftPan = Math.sqrt((1 - pan) / 2);
         const rightPan = Math.sqrt((1 + pan) / 2);
         left[sample] +=
-          Math.sin(Math.PI * 2 * leftFrequency * ageSeconds + phaseBase) * gain * leftPan;
+          getPikoOscillator(program, event, ageSeconds, leftFrequency, phaseBase, partialAllowed) *
+          gain *
+          leftPan;
         right[sample] +=
-          Math.sin(Math.PI * 2 * rightFrequency * ageSeconds + phaseBase) * gain * rightPan;
+          getPikoOscillator(program, event, ageSeconds, rightFrequency, phaseBase, partialAllowed) *
+          gain *
+          rightPan;
       }
     }
   }

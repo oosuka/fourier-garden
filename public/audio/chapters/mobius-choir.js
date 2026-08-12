@@ -3,36 +3,11 @@ import {
   hashUint32,
   isNonnegativeFinite,
   isPositiveFinite,
-} from "./shared.js?v=21";
+} from "./shared.js?v=24";
 
 function smoothstepMobius(value) {
   const clamped = Math.min(1, Math.max(0, value));
   return clamped * clamped * (3 - 2 * clamped);
-}
-
-function getMobiusChoirAbsoluteCarrierPhase(
-  frequencyHz,
-  partial,
-  modalAngularFrequency,
-  voicePhaseOffset,
-  absoluteTimeSeconds,
-) {
-  return (
-    Math.PI * 2 * frequencyHz * absoluteTimeSeconds +
-    partial * (modalAngularFrequency * absoluteTimeSeconds + voicePhaseOffset)
-  );
-}
-
-function getMobiusChoirContinuousAmplitude(phase, depth) {
-  return 1 - depth / 2 + depth * Math.abs(Math.cos(phase));
-}
-
-function getMobiusChoirContinuousBrightness(phase, depth, partialPosition) {
-  return 1 + depth * (Math.abs(Math.sin(phase)) - 0.5) * partialPosition;
-}
-
-function getMobiusChoirContinuousPan(basePan, phase, panMotion) {
-  return Math.min(1, Math.max(-1, basePan + Math.sin(phase) * panMotion));
 }
 
 function getMobiusChoirFormantWeight(vowel, frequencyHz, preset) {
@@ -98,10 +73,24 @@ function createMobiusChoirRuntime(program) {
             (1 + synthesis.stereoDetuneRatio);
           if (Math.max(leftFrequencyHz, rightFrequencyHz) >= frequencyLimit) continue;
           const averageFrequencyHz = (leftFrequencyHz + rightFrequencyHz) * 0.5;
+          const leftAngularRate =
+            Math.PI * 2 * leftFrequencyHz + partial * mode.modalAngularFrequency;
+          const rightAngularRate =
+            Math.PI * 2 * rightFrequencyHz + partial * mode.modalAngularFrequency;
           partials.push({
             partial,
             leftFrequencyHz,
             rightFrequencyHz,
+            leftAngularRate,
+            rightAngularRate,
+            leftRotationCos: Math.cos(leftAngularRate / sampleRate),
+            leftRotationSin: Math.sin(leftAngularRate / sampleRate),
+            rightRotationCos: Math.cos(rightAngularRate / sampleRate),
+            rightRotationSin: Math.sin(rightAngularRate / sampleRate),
+            leftCarrierCos: 1,
+            leftCarrierSin: 0,
+            rightCarrierCos: 1,
+            rightCarrierSin: 0,
             baseWeight:
               partial ** -synthesis.partialDamping * getMobiusLowCutWeight(averageFrequencyHz),
             startWeight: getMobiusChoirFormantWeight(
@@ -139,6 +128,11 @@ function createMobiusChoirRuntime(program) {
           controlPhaseOffset: mode.n * (((mode.id - 1) * Math.PI) / program.modes.length),
           panLeft: panGains[0],
           panRight: panGains[1],
+          oscillatorTimeSeconds: Number.NaN,
+          controlCos: 1,
+          controlSin: 0,
+          controlRotationCos: Math.cos(-mode.modalAngularFrequency / sampleRate),
+          controlRotationSin: Math.sin(-mode.modalAngularFrequency / sampleRate),
           partials,
           breath,
           breathNormalization,
@@ -168,6 +162,7 @@ function createMobiusChoirRuntime(program) {
     });
   }
   return {
+    samplePeriodSeconds: 1 / sampleRate,
     cycleSeconds: program.score.cycleSeconds,
     maximumEventSeconds: synthesis.maximumEventSeconds,
     breathSeconds: synthesis.breathSeconds,
@@ -175,6 +170,53 @@ function createMobiusChoirRuntime(program) {
     normalization: program.normalization,
     events,
   };
+}
+
+function prepareMobiusChoirVoiceSample(voice, absoluteTimeSeconds, samplePeriodSeconds) {
+  if (voice.oscillatorTimeSeconds === absoluteTimeSeconds) return;
+  const elapsedSeconds = absoluteTimeSeconds - voice.oscillatorTimeSeconds;
+  if (
+    Number.isFinite(voice.oscillatorTimeSeconds) &&
+    Math.abs(elapsedSeconds - samplePeriodSeconds) <= 1e-9
+  ) {
+    const controlCos = voice.controlCos;
+    const controlSin = voice.controlSin;
+    voice.controlCos =
+      controlCos * voice.controlRotationCos - controlSin * voice.controlRotationSin;
+    voice.controlSin =
+      controlSin * voice.controlRotationCos + controlCos * voice.controlRotationSin;
+    for (let partialIndex = 0; partialIndex < voice.partials.length; partialIndex += 1) {
+      const partial = voice.partials[partialIndex];
+      const leftCarrierCos = partial.leftCarrierCos;
+      const leftCarrierSin = partial.leftCarrierSin;
+      partial.leftCarrierCos =
+        leftCarrierCos * partial.leftRotationCos - leftCarrierSin * partial.leftRotationSin;
+      partial.leftCarrierSin =
+        leftCarrierSin * partial.leftRotationCos + leftCarrierCos * partial.leftRotationSin;
+      const rightCarrierCos = partial.rightCarrierCos;
+      const rightCarrierSin = partial.rightCarrierSin;
+      partial.rightCarrierCos =
+        rightCarrierCos * partial.rightRotationCos - rightCarrierSin * partial.rightRotationSin;
+      partial.rightCarrierSin =
+        rightCarrierSin * partial.rightRotationCos + rightCarrierCos * partial.rightRotationSin;
+    }
+  } else {
+    const controlPhase =
+      voice.controlPhaseOffset - voice.modalAngularFrequency * absoluteTimeSeconds;
+    voice.controlCos = Math.cos(controlPhase);
+    voice.controlSin = Math.sin(controlPhase);
+    for (let partialIndex = 0; partialIndex < voice.partials.length; partialIndex += 1) {
+      const partial = voice.partials[partialIndex];
+      const phaseOffset = partial.partial * voice.phaseOffset;
+      const leftPhase = partial.leftAngularRate * absoluteTimeSeconds + phaseOffset;
+      const rightPhase = partial.rightAngularRate * absoluteTimeSeconds + phaseOffset;
+      partial.leftCarrierCos = Math.cos(leftPhase);
+      partial.leftCarrierSin = Math.sin(leftPhase);
+      partial.rightCarrierCos = Math.cos(rightPhase);
+      partial.rightCarrierSin = Math.sin(rightPhase);
+    }
+  }
+  voice.oscillatorTimeSeconds = absoluteTimeSeconds;
 }
 
 function renderMobiusChoirBreath(voice, ageSeconds, preset) {
@@ -269,10 +311,12 @@ function accumulateMobiusChoirEvent(
 
     for (let voiceIndex = 0; voiceIndex < event.voices.length; voiceIndex += 1) {
       const voice = event.voices[voiceIndex];
-      const controlPhase =
-        voice.controlPhaseOffset - voice.modalAngularFrequency * absoluteTimeSeconds;
-      const amplitude = getMobiusChoirContinuousAmplitude(controlPhase, event.amplitudeMotionDepth);
-      const pan = getMobiusChoirContinuousPan(voice.basePan, controlPhase, event.panMotion);
+      prepareMobiusChoirVoiceSample(voice, absoluteTimeSeconds, runtime.samplePeriodSeconds);
+      const amplitude =
+        1 -
+        event.amplitudeMotionDepth / 2 +
+        event.amplitudeMotionDepth * Math.abs(voice.controlCos);
+      const pan = Math.min(1, Math.max(-1, voice.basePan + voice.controlSin * event.panMotion));
       const panLeft = Math.sqrt((1 - pan) / 2);
       const panRight = Math.sqrt((1 + pan) / 2);
       let voiceLeft = 0;
@@ -280,50 +324,31 @@ function accumulateMobiusChoirEvent(
       for (let partialIndex = 0; partialIndex < voice.partials.length; partialIndex += 1) {
         const partial = voice.partials[partialIndex];
         const partialPosition = (partial.partial - 1) / Math.max(1, event.partialCount - 1);
-        const brightness = getMobiusChoirContinuousBrightness(
-          controlPhase,
-          event.brightnessMotionDepth,
-          partialPosition,
-        );
+        const brightness =
+          1 + event.brightnessMotionDepth * (Math.abs(voice.controlSin) - 0.5) * partialPosition;
         const weight =
           partial.baseWeight *
           (partial.startWeight + (partial.endWeight - partial.startWeight) * vowelProgress) *
           brightness;
-        voiceLeft +=
-          weight *
-          Math.cos(
-            getMobiusChoirAbsoluteCarrierPhase(
-              partial.leftFrequencyHz,
-              partial.partial,
-              voice.modalAngularFrequency,
-              voice.phaseOffset,
-              absoluteTimeSeconds,
-            ),
-          );
-        voiceRight +=
-          weight *
-          Math.cos(
-            getMobiusChoirAbsoluteCarrierPhase(
-              partial.rightFrequencyHz,
-              partial.partial,
-              voice.modalAngularFrequency,
-              voice.phaseOffset,
-              absoluteTimeSeconds,
-            ),
-          );
+        voiceLeft += weight * partial.leftCarrierCos;
+        voiceRight += weight * partial.rightCarrierCos;
       }
       const breath =
-        event.breathGain *
-        mora.gain *
-        renderMobiusChoirBreath(voice, moraAgeSeconds, program.synthesis);
+        event.breathGain > 0
+          ? event.breathGain *
+            mora.gain *
+            renderMobiusChoirBreath(voice, moraAgeSeconds, program.synthesis)
+          : 0;
       eventLeft += voice.normalizedGain * panLeft * (voiceLeft * envelope * amplitude + breath);
       eventRight += voice.normalizedGain * panRight * (voiceRight * envelope * amplitude + breath);
     }
   }
 
-  const airEnvelope =
-    getMobiusContinuityEnvelope(ageSeconds, runtime.maximumEventSeconds) * event.breathGain * 0.035;
-  if (airEnvelope > 0) {
+  if (event.breathGain > 0) {
+    const airEnvelope =
+      getMobiusContinuityEnvelope(ageSeconds, runtime.maximumEventSeconds) *
+      event.breathGain *
+      0.035;
     for (let voiceIndex = 0; voiceIndex < event.voices.length; voiceIndex += 1) {
       const voice = event.voices[voiceIndex];
       const air = renderMobiusChoirAir(voice, absoluteTimeSeconds);

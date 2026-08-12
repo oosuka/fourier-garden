@@ -4,6 +4,7 @@ import {
   estimateOnsetSpacing,
   getBandEnergyRatios,
   getFrameRmsContinuity,
+  getLongListeningMetrics,
   getReferenceLikePulseScore,
   getStereoMetrics,
 } from "./audioMetrics";
@@ -84,11 +85,13 @@ describe("audio metrics", () => {
     left.fill(0.2, 500);
     right.fill(0.2, 500);
 
-    expect(getFrameRmsContinuity(left, right, sampleRate, 0.02, 0.05)).toEqual({
+    const continuity = getFrameRmsContinuity(left, right, sampleRate, 0.02, 0.05);
+    expect(continuity).toMatchObject({
       windowSeconds: 0.02,
       threshold: 0.05,
       maximumLowRmsSeconds: 0.3,
     });
+    expect(continuity.maximumLowRmsStartSeconds).toBeCloseTo(0.2, 10);
   });
 
   it("estimates onset spacing from a pulse train", () => {
@@ -114,5 +117,20 @@ describe("audio metrics", () => {
     const envelope = Float32Array.from({ length: 2_000 }, (_, index) => (index % 220 < 35 ? 1 : 0));
 
     expect(getReferenceLikePulseScore(envelope, sampleRate)).toBeGreaterThan(0.5);
+  });
+
+  it("measures stereo balance, macro repetition, and upper-band fatigue proxies", () => {
+    const sampleRate = 8_000;
+    const left = Float32Array.from(sine(sampleRate, 10, 700), (value, index) =>
+      Math.floor(index / (sampleRate * 0.5)) % 2 === 0 ? value : value * 0.2,
+    );
+    const right = Float32Array.from(left, (value) => value * 0.5);
+    const metrics = getLongListeningMetrics(left, right, sampleRate);
+
+    expect(metrics.stereoBalanceDb).toBeCloseTo(20 * Math.log10(2), 4);
+    expect(metrics.sideEnergyRatio).toBeGreaterThan(0);
+    expect(metrics.maximumMacroRepetition).toBeGreaterThan(0.99);
+    expect(metrics.above1800HzEnergyRatio).toBeLessThan(0.02);
+    expect(metrics.above2400HzEnergyRatio).toBeLessThan(0.01);
   });
 });

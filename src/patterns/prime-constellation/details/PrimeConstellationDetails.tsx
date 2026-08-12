@@ -37,7 +37,7 @@ export function PrimeConstellationDetails() {
         { label: "周期", value: "2π（周波数支持のgcd=1）" },
         { label: "厳密上界", value: "|zₚ(x)|≤1" },
         { label: "音楽構成", value: "60秒 / 150イベント / 5幕" },
-        { label: "主発音間隔", value: "0.09×素数間隔" },
+        { label: "主発音間隔", value: "(9.2/95)×素数間隔" },
         { label: "変換アルゴリズム", value: "DFT・FFT不使用" },
       ]}
       profile={{
@@ -81,7 +81,7 @@ export function PrimeConstellationDetails() {
           quantity: "素数間隔Δⱼ",
           status: "保持",
           visual: "隣接点を結ぶ24リンク",
-          audio: "0.09Δⱼ秒の発音間隔",
+          audio: "(9.2/95)Δⱼ秒の発音間隔",
         },
         {
           id: "prime-pitch",

@@ -185,6 +185,65 @@ export function createCinematicParticleFieldFromProfile(
       Math.cos(streamPhase * 1.13 - streamOffset) * range.spanY * 0.08 * streamDepth;
     positions[positionOffset + 2] = range.minimumZ + random() * (range.maximumZ - range.minimumZ);
 
+    const layoutPhase = streamPhase + profile.filamentPhase;
+    const depthSpan = range.maximumZ - range.minimumZ;
+    if (profile.layout === "constellation") {
+      const radius = range.spanX * (0.13 + radialBias * 0.25);
+      positions[positionOffset] =
+        Math.sin(layoutPhase * (1.8 + band * 0.24)) * radius +
+        Math.sin(layoutPhase * 4.1) * range.spanX * 0.035;
+      positions[positionOffset + 1] =
+        (random() - 0.5) * range.spanY + Math.cos(layoutPhase * 2.3) * range.spanY * 0.09;
+      positions[positionOffset + 2] =
+        range.minimumZ + streamDepth * depthSpan + Math.cos(layoutPhase * 1.7) * depthSpan * 0.08;
+    } else if (profile.layout === "tidal") {
+      const radius = range.spanY * (0.17 + radialBias * 0.27);
+      positions[positionOffset] = Math.cos(layoutPhase) * radius * 1.52;
+      positions[positionOffset + 1] = Math.sin(layoutPhase) * radius * 0.68;
+      positions[positionOffset + 2] =
+        range.minimumZ + streamDepth * depthSpan + Math.sin(layoutPhase * 3.1) * depthSpan * 0.1;
+    } else if (profile.layout === "orchard") {
+      const branch = (index % 7) - 3;
+      positions[positionOffset] =
+        branch * range.spanX * 0.075 +
+        Math.sin(layoutPhase * (1.2 + (index % 3) * 0.2)) * range.spanX * 0.09;
+      positions[positionOffset + 1] =
+        (random() - 0.5) * range.spanY + Math.abs(Math.sin(layoutPhase * 0.7)) * range.spanY * 0.12;
+      positions[positionOffset + 2] =
+        range.minimumZ + streamDepth * depthSpan + Math.cos(layoutPhase * 2) * 0.8;
+    } else if (profile.layout === "lanterns") {
+      const lane = (index % 4) - 1.5;
+      positions[positionOffset] =
+        lane * range.spanX * 0.18 + Math.sin(layoutPhase * 2.7) * range.spanX * 0.035;
+      positions[positionOffset + 1] = (random() - 0.5) * range.spanY;
+      positions[positionOffset + 2] =
+        range.minimumZ + streamDepth * depthSpan + Math.cos(layoutPhase) * depthSpan * 0.045;
+    } else if (profile.layout === "rain") {
+      const lane = ((index * 13) % 37) / 36 - 0.5;
+      positions[positionOffset] =
+        lane * range.spanX + Math.sin(layoutPhase * 3.2) * range.spanX * 0.018;
+      positions[positionOffset + 1] = (random() - 0.5) * range.spanY;
+      positions[positionOffset + 2] =
+        range.minimumZ + streamDepth * depthSpan + Math.sin(layoutPhase * 0.6) * depthSpan * 0.035;
+    } else if (profile.layout === "veil") {
+      const sweep = positions[positionOffset]! / (range.spanX * 0.5);
+      positions[positionOffset + 1] =
+        Math.sin(sweep * Math.PI * (1.3 + band * 0.22) + layoutPhase) * range.spanY * 0.18 +
+        (band - 1) * range.spanY * 0.08;
+      positions[positionOffset + 2] =
+        range.minimumZ + streamDepth * depthSpan + Math.cos(sweep * Math.PI * 2) * 0.65;
+    } else if (profile.layout === "torus") {
+      const minorAngle = layoutPhase * (2.2 + band * 0.19);
+      const majorRadius = range.spanY * (0.24 + band * 0.035);
+      const minorRadius = range.spanY * (0.045 + streamDepth * 0.08);
+      positions[positionOffset] =
+        Math.cos(layoutPhase) * (majorRadius + Math.cos(minorAngle) * minorRadius) * 1.45;
+      positions[positionOffset + 1] =
+        Math.sin(layoutPhase) * (majorRadius + Math.cos(minorAngle) * minorRadius) * 0.72;
+      positions[positionOffset + 2] =
+        range.minimumZ + streamDepth * depthSpan + Math.sin(minorAngle) * minorRadius;
+    }
+
     const firstColorIndex = Math.floor(random() * palette.length);
     const secondColorIndex = (firstColorIndex + 1) % palette.length;
     const firstColor = palette[firstColorIndex]!;

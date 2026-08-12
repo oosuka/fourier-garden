@@ -8,10 +8,12 @@ import {
 import { WAVELET_RAIN_SCORE } from "./score";
 export const WAVELET_RAIN_AUDIO_GRAPH: AudioGraphPreset = {
   ...PIKO_AUDIO_GRAPH,
-  dryLowPassHz: 1_480,
-  wetLowPassHz: 920,
-  wetGain: 0.03,
-  roomSeconds: 0.58,
+  dryHighShelfHz: 940,
+  dryHighShelfGainDb: -24,
+  dryLowPassHz: 1_080,
+  wetLowPassHz: 780,
+  wetGain: 0.065,
+  roomSeconds: 0.92,
 };
 export function createWaveletRainWorkletProgram(): PikoWorkletProgram {
   const program = {
@@ -19,7 +21,8 @@ export function createWaveletRainWorkletProgram(): PikoWorkletProgram {
     score: WAVELET_RAIN_SCORE,
     detuneRatio: 0.0007,
     outputGain: getChapterOutputGain("wavelet-rain"),
-    maximumVoices: 14,
+    maximumVoices: 18,
+    timbre: { partialRatio: 2.5, partialGain: 0.03, chirpRatio: -0.038 },
   };
   validatePikoProgram(program);
   return program;

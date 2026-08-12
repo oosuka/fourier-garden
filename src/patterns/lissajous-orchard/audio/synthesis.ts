@@ -8,9 +8,11 @@ import {
 import { LISSAJOUS_ORCHARD_SCORE } from "./score";
 export const LISSAJOUS_ORCHARD_AUDIO_GRAPH: AudioGraphPreset = {
   ...PIKO_AUDIO_GRAPH,
-  dryLowPassHz: 1_820,
-  wetGain: 0.038,
-  roomSeconds: 0.68,
+  dryHighShelfGainDb: -20,
+  dryLowPassHz: 1_550,
+  wetLowPassHz: 1_020,
+  wetGain: 0.052,
+  roomSeconds: 0.82,
 };
 export function createLissajousOrchardWorkletProgram(): PikoWorkletProgram {
   const program = {
@@ -19,6 +21,7 @@ export function createLissajousOrchardWorkletProgram(): PikoWorkletProgram {
     detuneRatio: 0.0008,
     outputGain: getChapterOutputGain("lissajous-orchard"),
     maximumVoices: 16,
+    timbre: { partialRatio: 4 / 3, partialGain: 0.045, chirpRatio: -0.014 },
   };
   validatePikoProgram(program);
   return program;

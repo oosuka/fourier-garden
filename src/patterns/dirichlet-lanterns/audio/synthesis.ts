@@ -20,6 +20,7 @@ export function createDirichletLanternsWorkletProgram(): PikoWorkletProgram {
     detuneRatio: 0.001,
     outputGain: getChapterOutputGain("dirichlet-lanterns"),
     maximumVoices: 18,
+    timbre: { partialRatio: 3, partialGain: 0.045, chirpRatio: 0 },
   };
   validatePikoProgram(program);
   return program;

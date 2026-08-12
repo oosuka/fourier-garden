@@ -20,6 +20,7 @@ export interface LowRmsContinuity {
   windowSeconds: number;
   threshold: number;
   maximumLowRmsSeconds: number;
+  maximumLowRmsStartSeconds: number;
 }
 
 export interface OnsetSpacing {
@@ -28,6 +29,20 @@ export interface OnsetSpacing {
   p10Seconds: number;
   p90Seconds: number;
   pulseScore: number;
+}
+
+export interface LongListeningMetrics {
+  crestFactorDb: number;
+  stereoBalanceDb: number;
+  sideEnergyRatio: number;
+  activeDynamicRangeDb: number;
+  shortTermImpactDb: number;
+  maximumLowRmsSeconds: number;
+  maximumLowRmsStartSeconds: number;
+  maximumMacroRepetition: number;
+  above900HzEnergyRatio: number;
+  above1800HzEnergyRatio: number;
+  above2400HzEnergyRatio: number;
 }
 
 function assertMatchingStereo(left: Float32Array, right: Float32Array): void {
@@ -86,6 +101,146 @@ function percentile(values: readonly number[], ratio: number): number {
   const sorted = values.toSorted((left, right) => left - right);
   const index = Math.min(sorted.length - 1, Math.max(0, Math.round((sorted.length - 1) * ratio)));
   return sorted[index]!;
+}
+
+function ratioToDb(numerator: number, denominator: number): number {
+  return (
+    20 * Math.log10(Math.max(Number.EPSILON, numerator) / Math.max(Number.EPSILON, denominator))
+  );
+}
+
+function getStereoFrameRms(
+  left: Float32Array,
+  right: Float32Array,
+  frameSamples: number,
+): Float32Array {
+  const values: number[] = [];
+  for (let start = 0; start < left.length; start += frameSamples) {
+    const end = Math.min(left.length, start + frameSamples);
+    let sumSquares = 0;
+    for (let index = start; index < end; index += 1) {
+      sumSquares += left[index]! ** 2 + right[index]! ** 2;
+    }
+    values.push(Math.sqrt(sumSquares / ((end - start) * 2)));
+  }
+  return Float32Array.from(values);
+}
+
+function getMaximumNormalizedAutocorrelation(
+  values: Float32Array,
+  minimumLag: number,
+  maximumLag: number,
+): number {
+  if (values.length < minimumLag + 2) return 0;
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const centered = Float64Array.from(values, (value) => value - mean);
+  let maximum = 0;
+
+  for (let lag = minimumLag; lag <= Math.min(maximumLag, values.length - 2); lag += 1) {
+    let product = 0;
+    let leftEnergy = 0;
+    let rightEnergy = 0;
+    for (let index = 0; index < centered.length - lag; index += 1) {
+      const leftValue = centered[index]!;
+      const rightValue = centered[index + lag]!;
+      product += leftValue * rightValue;
+      leftEnergy += leftValue * leftValue;
+      rightEnergy += rightValue * rightValue;
+    }
+    const denominator = Math.sqrt(leftEnergy * rightEnergy);
+    if (denominator > 0) maximum = Math.max(maximum, product / denominator);
+  }
+
+  return maximum;
+}
+
+function getHighPassEnergyRatio(
+  left: Float32Array,
+  right: Float32Array,
+  sampleRate: number,
+  cutoffHz: number,
+): number {
+  if (cutoffHz >= sampleRate / 2) return 0;
+  const omega = (2 * Math.PI * cutoffHz) / sampleRate;
+  const cosine = Math.cos(omega);
+  const alpha = Math.sin(omega) / (2 * Math.SQRT1_2);
+  const a0 = 1 + alpha;
+  const b0 = (1 + cosine) / 2 / a0;
+  const b1 = -(1 + cosine) / a0;
+  const b2 = b0;
+  const a1 = (-2 * cosine) / a0;
+  const a2 = (1 - alpha) / a0;
+  let inputEnergy = 0;
+  let outputEnergy = 0;
+
+  for (const channel of [left, right]) {
+    let x1 = 0;
+    let x2 = 0;
+    let y1 = 0;
+    let y2 = 0;
+    for (const sample of channel) {
+      const output = b0 * sample + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+      inputEnergy += sample * sample;
+      outputEnergy += output * output;
+      x2 = x1;
+      x1 = sample;
+      y2 = y1;
+      y1 = output;
+    }
+  }
+
+  return inputEnergy > 0 ? outputEnergy / inputEnergy : 0;
+}
+
+export function getLongListeningMetrics(
+  left: Float32Array,
+  right: Float32Array,
+  sampleRate: number,
+): LongListeningMetrics {
+  assertMatchingStereo(left, right);
+  assertPositiveFinite("sample rate", sampleRate);
+  const stereo = getStereoMetrics(left, right);
+  let leftEnergy = 0;
+  let rightEnergy = 0;
+  let midEnergy = 0;
+  let sideEnergy = 0;
+
+  for (let index = 0; index < left.length; index += 1) {
+    const leftValue = left[index]!;
+    const rightValue = right[index]!;
+    const mid = (leftValue + rightValue) / 2;
+    const side = (leftValue - rightValue) / 2;
+    leftEnergy += leftValue * leftValue;
+    rightEnergy += rightValue * rightValue;
+    midEnergy += mid * mid;
+    sideEnergy += side * side;
+  }
+
+  const shortFrames = getStereoFrameRms(left, right, Math.max(1, Math.round(sampleRate * 0.05)));
+  const macroFrames = getStereoFrameRms(left, right, Math.max(1, Math.round(sampleRate * 0.25)));
+  const activeFrames = [...shortFrames].filter((value) => value >= stereo.rms * 0.1);
+  const activeLow = percentile(activeFrames, 0.1);
+  const activeHigh = percentile(activeFrames, 0.9);
+  const maximumShortRms = Math.max(...shortFrames);
+  const lowRms = getFrameRmsContinuity(left, right, sampleRate, 0.02, stereo.rms * 0.1);
+
+  return {
+    crestFactorDb: ratioToDb(stereo.peak, stereo.rms),
+    stereoBalanceDb: ratioToDb(Math.sqrt(leftEnergy), Math.sqrt(rightEnergy)),
+    sideEnergyRatio: sideEnergy / Math.max(Number.EPSILON, midEnergy + sideEnergy),
+    activeDynamicRangeDb: ratioToDb(activeHigh, activeLow),
+    shortTermImpactDb: ratioToDb(maximumShortRms, stereo.rms),
+    maximumLowRmsSeconds: lowRms.maximumLowRmsSeconds,
+    maximumLowRmsStartSeconds: lowRms.maximumLowRmsStartSeconds,
+    maximumMacroRepetition: getMaximumNormalizedAutocorrelation(
+      macroFrames,
+      Math.max(1, Math.round(2 / 0.25)),
+      Math.max(1, Math.round(8 / 0.25)),
+    ),
+    above900HzEnergyRatio: getHighPassEnergyRatio(left, right, sampleRate, 900),
+    above1800HzEnergyRatio: getHighPassEnergyRatio(left, right, sampleRate, 1_800),
+    above2400HzEnergyRatio: getHighPassEnergyRatio(left, right, sampleRate, 2_400),
+  };
 }
 
 function dftPower(frame: Float64Array, sampleRate: number, frequencyHz: number): number {
@@ -193,6 +348,7 @@ export function getFrameRmsContinuity(
   const windowSamples = Math.max(1, Math.round(sampleRate * windowSeconds));
   let currentRun = 0;
   let maximumRun = 0;
+  let maximumRunStart = 0;
 
   for (let start = 0; start < left.length; start += windowSamples) {
     const end = Math.min(left.length, start + windowSamples);
@@ -202,13 +358,17 @@ export function getFrameRmsContinuity(
     }
     const rms = Math.sqrt(sumSquares / ((end - start) * 2));
     currentRun = rms < threshold ? currentRun + 1 : 0;
-    maximumRun = Math.max(maximumRun, currentRun);
+    if (currentRun > maximumRun) {
+      maximumRun = currentRun;
+      maximumRunStart = start / sampleRate - (currentRun - 1) * windowSeconds;
+    }
   }
 
   return {
     windowSeconds,
     threshold,
     maximumLowRmsSeconds: maximumRun * windowSeconds,
+    maximumLowRmsStartSeconds: maximumRunStart,
   };
 }
 

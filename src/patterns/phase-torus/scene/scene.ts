@@ -1,4 +1,5 @@
 import * as THREE from "three/webgpu";
+import type { RendererBackend } from "../../../core/rendererBackend";
 import { createImmersiveAnalyticScene } from "../../../rendering/analytic/immersiveScene";
 import {
   createAnalyticProfile,
@@ -10,7 +11,7 @@ import type { PatternSceneOptions } from "../../contracts";
 import { evaluateTorusField, getIrrationalTorusPhase } from "../math/model";
 const PALETTE = [0x4beaff, 0x526dff, 0xffc873] as const;
 const HISTORY = 2_048;
-export function createPhaseTorusContent() {
+export function createPhaseTorusContent(backend: RendererBackend = "webgpu") {
   const group = new THREE.Group();
   const geometry = new THREE.TorusGeometry(3.25, 1.12, 64, 160);
   const positions = geometry.getAttribute("position") as THREE.BufferAttribute;
@@ -121,7 +122,7 @@ export function createPhaseTorusContent() {
   const history = createLine(historyPositions, PALETTE[2], 0.74);
   group.add(history.line);
   const pointPosition = new Float32Array(3);
-  const point = createPoints(pointPosition, PALETTE[2], 0.24);
+  const point = createPoints(pointPosition, PALETTE[2], 0.24, backend);
   const pointHaloMaterial = new THREE.MeshBasicMaterial({
     color: 0xffffff,
     transparent: true,

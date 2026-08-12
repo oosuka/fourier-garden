@@ -295,9 +295,11 @@ describe("AudioEngine initialization", () => {
     const pattern = getResidueBloomPattern();
     const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);
 
+    expect(audio.sampleRateHz).toBeNull();
     await audio.initialize();
 
-    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=21"]);
+    expect(audio.sampleRateHz).toBe(1_000);
+    expect(records.workletModuleUrls).toEqual(["/audio/fourier-worklet.js?v=24"]);
     expect(records.workletMessages).toEqual([
       expect.objectContaining({
         type: "configure",
@@ -402,14 +404,14 @@ describe("AudioEngine initialization", () => {
       records.nodes.filter((node) => node.kind.startsWith("biquad:")).map((node) => node.options),
     ).toEqual([
       { type: "highpass", frequency: 220, Q: 0.45 },
-      { type: "highshelf", frequency: 1_000, gain: -24 },
-      { type: "lowpass", frequency: 1_080, Q: 0.25 },
+      { type: "highshelf", frequency: 900, gain: -28 },
+      { type: "lowpass", frequency: 960, Q: 0.25 },
       { type: "highpass", frequency: 220, Q: 0.45 },
-      { type: "lowpass", frequency: 860, Q: 0.25 },
+      { type: "lowpass", frequency: 720, Q: 0.25 },
     ]);
     expect(records.nodes.filter((node) => node.kind === "gain").slice(0, 2)).toEqual([
       { kind: "gain", options: { gain: 0.88 } },
-      { kind: "gain", options: { gain: 0.075 } },
+      { kind: "gain", options: { gain: 0.09 } },
     ]);
     expect(records.nodes.find((node) => node.kind === "compressor")?.options).toEqual({
       threshold: -16,
@@ -419,7 +421,7 @@ describe("AudioEngine initialization", () => {
       release: 0.2,
     });
     expect(records.nodes.find((node) => node.kind === "waveshaper")?.options.oversample).toBe("4x");
-    expect(records.bufferLengths).toEqual([1_150]);
+    expect(records.bufferLengths).toEqual([1_200]);
   });
 });
 

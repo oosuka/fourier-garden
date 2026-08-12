@@ -1,5 +1,6 @@
 import * as THREE from "three/webgpu";
 
+import type { RendererBackend } from "../../../core/rendererBackend";
 import { createImmersiveAnalyticScene } from "../../../rendering/analytic/immersiveScene";
 import {
   createAnalyticProfile,
@@ -8,19 +9,25 @@ import {
   evaluateFiveActEnergy,
 } from "../../../rendering/analytic/primitives";
 import type { PatternSceneOptions } from "../../contracts";
-import { PRIME_GAPS, PRIME_SUPPORT, PRIME_VISUAL_RATE, evaluatePrimeSum } from "../math/model";
+import {
+  PRIME_PHRASE_SECONDS,
+  PRIME_PHRASE_TIMES,
+  PRIME_SUPPORT,
+  PRIME_VISUAL_RATE,
+  evaluatePrimeSum,
+} from "../math/model";
 
 const PALETTE = [0xffc46f, 0xff8c52, 0xf5f7ff] as const;
 const LINK_ECHO_COUNT = 5;
 
-export function createPrimeConstellationContent() {
+export function createPrimeConstellationContent(backend: RendererBackend = "webgpu") {
   const group = new THREE.Group();
   const positions = new Float32Array(PRIME_SUPPORT.length * 3);
   const linkPositions = new Float32Array((PRIME_SUPPORT.length - 1) * 6);
-  const pointCloud = createPoints(positions, PALETTE[0], 0.38);
-  const pointHalos = createPoints(positions, PALETTE[1], 0.86);
+  const pointCloud = createPoints(positions, PALETTE[0], 0.38, backend);
+  const pointHalos = createPoints(positions, PALETTE[1], 0.86, backend);
   (pointHalos.points.material as THREE.PointsMaterial).opacity = 0.5;
-  const pointAuras = createPoints(positions, PALETTE[2], 1.45);
+  const pointAuras = createPoints(positions, PALETTE[2], 1.45, backend);
   (pointAuras.points.material as THREE.PointsMaterial).opacity = 0.12;
   const links = createLine(linkPositions, PALETTE[1], 0.82);
   const linkEchoes = Array.from({ length: LINK_ECHO_COUNT }, (_, echoIndex) => {
@@ -34,13 +41,11 @@ export function createPrimeConstellationContent() {
     return { positions: echoPositions, ...echo };
   });
   const centroidPosition = new Float32Array(3);
-  const centroid = createPoints(centroidPosition, PALETTE[2], 0.58);
-  const centroidHalo = createPoints(centroidPosition, PALETTE[0], 1.7);
+  const centroid = createPoints(centroidPosition, PALETTE[2], 0.58, backend);
+  const centroidHalo = createPoints(centroidPosition, PALETTE[0], 1.7, backend);
   (centroidHalo.points.material as THREE.PointsMaterial).opacity = 0.2;
   const highlightPosition = new Float32Array(3);
-  const highlight = createPoints(highlightPosition, 0xffffff, 0.72);
-  const phraseTimes = [0];
-  for (const gap of PRIME_GAPS) phraseTimes.push(phraseTimes.at(-1)! + gap * 0.09);
+  const highlight = createPoints(highlightPosition, 0xffffff, 0.72, backend);
   group.add(
     links.line,
     pointAuras.points,
@@ -74,9 +79,12 @@ export function createPrimeConstellationContent() {
       centroidPosition[0] = sum.real * 3.2;
       centroidPosition[1] = 0;
       centroidPosition[2] = sum.imaginary * 3.2 + 0.5;
-      const localTime = timeSeconds % 10;
+      const localTime = timeSeconds % PRIME_PHRASE_SECONDS;
       let activeIndex = 0;
-      while (activeIndex + 1 < phraseTimes.length && phraseTimes[activeIndex + 1]! <= localTime) {
+      while (
+        activeIndex + 1 < PRIME_PHRASE_TIMES.length &&
+        PRIME_PHRASE_TIMES[activeIndex + 1]! <= localTime
+      ) {
         activeIndex += 1;
       }
       highlightPosition[0] = positions[activeIndex * 3]!;

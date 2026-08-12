@@ -21,6 +21,20 @@ function withoutWhitespace(text: string): string {
 }
 
 describe("current documentation", () => {
+  it("keeps the Volta runtime pins synchronized with user-facing documentation", () => {
+    const packageJson = JSON.parse(readDoc("package.json")) as {
+      packageManager: string;
+      volta: { node: string; npm: string };
+    };
+    const docs = currentDocPaths.map((path) => readDoc(path)).join("\n");
+
+    expect(packageJson.packageManager).toBe("npm@11.19.0");
+    expect(packageJson.volta).toEqual({ node: "24.19.0", npm: "11.19.0" });
+    expect(docs).toContain("Node.js: `24.19.0`");
+    expect(docs).toContain("npm: `11.19.0`");
+    expect(docs).not.toMatch(/24\.16\.0|11\.17\.0|npm@11\.17\.0/);
+  });
+
   it("does not link current docs to removed detailed spec or plan files", () => {
     const docs = currentDocPaths.map((path) => readDoc(path)).join("\n");
 
@@ -85,7 +99,7 @@ describe("current documentation", () => {
     expect(readme).toContain("評価イベント、出力標本を再利用");
     expect(mathematicalModel).toContain("文字列キー、");
     expect(mathematicalModel).toContain("一時配列、一時オブジェクトを生成せず");
-    expect(designQa).toContain("console error 0件");
+    expect(designQa).toContain("warning／error 0件");
     expect(designQa).toContain("全画面、タブ非表示からの復帰");
   });
 
@@ -99,15 +113,17 @@ describe("current documentation", () => {
 
     expect(agents).toContain("2026年7月23日時点の全10章実装を正式版として扱う");
     expect(readme).toContain("実装済みの全10章を正式版として通常公開");
-    expect(mathematicalModel).toContain("2026年7月23日時点で正式公開しているChapter 1から10");
+    expect(mathematicalModel).toContain("2026年8月13日時点で正式公開しているChapter 1から10");
     expect(chapterAtlas).toContain("2026年7月23日時点で正式公開している全10章");
     expect(chapterAtlas).toContain("| 3 | Prime Constellation");
     expect(chapterAtlas).toContain("| 4 | Möbius Choir");
     expect(chapterAtlas).not.toContain("## Chapter 3: Möbius Choir");
     expect(superpowersIndex).toContain("2026年7月23日の全10章正式版");
-    expect(designQa).toContain("最終更新日: 2026-07-23");
+    expect(designQa).toContain("最終更新日: 2026-08-13");
     expect(designQa).toContain("全10章正式版確定日: 2026-07-23");
     expect(designQa).toContain("全10章を正式版として通常公開する");
+    expect(agents).toContain("追加の利用者試聴を要求せず、物理試聴ゲートは完了扱い");
+    expect(designQa).toContain("再調整版の物理試聴ゲートを完了し、正式完成と判定する");
 
     const primeIndex = mathematicalModel.indexOf("## Chapter 3: Prime Constellation");
     const mobiusIndex = mathematicalModel.indexOf("## Chapter 4: Möbius Choir");
@@ -122,6 +138,8 @@ describe("current documentation", () => {
     expect(docs).not.toMatch(/通常URLは.*正式版の3章/s);
     expect(docs).not.toMatch(/既存3章は通常レジストリ、新7章はpreview/);
     expect(docs).not.toMatch(/公開前の人間QAとして残す/);
+    expect(docs).not.toMatch(/再試聴完了前に物理試聴ゲートを合格扱いしてはならない/);
+    expect(docs).not.toMatch(/Mac内蔵スピーカーによる全9比較の再試聴を必須とする/);
     expect(docs).not.toMatch(/現行の残り実装順/);
   });
 });
