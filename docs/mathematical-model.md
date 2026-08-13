@@ -2,7 +2,7 @@
 
 ## 文書の位置付け
 
-この文書は2026年8月13日時点で正式公開しているChapter 1から10の数学、時間、
+この文書はVersion 1.0.0として正式公開するChapter 1から10の数学、時間、
 解析表示、ソニフィケーション規約の正本である。Chapter 3へ
 `Prime Constellation`を挿入し、`Möbius Choir`をChapter 4へ移動した
 全10章順を通常URLと互換preview URLの両方で使用する。

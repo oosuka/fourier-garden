@@ -138,16 +138,17 @@ describe("current documentation", () => {
     const superpowersIndex = readDoc("docs/superpowers/README.md");
     const designQa = readDoc("design-qa.md");
 
-    expect(agents).toContain("2026年7月23日時点の全10章実装を正式版として扱う");
-    expect(readme).toContain("実装済みの全10章を正式版として通常公開");
-    expect(mathematicalModel).toContain("2026年8月13日時点で正式公開しているChapter 1から10");
-    expect(chapterAtlas).toContain("2026年7月23日時点で正式公開している全10章");
+    expect(agents).toContain("Version 1.0.0の全10章実装");
+    expect(readme).toContain("Version 1.0.0（2026年8月13日）");
+    expect(mathematicalModel).toContain("Version 1.0.0として正式公開するChapter 1から10");
+    expect(chapterAtlas).toContain("Version 1.0.0として正式公開する全10章");
     expect(chapterAtlas).toContain("| 3 | Prime Constellation");
     expect(chapterAtlas).toContain("| 4 | Möbius Choir");
     expect(chapterAtlas).not.toContain("## Chapter 3: Möbius Choir");
     expect(superpowersIndex).toContain("2026年7月23日の全10章正式版");
     expect(designQa).toContain("最終更新日: 2026-08-13");
     expect(designQa).toContain("全10章正式版確定日: 2026-07-23");
+    expect(designQa).toContain("リリース版: 1.0.0");
     expect(designQa).toContain("全10章を正式版として通常公開する");
     expect(agents).toContain("追加の利用者試聴を要求せず、物理試聴ゲートは完了扱い");
     expect(designQa).toContain("再調整版の物理試聴ゲートを完了し、正式完成と判定する");

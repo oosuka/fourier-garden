@@ -39,7 +39,8 @@ UI、README、説明文、コメントでは、この区別を曖昧にしない
 
 ### 2.1 現在の正式版
 
-2026年7月23日時点の全10章実装を正式版として扱う。通常公開順は
+2026年7月23日に正式版化し、2026年8月13日に完成したVersion 1.0.0の全10章実装を
+現在の正式版として扱う。通常公開順は
 `Residue Bloom`、`Spectral Cathedral`、`Prime Constellation`、`Möbius Choir`、
 `Bessel Tide`、`Lissajous Orchard`、`Dirichlet Lanterns`、`Wavelet Rain`、
 `Riemann Veil`、`Phase Torus`である。追加7章は2026年7月13日のpreview実装と
