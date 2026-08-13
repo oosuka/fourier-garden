@@ -35,6 +35,22 @@ export const residueBloomPattern: ResidueBloomPatternDefinition = {
     ja: "4で割って1余る倍音の観測所",
   },
   formulaLatex: "f(x)=5\\sum_{k=0}^{12}\\frac{1}{k+1}\\sin((4k+1)x)",
+  contrastProfile: {
+    composition: "phasor-chain-waveform",
+    motion: "unidirectional-rotation-projection",
+    space: "split-complex-plane-history",
+    palette: "cyan-violet-gold",
+    timbre: "rounded-harmonic-piko",
+    rhythm: "ghosted-four-four-sixteenths",
+    time: "absolute-phasor-long-form",
+    audio: {
+      onsetPattern: "constant-sixteenth-with-ghost-rotation",
+      articulation: "rounded-harmonic-grain",
+      pitchMapping: "residue-harmonics-on-alternating-carriers",
+      spatialGesture: "phasor-position-pan",
+      wetCharacter: "section-bloom-room",
+    },
+  },
   dramaturgy: {
     cycleSeconds: 144,
     expressiveAxes: ["density", "dynamics", "timbre", "space", "motion", "color"],
@@ -132,9 +148,9 @@ export const residueBloomPattern: ResidueBloomPatternDefinition = {
     mode: "sonification",
     fundamentalHz: 55,
     initialVolume: 0.35,
-    roomSeconds: 1.9,
+    roomSeconds: 0.82,
     sonificationLatex:
-      "w_k=\\frac{A_k}{(k+1)^{1.85}},\\quad " +
+      "w_k=\\frac{A_k}{(k+1)^{3.2}},\\quad " +
       "f_{k,j}^{L/R}=n_k\\nu_j(1\\mp d),\\quad " +
       "g_{\\nu_j}^{L/R}(\\tau)=CG_eE_e(\\tau)" +
       "\\sum_{k\\in K(F_s)}w_kP_k^{L/R}" +
@@ -152,7 +168,7 @@ export const residueBloomPattern: ResidueBloomPatternDefinition = {
     scopeNotice:
       "本章は既知の解析係数から有限フーリエ級数を合成する作品です。未知の信号をDFTで解析する処理や、FFTアルゴリズムの計算過程は表示していません。",
     sonificationBody:
-      "音声は級数そのものを55 Hzで無加工再生したものではありません。音楽形式は48小節で反復しますが、定位・明るさ・アクセント・減衰は各周回の絶対イベント時刻における z(0.31tₑ) から評価します。同じ調波指数を440 / 495 Hzへ移し、基礎知覚重み、左右デチューン後のナイキスト制約、equal-power定位を適用します。フェーザ半径はアクセントと減衰へ使い、残響量は区間プロファイルから得る音楽的ソニフィケーションです。",
+      "音声は級数そのものを55 Hzで無加工再生したものではありません。音楽形式は48小節で反復しますが、定位・明るさ・アクセント・減衰は各周回の絶対イベント時刻における z(0.31tₑ) から評価します。フェーザ半径はアクセントと減衰へ使い、残響量は区間プロファイルから得ます。同じ調波指数を440 / 495 Hzへ移し、Aₖ/(k+1)^3.2の知覚重み、左右デチューン後のナイキスト制約、equal-power定位を適用します。強い上側調波と長い残響を抑えて全章共通の丸い中域ピコへ寄せますが、13調波の支持と係数由来順序は維持します。",
     poeticLayerBody:
       "粒子、光の膜、星雲、ブルーム、二次トレイルに加え、発音時の調波コロナと履歴パルスも共有イベントスコアへ反応する詩的な造形です。コロナとパルスは厳密な円・主波形と同じ点へ重なる別オブジェクトで、係数、位相、半径、終点、主波形の座標を変形しません。",
   },

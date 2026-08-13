@@ -1,0 +1,26 @@
+import type { AudioGraphPreset } from "../../../audio/audioProgram";
+import { definePikoChapterAudio, PIKO_AUDIO_GRAPH } from "../../../audio/pikoProgram";
+import { PHASE_TORUS_SCORE } from "./score";
+export const PHASE_TORUS_AUDIO_GRAPH: AudioGraphPreset = {
+  ...PIKO_AUDIO_GRAPH,
+  dryHighShelfGainDb: -21,
+  dryLowPassHz: 1_320,
+  wetLowPassHz: 900,
+  wetGain: 0.082,
+  roomSeconds: 1.18,
+};
+const phaseTorusAudio = definePikoChapterAudio({
+  kind: "phase-torus",
+  score: PHASE_TORUS_SCORE,
+  detuneRatio: 0.0015,
+  maximumVoices: 22,
+  timbre: {
+    partialRatio: (1 + Math.sqrt(5)) / 2,
+    partialGain: 0.055,
+    chirpRatio: 0.022,
+  },
+  graph: PHASE_TORUS_AUDIO_GRAPH,
+});
+
+export const createPhaseTorusWorkletProgram = phaseTorusAudio.createWorkletProgram;
+export const createPhaseTorusAudioProgram = phaseTorusAudio.createAudioProgram;

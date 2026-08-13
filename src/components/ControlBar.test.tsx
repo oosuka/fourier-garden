@@ -13,6 +13,7 @@ function renderControlBar(patternIndex: number, chapterCount: number, switching 
       playing={false}
       volume={0.35}
       detailsOpen={false}
+      detailsHintVisible={false}
       fullscreen={false}
       pattern={patternRegistry[patternIndex]!}
       chapterCount={chapterCount}
@@ -24,12 +25,14 @@ function renderControlBar(patternIndex: number, chapterCount: number, switching 
       onPreviousChapter={vi.fn<() => void>()}
       onNextChapter={vi.fn<() => void>()}
       onToggleDetails={vi.fn<() => void>()}
+      onDismissDetailsHint={vi.fn<() => void>()}
       onToggleFullscreen={vi.fn<() => void>()}
     />,
   );
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -56,7 +59,7 @@ describe("ControlBar chapter navigation", () => {
     expect(container.textContent).toContain("Spectral Cathedral");
   });
 
-  it("shows published Möbius Choir without a preview label", () => {
+  it("shows published Prime Constellation without a preview label", () => {
     const container = document.createElement("div");
     container.innerHTML = renderControlBar(2, 3);
 
@@ -67,7 +70,7 @@ describe("ControlBar chapter navigation", () => {
       true,
     );
     expect(container.textContent).not.toContain("PREVIEW");
-    expect(container.textContent).toContain("Möbius Choir");
+    expect(container.textContent).toContain("Prime Constellation");
   });
 
   it("disables both directions while switching chapters", () => {
@@ -107,6 +110,87 @@ describe("ControlBar chapter navigation", () => {
     expect(fullscreen?.getAttribute("aria-keyshortcuts")).toBe("F");
   });
 
+  it("expands a readable observation-notes hint without changing the button name", () => {
+    const container = document.createElement("div");
+    container.innerHTML = renderToStaticMarkup(
+      <ControlBar
+        playing={false}
+        volume={0.35}
+        detailsOpen={false}
+        detailsHintVisible
+        fullscreen={false}
+        pattern={patternRegistry[0]!}
+        chapterCount={3}
+        chapterIndex={0}
+        switchingChapter={false}
+        transport={new Transport(() => 0)}
+        onTogglePlay={vi.fn<() => void>()}
+        onVolume={vi.fn<(value: number) => void>()}
+        onPreviousChapter={vi.fn<() => void>()}
+        onNextChapter={vi.fn<() => void>()}
+        onToggleDetails={vi.fn<() => void>()}
+        onDismissDetailsHint={vi.fn<() => void>()}
+        onToggleFullscreen={vi.fn<() => void>()}
+      />,
+    );
+
+    const details = container.querySelector<HTMLButtonElement>(".detailsControl--hint");
+    expect(details?.getAttribute("aria-label")).toBe("詳細パネルを開く (D)");
+    expect(details?.textContent).toContain("OBSERVATION NOTES");
+    expect(details?.textContent).toContain("この章を知る · D");
+  });
+
+  it("pauses the hint timeout while its control has focus", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      "requestAnimationFrame",
+      vi.fn<(callback: FrameRequestCallback) => number>(() => 1),
+    );
+    vi.stubGlobal("cancelAnimationFrame", vi.fn<(handle: number) => void>());
+    const onDismissDetailsHint = vi.fn<() => void>();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <ControlBar
+          playing={false}
+          volume={0.35}
+          detailsOpen={false}
+          detailsHintVisible
+          fullscreen={false}
+          pattern={patternRegistry[0]!}
+          chapterCount={3}
+          chapterIndex={0}
+          switchingChapter={false}
+          transport={new Transport(() => 0)}
+          onTogglePlay={vi.fn<() => void>()}
+          onVolume={vi.fn<(value: number) => void>()}
+          onPreviousChapter={vi.fn<() => void>()}
+          onNextChapter={vi.fn<() => void>()}
+          onToggleDetails={vi.fn<() => void>()}
+          onDismissDetailsHint={onDismissDetailsHint}
+          onToggleFullscreen={vi.fn<() => void>()}
+        />,
+      );
+    });
+    const details = container.querySelector<HTMLButtonElement>(".detailsControl");
+
+    await act(async () => details?.focus());
+    await act(async () => vi.advanceTimersByTime(5_000));
+    expect(onDismissDetailsHint).not.toHaveBeenCalled();
+
+    await act(async () => details?.blur());
+    await act(async () => vi.advanceTimersByTime(3_999));
+    expect(onDismissDetailsHint).not.toHaveBeenCalled();
+    await act(async () => vi.advanceTimersByTime(1));
+    expect(onDismissDetailsHint).toHaveBeenCalledTimes(1);
+
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
   it("only rerenders the clock when the displayed whole second changes", async () => {
     let clockSeconds = 0;
     let frameCallback: FrameRequestCallback | null = null;
@@ -138,6 +222,7 @@ describe("ControlBar chapter navigation", () => {
             playing
             volume={0.35}
             detailsOpen={false}
+            detailsHintVisible={false}
             fullscreen={false}
             pattern={patternRegistry[0]!}
             chapterCount={3}
@@ -149,6 +234,7 @@ describe("ControlBar chapter navigation", () => {
             onPreviousChapter={vi.fn<() => void>()}
             onNextChapter={vi.fn<() => void>()}
             onToggleDetails={vi.fn<() => void>()}
+            onDismissDetailsHint={vi.fn<() => void>()}
             onToggleFullscreen={vi.fn<() => void>()}
           />
         </Profiler>,

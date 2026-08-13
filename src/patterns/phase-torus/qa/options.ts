@@ -1,0 +1,1 @@
+export const PHASE_TORUS_QA_TIME_SECONDS = 42;

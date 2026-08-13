@@ -1,0 +1,383 @@
+:root {
+  color-scheme: dark;
+  font-family: "Inter", "Hiragino Sans", sans-serif;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+  --ink: #eafaff;
+  --muted: #91a8b2;
+  --cyan: #73efff;
+  --cyan-soft: #a9f7ff;
+  --violet: #b09aff;
+  --amber: #ffd08a;
+  --panel: rgba(3, 12, 18, 0.9);
+  --line: rgba(151, 220, 237, 0.22);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root,
+#analytic-qa-root,
+#chapter-audio-ab-root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #010308;
+}
+
+html.audioAbQaDocument,
+body.audioAbQaPage {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#chapter-audio-ab-root {
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 1px solid var(--cyan);
+  outline-offset: 4px;
+}
+
+.app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 1024px;
+  min-height: 680px;
+  overflow: clip;
+  background: #010308;
+  color: var(--ink);
+  isolation: isolate;
+}
+
+.sceneCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.edgeVignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid rgba(113, 208, 230, 0.08);
+  box-shadow:
+    inset 0 0 120px rgba(0, 0, 0, 0.72),
+    inset 0 -100px 140px rgba(0, 0, 0, 0.62);
+}
+
+.chapterTransition {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  color: rgba(231, 250, 255, 0.94);
+  background:
+    radial-gradient(circle at center, rgba(32, 89, 112, 0.24), rgba(1, 3, 9, 0.88) 58%),
+    rgba(1, 3, 9, 0.76);
+  pointer-events: none;
+  animation: chapter-transition-in 260ms ease-out both;
+  backdrop-filter: blur(8px);
+}
+
+.chapterTransition--leaving {
+  opacity: 0;
+  transform: scale(0.985);
+  animation: none;
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease;
+}
+
+.chapterTransition span,
+.chapterTransition small {
+  color: rgba(129, 229, 246, 0.72);
+  font-family: Inter, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.chapterTransition h2 {
+  margin: 8px 0 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(34px, 5vw, 72px);
+  font-weight: 400;
+  letter-spacing: 0.11em;
+}
+
+.chapterTransition p {
+  margin: 0 0 8px;
+  font-family: "Noto Serif JP", serif;
+  font-size: clamp(14px, 1.5vw, 21px);
+  letter-spacing: 0.16em;
+}
+
+.chapterTransitionNote {
+  min-width: min(520px, 68vw);
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  margin-top: 22px;
+  padding-top: 19px;
+  border-top: 1px solid rgba(129, 229, 246, 0.18);
+  animation: chapter-note-in 480ms 320ms ease-out both;
+}
+
+.chapterTransitionNote strong {
+  color: rgba(238, 246, 243, 0.86);
+  font-family: "Noto Serif JP", serif;
+  font-size: clamp(13px, 1.1vw, 17px);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.chapterTransitionNote small {
+  color: rgba(255, 208, 138, 0.64);
+}
+
+@keyframes chapter-transition-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes chapter-note-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapterTransition {
+    animation: none;
+    backdrop-filter: none;
+  }
+}
+
+.interfaceLayer {
+  transition:
+    opacity 700ms ease,
+    transform 700ms ease;
+}
+
+.app--uiHidden .interfaceLayer {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.brandBlock {
+  position: absolute;
+  z-index: 4;
+  top: 3.1vh;
+  left: 2.3vw;
+  letter-spacing: 0.28em;
+  text-shadow: 0 0 18px rgba(114, 236, 255, 0.28);
+}
+
+.brandBlock h1 {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(24px, 2.05vw, 40px);
+  font-weight: 400;
+  letter-spacing: 0.34em;
+}
+
+.brandBlock p {
+  margin: 7px 0 0;
+  color: var(--cyan);
+  font-size: clamp(8px, 0.67vw, 12px);
+  font-weight: 500;
+}
+
+.brandBlock small {
+  display: block;
+  margin-top: 7px;
+  color: rgba(201, 226, 232, 0.55);
+  font-family: "Noto Serif JP", serif;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+}
+
+.eyebrow {
+  color: rgba(180, 216, 225, 0.66);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+}
+
+.formulaBlock {
+  position: absolute;
+  z-index: 4;
+  left: 2.2vw;
+  bottom: 14.5vh;
+  width: min(38vw, 610px);
+  border-left: 1px solid rgba(115, 239, 255, 0.42);
+  padding: 4px 0 4px 19px;
+}
+
+.mainFormula {
+  margin: 7px 0 3px;
+  color: #d5f8ff;
+  filter: drop-shadow(0 0 8px rgba(94, 229, 255, 0.26));
+}
+
+.mainFormula .katex-display {
+  margin: 0;
+  text-align: left;
+}
+
+.mainFormula .katex {
+  font-size: clamp(17px, 1.24vw, 24px);
+}
+
+.formulaBlock p {
+  margin: 4px 0 0;
+  max-width: 470px;
+  color: rgba(183, 211, 219, 0.48);
+  font-size: 9px;
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+}
+
+.poeticBlock {
+  position: absolute;
+  z-index: 4;
+  top: 15vh;
+  right: 3.2vw;
+  text-align: right;
+  opacity: 0.72;
+}
+
+.app--details .poeticBlock {
+  opacity: 0;
+}
+
+.poeticBlock span {
+  color: rgba(164, 222, 234, 0.55);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+}
+
+.poeticBlock p {
+  margin: 10px 0 0;
+  color: rgba(235, 250, 249, 0.72);
+  font-family: "Noto Serif JP", serif;
+  font-size: clamp(12px, 0.95vw, 18px);
+  line-height: 2;
+  letter-spacing: 0.16em;
+}
+
+.mathAnnotations {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.annotationContext {
+  position: absolute;
+  top: 15%;
+  left: 29%;
+  color: rgba(176, 215, 222, 0.42);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+.annotation {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--cyan-soft);
+  font-family: "Cormorant Garamond", serif;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 10px rgba(103, 235, 255, 0.5);
+}
+
+.annotation::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: calc(100% + 7px);
+  width: 42px;
+  border-top: 1px dotted currentColor;
+  opacity: 0.45;
+}
+
+.annotation small {
+  font-family: "Inter", sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  opacity: 0.76;
+}
+
+.annotation--one {
+  top: 19%;
+  left: 38%;
+}
+
+.annotation--two {
+  top: 29%;
+  left: 30%;
+  color: var(--amber);
+}
+
+.annotation--three {
+  top: 39%;
+  left: 42%;
+  color: var(--violet);
+}
+
+.annotation--four {
+  top: 48%;
+  left: 35%;
+  color: #dffcff;
+}
+
+.app--details .annotation,
+.app--details .annotationContext {
+  opacity: 0.35;
+}
+
+.controlsLayer {
+  position: absolute;
+  z-index: 8;
+  right: 2vw;
+  bottom: 2.2vh;
+  left: 2vw;
+}

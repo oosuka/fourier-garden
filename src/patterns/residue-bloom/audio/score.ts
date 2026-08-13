@@ -1,4 +1,5 @@
 import type { FourierSeriesDefinition } from "../../../math/fourierSeries";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 
 export type MusicalSectionId = "intro" | "growth" | "bloom" | "hush" | "return";
 
@@ -102,8 +103,8 @@ export const RESIDUE_BLOOM_SCORE_DEFINITION: MusicalScoreDefinition = {
   releaseSeconds: 0.055,
   antiAliasRatio: 0.9,
   stereoDetuneRatio: 0.00125,
-  timbreDamping: 1.85,
-  outputGain: 0.5,
+  timbreDamping: 3.2,
+  outputGain: getChapterOutputGain("residue-bloom"),
   sections: [
     { id: "intro", startBar: 0, barCount: 8 },
     { id: "growth", startBar: 8, barCount: 12 },
@@ -122,23 +123,24 @@ const SECTION_PHRASE_ACCENTS = {
   return: [0.92, 0.66, 1, 0.78],
 } as const satisfies Readonly<Record<MusicalSectionId, readonly [number, number, number, number]>>;
 const STEP_GHOST_CONTOUR = [
-  1.14, 0.48, 0.82, 0.52, 1.0, 0.46, 0.78, 0.5, 1.06, 0.48, 0.8, 0.54, 0.96, 0.46, 0.74, 0.5,
+  1.3, 0.28, 0.72, 0.38, 1.04, 0.24, 0.62, 0.34, 1.18, 0.3, 0.68, 0.4, 0.94, 0.22, 0.56, 0.36,
 ] as const;
+const BAR_PHRASE_ARC = [0.72, 0.9, 1.08, 0.82, 0.96, 1.16, 0.78, 1.04] as const;
 
 const SECTION_TARGETS = {
   intro: {
-    gain: [0.62, 0.72],
-    brightness: [0.16, 0.3],
-    wetSend: [0.54, 0.46],
-    stereoSpread: [0.36, 0.48],
-    visualIntensity: [0.56, 0.7],
+    gain: [0.54, 0.86],
+    brightness: [0.08, 0.58],
+    wetSend: [0.68, 0.34],
+    stereoSpread: [0.26, 0.66],
+    visualIntensity: [0.48, 0.82],
   },
   growth: {
-    gain: [0.72, 0.94],
-    brightness: [0.3, 0.78],
-    wetSend: [0.42, 0.28],
-    stereoSpread: [0.48, 0.7],
-    visualIntensity: [0.7, 0.94],
+    gain: [0.82, 1],
+    brightness: [0.52, 0.82],
+    wetSend: [0.36, 0.25],
+    stereoSpread: [0.62, 0.78],
+    visualIntensity: [0.8, 0.98],
   },
   bloom: {
     gain: [0.94, 1],
@@ -155,11 +157,11 @@ const SECTION_TARGETS = {
     visualIntensity: [0.52, 0.32],
   },
   return: {
-    gain: [0.66, 0.9],
-    brightness: [0.24, 0.72],
-    wetSend: [0.62, 0.42],
-    stereoSpread: [0.42, 0.72],
-    visualIntensity: [0.6, 0.9],
+    gain: [0.62, 0.96],
+    brightness: [0.18, 0.76],
+    wetSend: [0.7, 0.38],
+    stereoSpread: [0.38, 0.76],
+    visualIntensity: [0.56, 0.94],
   },
 } as const;
 
@@ -234,8 +236,8 @@ function getRhythmicAccent(
   const downbeatAccent = stepInBar === 0 ? 1.08 : 1;
   return clamp(
     motif[(phraseIndex + rotation) % motif.length]! * ghostContour * downbeatAccent,
-    0.3,
-    1.36,
+    0.18,
+    1.46,
   );
 }
 
@@ -308,6 +310,7 @@ export function buildMusicalScoreProgram(
     const barInSection = barIndex - section.startBar;
     const sectionProgress = (barInSection + stepInBar / stepsPerBar) / section.barCount;
     const profile = getSectionProfile(section.id, sectionProgress);
+    const barPhraseArc = BAR_PHRASE_ARC[barInSection % BAR_PHRASE_ARC.length]!;
     const active = getActiveSteps().includes(stepInBar);
     const eventOrdinal = active ? activeNoteOrdinal : -1;
     const phraseIndex = (active ? eventOrdinal % 4 : 0) as 0 | 1 | 2 | 3;
@@ -330,12 +333,12 @@ export function buildMusicalScoreProgram(
       activeNoteOrdinal: eventOrdinal,
       phraseIndex,
       carrierHz,
-      baseGain: active ? profile.gain : 0,
+      baseGain: active ? profile.gain * barPhraseArc : 0,
       baseAccent,
       baseBrightness: active
         ? getRhythmicBrightness(profile.brightness, baseAccent)
         : profile.brightness,
-      wetSend: profile.wetSend,
+      wetSend: clamp(profile.wetSend * (1.12 - barPhraseArc * 0.12), 0, 1),
       stereoSpread: profile.stereoSpread,
       visualIntensity: profile.visualIntensity,
     };

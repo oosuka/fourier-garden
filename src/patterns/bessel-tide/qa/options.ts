@@ -1,0 +1,1 @@
+export const BESSEL_TIDE_QA_TIME_SECONDS = 38;

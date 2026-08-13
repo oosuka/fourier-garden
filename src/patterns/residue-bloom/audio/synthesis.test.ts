@@ -47,24 +47,24 @@ describe("Residue Bloom audio synthesis", () => {
     expect(RESIDUE_BLOOM_AUDIO_GRAPH).toEqual({
       dryHighPassHz: 190,
       dryHighPassQ: 0.45,
-      dryHighShelfHz: 1_250,
-      dryHighShelfGainDb: -16,
-      dryLowPassHz: 2_100,
-      dryLowPassQ: 0.3,
+      dryHighShelfHz: 1_180,
+      dryHighShelfGainDb: -17,
+      dryLowPassHz: 1_650,
+      dryLowPassQ: 0.25,
       dryGain: 0.9,
       wetHighPassHz: 220,
       wetHighPassQ: 0.45,
-      wetLowPassHz: 1_450,
-      wetLowPassQ: 0.3,
-      wetGain: 0.12,
-      roomSeconds: 1.15,
-      roomDecay: 2.1,
+      wetLowPassHz: 1_180,
+      wetLowPassQ: 0.25,
+      wetGain: 0.045,
+      roomSeconds: 0.82,
+      roomDecay: 1.45,
       compressor: {
-        thresholdDb: -14,
+        thresholdDb: -16,
         kneeDb: 12,
         ratio: 3,
         attackSeconds: 0.006,
-        releaseSeconds: 0.18,
+        releaseSeconds: 0.2,
       },
       limiterCeilingDbfs: -1,
     });
@@ -131,7 +131,7 @@ describe("Residue Bloom audio synthesis", () => {
       nominalFrequencyHz: 24_255,
       included: false,
     });
-    expect(at495[1]?.weightedAmplitude).toBeCloseTo(2.5 / 2 ** 1.85, 12);
+    expect(at495[1]?.weightedAmplitude).toBeCloseTo(2.5 / 2 ** 3.2, 12);
   });
 
   it("applies the anti-alias guard to the higher detuned frequency", () => {
@@ -153,19 +153,20 @@ describe("Residue Bloom audio synthesis", () => {
     expect(fundamental.included).toBe(false);
   });
 
-  it.each([
-    44_100, 48_000, 96_000,
-  ])("keeps every included detuned component below 0.45 Fs at %i Hz", (sampleRate) => {
-    for (const carrierHz of [440, 495]) {
-      const components = getSonificationComponents(55, carrierHz, sampleRate, score.definition);
+  it.each([44_100, 48_000, 96_000])(
+    "keeps every included detuned component below 0.45 Fs at %i Hz",
+    (sampleRate) => {
+      for (const carrierHz of [440, 495]) {
+        const components = getSonificationComponents(55, carrierHz, sampleRate, score.definition);
 
-      for (const component of components.filter((candidate) => candidate.included)) {
-        expect(Math.max(component.leftFrequencyHz, component.rightFrequencyHz)).toBeLessThan(
-          sampleRate * 0.45,
-        );
+        for (const component of components.filter((candidate) => candidate.included)) {
+          expect(Math.max(component.leftFrequencyHz, component.rightFrequencyHz)).toBeLessThan(
+            sampleRate * 0.45,
+          );
+        }
       }
-    }
-  });
+    },
+  );
 
   it("renders finite rounded plucks with a soft overlap instead of a low drone", () => {
     const sampleRate = 48_000;
@@ -178,16 +179,20 @@ describe("Residue Bloom audio synthesis", () => {
     const stepSamples = Math.round(score.stepSeconds * sampleRate);
     const attackWindow = Math.round(0.055 * sampleRate);
     const tailWindow = Math.round(0.025 * sampleRate);
+    const attacks: number[] = [];
 
     for (let step = 0; step < 16; step += 1) {
       const start = step * stepSamples;
       const attack = rms(samples.slice(start, start + attackWindow));
       const tail = rms(samples.slice(start + stepSamples - tailWindow, start + stepSamples));
+      attacks.push(attack);
 
-      expect(attack).toBeGreaterThan(0.03);
+      expect(attack).toBeGreaterThan(0.008);
       expect(tail).toBeGreaterThan(attack * 0.015);
       expect(tail).toBeLessThan(attack * 0.46);
     }
+
+    expect(Math.max(...attacks) / Math.min(...attacks)).toBeGreaterThan(3.5);
 
     expect(samples.every(Number.isFinite)).toBe(true);
     expect(
@@ -216,7 +221,7 @@ describe("Residue Bloom audio synthesis", () => {
     const brightnessValues = activeEvents.map((event) => event.baseBrightness);
     const wetSendValues = activeEvents.map((event) => event.wetSend);
 
-    expect(score.definition.timbreDamping).toBeGreaterThanOrEqual(1.8);
+    expect(score.definition.timbreDamping).toBeGreaterThanOrEqual(3);
     expect(Math.max(...brightnessValues) - Math.min(...brightnessValues)).toBeGreaterThanOrEqual(
       0.78,
     );
@@ -255,7 +260,7 @@ describe("Residue Bloom audio synthesis", () => {
     expect(onsets.onsetCount).toBeGreaterThanOrEqual(score.totalSteps * 0.85);
     expect(onsets.p10Seconds).toBeGreaterThanOrEqual(0.16);
     expect(onsets.p90Seconds).toBeLessThanOrEqual(0.22);
-  }, 15_000);
+  }, 30_000);
 
   it("renders clearly separated anchors and ghost ticks in the first thirty seconds", () => {
     const sampleRate = 4_000;

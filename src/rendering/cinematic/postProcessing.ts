@@ -18,11 +18,15 @@ export interface CinematicPostProfile {
 const POST_PROFILES: Readonly<Record<QualityLevel, Readonly<CinematicPostProfile>>> = Object.freeze(
   {
     low: Object.freeze({ enabled: false, strength: 0, radius: 0, threshold: 1 }),
-    medium: Object.freeze({ enabled: true, strength: 0.82, radius: 0.22, threshold: 0.88 }),
-    high: Object.freeze({ enabled: true, strength: 1.18, radius: 0.36, threshold: 0.82 }),
-    ultra: Object.freeze({ enabled: true, strength: 1.42, radius: 0.46, threshold: 0.78 }),
+    medium: Object.freeze({ enabled: true, strength: 0.86, radius: 0.26, threshold: 0.82 }),
+    high: Object.freeze({ enabled: true, strength: 1.2, radius: 0.38, threshold: 0.76 }),
+    ultra: Object.freeze({ enabled: true, strength: 1.48, radius: 0.46, threshold: 0.7 }),
   },
 );
+
+// Above the reference display raster, UnrealBloom's extra full-frame passes miss the
+// 60 fps budget on the fallback renderer. Direct rendering preserves native math lines.
+const WEBGL_BLOOM_MAX_RASTER_PIXELS = 6_000_000;
 
 export interface CinematicPostProcessor {
   readonly mode: CinematicPostMode;
@@ -53,6 +57,19 @@ export function getCinematicPostMode(
 ): CinematicPostMode {
   if (!available) return "direct";
   return backend === "webgpu" ? "webgpu-bloom" : "webgl-bloom";
+}
+
+export function getWebGlViewportPostMode(
+  width: number,
+  height: number,
+  pixelRatio: number,
+  bloomEnabled: boolean,
+): CinematicPostMode {
+  assertViewport(width, height, pixelRatio);
+  if (!bloomEnabled) return "direct";
+  return width * pixelRatio * height * pixelRatio <= WEBGL_BLOOM_MAX_RASTER_PIXELS
+    ? "webgl-bloom"
+    : "direct";
 }
 
 function assertViewport(width: number, height: number, pixelRatio: number): void {
@@ -101,7 +118,7 @@ abstract class BasePostProcessor implements CinematicPostProcessor {
   protected getStrength(): number {
     const profile = getCinematicPostProfile(this.quality);
     return profile.enabled
-      ? Math.min(1.62, profile.strength + Math.min(0.2, this.energy * 0.18))
+      ? Math.min(1.82, profile.strength + Math.min(0.2, this.energy * 0.18))
       : 0;
   }
 
@@ -200,7 +217,18 @@ interface WebGlBloomLike {
 }
 
 class WebGlPostProcessor extends BasePostProcessor {
-  readonly mode = "webgl-bloom" as const;
+  private width = 1;
+  private height = 1;
+  private pixelRatio = 1;
+
+  get mode(): CinematicPostMode {
+    return getWebGlViewportPostMode(
+      this.width,
+      this.height,
+      this.pixelRatio,
+      getCinematicPostProfile(this.quality).enabled,
+    );
+  }
 
   constructor(
     private readonly renderer: WebGLRenderer,
@@ -215,17 +243,22 @@ class WebGlPostProcessor extends BasePostProcessor {
 
   render(): void {
     if (this.disposed) throw new Error("Cinematic post processor has been disposed");
-    if (getCinematicPostProfile(this.quality).enabled) this.composer.render();
+    if (this.mode === "webgl-bloom") this.composer.render();
     else this.renderer.render(this.scene, this.camera);
   }
 
   resize(width: number, height: number, pixelRatio: number): void {
     if (this.disposed) throw new Error("Cinematic post processor has been disposed");
     assertViewport(width, height, pixelRatio);
+    this.width = width;
+    this.height = height;
+    this.pixelRatio = pixelRatio;
     this.renderer.setPixelRatio(pixelRatio);
     this.renderer.setSize(width, height, false);
-    this.composer.setPixelRatio(pixelRatio);
-    this.composer.setSize(width, height);
+    if (this.mode === "webgl-bloom") {
+      this.composer.setPixelRatio(pixelRatio);
+      this.composer.setSize(width, height);
+    }
   }
 
   protected applyProfile(): void {

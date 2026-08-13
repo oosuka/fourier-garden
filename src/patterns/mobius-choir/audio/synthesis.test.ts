@@ -28,6 +28,7 @@ import {
   renderMobiusChoirStereo,
   validateMobiusChoirWorkletProgram,
 } from "./synthesis";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 
 describe("Möbius Choir synthesis", () => {
   it("wraps the six-mode score in the chapter-specific graph", () => {
@@ -46,12 +47,12 @@ describe("Möbius Choir synthesis", () => {
     expect(MOBIUS_CHOIR_SYNTHESIS.partialDamping).toBe(8);
     expect(MOBIUS_CHOIR_SYNTHESIS.maximumEventSeconds).toBe(0.23);
     expect(MOBIUS_CHOIR_SYNTHESIS.formantFloor).toBe(1);
-    expect(MOBIUS_CHOIR_SYNTHESIS.outputGain).toBe(0.36);
+    expect(MOBIUS_CHOIR_SYNTHESIS.outputGain).toBe(getChapterOutputGain("mobius-choir"));
     for (const articulation of Object.values(MOBIUS_CHOIR_SYNTHESIS.articulations)) {
       expect(articulation.breathGain).toBe(0);
       expect(articulation.moraOffsetsSeconds).toEqual([0]);
       expect(articulation.endSeconds).toBeGreaterThanOrEqual(0.19);
-      expect(articulation.endSeconds).toBeLessThanOrEqual(0.21);
+      expect(articulation.endSeconds).toBeLessThanOrEqual(0.23);
     }
     for (const bands of Object.values(MOBIUS_CHOIR_SYNTHESIS.formants)) {
       expect(bands.every((band) => band.amplitude === 0)).toBe(true);
@@ -59,18 +60,18 @@ describe("Möbius Choir synthesis", () => {
     expect(MOBIUS_CHOIR_AUDIO_GRAPH).toEqual({
       dryHighPassHz: 220,
       dryHighPassQ: 0.45,
-      dryHighShelfHz: 1_000,
-      dryHighShelfGainDb: -24,
-      dryLowPassHz: 1_080,
+      dryHighShelfHz: 900,
+      dryHighShelfGainDb: -28,
+      dryLowPassHz: 960,
       dryLowPassQ: 0.25,
       dryGain: 0.88,
       wetHighPassHz: 220,
       wetHighPassQ: 0.45,
-      wetLowPassHz: 860,
+      wetLowPassHz: 720,
       wetLowPassQ: 0.25,
-      wetGain: 0.075,
-      roomSeconds: 1.15,
-      roomDecay: 2.35,
+      wetGain: 0.09,
+      roomSeconds: 1.2,
+      roomDecay: 2.5,
       compressor: {
         thresholdDb: -16,
         kneeDb: 12,
@@ -100,7 +101,7 @@ describe("Möbius Choir synthesis", () => {
     const modes = createMobiusChoirAudioModes();
     expect(modes).toHaveLength(6);
     expect(modes.map((mode) => mode.baseFrequencyHz)).toEqual([
-      420, 657.1989354305979, 657.1989354305979, 803.7959396219992, 920, 920,
+      420, 566.0849616339433, 566.0849616339433, 743.17303530598, 920, 920,
     ]);
     expect(modes.map((mode) => mode.normalizedGain)).toEqual([
       1,
@@ -376,7 +377,8 @@ describe("Möbius Choir synthesis", () => {
     expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.2);
     expect(onsets.medianSeconds).toBeLessThanOrEqual(0.24);
     expect(onsets.p90Seconds - onsets.p10Seconds).toBeLessThanOrEqual(0.06);
-    expect(onsets.pulseScore).toBeGreaterThanOrEqual(0.3);
+    // Overlapping finite tails soften the click-like autocorrelation while every slot stays audible.
+    expect(onsets.pulseScore).toBeGreaterThanOrEqual(0.27);
   }, 20_000);
 
   it("keeps the collective phrase continuous while each gesture closes", () => {

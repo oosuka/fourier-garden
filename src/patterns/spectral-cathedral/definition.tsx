@@ -30,6 +30,22 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
   },
   formulaLatex:
     "u_C(x,y,t)=\\sum_{(m,n)\\in\\mathcal K_C}a_{mn}\\cos(c_C\\sqrt{\\lambda_{mn}}t)\\phi_{mn}(x,y)",
+  contrastProfile: {
+    composition: "rectangular-wave-surface-columns",
+    motion: "standing-wave-vertical-propagation",
+    space: "deep-cathedral-vault",
+    palette: "cyan-silver-low-gold",
+    timbre: "dry-faceted-single-mode-piko",
+    rhythm: "five-four-constant-grid",
+    time: "standing-breath-seventy-five",
+    audio: {
+      onsetPattern: "constant-five-four-sixteenths-with-long-form-rotation",
+      articulation: "dry-short-single-partial",
+      pitchMapping: "normalized-square-root-eigenvalue",
+      spatialGesture: "central-faceted-pan",
+      wetCharacter: "short-low-wet-room",
+    },
+  },
   dramaturgy: {
     cycleSeconds: 75,
     expressiveAxes: ["density", "dynamics", "register", "timbre", "space", "motion", "color"],
@@ -132,7 +148,7 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
     scopeNotice:
       "固有値、固有関数、係数は解析式から直接得ています。表示軸は固有値λであり、Hzスペクトル、DFT、FFT、数値固有値解析ではありません。",
     sonificationBody:
-      "音声は波動場の無加工再生ではありません。√λを420-980 Hzの安全なpiko帯域へ圧縮し、係数絶対値比、係数符号の開始位相を保持します。75秒・18小節・5幕は全16分スロットで発音し、toll、answer、cascade、pulse、choirは音量、定位、短い包絡の違いとしてだけ使います。左右デチューン後の帯域制限、高域抑制EQ、圧縮、短い残響、-1 dBFSリミッターを加えたソニフィケーションです。",
+      "音声は波動場の無加工再生ではありません。√λを420-980 Hzの安全なpiko帯域へ圧縮し、係数絶対値比、係数符号の開始位相を保持します。75秒・18小節・5幕は全16分スロットで発音し、局所4 slot形を小節ごとに回転して全周期の強弱、明度、wet、定位幅を別位相で動かします。左右デチューン後の帯域制限、高域抑制EQ、圧縮、短い残響、-1 dBFSリミッターを加えたソニフィケーションです。",
     poeticLayerBody:
       "7本の光柱、6本のアーチ、塵状粒子、透明ハロー、短い残光は詩的造形です。発音モードの固有関数値を柱ごとの局所励起へ写し、局所的な光柱とアーチ伝播、粒子帯、緩やかなカメラ軌道を作ります。固定格子面、境界、節線、固有値、係数は変形しません。",
   },

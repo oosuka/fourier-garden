@@ -5,7 +5,7 @@ import { mobiusChoirPattern } from "./definition";
 describe("Möbius Choir definition", () => {
   it("defines an analytic published flat quotient", () => {
     expect(mobiusChoirPattern.publication).toBe("published");
-    expect(mobiusChoirPattern.order).toBe(3);
+    expect(mobiusChoirPattern.order).toBe(4);
     expect(mobiusChoirPattern.definition.modes).toHaveLength(6);
     expect(mobiusChoirPattern.audio.score.events).toHaveLength(256);
     expect(mobiusChoirPattern.audio.score.cycleSeconds).toBeCloseTo(960 / 17, 12);

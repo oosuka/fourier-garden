@@ -72,7 +72,23 @@ export function DetailsPanel({ open, pattern, audio, onClose }: DetailsPanelProp
             <p className="scopeNotice">{pattern.education.scopeNotice}</p>
           </section>
         ) : (
-          <MathematicalDetails />
+          <>
+            <section className="academicContract" aria-label="学術的な検証契約">
+              <div>
+                <span>FINITE MODEL</span>
+                <strong>有限の係数・支持を台帳化</strong>
+              </div>
+              <div>
+                <span>ABSOLUTE TIME</span>
+                <strong>数学時刻を楽譜周期から分離</strong>
+              </div>
+              <div>
+                <span>LOCAL MAPPING</span>
+                <strong>音と光の因果を局所追跡</strong>
+              </div>
+            </section>
+            <MathematicalDetails />
+          </>
         )}
 
         <section className="dataSection">

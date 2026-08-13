@@ -19,8 +19,8 @@ function average(values: readonly number[]): number {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-describe("published chapter sound identity", () => {
-  it("keeps all published chapters in the same rounded midrange piko family", () => {
+describe("established chapter sound identity", () => {
+  it("keeps the three established synthesis graphs in the rounded midrange piko family", () => {
     for (const graph of [
       RESIDUE_BLOOM_AUDIO_GRAPH,
       SPECTRAL_CATHEDRAL_AUDIO_GRAPH,
@@ -36,13 +36,13 @@ describe("published chapter sound identity", () => {
     expect(createRhythmPreset(55).timbreDamping).toBeGreaterThanOrEqual(1.8);
   });
 
-  it("keeps Chapter 2 dry and faceted while Chapter 3 stays wider and more legato", () => {
+  it("keeps Chapter 2 dry and faceted while Chapter 4 stays wider and more legato", () => {
     const chapter2MaximumEnd = Math.max(
       ...Object.values(SPECTRAL_CATHEDRAL_SYNTHESIS.articulations).map(
         (articulation) => articulation.endSeconds,
       ),
     );
-    const chapter3MinimumEnd = Math.min(
+    const chapter4MinimumEnd = Math.min(
       ...Object.values(MOBIUS_CHOIR_SYNTHESIS.articulations).map(
         (articulation) => articulation.endSeconds,
       ),
@@ -50,27 +50,27 @@ describe("published chapter sound identity", () => {
     const chapter2AverageSpread = average(
       SPECTRAL_CATHEDRAL_SCORE.events.map((event) => event.stereoSpread),
     );
-    const chapter3AverageSpread = average(
+    const chapter4AverageSpread = average(
       MOBIUS_CHOIR_SCORE.events.map((event) => event.stereoSpread),
     );
     const chapter2MaximumWetSend = Math.max(
       ...SPECTRAL_CATHEDRAL_SCORE.events.map((event) => event.wetSend),
     );
-    const chapter3MinimumPanMotion = Math.min(
+    const chapter4MinimumPanMotion = Math.min(
       ...MOBIUS_CHOIR_SCORE.events.map((event) => event.panMotion),
     );
-    const chapter3MaximumPanMotion = Math.max(
+    const chapter4MaximumPanMotion = Math.max(
       ...MOBIUS_CHOIR_SCORE.events.map((event) => event.panMotion),
     );
 
     expect(chapter2MaximumEnd).toBeLessThanOrEqual(0.155);
     expect(chapter2MaximumWetSend).toBeLessThanOrEqual(0.055);
-    expect(chapter3MinimumEnd).toBeGreaterThanOrEqual(0.19);
-    expect(chapter3MinimumPanMotion).toBeGreaterThanOrEqual(0.3);
-    expect(chapter3MaximumPanMotion).toBeGreaterThanOrEqual(0.7);
+    expect(chapter4MinimumEnd).toBeGreaterThanOrEqual(0.19);
+    expect(chapter4MinimumPanMotion).toBeGreaterThanOrEqual(0.3);
+    expect(chapter4MaximumPanMotion).toBeGreaterThanOrEqual(0.7);
     expect(MOBIUS_CHOIR_AUDIO_GRAPH.wetGain).toBeGreaterThanOrEqual(
       SPECTRAL_CATHEDRAL_AUDIO_GRAPH.wetGain * 3,
     );
-    expect(chapter3AverageSpread - chapter2AverageSpread).toBeGreaterThanOrEqual(0.5);
+    expect(chapter4AverageSpread - chapter2AverageSpread).toBeGreaterThanOrEqual(0.5);
   });
 });

@@ -10,7 +10,8 @@ interface CanvasStageProps {
   pattern: PatternDefinition;
   transport: Transport;
   playing: boolean;
-  onStatus: (status: "loading" | "ready" | "error") => void;
+  sceneGeneration: number;
+  onStatus: (status: "loading" | "ready" | "error", generation: number) => void;
   onError: (message: string) => void;
 }
 
@@ -44,7 +45,14 @@ export function getSceneQualityPreference(search: string): {
   };
 }
 
-export function CanvasStage({ pattern, transport, playing, onStatus, onError }: CanvasStageProps) {
+export function CanvasStage({
+  pattern,
+  transport,
+  playing,
+  sceneGeneration,
+  onStatus,
+  onError,
+}: CanvasStageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playingRef = useRef(playing);
 
@@ -68,9 +76,10 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
     const adaptiveQuality = new AdaptiveQuality(qualityPreference.initialQuality, 180);
 
     const fail = (error: unknown) => {
+      if (disposed) return;
       console.error("Fourier Garden scene initialization failed", error);
       const message = error instanceof Error ? error.message : "描画の初期化に失敗しました";
-      onStatus("error");
+      onStatus("error", sceneGeneration);
       onError(message);
     };
 
@@ -131,7 +140,7 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
       sampleStarted = previousFrame;
       sampleFrames = 0;
       onError("");
-      onStatus("ready");
+      onStatus("ready", sceneGeneration);
       if (!animationFrame) {
         animationFrame = requestAnimationFrame(frame);
       }
@@ -144,7 +153,7 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
       animationFrame = 0;
       scene?.dispose();
       scene = null;
-      onStatus("loading");
+      onStatus("loading", sceneGeneration);
       try {
         await initializeScene();
       } catch (error) {
@@ -158,14 +167,14 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
       event.preventDefault();
       cancelAnimationFrame(animationFrame);
       animationFrame = 0;
-      onStatus("loading");
+      onStatus("loading", sceneGeneration);
     };
     const onWebGLContextRestored = () => void recoverScene();
 
     window.addEventListener("resize", resize);
     canvas.addEventListener("webglcontextlost", onWebGLContextLost);
     canvas.addEventListener("webglcontextrestored", onWebGLContextRestored);
-    onStatus("loading");
+    onStatus("loading", sceneGeneration);
     void initializeScene().catch(fail);
 
     return () => {
@@ -177,7 +186,7 @@ export function CanvasStage({ pattern, transport, playing, onStatus, onError }: 
       scene?.dispose();
       scene = null;
     };
-  }, [onError, onStatus, pattern, transport]);
+  }, [onError, onStatus, pattern, sceneGeneration, transport]);
 
   return (
     <canvas

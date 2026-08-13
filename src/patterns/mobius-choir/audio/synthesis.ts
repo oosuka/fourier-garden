@@ -1,4 +1,5 @@
 import { MOBIUS_CHOIR_DEFINITION } from "../math/model";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
 import {
   MOBIUS_CHOIR_SCORE,
@@ -94,55 +95,55 @@ export const MOBIUS_CHOIR_SYNTHESIS = {
   partialDamping: 8,
   articulations: {
     breath: {
-      attackSeconds: 0.01,
-      decaySeconds: 0.062,
-      fadeStartSeconds: 0.17,
-      endSeconds: 0.205,
+      attackSeconds: 0.016,
+      decaySeconds: 0.078,
+      fadeStartSeconds: 0.19,
+      endSeconds: 0.225,
       breathGain: 0,
       moraOffsetsSeconds: [0],
       moraGains: [0.82],
     },
     call: {
-      attackSeconds: 0.008,
-      decaySeconds: 0.058,
-      fadeStartSeconds: 0.16,
-      endSeconds: 0.195,
+      attackSeconds: 0.013,
+      decaySeconds: 0.074,
+      fadeStartSeconds: 0.188,
+      endSeconds: 0.224,
       breathGain: 0,
       moraOffsetsSeconds: [0],
       moraGains: [1],
     },
     answer: {
-      attackSeconds: 0.008,
-      decaySeconds: 0.06,
-      fadeStartSeconds: 0.164,
-      endSeconds: 0.2,
+      attackSeconds: 0.014,
+      decaySeconds: 0.076,
+      fadeStartSeconds: 0.19,
+      endSeconds: 0.226,
       breathGain: 0,
       moraOffsetsSeconds: [0],
       moraGains: [0.94],
     },
     turn: {
-      attackSeconds: 0.006,
-      decaySeconds: 0.056,
-      fadeStartSeconds: 0.156,
-      endSeconds: 0.19,
+      attackSeconds: 0.011,
+      decaySeconds: 0.07,
+      fadeStartSeconds: 0.184,
+      endSeconds: 0.22,
       breathGain: 0,
       moraOffsetsSeconds: [0],
       moraGains: [1],
     },
     braid: {
-      attackSeconds: 0.006,
-      decaySeconds: 0.056,
-      fadeStartSeconds: 0.158,
-      endSeconds: 0.192,
+      attackSeconds: 0.012,
+      decaySeconds: 0.072,
+      fadeStartSeconds: 0.186,
+      endSeconds: 0.222,
       breathGain: 0,
       moraOffsetsSeconds: [0],
       moraGains: [0.98],
     },
     converge: {
-      attackSeconds: 0.011,
-      decaySeconds: 0.066,
-      fadeStartSeconds: 0.176,
-      endSeconds: 0.21,
+      attackSeconds: 0.018,
+      decaySeconds: 0.082,
+      fadeStartSeconds: 0.194,
+      endSeconds: 0.23,
       breathGain: 0,
       moraOffsetsSeconds: [0],
       moraGains: [0.84],
@@ -178,24 +179,24 @@ export const MOBIUS_CHOIR_SYNTHESIS = {
   breathComponentCount: 1,
   stereoDetuneRatio: 0.00125,
   antiAliasRatio: 0.9,
-  outputGain: 0.36,
+  outputGain: getChapterOutputGain("mobius-choir"),
 } as const satisfies MobiusChoirSynthesisPreset;
 
 export const MOBIUS_CHOIR_AUDIO_GRAPH: AudioGraphPreset = {
   dryHighPassHz: 220,
   dryHighPassQ: 0.45,
-  dryHighShelfHz: 1_000,
-  dryHighShelfGainDb: -24,
-  dryLowPassHz: 1_080,
+  dryHighShelfHz: 900,
+  dryHighShelfGainDb: -28,
+  dryLowPassHz: 960,
   dryLowPassQ: 0.25,
   dryGain: 0.88,
   wetHighPassHz: 220,
   wetHighPassQ: 0.45,
-  wetLowPassHz: 860,
+  wetLowPassHz: 720,
   wetLowPassQ: 0.25,
-  wetGain: 0.075,
-  roomSeconds: 1.15,
-  roomDecay: 2.35,
+  wetGain: 0.09,
+  roomSeconds: 1.2,
+  roomDecay: 2.5,
   compressor: {
     thresholdDb: -16,
     kneeDb: 12,
@@ -217,9 +218,11 @@ export function createMobiusChoirAudioModes(): MobiusChoirAudioMode[] {
     eigenvalue: mode.eigenvalue,
     coefficient: mode.coefficient,
     voiceKind: mode.voiceKind,
-    baseFrequencyHz:
-      420 +
-      ((Math.sqrt(mode.eigenvalue) - minimumRoot) / (maximumRoot - minimumRoot)) * (920 - 420),
+    baseFrequencyHz: (() => {
+      const normalizedRoot =
+        (Math.sqrt(mode.eigenvalue) - minimumRoot) / (maximumRoot - minimumRoot);
+      return 420 + normalizedRoot ** 1.65 * (920 - 420);
+    })(),
     normalizedGain: 2 / (1 + mode.eigenvalue),
     modalAngularFrequency: MOBIUS_CHOIR_DEFINITION.waveTimeScale * Math.sqrt(mode.eigenvalue),
   }));

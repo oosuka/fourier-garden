@@ -16,7 +16,7 @@ function MobiusChoirMathematicalDetails() {
 export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
   kind: "mobius-choir",
   id: "mobius-choir",
-  order: 3,
+  order: 4,
   publication: "published",
   title: { en: "Möbius Choir", ja: "メビウスの合唱" },
   subtitle: {
@@ -25,6 +25,22 @@ export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
   },
   formulaLatex:
     "u_M(x,y,t)=\\sum_{(m,n)\\in\\mathcal K_M}b_{mn}\\sin(mx)\\cos\\!\\left(ny-\\sqrt{\\lambda_{mn}}\\,0.14t\\right)",
+  contrastProfile: {
+    composition: "single-mobius-band-seam",
+    motion: "traveling-wave-orientation-reversal",
+    space: "floating-closed-ribbon",
+    palette: "violet-blue-purple",
+    timbre: "dark-overlapping-single-mode-ribbon",
+    rhythm: "four-four-continuous-grid",
+    time: "two-turn-return",
+    audio: {
+      onsetPattern: "constant-sixteenth-flow-with-long-form-braid",
+      articulation: "soft-overlapping-finite-tail",
+      pitchMapping: "nonlinear-normalized-mobius-eigenvalue",
+      spatialGesture: "wide-seam-crossing-pan",
+      wetCharacter: "long-wide-room-tail",
+    },
+  },
   dramaturgy: {
     cycleSeconds: MOBIUS_CHOIR_SCORE.cycleSeconds,
     sections: MOBIUS_CHOIR_DRAMATURGY_SECTIONS,
@@ -98,7 +114,7 @@ export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
     scopeNotice:
       "3次元の帯はflat quotientと節線を観察する非等長埋め込みです。埋め込み曲面の誘導計量に対するLaplace–Beltrami固有モードではなく、固定した表側・裏側も定義しません。DFT、FFT、数値固有値解析は使用しません。",
     sonificationBody:
-      "音声は波動場の無加工再生ではありません。√λを420-920 Hzの安全なpiko帯域へ圧縮し、bₘₙの基礎振幅比、許容条件、n>0の正弦・余弦対の位相関係を保持します。carrierを絶対transport時刻で連続評価し、モード変位と速度を振幅と定位へ写します。256イベントは単一partial、ノイズ状付加音源ゲイン0の短い電子粒で、dry/wet両方の高域抑制EQ、圧縮、短い残響、-1 dBFSリミッターを加え、前周期の余韻も絶対イベント時刻で評価します。",
+      "音声は波動場の無加工再生ではありません。√λを420-920 Hzの安全なpiko帯域へ圧縮し、bₘₙの基礎振幅比、許容条件、n>0の正弦・余弦対の位相関係を保持します。carrierを絶対transport時刻で連続評価し、モード変位と速度を振幅と定位へ写します。局所4 slot形へ16小節の長周期輪郭を重ね、強弱、尾長、wet、左右運動を非同期に変えます。単一partial、高域抑制EQ、圧縮、短い残響、-1 dBFSリミッターは音楽的変換です。",
     poeticLayerBody:
       "息の粒子、六本の声部リボン、継ぎ目の淡いシアン残光は詩的造形です。音響と同じモード速度を粒子流へ渡し、局所変位・速度と継ぎ目通過から個別に応答します。厳密曲面、符号値、節線、境界の頂点は変形しません。",
   },

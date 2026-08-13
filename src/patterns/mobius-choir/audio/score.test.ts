@@ -115,15 +115,18 @@ describe("Möbius Choir score", () => {
     ).toBeGreaterThanOrEqual(0.7);
   });
 
-  it("keeps the choir rhythm flowing with a different four-slot accent shape", () => {
+  it("keeps the choir rhythm flowing while carrying its accent beyond four slots", () => {
     const firstFour = MOBIUS_CHOIR_SCORE.events.slice(0, 4);
     const unityAccentGain = firstFour[1]!.baseGain;
     const firstFourGainRatios = firstFour.map((event) => event.baseGain / unityAccentGain);
+    const nextBarGainRatios = MOBIUS_CHOIR_SCORE.events
+      .slice(16, 20)
+      .map((event) => event.baseGain / MOBIUS_CHOIR_SCORE.events[17]!.baseGain);
 
-    expect(firstFourGainRatios).toEqual([0.78, 1, 0.68, 0.92]);
     expect(
       Math.max(...firstFourGainRatios) - Math.min(...firstFourGainRatios),
     ).toBeGreaterThanOrEqual(0.3);
+    expect(nextBarGainRatios).not.toEqual(firstFourGainRatios);
   });
 
   it("varies gestures and avoids mechanical mode repetitions", () => {

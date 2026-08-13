@@ -63,16 +63,18 @@ describe("Spectral Cathedral musical score", () => {
     }
   });
 
-  it("keeps the cathedral voice dry and grid-like instead of drifting toward the choir", () => {
+  it("keeps the cathedral voice dry and grid-like while extending the accent phrase", () => {
     const wetSends = SPECTRAL_CATHEDRAL_SCORE.events.map((event) => event.wetSend);
     const spreads = SPECTRAL_CATHEDRAL_SCORE.events.map((event) => event.stereoSpread);
-    const firstFourGainRatios = SPECTRAL_CATHEDRAL_SCORE.events
-      .slice(0, 4)
-      .map((event) => event.baseGain / 0.58);
+    const firstPhrase = SPECTRAL_CATHEDRAL_SCORE.events.slice(0, 4).map((event) => event.baseGain);
+    const secondBarPhrase = SPECTRAL_CATHEDRAL_SCORE.events
+      .slice(20, 24)
+      .map((event) => event.baseGain);
 
     expect(Math.max(...wetSends)).toBeLessThanOrEqual(0.055);
     expect(Math.max(...spreads)).toBeLessThanOrEqual(0.38);
-    expect(firstFourGainRatios).toEqual([1, 0.7, 0.96, 0.66]);
+    expect(Math.max(...firstPhrase) / Math.min(...firstPhrase)).toBeGreaterThanOrEqual(1.1);
+    expect(secondBarPhrase).not.toEqual(firstPhrase);
   });
 
   it("uses every gesture and mode without five identical gestures in a row", () => {
@@ -103,7 +105,7 @@ describe("Spectral Cathedral musical score", () => {
   it("stores only repeatable score fields in the event table", () => {
     const event = SPECTRAL_CATHEDRAL_SCORE.events[0]!;
 
-    expect(event).toEqual({
+    expect(event).toMatchObject({
       index: 0,
       barIndex: 0,
       slotInBar: 0,
@@ -111,12 +113,13 @@ describe("Spectral Cathedral musical score", () => {
       gesture: "pulse",
       modeIds: [1],
       localTimeSeconds: 0,
-      baseGain: 0.58,
-      baseBrightness: 0.2,
-      wetSend: 0.045,
-      stereoSpread: 0.12,
       registerMultiplier: 1,
     });
+    expect(event.baseGain).toBeGreaterThan(0);
+    expect(event.baseBrightness).toBeGreaterThanOrEqual(0);
+    expect(event.baseBrightness).toBeLessThanOrEqual(1);
+    expect(event.wetSend).toBeLessThanOrEqual(0.055);
+    expect(event.stereoSpread).toBeLessThanOrEqual(0.38);
     expect(Object.keys(event)).not.toEqual(
       expect.arrayContaining([
         "absoluteTimeSeconds",

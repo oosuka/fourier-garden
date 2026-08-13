@@ -1,4 +1,5 @@
 import { SPECTRAL_CATHEDRAL_DEFINITION } from "../math/model";
+import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 import type { AudioEngineProgram, AudioGraphPreset } from "../../../audio/audioProgram";
 import {
   SPECTRAL_CATHEDRAL_SCORE,
@@ -139,7 +140,7 @@ export const SPECTRAL_CATHEDRAL_SYNTHESIS = {
   woodComponentCount: 1,
   stereoDetuneRatio: 0.00125,
   antiAliasRatio: 0.9,
-  outputGain: 0.5,
+  outputGain: getChapterOutputGain("spectral-cathedral"),
 } as const satisfies SpectralCathedralSynthesisPreset;
 
 export const SPECTRAL_CATHEDRAL_AUDIO_GRAPH: AudioGraphPreset = {

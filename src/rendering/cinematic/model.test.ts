@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CINEMATIC_ENVIRONMENT_PROFILES,
   CINEMATIC_PARTICLE_BUDGETS,
   createCinematicParticleField,
+  createCinematicParticleFieldFromProfile,
   getCinematicEnvironmentParticleCount,
   getCinematicViewportSpan,
 } from "./model";
+import { createAnalyticProfile } from "../analytic/primitives";
 
 describe("cinematic environment model", () => {
   it("uses the approved total particle budgets", () => {
@@ -30,6 +33,23 @@ describe("cinematic environment model", () => {
     expect(first.sizes).toEqual(second.sizes);
     expect(first.phases).toEqual(second.phases);
     expect(first.bands).toEqual(second.bands);
+  });
+
+  it("keeps chapter and profile particle entrypoints byte-identical", () => {
+    for (const chapter of ["residue-bloom", "spectral-cathedral", "mobius-choir"] as const) {
+      const chapterField = createCinematicParticleField(41_041, chapter, 2_000);
+      const profileField = createCinematicParticleFieldFromProfile(
+        41_041,
+        CINEMATIC_ENVIRONMENT_PROFILES[chapter],
+        2_000,
+      );
+
+      expect(profileField.positions).toEqual(chapterField.positions);
+      expect(profileField.colors).toEqual(chapterField.colors);
+      expect(profileField.sizes).toEqual(chapterField.sizes);
+      expect(profileField.phases).toEqual(chapterField.phases);
+      expect(profileField.bands).toEqual(chapterField.bands);
+    }
   });
 
   it("changes decorative attributes for another seed", () => {
@@ -69,5 +89,36 @@ describe("cinematic environment model", () => {
     expect(field.sizes.every(Number.isFinite)).toBe(true);
     expect(field.phases.every(Number.isFinite)).toBe(true);
     expect(new Set(field.bands)).toEqual(new Set([0, 1, 2]));
+  });
+
+  it("gives every analytic layout a distinct deterministic particle topology", () => {
+    const layouts = [
+      "constellation",
+      "tidal",
+      "orchard",
+      "lanterns",
+      "rain",
+      "veil",
+      "torus",
+    ] as const;
+    const signatures = layouts.map((layout, index) => {
+      const profile = createAnalyticProfile(
+        [0x78f3ff, 0xa798ff, 0xffc782],
+        [1, 1],
+        index * 0.3,
+        layout,
+      );
+      const field = createCinematicParticleFieldFromProfile(41_041, profile, 2_000);
+      return Array.from({ length: 80 }, (_, pointIndex) => {
+        const offset = pointIndex * 3;
+        return [
+          field.positions[offset]!.toFixed(3),
+          field.positions[offset + 1]!.toFixed(3),
+          field.positions[offset + 2]!.toFixed(3),
+        ].join(",");
+      }).join("|");
+    });
+
+    expect(new Set(signatures).size).toBe(layouts.length);
   });
 });

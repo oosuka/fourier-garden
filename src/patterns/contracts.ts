@@ -55,6 +55,23 @@ export interface PatternDramaturgy {
   };
 }
 
+export interface PatternContrastProfile {
+  composition: string;
+  motion: string;
+  space: string;
+  palette: string;
+  timbre: string;
+  rhythm: string;
+  time: string;
+  audio: {
+    onsetPattern: string;
+    articulation: string;
+    pitchMapping: string;
+    spatialGesture: string;
+    wetCharacter: string;
+  };
+}
+
 export interface PatternScoreContract {
   cycleSeconds: number;
 }
@@ -115,6 +132,7 @@ export interface PatternDefinition {
   title: LocalizedText;
   subtitle: LocalizedText;
   formulaLatex: string;
+  contrastProfile: PatternContrastProfile;
   dramaturgy: PatternDramaturgy;
   presentation: PatternPresentation;
   education: EducationContent;

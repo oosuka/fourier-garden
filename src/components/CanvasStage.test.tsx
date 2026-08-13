@@ -51,7 +51,7 @@ describe("CanvasStage WebGL context recovery", () => {
       vi.fn<(callback: FrameRequestCallback) => number>(() => 1),
     );
     vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrameMock);
-    const onStatus = vi.fn<(status: "loading" | "ready" | "error") => void>();
+    const onStatus = vi.fn<(status: "loading" | "ready" | "error", generation: number) => void>();
     const container = document.createElement("div");
     const root = createRoot(container);
 
@@ -61,6 +61,7 @@ describe("CanvasStage WebGL context recovery", () => {
           pattern={pattern}
           transport={new Transport(() => 0)}
           playing
+          sceneGeneration={0}
           onStatus={onStatus}
           onError={vi.fn<(message: string) => void>()}
         />,
@@ -74,7 +75,7 @@ describe("CanvasStage WebGL context recovery", () => {
 
     expect(contextLost.defaultPrevented).toBe(true);
     expect(cancelAnimationFrameMock).toHaveBeenCalledWith(1);
-    expect(onStatus).toHaveBeenLastCalledWith("loading");
+    expect(onStatus).toHaveBeenLastCalledWith("loading", 0);
 
     await act(async () => root.unmount());
     expect(dispose).toHaveBeenCalledOnce();

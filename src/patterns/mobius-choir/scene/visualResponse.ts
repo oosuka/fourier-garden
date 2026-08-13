@@ -127,7 +127,7 @@ export function evaluateMobiusChoirVisualFrame(
     dramaturgy,
     collectiveEnergy: clamp01(collectiveEnergy * 1.55 + dramaturgy.audioEnergy * 0.45),
     onsetEnergy: clamp01(onsetEnergy + dramaturgy.motionEnergy * 0.35),
-    seamEnergy: clamp01(Math.max(...seam) * 1.85 + dramaturgy.visualEnergy * 0.35),
+    seamEnergy: clamp01(Math.max(...seam) * 1.9 + dramaturgy.visualEnergy * 0.35),
     modes,
   };
 }

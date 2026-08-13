@@ -16,22 +16,40 @@ describe("pattern registry", () => {
     }
   });
 
-  it("publishes the first three chapters in chapter order", () => {
+  it("publishes all ten formally approved chapters in final order", () => {
     expect(patternRegistry.map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
+      "prime-constellation",
       "mobius-choir",
+      "bessel-tide",
+      "lissajous-orchard",
+      "dirichlet-lanterns",
+      "wavelet-rain",
+      "riemann-veil",
+      "phase-torus",
     ]);
+    expect(patternRegistry.every((pattern) => pattern.publication === "published")).toBe(true);
     expect(getPatternRegistry("")).toBe(patternRegistry);
     expect(getPatternRegistry("?seed=qa")).toBe(patternRegistry);
   });
 
-  it("keeps the preview registry compatible after Möbius Choir publication", () => {
+  it("keeps the legacy preview URL compatible with the final ten-chapter order", () => {
     expect(patternPreviewRegistry.map((pattern) => pattern.id)).toEqual([
       "residue-bloom",
       "spectral-cathedral",
+      "prime-constellation",
       "mobius-choir",
+      "bessel-tide",
+      "lissajous-orchard",
+      "dirichlet-lanterns",
+      "wavelet-rain",
+      "riemann-veil",
+      "phase-torus",
     ]);
+    expect(patternPreviewRegistry.every((pattern) => pattern.publication === "published")).toBe(
+      true,
+    );
     expect(getPatternRegistry("?chapters=preview")).toBe(patternPreviewRegistry);
     expect(getPatternRegistry("?chapters=PREVIEW")).toBe(patternRegistry);
   });

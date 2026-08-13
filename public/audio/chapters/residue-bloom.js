@@ -1,4 +1,6 @@
-import { clamp, isFiniteNumber, isPositiveFinite } from "./shared.js?v=19";
+import { clamp, isFiniteNumber, isPositiveFinite } from "./shared.js?v=24";
+
+const RESIDUE_TAU = Math.PI * 2;
 
 function evaluateSerializedPhasor(mapping, absoluteTimeSeconds, target) {
   const angle = absoluteTimeSeconds * mapping.visualAngularRate;
@@ -36,12 +38,38 @@ function evaluateEvent(score, event, cycleIndex, phasor, target) {
   target.normalizedPhasorRadius = phasor.normalizedRadius;
 }
 
-function createResidueBloomState() {
+function createResidueBloomState(program) {
+  const partialCount = program.partials.length;
+  const partialWeights = new Float64Array(partialCount);
+  const partialPanBases = new Float64Array(partialCount);
+  for (let index = 0; index < partialCount; index += 1) {
+    partialWeights[index] =
+      program.partials[index].sourceAmplitude /
+      Math.pow(index + 1, program.score.definition.timbreDamping);
+    partialPanBases[index] = Math.sin(index * 2.399963229728653) * 0.24;
+  }
   return {
     filterLeft: 0,
     filterRight: 0,
     cachedCycleIndex: -1,
     cachedGlobalStep: -1,
+    partialWeights,
+    partialPanBases,
+    activePartialCount: 0,
+    eventScale: 0,
+    decayDenominator: 1,
+    filterCoefficient: 0,
+    wetScale: 0,
+    leftGains: new Float64Array(partialCount),
+    rightGains: new Float64Array(partialCount),
+    leftSines: new Float64Array(partialCount),
+    leftCosines: new Float64Array(partialCount),
+    rightSines: new Float64Array(partialCount),
+    rightCosines: new Float64Array(partialCount),
+    leftDeltaSines: new Float64Array(partialCount),
+    leftDeltaCosines: new Float64Array(partialCount),
+    rightDeltaSines: new Float64Array(partialCount),
+    rightDeltaCosines: new Float64Array(partialCount),
     phasor: {
       normalizedX: 0,
       normalizedY: 0,
@@ -75,10 +103,69 @@ function resetResidueBloomState(state) {
   state.filterRight = 0;
   state.cachedCycleIndex = -1;
   state.cachedGlobalStep = -1;
+  state.activePartialCount = 0;
+  state.eventScale = 0;
   state.sample.dryLeft = 0;
   state.sample.dryRight = 0;
   state.sample.wetLeft = 0;
   state.sample.wetRight = 0;
+}
+
+function prepareResidueBloomEvent(program, state, localTime) {
+  const score = program.score;
+  const event = state.cachedEvent;
+  const frequencyLimit = sampleRate * 0.5 * score.definition.antiAliasRatio;
+  const detune = score.definition.stereoDetuneRatio;
+  const eventPan = event.normalizedPhasorX * 0.28;
+  let normalization = 0;
+  let activePartialCount = 0;
+
+  if (event.active) {
+    for (let index = 0; index < program.partials.length; index += 1) {
+      const partial = program.partials[index];
+      const nominalFrequency = event.carrierHz * partial.harmonic;
+      const leftFrequency = nominalFrequency * (1 - detune);
+      const rightFrequency = nominalFrequency * (1 + detune);
+      if (Math.max(leftFrequency, rightFrequency) >= frequencyLimit) continue;
+
+      const weight = state.partialWeights[index];
+      const partialPan = state.partialPanBases[index] * event.stereoSpread;
+      const pan = clamp(eventPan + partialPan, -0.92, 0.92);
+      const leftAngularFrequency = RESIDUE_TAU * leftFrequency;
+      const rightAngularFrequency = RESIDUE_TAU * rightFrequency;
+      const leftPhase = leftAngularFrequency * localTime + partial.sinePhase;
+      const rightPhase = rightAngularFrequency * localTime + partial.sinePhase;
+      const leftDelta = leftAngularFrequency / sampleRate;
+      const rightDelta = rightAngularFrequency / sampleRate;
+
+      state.leftGains[activePartialCount] = weight * Math.sqrt((1 - pan) * 0.5);
+      state.rightGains[activePartialCount] = weight * Math.sqrt((1 + pan) * 0.5);
+      state.leftSines[activePartialCount] = Math.sin(leftPhase);
+      state.leftCosines[activePartialCount] = Math.cos(leftPhase);
+      state.rightSines[activePartialCount] = Math.sin(rightPhase);
+      state.rightCosines[activePartialCount] = Math.cos(rightPhase);
+      state.leftDeltaSines[activePartialCount] = Math.sin(leftDelta);
+      state.leftDeltaCosines[activePartialCount] = Math.cos(leftDelta);
+      state.rightDeltaSines[activePartialCount] = Math.sin(rightDelta);
+      state.rightDeltaCosines[activePartialCount] = Math.cos(rightDelta);
+      normalization += weight;
+      activePartialCount += 1;
+    }
+  }
+
+  const accentDecayScale = clamp(0.16 + event.baseAccent * 1.08, 0.52, 1.55);
+  const decayScale = (0.88 + event.normalizedPhasorRadius * 0.24) * accentDecayScale;
+  const minimumCutoffHz = 520;
+  const maximumCutoffHz = Math.min(2_050, sampleRate * 0.2);
+  const cutoffHz = minimumCutoffHz + (maximumCutoffHz - minimumCutoffHz) * event.brightness;
+  state.activePartialCount = activePartialCount;
+  state.eventScale =
+    normalization > 0
+      ? (score.definition.outputGain * event.baseGain * event.accent) / normalization
+      : 0;
+  state.decayDenominator = score.definition.decaySeconds * decayScale;
+  state.filterCoefficient = 1 - Math.exp((-RESIDUE_TAU * cutoffHz) / sampleRate);
+  state.wetScale = event.wetSend * 0.5;
 }
 
 function renderResidueBloomSample(program, state, absoluteTime) {
@@ -92,20 +179,16 @@ function renderResidueBloomSample(program, state, absoluteTime) {
     state.cachedGlobalStep = globalStep;
     const baseEvent = score.events[globalStep];
     evaluateEvent(score, baseEvent, cycleIndex, state.phasor, state.cachedEvent);
+    prepareResidueBloomEvent(program, state, localTime);
   }
   const event = state.cachedEvent;
   const sample = state.sample;
-  const accentDecayScale = clamp(0.16 + event.baseAccent * 1.08, 0.52, 1.55);
-  const decayScale = (0.88 + event.normalizedPhasorRadius * 0.24) * accentDecayScale;
   const attackProgress = Math.min(1, Math.max(0, localTime / score.definition.attackSeconds));
   const attackShape = attackProgress * attackProgress * (3 - 2 * attackProgress);
   const decay =
     localTime < score.definition.attackSeconds
       ? attackShape
-      : Math.exp(
-          -(localTime - score.definition.attackSeconds) /
-            (score.definition.decaySeconds * decayScale),
-        );
+      : Math.exp(-(localTime - score.definition.attackSeconds) / state.decayDenominator);
   const releaseProgress = Math.min(
     1,
     Math.max(0, (score.stepSeconds - localTime) / score.definition.releaseSeconds),
@@ -114,45 +197,31 @@ function renderResidueBloomSample(program, state, absoluteTime) {
   const envelope = event.active ? decay * releaseShape : 0;
   let leftSample = 0;
   let rightSample = 0;
-  let normalization = 0;
-  const frequencyLimit = sampleRate * 0.5 * score.definition.antiAliasRatio;
-  const detune = score.definition.stereoDetuneRatio;
 
   if (event.active) {
-    for (let index = 0; index < program.partials.length; index += 1) {
-      const partial = program.partials[index];
-      const nominalFrequency = event.carrierHz * partial.harmonic;
-      const leftFrequency = nominalFrequency * (1 - detune);
-      const rightFrequency = nominalFrequency * (1 + detune);
-      if (Math.max(leftFrequency, rightFrequency) >= frequencyLimit) {
-        continue;
-      }
-      const gain = partial.sourceAmplitude / Math.pow(index + 1, score.definition.timbreDamping);
-      const leftPhase = Math.PI * 2 * leftFrequency * localTime + partial.sinePhase;
-      const rightPhase = Math.PI * 2 * rightFrequency * localTime + partial.sinePhase;
-      const eventPan = event.normalizedPhasorX * 0.28;
-      const partialPan = Math.sin(index * 2.399963229728653) * 0.24 * event.stereoSpread;
-      const pan = Math.min(0.92, Math.max(-0.92, eventPan + partialPan));
-      const leftPanGain = Math.sqrt((1 - pan) * 0.5);
-      const rightPanGain = Math.sqrt((1 + pan) * 0.5);
-      leftSample += Math.sin(leftPhase) * gain * leftPanGain;
-      rightSample += Math.sin(rightPhase) * gain * rightPanGain;
-      normalization += gain;
+    for (let index = 0; index < state.activePartialCount; index += 1) {
+      const leftSine = state.leftSines[index];
+      const leftCosine = state.leftCosines[index];
+      const rightSine = state.rightSines[index];
+      const rightCosine = state.rightCosines[index];
+      leftSample += leftSine * state.leftGains[index];
+      rightSample += rightSine * state.rightGains[index];
+      state.leftSines[index] =
+        leftSine * state.leftDeltaCosines[index] + leftCosine * state.leftDeltaSines[index];
+      state.leftCosines[index] =
+        leftCosine * state.leftDeltaCosines[index] - leftSine * state.leftDeltaSines[index];
+      state.rightSines[index] =
+        rightSine * state.rightDeltaCosines[index] + rightCosine * state.rightDeltaSines[index];
+      state.rightCosines[index] =
+        rightCosine * state.rightDeltaCosines[index] - rightSine * state.rightDeltaSines[index];
     }
   }
 
-  const scale =
-    normalization > 0
-      ? (score.definition.outputGain * envelope * event.baseGain * event.accent) / normalization
-      : 0;
+  const scale = state.eventScale * envelope;
   const unfilteredLeft = leftSample * scale;
   const unfilteredRight = rightSample * scale;
-  const minimumCutoffHz = 520;
-  const maximumCutoffHz = Math.min(2_050, sampleRate * 0.2);
-  const cutoffHz = minimumCutoffHz + (maximumCutoffHz - minimumCutoffHz) * event.brightness;
-  const filterCoefficient = 1 - Math.exp((-2 * Math.PI * cutoffHz) / sampleRate);
-  state.filterLeft += (unfilteredLeft - state.filterLeft) * filterCoefficient;
-  state.filterRight += (unfilteredRight - state.filterRight) * filterCoefficient;
+  state.filterLeft += (unfilteredLeft - state.filterLeft) * state.filterCoefficient;
+  state.filterRight += (unfilteredRight - state.filterRight) * state.filterCoefficient;
 
   if (!event.active) {
     sample.dryLeft = 0;
@@ -162,11 +231,10 @@ function renderResidueBloomSample(program, state, absoluteTime) {
     return sample;
   }
 
-  const wetScale = event.wetSend * 0.5;
   sample.dryLeft = state.filterLeft;
   sample.dryRight = state.filterRight;
-  sample.wetLeft = state.filterLeft * wetScale;
-  sample.wetRight = state.filterRight * wetScale;
+  sample.wetLeft = state.filterLeft * state.wetScale;
+  sample.wetRight = state.filterRight * state.wetScale;
   return sample;
 }
 

@@ -1,0 +1,786 @@
+.audioAbQa {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: clamp(32px, 6vw, 88px);
+  color: #eafcff;
+  background:
+    radial-gradient(circle at 18% 10%, rgb(62 206 226 / 16%), transparent 31%),
+    radial-gradient(circle at 82% 64%, rgb(176 100 255 / 13%), transparent 35%),
+    linear-gradient(145deg, #02070c, #020308 62%, #06040d);
+  font-family: Inter, sans-serif;
+}
+
+.audioAbQa header,
+.audioAbQa__start,
+.audioAbQa__session,
+.audioAbQa__sampleProtocol,
+.audioAbQa__pair,
+.audioAbQa__cards,
+.audioAbQa__transport,
+.audioAbQa__evaluation,
+.audioAbQa__navigation,
+.audioAbQa__verdict,
+.audioAbQa > footer,
+.audioAbQa__error {
+  width: min(1120px, 100%);
+  margin-inline: auto;
+}
+
+.audioAbQa header p,
+.audioAbQa article > span,
+.audioAbQa__startCopy > span,
+.audioAbQa__pair,
+.audioAbQa__sessionHeading > div > span,
+.audioAbQa__sampleProtocol > div > span,
+.audioAbQa__evaluationHeading > div > span,
+.audioAbQa__verdict > div > span {
+  color: #82eaf3;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+}
+
+.audioAbQa h1,
+.audioAbQa article h2 {
+  margin: 8px 0;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.audioAbQa h1 {
+  font-size: clamp(40px, 6vw, 72px);
+}
+
+.audioAbQa header > span,
+.audioAbQa article small,
+.audioAbQa footer,
+.audioAbQa__session > p,
+.audioAbQa__ratingRow small,
+.audioAbQa__navigation > span,
+.audioAbQa__verdict small,
+.audioAbQa__reportActions > span {
+  color: rgb(222 241 246 / 64%);
+}
+
+.audioAbQa__session,
+.audioAbQa__start,
+.audioAbQa__sampleProtocol,
+.audioAbQa__evaluation,
+.audioAbQa__verdict {
+  box-sizing: border-box;
+  border: 1px solid rgb(186 226 236 / 18%);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgb(8 21 30 / 88%), rgb(4 9 16 / 78%));
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 4%),
+    0 18px 52px rgb(0 0 0 / 18%);
+}
+
+.audioAbQa__start {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(250px, 0.85fr) minmax(250px, 0.8fr);
+  align-items: center;
+  gap: clamp(22px, 4vw, 52px);
+  overflow: hidden;
+  padding: clamp(24px, 3.5vw, 40px);
+  margin-top: 28px;
+  border-color: rgb(130 234 243 / 46%);
+  background:
+    radial-gradient(circle at 3% 20%, rgb(92 226 239 / 14%), transparent 42%),
+    linear-gradient(135deg, rgb(9 34 42 / 96%), rgb(5 12 20 / 94%));
+  box-shadow:
+    inset 4px 0 rgb(130 234 243 / 70%),
+    inset 0 1px rgb(255 255 255 / 5%),
+    0 24px 72px rgb(0 0 0 / 28%);
+}
+
+.audioAbQa__start.is-playing {
+  border-color: rgb(255 212 157 / 58%);
+  box-shadow:
+    inset 4px 0 rgb(255 212 157 / 88%),
+    inset 0 0 54px rgb(130 234 243 / 5%),
+    0 24px 72px rgb(0 0 0 / 28%);
+}
+
+.audioAbQa__startCopy > span {
+  color: #82eaf3;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+}
+
+.audioAbQa__startCopy h2 {
+  margin: 7px 0 10px;
+  font-family: "Noto Serif JP", serif;
+  font-size: clamp(24px, 2.6vw, 34px);
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0.03em;
+}
+
+.audioAbQa__startCopy p {
+  max-width: 42em;
+  margin: 0;
+  color: rgb(222 241 246 / 70%);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.audioAbQa__startSteps {
+  display: grid;
+  gap: 9px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.audioAbQa__startSteps li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  padding: 9px 11px;
+  color: rgb(222 241 246 / 42%);
+  border: 1px solid rgb(186 226 236 / 10%);
+  border-radius: 9px;
+  background: rgb(2 9 14 / 42%);
+}
+
+.audioAbQa__startSteps li > span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgb(130 234 243 / 22%);
+  border-radius: 50%;
+  font-size: 10px;
+}
+
+.audioAbQa__startSteps li > div {
+  display: grid;
+  gap: 2px;
+}
+
+.audioAbQa__startSteps strong {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.audioAbQa__startSteps small {
+  font-size: 9px;
+}
+
+.audioAbQa__startSteps li.is-active {
+  color: #efffff;
+  border-color: rgb(130 234 243 / 40%);
+  background: rgb(16 51 61 / 62%);
+}
+
+.audioAbQa__startSteps li.is-complete {
+  color: #ffd49d;
+  border-color: rgb(255 212 157 / 24%);
+}
+
+.audioAbQa__startSteps li.is-complete > span {
+  color: #061014;
+  border-color: #ffd49d;
+  background: #ffd49d;
+}
+
+.audioAbQa__startAction {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.audioAbQa__startAction .audioAbQa__startButton {
+  grid-column: 1 / -1;
+  min-height: 54px;
+  color: #041013;
+  border-color: #d8fcff;
+  background: linear-gradient(135deg, #c9faff, #82eaf3);
+  box-shadow: 0 10px 34px rgb(83 223 238 / 18%);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.audioAbQa__startAction .audioAbQa__startButton:disabled {
+  color: rgb(234 252 255 / 72%);
+  border-color: rgb(130 234 243 / 24%);
+  background: rgb(10 36 44 / 72%);
+  box-shadow: none;
+  opacity: 1;
+}
+
+.audioAbQa__startAction progress {
+  width: 100%;
+}
+
+.audioAbQa__startAction .audioAbQa__startStop {
+  padding: 9px 14px;
+  color: #ffd49d;
+  border-color: rgb(255 212 157 / 36%);
+  background: transparent;
+  font-size: 9px;
+}
+
+.audioAbQa__startAction > span {
+  grid-column: 1 / -1;
+  color: rgb(222 241 246 / 56%);
+  font-size: 9px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.audioAbQa__session {
+  padding: clamp(22px, 3vw, 34px);
+  margin-top: 18px;
+}
+
+.audioAbQa__sessionHeading,
+.audioAbQa__evaluationHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.audioAbQa__sessionHeading h2,
+.audioAbQa__evaluationHeading h2,
+.audioAbQa__verdict h2 {
+  margin: 6px 0 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.audioAbQa__sessionHeading > strong {
+  color: #d5fcff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 34px;
+  font-weight: 400;
+}
+
+.audioAbQa progress {
+  overflow: hidden;
+  height: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(137 207 217 / 12%);
+  color: #82eaf3;
+}
+
+.audioAbQa progress::-webkit-progress-bar {
+  background: rgb(137 207 217 / 12%);
+}
+
+.audioAbQa progress::-webkit-progress-value {
+  background: linear-gradient(90deg, #65ddea, #c19bff);
+}
+
+.audioAbQa__session > progress {
+  width: 100%;
+  margin: 20px 0 22px;
+}
+
+.audioAbQa__fixedOutput {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  box-sizing: border-box;
+  min-height: 54px;
+  padding: 12px 18px;
+  color: #061014;
+  border: 1px solid rgb(201 250 255 / 86%);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgb(201 250 255 / 92%), rgb(130 234 243 / 82%));
+}
+
+.audioAbQa__fixedOutput > span,
+.audioAbQa__fixedOutput > small {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.audioAbQa__fixedOutput > strong {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-align: left;
+}
+
+.audioAbQa__fixedOutput > small {
+  color: rgb(6 16 20 / 62%);
+}
+
+.audioAbQa__session > p {
+  margin: 16px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.audioAbQa__sampleProtocol {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.9fr) minmax(300px, 1.35fr) minmax(220px, 0.85fr);
+  align-items: center;
+  gap: clamp(22px, 4vw, 54px);
+  padding: clamp(22px, 3vw, 34px);
+  margin-top: 18px;
+}
+
+.audioAbQa__sampleProtocol h2 {
+  margin: 6px 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(27px, 3vw, 38px);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.audioAbQa__sampleProtocol p {
+  margin: 0;
+  color: rgb(222 241 246 / 62%);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.audioAbQa__sampleProtocol ol {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.audioAbQa__sampleProtocol ol::before {
+  position: absolute;
+  top: 15px;
+  right: 12%;
+  left: 12%;
+  height: 1px;
+  background: rgb(130 234 243 / 18%);
+  content: "";
+}
+
+.audioAbQa__sampleProtocol li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  color: rgb(222 241 246 / 38%);
+  text-align: center;
+}
+
+.audioAbQa__sampleProtocol li > span {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border: 1px solid rgb(130 234 243 / 22%);
+  border-radius: 50%;
+  background: #071018;
+  font-size: 9px;
+}
+
+.audioAbQa__sampleProtocol li > small {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.audioAbQa__sampleProtocol li.is-active {
+  color: #eaffff;
+}
+
+.audioAbQa__sampleProtocol li.is-active > span {
+  color: #071018;
+  border-color: #c9faff;
+  background: #b9f4fa;
+  box-shadow: 0 0 22px rgb(130 234 243 / 24%);
+}
+
+.audioAbQa__sampleProtocol > dl {
+  gap: 8px;
+  margin: 0;
+}
+
+.audioAbQa__sampleProtocol > dl div {
+  grid-template-columns: 92px 1fr;
+  gap: 8px;
+}
+
+.audioAbQa__sampleProtocol > dl dt,
+.audioAbQa__sampleProtocol > dl dd {
+  font-size: 10px;
+}
+
+.audioAbQa__pair {
+  display: grid;
+  gap: 10px;
+  margin-top: 34px;
+}
+
+.audioAbQa__pair > span {
+  font-size: 10px;
+}
+
+.audioAbQa select {
+  width: 100%;
+  padding: 14px 16px;
+  color: #efffff;
+  border: 1px solid rgb(130 234 243 / 32%);
+  border-radius: 8px;
+  background: rgb(5 15 23 / 92%);
+  font: inherit;
+  letter-spacing: 0.04em;
+}
+
+.audioAbQa__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.audioAbQa article {
+  padding: clamp(24px, 4vw, 48px);
+  border: 1px solid rgb(186 226 236 / 18%);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgb(8 21 30 / 92%), rgb(4 9 16 / 82%));
+  box-shadow: inset 0 1px rgb(255 255 255 / 4%);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.audioAbQa article.is-active {
+  border-color: rgb(130 234 243 / 76%);
+  box-shadow:
+    0 0 46px rgb(81 220 240 / 15%),
+    inset 0 0 48px rgb(71 196 222 / 5%);
+}
+
+.audioAbQa article h2 {
+  font-size: clamp(28px, 4vw, 44px);
+}
+
+.audioAbQa article p {
+  margin: 0 0 8px;
+  font-family: "Noto Serif JP", serif;
+}
+
+.audioAbQa dl {
+  display: grid;
+  gap: 10px;
+  margin: 28px 0;
+}
+
+.audioAbQa dl div {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  gap: 12px;
+}
+
+.audioAbQa dt,
+.audioAbQa dd {
+  margin: 0;
+  font-size: 12px;
+}
+
+.audioAbQa dt {
+  color: rgb(130 234 243 / 66%);
+}
+
+.audioAbQa__cardMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #82eaf3;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+
+.audioAbQa__cardMeta > span:last-child {
+  color: rgb(222 241 246 / 38%);
+}
+
+.audioAbQa__cardMeta > span.is-complete {
+  color: #ffd49d;
+}
+
+.audioAbQa button {
+  padding: 12px 22px;
+  color: #eaffff;
+  border: 1px solid rgb(130 234 243 / 48%);
+  border-radius: 999px;
+  background: rgb(8 32 41 / 88%);
+  letter-spacing: 0.16em;
+  cursor: pointer;
+}
+
+.audioAbQa button:focus-visible,
+.audioAbQa select:focus-visible,
+.audioAbQa textarea:focus-visible {
+  outline: 2px solid #ffd49d;
+  outline-offset: 3px;
+}
+
+.audioAbQa button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.audioAbQa article > button {
+  width: 100%;
+}
+
+.audioAbQa__playProgress {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+}
+
+.audioAbQa__transport {
+  min-height: 54px;
+}
+
+.audioAbQa__stop {
+  display: block;
+  margin-top: 22px;
+}
+
+.audioAbQa__error {
+  color: #ff9a9a;
+}
+
+.audioAbQa__evaluation {
+  padding: clamp(24px, 4vw, 42px);
+  margin-top: 30px;
+}
+
+.audioAbQa__evaluationHeading > strong {
+  padding: 8px 12px;
+  color: rgb(222 241 246 / 48%);
+  border: 1px solid rgb(186 226 236 / 16%);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+.audioAbQa__evaluationHeading > strong.is-complete {
+  color: #ffd49d;
+  border-color: rgb(255 212 157 / 38%);
+  background: rgb(255 184 114 / 7%);
+}
+
+.audioAbQa__evaluation > fieldset {
+  padding: 0;
+  margin: 28px 0 0;
+  border: 0;
+}
+
+.audioAbQa__evaluation > fieldset > legend {
+  margin-bottom: 18px;
+  color: rgb(222 241 246 / 58%);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.audioAbQa__criteria {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgb(186 226 236 / 14%);
+  border-radius: 12px;
+  background: rgb(186 226 236 / 12%);
+}
+
+.audioAbQa__ratingRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 15px 18px;
+  background: rgb(3 10 16 / 94%);
+}
+
+.audioAbQa__ratingRow > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.audioAbQa__ratingRow strong {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.audioAbQa__ratingRow small {
+  font-size: 10px;
+}
+
+.audioAbQa__ratingRow > div:last-child {
+  display: flex;
+  gap: 7px;
+}
+
+.audioAbQa__ratingRow button {
+  min-width: 40px;
+  padding: 9px 12px;
+  border-radius: 8px;
+}
+
+.audioAbQa__ratingRow button.is-selected {
+  color: #061014;
+  border-color: #c9faff;
+  background: #b9f4fa;
+  box-shadow: 0 0 22px rgb(130 234 243 / 20%);
+}
+
+.audioAbQa__note {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  color: rgb(222 241 246 / 70%);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.audioAbQa textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 14px 16px;
+  resize: vertical;
+  color: #efffff;
+  border: 1px solid rgb(130 234 243 / 24%);
+  border-radius: 10px;
+  background: rgb(3 11 17 / 86%);
+  font:
+    12px / 1.7 Inter,
+    sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.audioAbQa__navigation {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.audioAbQa__navigation > span {
+  font-size: 11px;
+  text-align: center;
+}
+
+.audioAbQa__verdict {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 32px;
+  padding: clamp(24px, 4vw, 42px);
+  margin-top: 38px;
+}
+
+.audioAbQa__verdict--pass {
+  border-color: rgb(255 212 157 / 46%);
+  box-shadow:
+    inset 0 0 56px rgb(255 186 122 / 5%),
+    0 18px 52px rgb(0 0 0 / 18%);
+}
+
+.audioAbQa__verdict--review {
+  border-color: rgb(255 140 140 / 42%);
+}
+
+.audioAbQa__verdict p {
+  margin: 14px 0 8px;
+  color: rgb(222 241 246 / 72%);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.audioAbQa__reportActions {
+  display: grid;
+  align-content: start;
+  justify-items: stretch;
+  gap: 10px;
+  min-width: 228px;
+}
+
+.audioAbQa__reportActions > span {
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.audioAbQa__reportActions .audioAbQa__reset {
+  color: rgb(222 241 246 / 44%);
+  border-color: rgb(186 226 236 / 14%);
+  background: transparent;
+}
+
+.audioAbQa > footer {
+  margin-top: 28px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 760px) {
+  .audioAbQa__cards {
+    grid-template-columns: 1fr;
+  }
+
+  .audioAbQa__fixedOutput {
+    display: grid;
+  }
+
+  .audioAbQa__sampleProtocol {
+    grid-template-columns: 1fr;
+  }
+
+  .audioAbQa__start {
+    grid-template-columns: 1fr;
+  }
+
+  .audioAbQa__sessionHeading,
+  .audioAbQa__evaluationHeading,
+  .audioAbQa__verdict {
+    grid-template-columns: 1fr;
+  }
+
+  .audioAbQa__evaluationHeading {
+    display: grid;
+  }
+
+  .audioAbQa__evaluationHeading > strong {
+    justify-self: start;
+  }
+
+  .audioAbQa__ratingRow {
+    grid-template-columns: 1fr;
+  }
+
+  .audioAbQa__navigation {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .audioAbQa__navigation > span {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .audioAbQa__verdict {
+    display: grid;
+  }
+
+  .audioAbQa__reportActions {
+    min-width: 0;
+  }
+}
