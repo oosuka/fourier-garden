@@ -62,6 +62,10 @@ Chapter 11以降を追加するときの入口条件をまとめる現行資料�
 - 章固有の数学要素と局所発音・局所造形の因果を説明可能にする。
 - WebGPUとWebGL2の両経路を持ち、数学線、文字、UIの解像度を
   適応品質の最初の削減対象にしない。
+- 新章の共通analytic scene factoryは、WebGPU rendererまたはsceneの初期化に失敗した場合に
+  失敗資源を破棄してWebGL2へ再試行する。`?renderer=webgl`ではWebGL2を直接選択する。
+- 章切替のscene statusは世代番号で管理し、旧sceneの遅延通知を現行sceneの準備完了へ
+  混入させない。
 - `PatternDramaturgy`と`PatternContrastProfile`の登録時検証を通す。
 - 自動テストに加えて決定的音響指標、章間レンダー比較、連続観察、代表ビューポートの
   視覚QAを行う。利用者による反復試聴は要求しない。

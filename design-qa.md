@@ -33,11 +33,13 @@ P0、P1、P2の未解決項目はない。数学式、係数、支持、境界�
 | レジストリ | 通常URLと互換URLの両方で全10章順を検証 |
 | 公開メタデータ | 全10章が`publication: "published"` |
 | 数学・DSP | 決定性、帯域、係数、位相、絶対時刻、Worklet一致を回帰検証 |
+| renderer/lifecycle | 共通analytic sceneのWebGPU初期化失敗時のWebGL2再試行と、章切替の世代付きscene statusを実装済み |
 | console | 全10章のWebGPU／WebGL2固定時刻確認でwarning／error 0件 |
 
 全体検証の正規コマンドは`npm run check`である。公開状態を変更した
-2026年8月13日の音響再調整と構造整理、依存更新後は、format、lint、595テスト、型検査、
-production buildを通過した。TypeScript 7、Three.js r185、Vite 8.2を含む更新後も、
+2026年8月13日の音響再調整と構造整理、依存更新、描画初期化フォールバックと
+章切替世代管理の修正後は、format、lint、595テスト、型検査、production buildを通過した。
+TypeScript 7、Three.js r185、Vite 8.2を含む更新後も、
 数学、DSP、固定seed粒子、章切替、GPU資源解放の回帰はすべて成功している。
 
 ## 視覚証拠
@@ -302,4 +304,4 @@ Dirichlet Lanternsから分離した。Riemann Veilは最大carrierを760 Hzへ�
 | 2026-07-14 | 全10章 | シネマティック背景と絶対時刻運動の再設計 |
 | 2026-07-23 | 全10章 | 追加7章を`published`へ昇格し、全10章正式版を確定 |
 | 2026-07-24 | 全10章 | 章固有音色、Lissajous同期、Wavelet局所雨、環境独立性、学術Detailsを強化 |
-| 2026-08-13 | 全10章 | 最後のMac内蔵スピーカー全9比較を反映して再調整し、委任された品質判断で正式完成 |
+| 2026-08-13 | 全10章 | 最後のMac内蔵スピーカー全9比較を反映して再調整し、描画初期化フォールバックと章切替世代管理を強化、委任された品質判断で正式完成 |

@@ -11,6 +11,11 @@ const CHAPTER_TRANSITION_EXIT_MS = 300;
 
 type SceneStatus = "loading" | "ready" | "error";
 
+interface SceneReadyWaiter {
+  generation: number;
+  resolve: () => void;
+}
+
 export function useFourierGardenController() {
   const patterns = useMemo(() => getPatternRegistry(window.location.search), []);
   const [patternIndex, setPatternIndex] = useState(0);
@@ -34,7 +39,8 @@ export function useFourierGardenController() {
   const [switchingChapter, setSwitchingChapter] = useState(false);
   const [transitionPattern, setTransitionPattern] = useState<PatternDefinition | null>(null);
   const [transitionLeaving, setTransitionLeaving] = useState(false);
-  const sceneReadyResolver = useRef<(() => void) | null>(null);
+  const sceneGenerationRef = useRef(0);
+  const sceneReadyResolver = useRef<SceneReadyWaiter | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsHintVisible, setDetailsHintVisible] = useState(false);
   const detailsDiscovered = useRef(false);
@@ -140,9 +146,10 @@ export function useFourierGardenController() {
       const operation = ++playbackOperation.current;
       const resumeAfterSwitch = playing;
       const nextPattern = patterns[nextIndex]!;
+      const nextSceneGeneration = ++sceneGenerationRef.current;
       const transitionStarted = performance.now();
       const sceneReady = new Promise<void>((resolve) => {
-        sceneReadyResolver.current = resolve;
+        sceneReadyResolver.current = { generation: nextSceneGeneration, resolve };
       });
       setSwitchingChapter(true);
       setTransitionPattern(nextPattern);
@@ -194,7 +201,9 @@ export function useFourierGardenController() {
           setSwitchingChapter(false);
           setTransitionPattern(null);
           setTransitionLeaving(false);
-          sceneReadyResolver.current = null;
+          if (sceneReadyResolver.current?.generation === nextSceneGeneration) {
+            sceneReadyResolver.current = null;
+          }
           showDetailsHint(nextPattern.id);
         }
       }
@@ -212,11 +221,15 @@ export function useFourierGardenController() {
     ],
   );
 
-  const handleSceneStatus = useCallback((status: SceneStatus) => {
+  const handleSceneStatus = useCallback((status: SceneStatus, generation: number) => {
+    if (generation !== sceneGenerationRef.current) return;
     setSceneStatus(status);
     if (status === "ready" || status === "error") {
-      sceneReadyResolver.current?.();
-      sceneReadyResolver.current = null;
+      const waiter = sceneReadyResolver.current;
+      if (waiter?.generation === generation) {
+        waiter.resolve();
+        sceneReadyResolver.current = null;
+      }
     }
   }, []);
 
@@ -312,6 +325,7 @@ export function useFourierGardenController() {
     fullscreen,
     volume,
     sceneStatus,
+    sceneGeneration: sceneGenerationRef.current,
     sceneError,
     audioError,
     interfaceHidden: entered && !uiVisible && !detailsOpen && !detailsHintVisible,

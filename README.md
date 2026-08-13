@@ -90,6 +90,8 @@ WebGL2の実ラスタが600万pixelを超える大画面では、全画面bloom�
 初期音量は35%で、変更値はローカル保存されます。章を切り替えると旧sceneと
 旧音声を160 msでフェードアウトしてからAudioContextを破棄し、transportを0秒へ戻します。
 再生中だった場合は次章の初期化後に0秒から再生を継続します。
+章切替中のscene statusは世代番号で管理し、旧sceneの遅延した初期化・エラー通知が
+新章の準備完了を誤って解決しないようにします。
 
 章切り替えカードは1.8秒以上表示し、各章の`gentleTitle`を`OBSERVATION NOTE`として
 短く紹介します。Detailsをまだ一度も開いていないセッションでは、Enter直後と各章の
@@ -178,6 +180,10 @@ Spectral Cathedralが60 fpsを維持しました。
 - npm: `11.19.0`
 - 通常描画: Three.js `WebGPURenderer`、TSL、Bloom
 - フォールバック: Three.js `WebGLRenderer`によるWebGL2
+
+追加7章で共有するanalytic scene factoryは、`navigator.gpu`の存在だけで初期化成功とは
+みなしません。WebGPU rendererまたはsceneの初期化に失敗した場合は失敗したGPU資源を破棄し、
+WebGL2へ自動的に再試行します。`renderer=webgl`を指定した場合は、最初からWebGL2を使います。
 
 Node.jsとnpmは`package.json`の`volta`フィールドで固定します。実行時に外部音源、
 外部画像、外部CDN、分析通信を使用せず、音声、残響インパルス、映像を生成します。

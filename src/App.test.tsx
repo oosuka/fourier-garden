@@ -39,12 +39,14 @@ vi.mock("./audio/AudioEngine", () => ({
 vi.mock("./components/CanvasStage", () => ({
   CanvasStage: ({
     pattern,
+    sceneGeneration,
     onStatus,
   }: {
     pattern: { id: string };
-    onStatus: (status: "ready") => void;
+    sceneGeneration: number;
+    onStatus: (status: "ready", generation: number) => void;
   }) => {
-    useEffect(() => onStatus("ready"), [onStatus, pattern.id]);
+    useEffect(() => onStatus("ready", sceneGeneration), [onStatus, pattern.id, sceneGeneration]);
     return <canvas data-testid={`scene-${pattern.id}`} />;
   },
 }));

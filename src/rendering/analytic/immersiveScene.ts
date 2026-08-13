@@ -168,38 +168,78 @@ class ImmersiveAnalyticScene implements PatternScene {
   }
 }
 
+async function createWebGLRenderer(canvas: HTMLCanvasElement): Promise<WebGLRenderer> {
+  const module = await import("three");
+  return new module.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: "high-performance",
+  });
+}
+
+async function createRenderer(
+  options: PatternSceneOptions,
+  backend: RendererBackend,
+): Promise<SceneRenderer> {
+  if (backend === "webgl") return createWebGLRenderer(options.canvas);
+
+  const webgpu = new THREE.WebGPURenderer({
+    canvas: options.canvas,
+    antialias: true,
+    alpha: false,
+  });
+  const reportDeviceLost = webgpu.onDeviceLost.bind(webgpu);
+  webgpu.onDeviceLost = (info) => {
+    reportDeviceLost(info);
+    options.onDeviceLost?.();
+  };
+  try {
+    await webgpu.init();
+    return webgpu;
+  } catch (error) {
+    webgpu.dispose();
+    throw error;
+  }
+}
+
+async function createSceneForBackend(
+  options: PatternSceneOptions,
+  config: ImmersiveAnalyticSceneConfig,
+  backend: RendererBackend,
+): Promise<PatternScene> {
+  const renderer = await createRenderer(options, backend);
+  let scene: ImmersiveAnalyticScene | null = null;
+  try {
+    const poeticLayers = new URLSearchParams(window.location.search).get("poetic") !== "off";
+    scene = new ImmersiveAnalyticScene(renderer, backend, config, options.seed, poeticLayers);
+    await scene.initialize();
+    return scene;
+  } catch (error) {
+    if (scene) scene.dispose();
+    else renderer.dispose();
+    throw error;
+  }
+}
+
 export async function createImmersiveAnalyticScene(
   options: PatternSceneOptions,
   config: ImmersiveAnalyticSceneConfig,
 ): Promise<PatternScene> {
   const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
-  const backend = selectRendererBackend(forceWebGL, "gpu" in navigator);
-  options.canvas.dataset.rendererBackend = backend;
-  let renderer: SceneRenderer;
-  if (backend === "webgl") {
-    const module = await import("three");
-    renderer = new module.WebGLRenderer({
-      canvas: options.canvas,
-      antialias: true,
-      alpha: false,
-      powerPreference: "high-performance",
-    });
-  } else {
-    const webgpu = new THREE.WebGPURenderer({
-      canvas: options.canvas,
-      antialias: true,
-      alpha: false,
-    });
-    const reportDeviceLost = webgpu.onDeviceLost.bind(webgpu);
-    webgpu.onDeviceLost = (info) => {
-      reportDeviceLost(info);
-      options.onDeviceLost?.();
-    };
-    await webgpu.init();
-    renderer = webgpu;
+  const requestedBackend = selectRendererBackend(forceWebGL, "gpu" in navigator);
+  options.canvas.dataset.rendererBackend = requestedBackend;
+
+  try {
+    const scene = await createSceneForBackend(options, config, requestedBackend);
+    options.canvas.dataset.rendererBackend = requestedBackend;
+    return scene;
+  } catch (error) {
+    if (requestedBackend !== "webgpu") throw error;
+    console.warn("WebGPU scene initialization failed; falling back to WebGL.", error);
   }
-  const poeticLayers = new URLSearchParams(window.location.search).get("poetic") !== "off";
-  const scene = new ImmersiveAnalyticScene(renderer, backend, config, options.seed, poeticLayers);
-  await scene.initialize();
+
+  const scene = await createSceneForBackend(options, config, "webgl");
+  options.canvas.dataset.rendererBackend = "webgl";
   return scene;
 }

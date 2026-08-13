@@ -29,6 +29,7 @@ export function App() {
     fullscreen,
     volume,
     sceneStatus,
+    sceneGeneration,
     sceneError,
     audioError,
     interfaceHidden,
@@ -66,6 +67,7 @@ export function App() {
         pattern={pattern}
         transport={transport}
         playing={playing}
+        sceneGeneration={sceneGeneration}
         onStatus={handleSceneStatus}
         onError={handleSceneError}
       />

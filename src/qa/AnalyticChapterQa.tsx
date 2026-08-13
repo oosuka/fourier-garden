@@ -35,6 +35,7 @@ function AnalyticChapterQa() {
         pattern={pattern}
         transport={transport}
         playing={false}
+        sceneGeneration={0}
         onStatus={setStatus}
         onError={setError}
       />

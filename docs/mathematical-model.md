@@ -6,6 +6,9 @@
 解析表示、ソニフィケーション規約の正本である。Chapter 3へ
 `Prime Constellation`を挿入し、`Möbius Choir`をChapter 4へ移動した
 全10章順を通常URLと互換preview URLの両方で使用する。
+2026年8月13日の描画初期化フォールバックと章切替世代管理は、数学層と
+ソニフィケーション定義を変更しない。renderer、scene lifecycle、UIの運用契約は
+`README.md`と`AGENTS.md`を参照する。
 
 ## プロダクトの定義
 

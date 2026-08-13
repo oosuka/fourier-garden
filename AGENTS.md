@@ -517,6 +517,8 @@ interface PatternScene {
 
 - 通常は `WebGPURenderer` とTSLを使用する
 - WebGPU非対応時は専用の `WebGLRenderer` へフォールバックする
+- 新章の共通analytic scene factoryでは、`navigator.gpu`が存在してもrendererまたはsceneの
+  初期化に失敗した場合、失敗したGPU資源を破棄して`WebGLRenderer`へ再試行する
 - `?renderer=webgl` でWebGL2経路を強制確認できる状態を維持する
 - `?seed=qa` で固定シードを使用できる状態を維持する
 - `?quality=high` で高品質を固定できる状態を維持する
@@ -524,6 +526,8 @@ interface PatternScene {
 - WebGPU device loss時は描画基盤を再初期化する
 - WebGL context loss/restorationを安全に処理する
 - scene切り替え、再初期化、unmount時にGPUリソースを破棄する
+- 章切替のscene statusは世代番号で管理し、旧sceneの遅延した初期化・エラー通知を
+  現行sceneの準備完了へ混入させない
 - animation frame、DOMイベント、AudioNode、タイマーを残留させない
 
 WebGPUとWebGL2は別実装上の制約を持つ。片方で動くThree.jsオブジェクトや
