@@ -1,6 +1,7 @@
 > 履歴資料 — 2026年9月7日のV2文書整理前の記録です。
 > 以下の仕様・QA結果・開発指示はVersion 1の当時の記録であり、現在の永続的な指示ではありません。
-> 現行の入口はリポジトリ直下のAGENTS.mdとREADME.mdです。リンクは当時の相対位置を保持しています。
+> 現行の入口はリポジトリ直下のAGENTS.mdとREADME.mdです。リンク先は現在の構成へ解決するよう保守しますが、
+> 本文はVersion 1当時の開発ガイドとして凍結しています。
 
 # Fourier Garden 開発ガイド
 
@@ -15,8 +16,8 @@
 1. 実行環境から与えられるsystemおよびdeveloper指示
 2. ユーザーが現在の依頼で明示した指示
 3. この `AGENTS.md`
-4. [`docs/mathematical-model.md`](docs/mathematical-model.md) の数理定義
-5. [`README.md`](README.md) のプロダクト仕様
+4. [`docs/mathematical-model.md`](../mathematical-model.md) の数理定義
+5. [`README.md`](../../README.md) のプロダクト仕様
 6. 既存コードとテストが示す慣例
 
 数学的な定義については `docs/mathematical-model.md` を正本とする。

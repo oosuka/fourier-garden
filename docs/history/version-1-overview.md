@@ -1,6 +1,7 @@
 > 履歴資料 — 2026年9月7日のV2文書整理前の記録です。
 > 以下の仕様・QA結果・開発指示はVersion 1の当時の記録であり、現在の永続的な指示ではありません。
-> 現行の入口はリポジトリ直下のAGENTS.mdとREADME.mdです。リンクは当時の相対位置を保持しています。
+> 現行の入口はリポジトリ直下のAGENTS.mdとREADME.mdです。リンク先は現在の構成へ解決するよう保守しますが、
+> 本文はVersion 1当時の記録として凍結しています。
 
 # Fourier Garden
 
@@ -28,7 +29,7 @@ Chapter 2から10には全スコアを横断する強弱、尾長、wet、空間
 
 ## 現在の章
 
-公開状態と表示順の正本は[`src/patterns/registry.ts`](src/patterns/registry.ts)です。
+公開状態と表示順の正本は[`src/patterns/registry.ts`](../../src/patterns/registry.ts)です。
 
 | Chapter | 状態 | 数学的対象 | 時間構成 | 主な音響・造形 |
 | --- | --- | --- | --- | --- |
@@ -47,9 +48,9 @@ Chapter 2から10には全スコアを横断する強弱、尾長、wet、空間
 `chapters=preview`も互換入口として同じ10章順を返します。
 
 章固有の数式、係数、位相、投影、スコア、音響写像は
-[`docs/mathematical-model.md`](docs/mathematical-model.md)を参照してください。
+[`docs/mathematical-model.md`](../mathematical-model.md)を参照してください。
 現行10章の比較、隣接章とのコントラスト、将来章の入口条件は
-[`docs/chapter-atlas.md`](docs/chapter-atlas.md)で管理します。READMEには将来章を固定列挙せず、
+[`docs/chapter-atlas.md`](../chapter-atlas.md)で管理します。READMEには将来章を固定列挙せず、
 章数が増えても現行章一覧と共通契約だけを更新します。
 
 ## 全章共通の表現レイヤー
@@ -158,7 +159,7 @@ http://localhost:5173/chapter-audio-ab-qa.html
 Mac内蔵スピーカー必須条件、完聴時刻を含める。ツール内の参考合格条件は全9比較完了、
 評価1なし、全体平均2.60以上、章の独立性2.70以上、聴きやすさと疲労耐性2.50以上である。
 発音と局所造形の対応は
-[`docs/sound-shape-causality.md`](docs/sound-shape-causality.md)を正本とする。
+[`docs/sound-shape-causality.md`](../sound-shape-causality.md)を正本とする。
 
 主なクエリ:
 
@@ -254,8 +255,8 @@ AudioContextを完全に解放します。標本ループの一時割り当て�
 
 ## 文書
 
-- [`AGENTS.md`](AGENTS.md): 開発時の数学・音響・描画・QA不変条件
-- [`docs/mathematical-model.md`](docs/mathematical-model.md): 実装済み章の数理・音響正本
-- [`docs/chapter-atlas.md`](docs/chapter-atlas.md): 現行10章の比較、コントラスト、将来章の入口条件
-- [`design-qa.md`](design-qa.md): 実測QA、履歴、運用QA項目
-- [`docs/superpowers/README.md`](docs/superpowers/README.md): 廃止済み設計・実装計画の履歴索引
+- [`AGENTS.md`](../../AGENTS.md): 開発時の数学・音響・描画・QA不変条件
+- [`docs/mathematical-model.md`](../mathematical-model.md): 実装済み章の数理・音響正本
+- [`docs/chapter-atlas.md`](../chapter-atlas.md): 現行10章の比較、コントラスト、将来章の入口条件
+- [`design-qa.md`](../../design-qa.md): 実測QA、履歴、運用QA項目
+- [`docs/superpowers/README.md`](../superpowers/README.md): 設計・実装計画の索引

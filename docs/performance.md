@@ -36,7 +36,7 @@ CPU送出時間はGPU完了時間ではない。GPU負荷は別の証拠がな�
 | Riemann | 0.825 |
 | Torus | 0.329 |
 
-再現は`rtk proxy npm run qa:audio-performance`。当該実行は72テストを通過した。
+再現は`rtk proxy npm run qa:audio-performance`。この時点の実行は72テストを通過した。
 V2の4K／長時間A/V実測は[作業記録](qa/renewal/progress.md)で完了条件を追跡する。
 
 9月8日13:35の再検証も72テスト成功。停止後に十分減衰したsourceを厳密な無音へ閉じ、
@@ -71,6 +71,29 @@ Cathedral 1.080 ms。Möbiusの部分音と有限尾を増やした分の負荷�
 | Torus | 0.333 |
 
 全章で目標1.333 ms未満。ブラウザの実時間期限と章切替中の負荷は別に検証する。
+
+## 2026年9月14日現在のDSP再確認
+
+現行コミットの`rtk proxy npm run qa:audio-performance`は75テスト成功。
+48 kHz／128標本のNode VM代表block p95は次のとおりで、全章が目標1.333 ms未満だった。
+
+| 章 | p95 ms |
+| --- | ---: |
+| Residue | 0.449 |
+| Cathedral | 1.026 |
+| Prime | 0.258 |
+| Möbius | 1.176 |
+| Bessel | 0.302 |
+| Lissajous | 0.280 |
+| Dirichlet | 0.195 |
+| Wavelet | 0.322 |
+| Riemann | 0.859 |
+| Torus | 0.348 |
+
+これはNode VMの代表block計測であり、ブラウザ音声スレッドの期限、章切替中の二重グラフ、
+実機の出音遅延を測定したものではない。現在の`npm run check`は99テストファイル成功・1スキップ、
+725テスト成功・1スキップで、format・lint・strict型・production buildも成功した。
+production buildにはThree.js postProcessingの約684 kB chunk警告が残る。
 
 ## ChromeでのCathedral V2
 

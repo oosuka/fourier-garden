@@ -9,7 +9,8 @@ Fourier Gardenは、数学的構造から音と光をリアルタイムに生成
 **このブランチではVersion 2を制作中です。** 入口、鑑賞UI、出力時計による同期、
 局所的な音と光の応答、章別の材質と音色を再構築しています。
 全章の連続観察、音映像QA、4K性能を含む完成監査は進行中です。
-[作業・検証記録](docs/qa/renewal/progress.md)に実装済みと未検証を分けて記載しています。
+[作業・検証記録](docs/qa/renewal/progress.md)と[QA台帳](docs/qa/renewal/luna-task-board.md)に、
+実装済み・検証済み・未検証を分けて記載しています。
 
 ## 鑑賞する
 

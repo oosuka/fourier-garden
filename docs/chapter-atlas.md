@@ -1,6 +1,6 @@
 # Fourier Garden Chapter Atlas
 
-2026年9月10日のV2制作中の実装を比較する。これは全章の品質合格表ではない。
+2026年9月14日確認時点のV2制作中の実装を比較する。これは全章の品質合格表ではない。
 表示順と通常体験への登録は[registry](../src/patterns/registry.ts)、式は[数学モデル](mathematical-model.md)、
 数学的主張の範囲は[主張台帳](chapter-claim-ledger.md)、観察結果と残課題は[作業記録](qa/renewal/progress.md)を参照する。
 V1の完成宣言、旧音色、旧配色をV2の証拠へ引き継がない。

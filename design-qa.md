@@ -1,5 +1,9 @@
 # Fourier Garden デザインQA
 
+> 履歴資料 — これはVersion 1.0.0（2026年8月13日）の最終QA記録です。Version 2の現在の
+> 実装・検証・完成判定には、[V2設計](docs/superpowers/specs/2026-09-06-renewal-design.md)と
+> [V2作業記録](docs/qa/renewal/progress.md)を使用します。
+
 最終更新日: 2026-08-13
 全10章正式版確定日: 2026-07-23
 リリース版: 1.0.0

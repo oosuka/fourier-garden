@@ -1,6 +1,6 @@
 # Fourier Garden V2 — Lunaへの引き継ぎプロンプト
 
-2026年9月13日の引き継ぎ。以下を次の実行タスクへの指示として使う。
+2026年9月14日更新。以下を次の実行タスクへの指示として使う。
 モデルは **GPT-5.6 Luna（`gpt-5.6-luna`）**、通常の推論設定は **High（`high`）**。
 数学・DSP・時計・資源寿命の原因分析と修正は **Extra high（`xhigh`）** を推奨する。
 設定を一つに固定する場合はLuna / xhighでよい。モデル選択は実行タスク側で行い、
@@ -18,7 +18,7 @@ Fourier GardenのVersion 2制作を、現在の作業ツリーから継続して
 根拠のない全体改造、再設計のやり直し、合格済み条件の無限の再測定は避けてください。
 Lunaというモデル名だけを理由に、数学・音響の正しさや完成品質を保証しないでください。
 
-利用者は、前のタスクを「引き継ぎの作成完了」で終了するよう指示しました。
+前タスクではこの文書を引き継ぎの入口として保存した。現在はその後の実装・QA・文書同期を反映している。
 **前タスクの目標が完了になっていても、V2作品の完成判定ではありません。**
 この引き継ぎを受け取ったタスクは、下記の未完了項目を扱います。
 新しい目標、タスク、ブランチ、コミット、公開を勝手に作成する依頼ではありません。
@@ -90,12 +90,12 @@ Lunaというモデル名だけを理由に、数学・音響の正しさや完�
 
 最新の自動検証：
 
-- 2026-09-13 10:44開始の `npm run check` は **723成功・1skip**、99ファイル成功・1skip。
-  整形、Lint、strict型、production build成功。実行時間84.69秒。
+- 2026-09-14の現行版 `npm run check` は **725成功・1skip**、99ファイル成功・1skip。
+  整形、Lint、strict型、production build成功。Three.js postProcessingの約684 kB chunk警告は残る。
 - その後のMöbius埋め込み式の表示上の改行は、関連3テストと整形・Lint・型・buildで別に検証した。
-- Three.js postProcessingの約684 kB chunk警告が残る。警告上限を上げて隠さない。
-- 最終DSP変更後の2026-09-10の音響性能は75テスト成功。48 kHz / 128標本のNode VM p95は全章1.333 ms未満。
-  最大はMöbius 1.129 ms。ブラウザ音声スレッドの実測とは別。
+- 2026-09-14の `qa:audio-performance` は75テスト成功。48 kHz / 128標本のNode VM p95は全章1.333 ms未満。
+  最大はMöbius 1.176 ms。ブラウザ音声スレッドの実測とは別。
+- 全Markdownのローカルリンク、10章の構造、QA JSON 39件のJSON形式を監査し、欠落・不正はなかった。
 - 全周期音響の現行比較入口は [audio-residue-v2.json](audio-residue-v2.json)。比較前後の説明は進捗と音響正本を読む。
 
 直近の修正を戻さないこと：
@@ -114,19 +114,25 @@ Lunaというモデル名だけを理由に、数学・音響の正しさや完�
 
 | 章 | WebGPU | WebGL2 | 扱い |
 | --- | --- | --- | --- |
-| Cathedral | [59.9998 fps](cathedral-dpr-webgpu-4k.json) | [60.0000 fps](cathedral-dpr-webgl-4k.json) | 固有粒子補正後。両方3600フレーム、50 ms超0回 |
-| Möbius | [59.9993 fps](mobius-dpr-webgpu-4k.json) | [59.9999 fps](mobius-dpr-webgl-4k.json) | 固有粒子補正・式整形後。両方3600フレーム、50 ms超0回 |
-| Residue | [旧試行](residue-v2-webgpu-4k.json) | [旧試行](residue-v2-webgl-4k.json) | 両方50 ms超2回。観測を止めた静かな再計測が必要 |
-| Torus | [以前の通常Bloom試行](phase-torus-webgpu-4k-paired-bloom.json) | 今回の網羅確認は未完 | 現行共有変更すべての証拠ではない |
-| その他6章 | 現行条件の網羅確認は未完 | 現行条件の網羅確認は未完 | 未検証を不具合と決めつけない |
+| Residue | [記録](luna-residue-bloom-webgpu-4k-01.json) | [記録](luna-residue-bloom-webgl-4k-01.json) | P01-G/L合格。両方50 ms超0回 |
+| Cathedral | [記録](cathedral-dpr-webgpu-4k.json) | [記録](cathedral-dpr-webgl-4k.json) | P02-G/Lは既存証拠。両方50 ms超0回 |
+| Prime | [記録](luna-prime-constellation-webgpu-4k-01.json) | [初回](luna-prime-constellation-webgl-4k-01.json)／[再計測](luna-prime-constellation-webgl-4k-02.json) | P03-G合格。P03-Lは2試行とも50 ms超1回で要再計測 |
+| Möbius | [記録](mobius-dpr-webgpu-4k.json) | [記録](mobius-dpr-webgl-4k.json) | P04-G/Lは既存証拠。両方50 ms超0回 |
+| Bessel | [記録](luna-bessel-tide-webgpu-4k-01.json) | [記録](luna-bessel-tide-webgl-4k-01.json) | P05-G/L合格。両方50 ms超0回 |
+| Lissajous | [記録](luna-lissajous-orchard-webgpu-4k-01.json) | [記録](luna-lissajous-orchard-webgl-4k-01.json) | P06-G/L合格。両方50 ms超0回。ただしT06は未完 |
+| Dirichlet | [記録](luna-dirichlet-lanterns-webgpu-4k-01.json) | [記録](luna-dirichlet-lanterns-webgl-4k-01.json) | P07-G/L合格。両方50 ms超0回。ただしT07は未完 |
+| Haar | [記録](luna-wavelet-rain-webgpu-4k-01.json) | [記録](luna-wavelet-rain-webgl-4k-01.json) | P08-G/L合格。両方50 ms超0回。ただしT08は未完 |
+| Riemann | [記録](luna-riemann-veil-webgpu-4k-01.json) | [記録](luna-riemann-veil-webgl-4k-01.json) | P09-G/L合格。両方50 ms超0回。ただしT09は未完 |
+| Torus | [記録](luna-phase-torus-webgpu-4k-01.json) | [記録](luna-phase-torus-webgl-4k-01.json) | P10-G/L合格。両方50 ms超0回。T10-G一部済、T10-L未完 |
 
 上記4KはCSS／実ラスタ3840×2160、DPR 1、high、seed=qa、48 kHz、音量35%、通常motion。
 WebGPUはBloom、WebGL2は600万pixel超でBloomを省く通常経路。同じ後処理負荷ではない。
 同期差は推定値。物理出音や表示遅延を測定したとは言わない。
 
-Residue・Cathedral・Möbiusは両renderer、DPR 1、3比率で全景とノートの観察済み部分がある。
-最新のCathedral／Möbius画像は前タスク内で観察したもので、新規PNGは保存していない。
-高DPI、reduced motion、全5幕、寿命の網羅的な合格へ拡張して解釈しない。
+上表は4K 60秒（P）の記録であり、全幕・高DPI・連続動作（T）の合格を意味しない。
+T01〜T05は両rendererのDPR2・序盤／終盤60秒・連続観察・seek／逆seek・周回境界を記録済み。
+T06〜T09は4K記録のみで、Tの連続窓と局所因果の証拠が不足している。T10-Gは一部済、T10-Lは証拠不足。
+音色の知覚評価、物理AV遅延、実GPU完了時間・メモリは全章で未測定である。
 
 ## 4. Lunaでの実行規律
 
@@ -158,14 +164,12 @@ Residue・Cathedral・Möbiusは両renderer、DPR 1、3比率で全景とノー�
 
 推奨順序：
 
-1. **G00**：現在の作業ツリーと証拠を確認し、台帳の次の1件を選ぶ。新たな全面設計はしない。
-2. **V08-G → P08-G → V08-L → P08-L**：途中で止まっていたHaarの表示と4Kを揃える。
-3. **P01-G → P01-L**：Residueの4Kを記録中の観測なしで確認する。
-4. 残る `V` と `P` を **Bessel → Prime → Lissajous → Dirichlet → Riemann → Torus** の順に進める。
-   表示に関わる不具合は修正してから、その版の性能を確定する。
-5. 既に大部分を観察したResidue／Cathedral／Möbiusの `V` は、未確認部分だけ補う。
-6. `T` を1章・1rendererずつ実行する。`U01–U04`、`L01–L02`を行い、共通の操作と寿命を閉じる。
-7. `A01–A02`、`M01–M10`、`R01–R03`、`D01`、`F01`。数学・因果の疑義を見つけた場合はこの順を待たず先に処理する。
+1. **T06-G**：台帳の次の1件。LissajousのDPR2・全5幕・連続窓・開始／終盤計測・局所因果を記録する。
+2. **T06-L → T07-G/L → T08-G/L → T09-G/L → T10-G/L**：同じ条件を章・rendererごとに実行し、証拠不足を埋める。
+3. **P03-L**：Prime WebGL2 4Kを、現行実装を変えず観測干渉なしで再計測する。2試行の50 ms超を無理に合格へしない。
+4. **U01–U04、L01–L02**：共通UI、復旧、非表示復帰、章切替、所有資源の実操作を閉じる。
+5. **A01–A02、M01–M10**：全周期・隣接章・10章の数学／音響／因果を現行版で監査する。
+6. **R01–R03、D01、F01**：独立読み取り監査、31要件と正本の同期、残る未測定を含む最終判定。
 
 ### V：1章・1rendererの表示、数学実験、reduced motion
 
