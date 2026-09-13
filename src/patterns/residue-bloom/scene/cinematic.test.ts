@@ -1,14 +1,53 @@
 import { describe, expect, it } from "vitest";
 
-import { projectSeriesToVerticalAxis } from "../../../math/fourierSeries";
+import { getEpicycleSteps, projectSeriesToVerticalAxis } from "../../../math/fourierSeries";
 import { RESIDUE_BLOOM_SERIES } from "../math/model";
 import {
   getResidueBloomCinematicCounts,
   getResidueBloomLocalParticleCount,
   getResidueBloomPrimaryWavePoint,
 } from "./scene";
+import { getResidueBloomSceneLayout, writeResidueBloomFlowPositions } from "./spatialModel";
 
 describe("Residue Bloom cinematic scene", () => {
+  it("fits every circle and the waveform in desktop and observation-note viewports", () => {
+    for (const aspect of [0.75, 840 / 818, 16 / 10, 16 / 9, 21 / 9]) {
+      const layout = getResidueBloomSceneLayout(aspect);
+      for (let index = 0; index <= 120; index++) {
+        for (const circle of getEpicycleSteps(RESIDUE_BLOOM_SERIES, (index * Math.PI) / 60)) {
+          const x = layout.centerX + circle.originX * layout.scale;
+          const y = layout.centerY + circle.originY * layout.scale;
+          const radius = circle.radius * layout.scale;
+          expect(x - radius).toBeGreaterThanOrEqual(-10 * aspect * 0.96);
+          expect(x + radius).toBeLessThan(layout.waveStart);
+          expect(Math.abs(y) + radius).toBeLessThan(8);
+        }
+      }
+      expect(layout.waveEnd).toBeLessThan(10 * aspect);
+      expect(layout.waveEnd - layout.waveStart).toBeGreaterThan(10 * aspect * 0.6);
+    }
+  });
+
+  it("fixes decorative flow in reduced motion even as time and the mathematical endpoint change", () => {
+    const seeds = new Float32Array([0.12, 0.3, 0.6, 1.2, 0.47, 0.6, 0.2, 3.7]);
+    const first = new Float32Array(6);
+    const later = new Float32Array(6);
+    writeResidueBloomFlowPositions(first, seeds, 2, 0.1, 0.8, 4, 3, true);
+    writeResidueBloomFlowPositions(later, seeds, 2, 19.4, 0.2, -6, -2, true);
+    expect(later).toEqual(first);
+  });
+
+  it("does not amplify a small excitation change into a large positional jump after hours", () => {
+    const seeds = new Float32Array([0.12, 0.3, 0.6, 1.2, 0.47, 0.6, 0.2, 3.7]);
+    const first = new Float32Array(6);
+    const later = new Float32Array(6);
+    writeResidueBloomFlowPositions(first, seeds, 2, 10_000, 0.4, 4, 3);
+    writeResidueBloomFlowPositions(later, seeds, 2, 10_000, 0.4001, 4, 3);
+    expect(Math.max(...later.map((value, index) => Math.abs(value - first[index]!)))).toBeLessThan(
+      0.001,
+    );
+  });
+
   it("matches every approved total particle budget", () => {
     expect(getResidueBloomCinematicCounts("low")).toEqual({
       localParticles: 4_000,

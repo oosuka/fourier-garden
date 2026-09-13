@@ -16,7 +16,12 @@ const riemannVeilAudio = definePikoChapterAudio({
   score: RIEMANN_VEIL_SCORE,
   detuneRatio: 0.0013,
   maximumVoices: 20,
-  timbre: { partialRatio: Math.SQRT2, partialGain: 0.025, chirpRatio: -0.012 },
+  timbre: {
+    partialRatio: Math.SQRT2,
+    partialGain: 0.075,
+    chirpRatio: -0.004,
+    partialDecayScale: 0.85,
+  },
   graph: RIEMANN_VEIL_AUDIO_GRAPH,
 });
 

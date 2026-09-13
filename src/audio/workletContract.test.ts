@@ -19,13 +19,13 @@ const chapterSources = [
 
 describe("AudioWorklet mathematical contract", () => {
   it("cache-busts every module in the worklet dependency graph", () => {
-    expect(workletSource.match(/from ["'][^"']+\?v=24["']/g) ?? []).toHaveLength(11);
+    expect(workletSource.match(/from ["'][^"']+\?v=30["']/g) ?? []).toHaveLength(11);
     for (const chapterSource of [residueBloomSource, spectralCathedralSource, mobiusChoirSource]) {
-      expect(chapterSource).toMatch(/from ["']\.\/shared\.js\?v=24["']/);
+      expect(chapterSource).toMatch(/from ["']\.\/shared\.js\?v=30["']/);
     }
-    expect(sharedPikoSource).toMatch(/from ["']\.\/shared\.js\?v=24["']/);
+    expect(sharedPikoSource).toMatch(/from ["']\.\/shared\.js\?v=30["']/);
     for (const chapterSource of pikoChapterSources) {
-      expect(chapterSource).toMatch(/from ["']\.\/shared-piko\.js\?v=24["']/);
+      expect(chapterSource).toMatch(/from ["']\.\/shared-piko\.js\?v=30["']/);
     }
   });
 
@@ -38,25 +38,14 @@ describe("AudioWorklet mathematical contract", () => {
     expect(workletSource).not.toContain("function renderMobiusChoirSample");
   });
 
-  it("derives phasor controls from the serialized mapping instead of repeat events", () => {
-    expect(residueBloomSource).toContain("evaluateSerializedPhasor");
-    expect(residueBloomSource).toContain("const baseEvent = score.events[globalStep]");
-    expect(residueBloomSource).toContain(
-      "evaluateEvent(score, baseEvent, cycleIndex, state.phasor, state.cachedEvent)",
-    );
-    expect(residueBloomSource).not.toContain("score.events[globalStep].normalizedPhasorX");
-    expect(residueBloomSource).not.toContain("score.events[globalStep].normalizedPhasorRadius");
-  });
-
-  it("reuses numeric event caches and output storage in the Residue Bloom sample loop", () => {
-    expect(residueBloomSource).toContain("cachedCycleIndex");
-    expect(residueBloomSource).toContain("cachedGlobalStep");
+  it("keeps Residue event preparation and sampling free of allocations and score scans", () => {
     expect(residueBloomSource).toContain("const sample = state.sample");
-    const renderStart = residueBloomSource.indexOf("function renderResidueBloomSample");
+    const renderStart = residueBloomSource.indexOf("function prepareResidueBloomEvent");
     const renderEnd = residueBloomSource.indexOf("function validateResidueBloomProgram");
     const renderSource = residueBloomSource.slice(renderStart, renderEnd);
     expect(renderSource).not.toContain("return {");
     expect(renderSource).not.toContain("`${");
+    expect(renderSource).not.toMatch(/new |Array\.from|\.map\(|\.sort\(|\.find\(/);
   });
 
   it("guards the maximum detuned frequency", () => {

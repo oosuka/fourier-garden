@@ -1,13 +1,74 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import * as THREE from "three/webgpu";
+import BloomNode from "three/addons/tsl/display/BloomNode.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 import {
   getCinematicPostMode,
   getCinematicPostProfile,
   getWebGlViewportPostMode,
+  createCinematicPostProcessor,
 } from "./postProcessing";
 
+afterEach(() => vi.restoreAllMocks());
+
 describe("cinematic post processing", () => {
-  it("uses the approved bloom profiles", () => {
+  it("bounds decorative bloom work at 4K while preserving the native scene raster", async () => {
+    const scaling = vi.spyOn(BloomNode.prototype, "setResolutionScale");
+    const renderer = new THREE.WebGPURenderer();
+    const processor = await createCinematicPostProcessor({
+      renderer,
+      backend: "webgpu",
+      scene: new THREE.Scene(),
+      camera: new THREE.PerspectiveCamera(),
+      exposure: 1,
+    });
+    processor.resize(1920, 1080, 2);
+    processor.setQuality("high");
+    const scale = scaling.mock.calls.at(-1)?.[0] ?? 1;
+    expect(3840 * 2160 * scale ** 2).toBeLessThanOrEqual(1_048_577);
+    expect(renderer.domElement.width).toBe(3840);
+    expect(renderer.domElement.height).toBe(2160);
+    processor.dispose();
+  });
+  it("releases the scene and bloom render targets when a chapter is disposed", async () => {
+    const disposeBloom = vi.spyOn(BloomNode.prototype, "dispose");
+    const disposeScene = vi.spyOn(THREE.PassNode.prototype, "dispose");
+    const renderer = new THREE.WebGPURenderer();
+    const processor = await createCinematicPostProcessor({
+      renderer,
+      backend: "webgpu",
+      scene: new THREE.Scene(),
+      camera: new THREE.PerspectiveCamera(),
+      exposure: 1,
+    });
+    processor.dispose();
+    processor.dispose();
+    expect(disposeBloom).toHaveBeenCalledTimes(1);
+    expect(disposeScene).toHaveBeenCalledTimes(1);
+  });
+  it("releases WebGL bloom targets and its high-pass shader once", async () => {
+    // Construct real passes without needing a WebGL context: their constructor
+    // only reads the renderer viewport. No rendering methods are substituted.
+    const renderer = new THREE.WebGPURenderer();
+    const resizeBloom = vi.spyOn(UnrealBloomPass.prototype, "setSize");
+    const processor = await createCinematicPostProcessor({
+      renderer,
+      backend: "webgl",
+      scene: new THREE.Scene(),
+      camera: new THREE.PerspectiveCamera(),
+      exposure: 1,
+    });
+    const bloomPass = resizeBloom.mock.contexts[0];
+    if (!(bloomPass instanceof UnrealBloomPass)) throw new Error("Expected a WebGL bloom pass");
+    const released: string[] = [];
+    bloomPass.renderTargetBright.addEventListener("dispose", () => released.push("bright"));
+    bloomPass.materialHighPassFilter.addEventListener("dispose", () => released.push("high-pass"));
+    processor.dispose();
+    processor.dispose();
+    expect(released.toSorted()).toEqual(["bright", "high-pass"]);
+  });
+  it("keeps bloom below the material cores and reduces it with decorative quality", () => {
     expect(getCinematicPostProfile("low")).toEqual({
       enabled: false,
       strength: 0,
@@ -16,19 +77,19 @@ describe("cinematic post processing", () => {
     });
     expect(getCinematicPostProfile("medium")).toEqual({
       enabled: true,
-      strength: 0.86,
+      strength: 0.48,
       radius: 0.26,
       threshold: 0.82,
     });
     expect(getCinematicPostProfile("high")).toEqual({
       enabled: true,
-      strength: 1.2,
+      strength: 0.62,
       radius: 0.38,
       threshold: 0.76,
     });
     expect(getCinematicPostProfile("ultra")).toEqual({
       enabled: true,
-      strength: 1.48,
+      strength: 0.78,
       radius: 0.46,
       threshold: 0.7,
     });

@@ -1,3 +1,5 @@
+import { observation } from "./observation";
+import { study } from "./study";
 import { createFiveActSections } from "../analyticDefinition";
 import type { PrimeConstellationPatternDefinition } from "./types";
 import { PRIME_CONSTELLATION_SCORE } from "./audio/score";
@@ -83,6 +85,8 @@ export const primeConstellationPattern: PrimeConstellationPatternDefinition = {
     poeticLines: ["離れた数の灯が、", "ひとつの位相空間へ集まる。"],
     canvasAriaLabel: "素数周波数で回転する25個の位相点と素数間隔の星座",
   },
+  observation,
+  study,
   education: {
     gentleTitle: "素数だけが、夜空の決まった場所で瞬く。",
     gentleBody:

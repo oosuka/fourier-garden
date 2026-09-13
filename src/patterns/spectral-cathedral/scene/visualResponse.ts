@@ -5,6 +5,12 @@ import {
   type SpectralCathedralGesture,
 } from "../audio/score";
 import {
+  SPECTRAL_CATHEDRAL_SYNTHESIS,
+  createSpectralCathedralAudioModes,
+  getSpectralCathedralBellEnvelope,
+  getSpectralCathedralContactGain,
+} from "../audio/synthesis";
+import {
   SPECTRAL_CATHEDRAL_DEFINITION,
   evaluateSpectralCathedralEigenfunction,
 } from "../math/model";
@@ -58,6 +64,9 @@ const VISUAL_PROFILES = {
 >;
 
 const MAXIMUM_VISUAL_EVENT_SECONDS = 2.8;
+const AUDIO_MODES_BY_ID = new Map(
+  createSpectralCathedralAudioModes().map((mode) => [mode.id, mode]),
+);
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
@@ -87,6 +96,22 @@ function getEventPillarInfluence(
     }
   }
   return influence;
+}
+
+function getEventPillarExcitation(
+  event: EvaluatedSpectralCathedralEvent,
+  matrix: SpectralCathedralModeInfluenceMatrix,
+): number[] {
+  const excitation = Array.from({ length: matrix.pillarCount }, () => 0);
+  for (const modeId of event.modeIds) {
+    const influence = matrix.byModeId.get(modeId);
+    if (!influence) continue;
+    const gain = AUDIO_MODES_BY_ID.get(modeId)!.normalizedGain;
+    for (const [index, value] of influence.entries()) {
+      excitation[index]! += gain * value;
+    }
+  }
+  return excitation;
 }
 
 export function createSpectralCathedralModeInfluenceMatrix(
@@ -144,13 +169,44 @@ export function evaluateSpectralCathedralVisualFrame(
 
   for (const event of events) {
     const envelope = getVisualEnvelope(event.ageSeconds, event.gesture);
-    const eventEnergy = envelope * event.baseGain;
+    let displacement = 0;
+    let velocity = 0;
+    let modalGain = 0;
+    for (const modeId of event.modeIds) {
+      const mode = AUDIO_MODES_BY_ID.get(modeId)!;
+      const phase = mode.modalAngularFrequency * event.absoluteTimeSeconds;
+      displacement += Math.abs(Math.cos(phase));
+      velocity += Math.abs(Math.sin(phase));
+      modalGain += mode.normalizedGain;
+    }
+    displacement /= event.modeIds.length;
+    velocity /= event.modeIds.length;
+    const articulation = SPECTRAL_CATHEDRAL_SYNTHESIS.articulations[event.gesture];
+    let soundingEnvelope = 0;
+    let contactEnvelope = 0;
+    for (const [index, offset] of articulation.subgrainOffsetsSeconds.entries()) {
+      const age = event.ageSeconds - offset;
+      const body =
+        getSpectralCathedralBellEnvelope(
+          age,
+          event.gesture,
+          SPECTRAL_CATHEDRAL_SYNTHESIS,
+          0.82 + displacement * 0.38,
+        ) * articulation.subgrainGains[index]!;
+      soundingEnvelope += body;
+      contactEnvelope += body * getSpectralCathedralContactGain(2, age, velocity);
+    }
+    const eventEnergy = soundingEnvelope * event.baseGain * modalGain;
     collectiveEnergySum += eventEnergy;
-    onsetEnergy = Math.max(onsetEnergy, eventEnergy * Math.exp(-event.ageSeconds / 0.12) * 2.2);
+    onsetEnergy = Math.max(onsetEnergy, contactEnvelope * event.baseGain * modalGain * 2.2);
     const influence = getEventPillarInfluence(event, matrix);
+    const excitation = getEventPillarExcitation(event, matrix);
     for (let index = 0; index < matrix.pillarCount; index += 1) {
       const weighted = envelope * influence[index]!;
-      impacts[index] = Math.max(impacts[index]!, weighted);
+      impacts[index] = Math.max(
+        impacts[index]!,
+        soundingEnvelope * event.baseGain * excitation[index]!,
+      );
       afterglowSums[index] += weighted;
       warmthSums[index] += weighted * event.baseBrightness;
       influenceSums[index] += weighted;

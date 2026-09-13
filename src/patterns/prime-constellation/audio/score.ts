@@ -45,21 +45,15 @@ export const PRIME_CONSTELLATION_SCORE: PikoScoreProgram = createEnergyBalancedP
           phraseProfiles[Math.floor(index / PRIME_SUPPORT.length)]! *
           (0.42 + (index % 5 === 0 ? 0.34 : 0)) *
           motionAt(index).accent,
-        pan: (index) => {
-          const time =
-            Math.floor(index / PRIME_SUPPORT.length) * PRIME_PHRASE_SECONDS +
-            PRIME_PHRASE_TIMES[index % PRIME_SUPPORT.length]!;
-          return (
-            Math.sin(PRIME_SUPPORT[index % PRIME_SUPPORT.length]! * PRIME_VISUAL_RATE * time) * 0.78
-          );
-        },
-        panMotionDepth: (index) => 0.08 + 0.1 * motionAt(index).motionScale,
+        pan: () => 0,
+        panMotionDepth: (index) => 0.62 + 0.12 * motionAt(index).motionScale,
         panMotionRateRadiansPerSecond: (index) => PRIME_SUPPORT[index % 25]! * PRIME_VISUAL_RATE,
+        panMotionPhaseRadians: () => Math.PI / 2,
         wet: (index) =>
           (0.06 + 0.04 * Math.abs(Math.sin(index * 1.7))) * motionAt(index).spaceScale,
         articulation: (index) => ({
-          attackSeconds: 0.006,
-          decaySeconds: (index % 5 === 0 ? 0.095 : 0.065) * motionAt(index).tailScale,
+          attackSeconds: index % 5 === 0 ? 0.011 : 0.007,
+          decaySeconds: (index % 5 === 0 ? 0.105 : 0.075) * motionAt(index).tailScale,
           endSeconds: (index % 5 === 0 ? 0.22 : 0.15) * motionAt(index).tailScale,
         }),
         phaseDrift: (index) => PRIME_SUPPORT[index % 25]! * PRIME_VISUAL_RATE,

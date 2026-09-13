@@ -146,10 +146,10 @@ export function createMobiusChoirPoeticModel(seed: number): MobiusChoirPoeticMod
       particleBase[offset + 5] = 0.35 + random() * 0.65;
       particleModeIds[index] = mode.id;
       particleKinds[index] = kind;
-      const cyan = random();
-      particleColors[index * 3] = 0.18 + cyan * 0.18;
-      particleColors[index * 3 + 1] = 0.24 + cyan * 0.3;
-      particleColors[index * 3 + 2] = 0.62 + random() * 0.42;
+      const warmth = random();
+      particleColors[index * 3] = 0.18 + warmth * 0.16;
+      particleColors[index * 3 + 1] = 0.18 + warmth * 0.12;
+      particleColors[index * 3 + 2] = 0.2 + random() * 0.08;
       continue;
     }
     const lane = Math.floor(random() * mode.m);
@@ -169,11 +169,11 @@ export function createMobiusChoirPoeticModel(seed: number): MobiusChoirPoeticMod
     particleBase[offset + 5] = 0.35 + random() * 0.65;
     particleModeIds[index] = mode.id;
     particleKinds[index] = kind;
-    const violet = modeIndex / Math.max(1, MOBIUS_CHOIR_DEFINITION.modes.length - 1);
-    const brightness = kind === 0 ? 1 : 0.72;
-    particleColors[index * 3] = (0.32 + violet * 0.5) * brightness;
-    particleColors[index * 3 + 1] = (0.38 + (1 - violet) * 0.62) * brightness;
-    particleColors[index * 3 + 2] = (1.08 + random() * 0.42) * brightness;
+    const warmth = modeIndex / Math.max(1, MOBIUS_CHOIR_DEFINITION.modes.length - 1);
+    const brightness = kind === 0 ? 1 : 0.48;
+    particleColors[index * 3] = (0.42 + warmth * 0.26) * brightness;
+    particleColors[index * 3 + 1] = (0.5 + warmth * 0.08) * brightness;
+    particleColors[index * 3 + 2] = (0.58 - warmth * 0.12 + random() * 0.04) * brightness;
   }
   return {
     particleBase,
@@ -191,6 +191,7 @@ function updateMobiusChoirParticle(
   modeEnergies: readonly number[],
   modeVelocities: readonly number[],
   index: number,
+  reducedMotion = false,
 ): void {
   const baseOffset = index * 6;
   const sourceX = model.particleBase[baseOffset]!;
@@ -199,8 +200,8 @@ function updateMobiusChoirParticle(
   const phase = model.particleBase[baseOffset + 3]!;
   const radius = model.particleBase[baseOffset + 4]!;
   const modeIndex = model.particleModeIds[index]! - 1;
-  const energy = modeEnergies[modeIndex]!;
-  const velocity = modeVelocities[modeIndex]!;
+  const energy = reducedMotion ? 0 : modeEnergies[modeIndex]!;
+  const velocity = reducedMotion ? 0 : modeVelocities[modeIndex]!;
   const kind = model.particleKinds[index]!;
   const output = index * 3;
   if (kind === 2) {
@@ -208,7 +209,7 @@ function updateMobiusChoirParticle(
     const baseZ = model.particleBase[baseOffset + 2]!;
     const speed = model.particleBase[baseOffset + 4]!;
     const depth = model.particleBase[baseOffset + 5]!;
-    const flow = phase + absoluteTimeSeconds * speed * (0.72 + energy * 0.62 + velocity * 0.48);
+    const flow = phase + absoluteTimeSeconds * speed * 0.72 + energy * 0.12 + velocity * 0.08;
     model.particlePositions[output] = sourceX + Math.sin(flow) * (0.55 + depth * 1.35);
     model.particlePositions[output + 1] = baseY + Math.cos(flow * 0.73) * (0.28 + depth * 0.72);
     model.particlePositions[output + 2] =
@@ -226,7 +227,7 @@ function updateMobiusChoirParticle(
   model.particlePositions[output + 1] = point.y + (point.y / length) * flutter;
   model.particlePositions[output + 2] = point.z + (point.z / length) * flutter;
   if (kind === 1) {
-    const driftPhase = phase + absoluteTimeSeconds * (0.16 + energy * 0.12 + velocity * 0.16);
+    const driftPhase = phase + absoluteTimeSeconds * 0.16 + energy * 0.12 + velocity * 0.16;
     model.particlePositions[output] += Math.sin(driftPhase * 0.73) * 0.14;
     model.particlePositions[output + 1] += Math.cos(driftPhase) * 0.11;
     model.particlePositions[output + 2] += Math.sin(driftPhase * 1.21) * 0.14;
@@ -239,6 +240,7 @@ export function updateMobiusChoirParticles(
   modeEnergies: readonly number[],
   modeVelocities: readonly number[],
   particleCount: number,
+  reducedMotion = false,
 ): void {
   if (!Number.isFinite(absoluteTimeSeconds) || absoluteTimeSeconds < 0) {
     throw new Error("Möbius Choir particle time must be finite and nonnegative");
@@ -267,24 +269,33 @@ export function updateMobiusChoirParticles(
   );
   if (!quality) throw new Error("Möbius Choir particle count must match a quality budget");
   for (let index = 0; index < quality.surfaceParticleCount; index += 1) {
-    updateMobiusChoirParticle(model, absoluteTimeSeconds, modeEnergies, modeVelocities, index);
+    updateMobiusChoirParticle(
+      model,
+      reducedMotion ? 0 : absoluteTimeSeconds,
+      modeEnergies,
+      modeVelocities,
+      index,
+      reducedMotion,
+    );
   }
   for (let index = 0; index < quality.atmosphereParticleCount; index += 1) {
     updateMobiusChoirParticle(
       model,
-      absoluteTimeSeconds,
+      reducedMotion ? 0 : absoluteTimeSeconds,
       modeEnergies,
       modeVelocities,
       MOBIUS_CHOIR_SURFACE_PARTICLES + index,
+      reducedMotion,
     );
   }
   for (let index = 0; index < quality.panoramaParticleCount; index += 1) {
     updateMobiusChoirParticle(
       model,
-      absoluteTimeSeconds,
+      reducedMotion ? 0 : absoluteTimeSeconds,
       modeEnergies,
       modeVelocities,
       MOBIUS_CHOIR_SURFACE_PARTICLES + MOBIUS_CHOIR_ATMOSPHERE_PARTICLES + index,
+      reducedMotion,
     );
   }
 }

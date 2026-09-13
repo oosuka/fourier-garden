@@ -63,12 +63,12 @@ describe("Möbius Choir strict drawing model", () => {
     expect(model.positions).toEqual(positionsBefore);
   });
 
-  it("uses an exact neutral color at zero and finite violet/cyan sign colors", () => {
-    expect(getMobiusChoirSurfaceColor(0)).toEqual({ r: 0.014, g: 0.016, b: 0.028 });
+  it("keeps zero dark and the two field signs distinguishable", () => {
+    expect(Math.max(...Object.values(getMobiusChoirSurfaceColor(0)))).toBeLessThan(0.04);
     const positive = getMobiusChoirSurfaceColor(0.8);
     const negative = getMobiusChoirSurfaceColor(-0.8);
-    expect(positive.b).toBeGreaterThan(positive.r);
-    expect(negative.b).toBeGreaterThan(negative.g);
+    expect(positive.r).toBeGreaterThan(positive.b);
+    expect(negative.b).toBeGreaterThan(negative.r);
     for (const value of [-1, -0.5, 0, 0.5, 1]) {
       expect(
         Object.values(getMobiusChoirSurfaceColor(value)).every(

@@ -3,7 +3,7 @@ import {
   hashUint32,
   isNonnegativeFinite,
   isPositiveFinite,
-} from "./shared.js?v=24";
+} from "./shared.js?v=30";
 
 function smoothstepMobius(value) {
   const clamped = Math.min(1, Math.max(0, value));
@@ -71,7 +71,10 @@ function createMobiusChoirRuntime(program) {
             event.registerMultiplier *
             partial *
             (1 + synthesis.stereoDetuneRatio);
-          if (Math.max(leftFrequencyHz, rightFrequencyHz) >= frequencyLimit) continue;
+          const generatedMaximumHz =
+            Math.max(leftFrequencyHz, rightFrequencyHz) +
+            (partial * mode.modalAngularFrequency) / (2 * Math.PI);
+          if (generatedMaximumHz >= frequencyLimit) continue;
           const averageFrequencyHz = (leftFrequencyHz + rightFrequencyHz) * 0.5;
           const leftAngularRate =
             Math.PI * 2 * leftFrequencyHz + partial * mode.modalAngularFrequency;
@@ -462,7 +465,7 @@ function validateMobiusChoirProgram(program) {
         event.stereoSpread <= 1 &&
         Number.isInteger(event.partialCount) &&
         event.partialCount >= 1 &&
-        event.partialCount <= 1 &&
+        event.partialCount <= 3 &&
         isNonnegativeFinite(event.amplitudeMotionDepth) &&
         event.amplitudeMotionDepth <= 1 &&
         isNonnegativeFinite(event.brightnessMotionDepth) &&
@@ -476,7 +479,7 @@ function validateMobiusChoirProgram(program) {
     preset &&
     Number.isInteger(preset.maximumPartials) &&
     preset.maximumPartials >= 1 &&
-    preset.maximumPartials <= 1 &&
+    preset.maximumPartials <= 3 &&
     isPositiveFinite(preset.partialDamping) &&
     isPositiveFinite(preset.maximumEventSeconds) &&
     isPositiveFinite(preset.breathSeconds) &&

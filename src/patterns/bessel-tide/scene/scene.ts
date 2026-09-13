@@ -1,21 +1,24 @@
+import { createBesselTideWorkletProgram } from "../audio/synthesis";
 import * as THREE from "three/webgpu";
+import { BESSEL_TIDE_SCORE } from "../audio/score";
+import { createEventResonance } from "../../../rendering/analytic/eventResonance";
+import { configurePoeticObjects } from "../../../rendering/analytic/displayLayers";
 
 import type { RendererBackend } from "../../../core/rendererBackend";
 import { createImmersiveAnalyticScene } from "../../../rendering/analytic/immersiveScene";
 import {
   createAnalyticProfile,
   createLine,
-  createPoints,
   evaluateFiveActEnergy,
 } from "../../../rendering/analytic/primitives";
 import type { PatternSceneOptions } from "../../contracts";
 import { BESSEL_MODES, BESSEL_ZEROS, evaluateBesselField, evaluateBesselMode } from "../math/model";
 
-const PALETTE = [0x55f1e1, 0x3f9dff, 0x193b9e] as const;
+const PALETTE = [0x93c3ae, 0xd3ceab, 0x355f53] as const;
 const RADIAL = 56;
 const ANGULAR = 128;
 
-export function createBesselTideContent(backend: RendererBackend = "webgpu") {
+export function createBesselTideContent(backend: RendererBackend = "webgpu", poeticLayers = true) {
   const group = new THREE.Group();
   const positions = new Float32Array((RADIAL + 1) * ANGULAR * 3);
   const colors = new Float32Array(positions.length);
@@ -40,14 +43,16 @@ export function createBesselTideContent(backend: RendererBackend = "webgpu") {
   geometry.setAttribute("position", positionAttribute);
   geometry.setAttribute("color", colorAttribute);
   geometry.setIndex(indices);
-  const material = new THREE.MeshBasicMaterial({
+  const material = new THREE.MeshStandardMaterial({
+    roughness: 0.54,
+    metalness: 0.32,
     vertexColors: true,
     transparent: true,
-    opacity: 0.46,
+    opacity: 0.86,
     side: THREE.DoubleSide,
     blending: THREE.NormalBlending,
     depthWrite: false,
-    toneMapped: false,
+    toneMapped: true,
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
@@ -67,7 +72,7 @@ export function createBesselTideContent(backend: RendererBackend = "webgpu") {
   const surfaceSparkles = new THREE.Points(
     geometry,
     new THREE.PointsMaterial({
-      color: 0xd9ffff,
+      color: 0xdfe5d4,
       size: 0.016,
       sizeAttenuation: true,
       transparent: true,
@@ -100,7 +105,7 @@ export function createBesselTideContent(backend: RendererBackend = "webgpu") {
     boundaryPositions[index * 3] = Math.cos(theta) * 4.4;
     boundaryPositions[index * 3 + 1] = Math.sin(theta) * 4.4;
   }
-  const boundary = createLine(boundaryPositions, 0x8ffff1, 0.88);
+  const boundary = createLine(boundaryPositions, 0xceceb1, 0.88);
   const nodalRings = Array.from({ length: 2 }, () => {
     const ringPositions = new Float32Array((ANGULAR + 1) * 3);
     for (let index = 0; index <= ANGULAR; index += 1) {
@@ -109,23 +114,76 @@ export function createBesselTideContent(backend: RendererBackend = "webgpu") {
       ringPositions[index * 3 + 1] = Math.sin(theta);
       ringPositions[index * 3 + 2] = 0.035;
     }
-    const ring = createLine(ringPositions, 0xb8fff3, 0.78);
+    const ring = createLine(ringPositions, 0xe1dcbf, 0.78);
+    ring.line.renderOrder = 4;
+    (ring.line.material as THREE.LineBasicMaterial).depthTest = false;
     group.add(ring.line);
     return ring.line;
   });
   const nodalDiameters = Array.from({ length: 4 }, () => {
-    const diameter = createLine(new Float32Array(6), 0x70dfff, 0.72);
+    const diameter = createLine(new Float32Array(6), 0xd5d3b7, 0.72);
+    diameter.line.renderOrder = 4;
+    (diameter.line.material as THREE.LineBasicMaterial).depthTest = false;
     group.add(diameter.line);
     return diameter;
   });
-  const markerPosition = new Float32Array(3);
-  const marker = createPoints(markerPosition, 0xffffff, 0.24, backend);
-  group.add(mesh, surfaceWire, surfaceSparkles, boundary.line, marker.points);
+  group.add(mesh, surfaceWire, surfaceSparkles, boundary.line);
+  // Sparse polar contours sample the same surface vertices, without a diagonal
+  // triangulation pattern competing with the selected mode's nodal structure.
+  const contourVertices: number[] = [];
+  for (let radial = 4; radial < RADIAL; radial += 4) {
+    for (let angular = 0; angular < ANGULAR; angular++) {
+      contourVertices.push(
+        radial * ANGULAR + angular,
+        radial * ANGULAR + ((angular + 1) % ANGULAR),
+      );
+    }
+  }
+  for (let angular = 0; angular < ANGULAR; angular += 8) {
+    for (let radial = 0; radial < RADIAL; radial++) {
+      contourVertices.push(radial * ANGULAR + angular, (radial + 1) * ANGULAR + angular);
+    }
+  }
+  const contourData = new Float32Array(contourVertices.length * 3);
+  const contourGeometry = new THREE.BufferGeometry();
+  const contourAttribute = new THREE.BufferAttribute(contourData, 3);
+  contourGeometry.setAttribute("position", contourAttribute);
+  const contours = new THREE.LineSegments(
+    contourGeometry,
+    new THREE.LineBasicMaterial({
+      color: 0x8eac9c,
+      opacity: 0.13,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  contours.name = "bessel-surface-contours";
+  contours.frustumCulled = false;
+  group.add(contours);
   group.rotation.x = -0.94;
   group.scale.setScalar(0.94);
+  const resonance = createEventResonance(BESSEL_TIDE_SCORE, backend, {
+    gesture: "ripple",
+    colors: PALETTE,
+    timbre: createBesselTideWorkletProgram().timbre,
+    locate(voice, time, target) {
+      const mode = BESSEL_MODES[voice.event.sourceIndex % BESSEL_MODES.length]!;
+      const radius = (mode.n === 1 ? 0.52 : 0.72) * 4.4;
+      const theta = Math.acos(Math.max(-1, Math.min(1, voice.pan)));
+      target.set(
+        Math.cos(theta) * radius,
+        Math.sin(theta) * radius,
+        evaluateBesselField(radius / 4.4, theta, time) * 2.2,
+      );
+    },
+  });
+  group.add(resonance.group);
+  configurePoeticObjects(poeticLayers, resonance.group, surfaceWire, surfaceSparkles);
   return {
     group,
-    update(timeSeconds: number) {
+    update(timeSeconds: number, reducedMotion = false) {
+      const stagingTime = reducedMotion ? 0 : timeSeconds;
       for (let modeIndex = 0; modeIndex < BESSEL_MODES.length; modeIndex += 1) {
         const mode = BESSEL_MODES[modeIndex]!;
         temporalCoefficients[modeIndex] =
@@ -146,13 +204,24 @@ export function createBesselTideContent(backend: RendererBackend = "webgpu") {
         const positive = Math.max(0, value);
         const negative = Math.max(0, -value);
         const magnitude = Math.min(1, Math.abs(value) * 1.8);
-        colors[offset] = 0.015 + positive * 0.58 + magnitude * 0.04;
-        colors[offset + 1] = 0.055 + magnitude * 0.52 + positive * 0.16;
-        colors[offset + 2] = 0.16 + negative * 0.78 + magnitude * 0.22;
+        colors[offset] = 0.025 + positive * 0.08 + magnitude * 0.03;
+        colors[offset + 1] = 0.085 + magnitude * 0.1 + positive * 0.035;
+        colors[offset + 2] = 0.055 + negative * 0.04 + magnitude * 0.04;
       }
       positionAttribute.needsUpdate = true;
+      geometry.computeVertexNormals();
       colorAttribute.needsUpdate = true;
-      const mode = BESSEL_MODES[Math.floor(timeSeconds * 6) % BESSEL_MODES.length]!;
+      for (let index = 0; index < contourVertices.length; index++) {
+        const source = contourVertices[index]! * 3;
+        contourData[index * 3] = positions[source]!;
+        contourData[index * 3 + 1] = positions[source + 1]!;
+        contourData[index * 3 + 2] = positions[source + 2]! + 0.01;
+      }
+      contourAttribute.needsUpdate = true;
+      const eventFrame = resonance.update(timeSeconds);
+      const sourceIndex = eventFrame.focus?.sourceIndex ?? 0;
+      group.userData.sourceIndex = sourceIndex;
+      const mode = BESSEL_MODES[sourceIndex % BESSEL_MODES.length]!;
       const innerZeros = BESSEL_ZEROS.filter(
         (candidate) => candidate.m === mode.m && candidate.n < mode.n,
       );
@@ -173,21 +242,15 @@ export function createBesselTideContent(backend: RendererBackend = "webgpu") {
         data.set([-x, -y, 0.04, x, y, 0.04]);
         diameter.attribute.needsUpdate = true;
       });
-      const markerRadius = Math.min(0.94, mode.zero / 10) * 4.4;
-      const markerTheta = mode.m === 0 ? timeSeconds * 0.16 : (timeSeconds * 0.16) / mode.m;
-      markerPosition[0] = Math.cos(markerTheta) * markerRadius;
-      markerPosition[1] = Math.sin(markerTheta) * markerRadius;
-      markerPosition[2] = evaluateBesselField(markerRadius / 4.4, markerTheta, timeSeconds) * 2.2;
-      marker.attribute.needsUpdate = true;
       const energy = evaluateFiveActEnergy(timeSeconds, 72);
-      group.rotation.x = -0.94 + Math.sin(timeSeconds * 0.071) * 0.095;
-      group.rotation.y = Math.sin(timeSeconds * 0.043 + 1.1) * 0.12;
-      group.rotation.z = Math.sin(timeSeconds * 0.052) * 0.16;
-      group.position.y = Math.sin(timeSeconds * 0.038 + 0.4) * 0.16;
-      (surfaceWire.material as THREE.MeshBasicMaterial).opacity = 0.032 + energy * 0.042;
+      group.rotation.x = -0.94 + Math.sin(stagingTime * 0.071) * 0.095;
+      group.rotation.y = Math.sin(stagingTime * 0.043 + 1.1) * 0.12;
+      group.rotation.z = Math.sin(stagingTime * 0.052) * 0.16;
+      group.position.y = Math.sin(stagingTime * 0.038 + 0.4) * 0.16;
+      (surfaceWire.material as THREE.MeshBasicMaterial).opacity = 0.002;
       (surfaceSparkles.material as THREE.PointsMaterial).size = 0.013 + energy * 0.009;
-      (surfaceSparkles.material as THREE.PointsMaterial).opacity = 0.11 + energy * 0.14;
-      material.opacity = 0.18 + energy * 0.1;
+      (surfaceSparkles.material as THREE.PointsMaterial).opacity = 0.004;
+      material.roughness = 0.57 - energy * 0.06;
       return { energy, warmth: 0.16, cameraY: -0.1 };
     },
   };

@@ -27,11 +27,11 @@ const TRANSVERSE_GRID_SEGMENTS = MOBIUS_CHOIR_GRID_ROWS - 1;
 export const MOBIUS_CHOIR_PARAMETER_GRID_SEGMENT_COUNT =
   LONGITUDINAL_GRID_LINE_COUNT * LONGITUDINAL_GRID_SEGMENTS +
   TRANSVERSE_GRID_LINE_COUNT * TRANSVERSE_GRID_SEGMENTS;
-const ZERO_COLOR = Object.freeze({ r: 0.014, g: 0.016, b: 0.028 });
-const POSITIVE_LOW = Object.freeze({ r: 0.045, g: 0.05, b: 0.16 });
-const POSITIVE_HIGH = Object.freeze({ r: 0.42, g: 0.72, b: 1 });
-const NEGATIVE_LOW = Object.freeze({ r: 0.07, g: 0.025, b: 0.16 });
-const NEGATIVE_HIGH = Object.freeze({ r: 0.72, g: 0.34, b: 1 });
+const ZERO_COLOR = Object.freeze({ r: 0.018, g: 0.017, b: 0.015 });
+const POSITIVE_LOW = Object.freeze({ r: 0.085, g: 0.075, b: 0.062 });
+const POSITIVE_HIGH = Object.freeze({ r: 0.9, g: 0.8, b: 0.67 });
+const NEGATIVE_LOW = Object.freeze({ r: 0.043, g: 0.063, b: 0.075 });
+const NEGATIVE_HIGH = Object.freeze({ r: 0.48, g: 0.64, b: 0.71 });
 
 export const MOBIUS_CHOIR_MAX_NODAL_SEGMENTS = CELL_COUNT * 4;
 

@@ -1,158 +1,207 @@
 .entryScreen {
   position: absolute;
-  z-index: 20;
   inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: linear-gradient(90deg, #060a08 4%, #060a08e6 27%, #060a0880 44%, transparent 68%);
+}
+.entryEdition {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  top: 38px;
   display: flex;
-  align-items: center;
-  flex-direction: column;
-  justify-content: center;
-  background: rgba(1, 3, 8, 0.7);
-  backdrop-filter: blur(10px) saturate(90%);
-  text-align: center;
-  animation: entryReveal 1.4s ease both;
-}
-
-.entryMark {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: rgba(164, 231, 242, 0.55);
-  font-family: "Cormorant Garamond", serif;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-}
-
-.entryMark i {
-  width: 52px;
-  height: 1px;
-  background: rgba(111, 231, 249, 0.45);
-  box-shadow: 0 0 10px rgba(98, 234, 255, 0.4);
-}
-
-.entryEyebrow {
-  margin: 28px 0 7px;
-  color: var(--cyan);
+  justify-content: space-between;
   font-size: 9px;
-  letter-spacing: 0.38em;
+  letter-spacing: 0.19em;
+  color: #b6bdae;
 }
-
-.entryScreen h2 {
-  margin: 0;
-  font-family: "Cormorant Garamond", serif;
-  font-size: clamp(54px, 6.1vw, 108px);
-  font-weight: 400;
+.entryEdition span:last-child {
+  color: #8f9e8c;
+}
+.entryCopy {
+  position: absolute;
+  left: calc(var(--gutter) + 2.2vw);
+  top: 50%;
+  width: 46%;
+  max-width: 640px;
+  transform: translateY(-49%);
+  pointer-events: auto;
+}
+.entryEyebrow {
+  font-size: 9px;
   letter-spacing: 0.22em;
-  text-indent: 0.22em;
-  text-shadow: 0 0 32px rgba(93, 223, 255, 0.22);
+  color: #cab895;
+  margin: 0 0 28px;
 }
-
+.entryCopy h1 {
+  margin: 0;
+  font:
+    400 clamp(76px, 8.6vw, 148px) / 0.78 "Cormorant Garamond",
+    serif;
+  letter-spacing: -0.035em;
+  color: #e8e4d7;
+}
+.entryCopy h1 em {
+  font-style: normal;
+  display: block;
+  margin-top: 9px;
+}
 .entryJapanese {
-  margin: 20px 0 28px;
-  color: rgba(232, 245, 244, 0.74);
-  font-family: "Noto Serif JP", serif;
-  font-size: clamp(13px, 1.05vw, 19px);
-  line-height: 2.1;
-  letter-spacing: 0.13em;
-}
-
-.enterButton {
-  min-width: 310px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  border: 1px solid rgba(114, 239, 255, 0.58);
-  border-radius: 30px;
-  padding: 12px 25px;
-  background: rgba(4, 17, 25, 0.72);
-  box-shadow:
-    0 0 28px rgba(73, 217, 255, 0.1),
-    inset 0 0 25px rgba(73, 217, 255, 0.05);
-  color: #eaffff;
-  cursor: pointer;
-  transition:
-    border-color 250ms ease,
-    box-shadow 250ms ease,
-    transform 250ms ease;
-}
-
-.enterButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  border-color: rgba(153, 249, 255, 0.95);
-  box-shadow:
-    0 0 45px rgba(73, 217, 255, 0.2),
-    inset 0 0 25px rgba(73, 217, 255, 0.08);
-}
-
-.enterButton:disabled {
-  cursor: wait;
-  opacity: 0.5;
-}
-
-.enterButton svg {
-  width: 22px;
-}
-
-.enterButton span {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 10px;
-  letter-spacing: 0.17em;
-}
-
-.enterButton small {
-  color: rgba(181, 216, 223, 0.55);
-  font-family: "Noto Serif JP", serif;
-  font-size: 8px;
+  margin: 38px 0 20px;
+  font:
+    400 clamp(15px, 1.3vw, 22px) / 1.9 "Noto Serif JP",
+    serif;
   letter-spacing: 0.08em;
 }
-
-.entryHint {
-  margin-top: 17px;
-  color: rgba(161, 194, 201, 0.4);
-  font-size: 7px;
-  letter-spacing: 0.13em;
+.entryDescription {
+  margin: 0;
+  color: #a5afa0;
+  font-size: 11px;
+  line-height: 2.15;
+  letter-spacing: 0.03em;
 }
-
+.entryActions {
+  margin-top: 31px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 17px;
+}
+.enterButton {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-height: 64px;
+  min-width: 310px;
+  padding: 12px 19px;
+  border: 1px solid #d2c8a565;
+  border-radius: 3px;
+  background: #c4b28b12;
+  color: #e6e5d7;
+}
+.enterButton > svg {
+  width: 20px;
+  color: #d9c69c;
+}
+.enterButton > span:first-of-type {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.enterButton > span:last-child {
+  margin-left: auto;
+  font-size: 21px;
+  font-weight: 300;
+  color: #bcba9a;
+}
+.enterButton small {
+  color: #abb39e;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+.enterButton:hover:not(:disabled) {
+  background: #d9c69c;
+  color: #141b13;
+  border-color: #d9c69c;
+}
+.enterButton:hover:not(:disabled) small,
+.enterButton:hover:not(:disabled) svg,
+.enterButton:hover:not(:disabled) > span:last-child {
+  color: #46503b;
+}
+.silentEntry {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  font-size: 11px;
+  color: #b6bdad;
+  letter-spacing: 0.06em;
+}
+.silentEntry span {
+  margin-left: 9px;
+}
+.silentEntry:hover {
+  color: #e8e4d7;
+}
+.entryFooter {
+  position: absolute;
+  bottom: 38px;
+  left: var(--gutter);
+  right: var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #9aa68f;
+  font-size: 10px;
+}
+.entryFooter p {
+  font-family: "Noto Serif JP", serif;
+  letter-spacing: 0.07em;
+  margin: 0;
+}
 .sceneStatus {
   position: absolute;
-  z-index: 21;
-  top: 50%;
-  left: 50%;
+  z-index: 25;
+  bottom: 120px;
+  right: var(--gutter);
   display: flex;
   align-items: center;
   gap: 10px;
-  transform: translate(-50%, -50%);
-  color: rgba(186, 232, 240, 0.62);
-  font-size: 9px;
-  letter-spacing: 0.17em;
+  color: #c6cbb8;
+  font-size: 11px;
+  max-width: 420px;
+  line-height: 1.8;
 }
-
 .sceneStatus svg {
-  width: 17px;
+  width: 16px;
+  flex-shrink: 0;
 }
-
 .spin {
   animation: spin 1.5s linear infinite;
 }
-
 .audioNotice {
   position: absolute;
-  z-index: 8;
-  top: 3vh;
-  right: 3vw;
+  z-index: 9;
+  top: 112px;
+  left: var(--gutter);
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: rgba(255, 212, 157, 0.72);
-  font-size: 9px;
+  gap: 10px;
+  color: #dbb98e;
+  font-size: 11px;
 }
-
 .audioNotice svg {
-  width: 15px;
+  width: 16px;
 }
-
+.noticeActions {
+  display: flex;
+  gap: 18px;
+  margin-top: 8px;
+}
+.sceneStatus button,
+.audioNotice button {
+  display: inline-block;
+  min-height: 36px;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  padding: 5px 0;
+  background: transparent;
+  font-size: 11px;
+  color: var(--ink);
+}
+.sceneStatus button {
+  margin-left: 18px;
+}
+.sceneStatus details {
+  margin-top: 8px;
+  color: var(--muted);
+}
+.sceneStatus summary {
+  cursor: pointer;
+}
 @keyframes spin {
   to {
     transform: rotate(360deg);

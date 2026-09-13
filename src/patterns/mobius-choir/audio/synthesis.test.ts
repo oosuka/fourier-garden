@@ -28,7 +28,6 @@ import {
   renderMobiusChoirStereo,
   validateMobiusChoirWorkletProgram,
 } from "./synthesis";
-import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 
 describe("Möbius Choir synthesis", () => {
   it("wraps the six-mode score in the chapter-specific graph", () => {
@@ -39,47 +38,6 @@ describe("Möbius Choir synthesis", () => {
     expect(createWorkletConfigureMessage(program.worklet)).toEqual({
       type: "configure",
       program: program.worklet,
-    });
-  });
-
-  it("uses the approved piko synthesis constants and graph", () => {
-    expect(MOBIUS_CHOIR_SYNTHESIS.maximumPartials).toBe(1);
-    expect(MOBIUS_CHOIR_SYNTHESIS.partialDamping).toBe(8);
-    expect(MOBIUS_CHOIR_SYNTHESIS.maximumEventSeconds).toBe(0.23);
-    expect(MOBIUS_CHOIR_SYNTHESIS.formantFloor).toBe(1);
-    expect(MOBIUS_CHOIR_SYNTHESIS.outputGain).toBe(getChapterOutputGain("mobius-choir"));
-    for (const articulation of Object.values(MOBIUS_CHOIR_SYNTHESIS.articulations)) {
-      expect(articulation.breathGain).toBe(0);
-      expect(articulation.moraOffsetsSeconds).toEqual([0]);
-      expect(articulation.endSeconds).toBeGreaterThanOrEqual(0.19);
-      expect(articulation.endSeconds).toBeLessThanOrEqual(0.23);
-    }
-    for (const bands of Object.values(MOBIUS_CHOIR_SYNTHESIS.formants)) {
-      expect(bands.every((band) => band.amplitude === 0)).toBe(true);
-    }
-    expect(MOBIUS_CHOIR_AUDIO_GRAPH).toEqual({
-      dryHighPassHz: 220,
-      dryHighPassQ: 0.45,
-      dryHighShelfHz: 900,
-      dryHighShelfGainDb: -28,
-      dryLowPassHz: 960,
-      dryLowPassQ: 0.25,
-      dryGain: 0.88,
-      wetHighPassHz: 220,
-      wetHighPassQ: 0.45,
-      wetLowPassHz: 720,
-      wetLowPassQ: 0.25,
-      wetGain: 0.09,
-      roomSeconds: 1.2,
-      roomDecay: 2.5,
-      compressor: {
-        thresholdDb: -16,
-        kneeDb: 12,
-        ratio: 3,
-        attackSeconds: 0.008,
-        releaseSeconds: 0.2,
-      },
-      limiterCeilingDbfs: -1,
     });
   });
 
@@ -97,7 +55,7 @@ describe("Möbius Choir synthesis", () => {
     expect(MOBIUS_CHOIR_SYNTHESIS.articulations.braid.moraOffsetsSeconds).toEqual([0]);
   });
 
-  it("maps eigenvalues into the safe piko band with correct voice kinds", () => {
+  it("maps eigenvalues into the midrange with correct voice kinds", () => {
     const modes = createMobiusChoirAudioModes();
     expect(modes).toHaveLength(6);
     expect(modes.map((mode) => mode.baseFrequencyHz)).toEqual([
@@ -171,7 +129,7 @@ describe("Möbius Choir synthesis", () => {
     }
   });
 
-  it("closes every gesture envelope exactly and leaves gaps", () => {
+  it("closes every gesture envelope exactly", () => {
     for (const [gesture, articulation] of Object.entries(MOBIUS_CHOIR_SYNTHESIS.articulations)) {
       expect(getMobiusChoirEnvelope(-0.01, gesture)).toBe(0);
       expect(getMobiusChoirEnvelope(0, gesture)).toBe(0);
@@ -184,18 +142,19 @@ describe("Möbius Choir synthesis", () => {
     }
   });
 
-  it("applies the detuned 0.45 Fs guard to all partials", () => {
+  it("applies the detuned and modal 0.45 Fs guard to all partials", () => {
     for (const sampleRate of [16_000, 22_050, 44_100, 48_000, 96_000]) {
       for (const mode of createMobiusChoirAudioModes()) {
         for (const register of [1]) {
           const partials = getMobiusChoirPartials(mode, sampleRate, register);
-          expect(partials).toHaveLength(1);
           expect(
             partials
               .filter((partial) => partial.included)
               .every(
                 (partial) =>
-                  Math.max(partial.leftFrequencyHz, partial.rightFrequencyHz) < 0.45 * sampleRate,
+                  Math.max(partial.leftFrequencyHz, partial.rightFrequencyHz) +
+                    (partial.partial * mode.modalAngularFrequency) / (2 * Math.PI) <
+                  0.45 * sampleRate,
               ),
           ).toBe(true);
         }
@@ -295,39 +254,7 @@ describe("Möbius Choir synthesis", () => {
     expect(ratio).toBeLessThanOrEqual(1.18);
   }, 15_000);
 
-  it("matches the reference-like mid-band pulse profile without low boom", () => {
-    const sampleRate = 4_000;
-    const program = createMobiusChoirWorkletProgram();
-    const rendered = renderMobiusChoirStereo({
-      program,
-      startTimeSeconds: 0,
-      durationSeconds: program.score.cycleSeconds,
-      sampleRate,
-    });
-    const metrics = getStereoMetrics(rendered.left, rendered.right);
-    const bands = getBandEnergyRatios(rendered.left, rendered.right, sampleRate);
-    const continuity = getFrameRmsContinuity(
-      rendered.left,
-      rendered.right,
-      sampleRate,
-      0.02,
-      0.0015,
-    );
-    const onsets = estimateOnsetSpacing(rendered.left, rendered.right, sampleRate);
-
-    expect(metrics.peak).toBeLessThanOrEqual(10 ** (-1 / 20));
-    expect(Math.abs(metrics.mean)).toBeLessThan(1e-3);
-    expect(bands.below150Hz).toBeLessThanOrEqual(0.02);
-    expect(bands.below250Hz).toBeLessThanOrEqual(0.06);
-    expect(bands.below400Hz).toBeLessThanOrEqual(0.18);
-    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.6);
-    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.1);
-    expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.16);
-    expect(onsets.medianSeconds).toBeLessThanOrEqual(0.32);
-    expect(onsets.pulseScore).toBeGreaterThan(0.2);
-  }, 15_000);
-
-  it("keeps the piko pulse train rounded instead of breathy and sharp", () => {
+  it("keeps the finite voice train in the midrange without a sharp high-frequency tail", () => {
     const sampleRate = 12_000;
     const program = createMobiusChoirWorkletProgram();
     const rendered = renderMobiusChoirStereo({
@@ -338,48 +265,19 @@ describe("Möbius Choir synthesis", () => {
     });
     const bands = getBandEnergyRatios(rendered.left, rendered.right, sampleRate);
     const onsets = estimateOnsetSpacing(rendered.left, rendered.right, sampleRate);
-
+    const metrics = getStereoMetrics(rendered.left, rendered.right);
+    expect(metrics.peak).toBeLessThanOrEqual(10 ** (-1 / 20));
+    expect(Math.abs(metrics.mean)).toBeLessThan(1e-3);
+    expect(bands.below250Hz).toBeLessThanOrEqual(0.01);
+    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.9);
     expect(bands.between900HzAnd3000Hz).toBeLessThanOrEqual(0.08);
     expect(bands.between1200HzAnd10000Hz).toBeLessThanOrEqual(0.01);
     expect(bands.between1800HzAnd10000Hz).toBeLessThanOrEqual(0.0012);
     expect(bands.between2400HzAnd10000Hz).toBeLessThanOrEqual(0.00012);
     expect(bands.between3000HzAnd10000Hz).toBeLessThanOrEqual(0.00003);
-    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.58);
     expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.16);
     expect(onsets.medianSeconds).toBeLessThanOrEqual(0.32);
-    expect(onsets.pulseScore).toBeGreaterThan(0.2);
   }, 15_000);
-
-  it("renders the renewed piko engine as a narrow-band constant pulse train", () => {
-    const sampleRate = 12_000;
-    const program = createMobiusChoirWorkletProgram();
-    const rendered = renderMobiusChoirStereo({
-      program,
-      startTimeSeconds: 0,
-      durationSeconds: program.score.cycleSeconds,
-      sampleRate,
-    });
-    const bands = getBandEnergyRatios(rendered.left, rendered.right, sampleRate);
-    const continuity = getFrameRmsContinuity(
-      rendered.left,
-      rendered.right,
-      sampleRate,
-      0.02,
-      0.0015,
-    );
-    const onsets = estimateOnsetSpacing(rendered.left, rendered.right, sampleRate);
-
-    expect(bands.below250Hz).toBeLessThanOrEqual(0.01);
-    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.9);
-    expect(bands.between1200HzAnd10000Hz).toBeLessThanOrEqual(0.018);
-    expect(bands.between1800HzAnd10000Hz).toBeLessThanOrEqual(0.002);
-    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.08);
-    expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.2);
-    expect(onsets.medianSeconds).toBeLessThanOrEqual(0.24);
-    expect(onsets.p90Seconds - onsets.p10Seconds).toBeLessThanOrEqual(0.06);
-    // Overlapping finite tails soften the click-like autocorrelation while every slot stays audible.
-    expect(onsets.pulseScore).toBeGreaterThanOrEqual(0.27);
-  }, 20_000);
 
   it("keeps the collective phrase continuous while each gesture closes", () => {
     const sampleRate = 4_000;

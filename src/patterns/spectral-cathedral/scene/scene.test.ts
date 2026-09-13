@@ -18,6 +18,10 @@ import {
 } from "./visualResponse";
 
 describe("Spectral Cathedral strict scene contracts", () => {
+  it("keeps the fitted camera still when reduced motion is requested", () => {
+    const base = getSpectralCathedralCameraPlacement(16 / 9);
+    expect(getSpectralCathedralChoreographedCameraPlacement(base, 43.5, true)).toEqual(base);
+  });
   it("never reduces strict mathematical objects by quality", () => {
     for (const quality of ["low", "medium", "high", "ultra"] as const) {
       expect(getSpectralCathedralStrictQuality(quality)).toEqual(

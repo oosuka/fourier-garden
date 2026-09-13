@@ -36,7 +36,7 @@ describe("Residue Bloom score overlay", () => {
   });
 
   it("uses stable phrase colors with a warm opening", () => {
-    expect(getPhraseColorHex(0)).toBe(0xffc782);
+    expect(getPhraseColorHex(0)).toBe(0xe4c18b);
     expect(getPhraseColorHex(1)).not.toBe(getPhraseColorHex(0));
     expect(getPhraseColorHex(4)).toBe(getPhraseColorHex(0));
   });
@@ -46,7 +46,7 @@ describe("Residue Bloom score overlay", () => {
 
     expect(presentation).toEqual({
       opacity: getCoronaOpacity(RESIDUE_BLOOM_CORONA_WEIGHTS[0]!, 0.8),
-      colorHex: 0xffc782,
+      colorHex: 0xe4c18b,
     });
     expect(presentation).not.toHaveProperty("x");
     expect(presentation).not.toHaveProperty("y");

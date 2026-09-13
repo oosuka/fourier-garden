@@ -1,3 +1,5 @@
+import { observation } from "./observation";
+import { study } from "./study";
 import { createFiveActSections } from "../analyticDefinition";
 import { WAVELET_RAIN_SCORE } from "./audio/score";
 import { createWaveletRainAudioProgram } from "./audio/synthesis";
@@ -19,7 +21,7 @@ export const waveletRainPattern: WaveletRainPatternDefinition = {
     composition: "six-level-time-scale-cell-canopy",
     motion: "vertical-localized-rain-scan",
     space: "shallow-layered-coefficient-plane",
-    palette: "cyan-blue-negative-violet",
+    palette: "silver-slate-ink",
     timbre: "dark-overlapping-wavelet-drop",
     rhythm: "dyadic-clustered-multiscale-bursts",
     time: "sixteen-second-support-scan",
@@ -77,6 +79,8 @@ export const waveletRainPattern: WaveletRainPatternDefinition = {
     poeticLines: ["局在する差が雨となり、", "六段の時間を通り抜ける。"],
     canvasAriaLabel: "Haarウェーブレットの時間・スケール係数セルと区分一定再構成",
   },
+  observation,
+  study,
   education: {
     gentleTitle: "大きな変化と小さな変化を、違う粒の雨として見る。",
     gentleBody:
@@ -87,7 +91,7 @@ export const waveletRainPattern: WaveletRainPatternDefinition = {
     scopeNotice:
       "時間・スケール係数はFFT周波数スペクトルではなく、P₆gは元関数gと同一ではありません。不連続点の点値とL²同値類を区別し、雨滴を基底関数そのものとは説明しません。",
     sonificationBody:
-      "スケールj、支持位置k/2ʲ、係数絶対値、符号を、それぞれ音高と包絡、左右定位、強度、開始位相0/πへ写します。係数支持の走査順を保ったまま、64秒の強弱、尾長、wet輪郭とスケール由来の連続定位を重ねます。短い木片状の音色とcool roomは聴取のための演出です。",
+      "スケールj、支持区間の中心(k+1/2)/2ʲ、係数絶対値、符号を、それぞれ音高と包絡、左右定位、強度、開始位相0/πへ写します。同じ支持から光の雨が落ち、音の部分音と発光の芯が先に減衰します。64秒の強弱、尾長、残響とスケール由来の連続定位は聴取のための演出です。",
     poeticLayerBody:
       "雨粒、飛沫、残像、奥行きを持つ六段の係数面は詩的造形を含みます。各滴は対応する支持セルからのみ発生し、セル境界、係数符号、区分一定再構成を変形しません。",
   },

@@ -16,6 +16,19 @@ const score = buildMusicalScoreProgram(
 );
 
 describe("Residue Bloom poetic visual response", () => {
+  it("lets the higher corona contact fade and closes the local light with its note", () => {
+    const isolated = {
+      ...score,
+      events: score.events.map((event, index) => ({ ...event, active: index === 0 })),
+    };
+    const early = getResidueBloomVisualResponse(evaluateMusicalScore(isolated, 0.045));
+    const late = getResidueBloomVisualResponse(evaluateMusicalScore(isolated, 0.16));
+    const ended = getResidueBloomVisualResponse(evaluateMusicalScore(isolated, 0.36));
+    expect(late.coronaContact).toBeLessThan(early.coronaContact * 0.4);
+    expect(ended.coronaStrength).toBe(0);
+    expect(ended.spokeNodeOpacity).toBe(0);
+    expect(ended.membraneOpacityBoost).toBeGreaterThan(0);
+  });
   it("is visibly stronger on a bloom phrase accent than during hush", () => {
     const bloom = getResidueBloomVisualResponse(evaluateMusicalScore(score, 60.02));
     const hush = getResidueBloomVisualResponse(evaluateMusicalScore(score, 111.02));
@@ -44,8 +57,8 @@ describe("Residue Bloom poetic visual response", () => {
       expect(response.coronaStrength).toBeLessThanOrEqual(1);
       expect(response.spokeNodeOpacity).toBeGreaterThanOrEqual(0);
       expect(response.spokeNodeOpacity).toBeLessThanOrEqual(1);
-      expect(response.historyPulseOpacity).toBeGreaterThanOrEqual(0);
-      expect(response.historyPulseOpacity).toBeLessThanOrEqual(1);
+      expect(response.coronaContact).toBeGreaterThanOrEqual(0);
+      expect(response.coronaContact).toBeLessThanOrEqual(1.3);
     }
   });
 
@@ -74,7 +87,6 @@ describe("Residue Bloom poetic visual response", () => {
 
     expect(bloom.coronaStrength).toBeGreaterThan(decay.coronaStrength);
     expect(bloom.spokeNodeOpacity).toBeGreaterThan(decay.spokeNodeOpacity);
-    expect(bloom.historyPulseOpacity).toBeGreaterThan(decay.historyPulseOpacity);
   });
 
   it("keeps the phrase-opening math overlay stronger than the following phrase", () => {
@@ -82,9 +94,6 @@ describe("Residue Bloom poetic visual response", () => {
     const followingNote = getResidueBloomVisualResponse(evaluateMusicalScore(score, 60.2075));
 
     expect(phraseOpening.coronaStrength).toBeGreaterThan(followingNote.coronaStrength * 1.1);
-    expect(phraseOpening.historyPulseOpacity).toBeGreaterThan(
-      followingNote.historyPulseOpacity * 1.1,
-    );
   });
 
   it("returns the final bar toward the intro density and brightness", () => {

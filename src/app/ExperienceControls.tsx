@@ -1,3 +1,4 @@
+import { ChapterIndex } from "../components/ChapterIndex";
 import type { AudioEngine } from "../audio/AudioEngine";
 import { ControlBar } from "../components/ControlBar";
 import { DetailsPanel } from "../components/DetailsPanel";
@@ -5,7 +6,14 @@ import type { Transport } from "../core/transport";
 import type { PatternDefinition } from "../patterns/contracts";
 
 interface ExperienceControlsProps {
+  patterns: readonly PatternDefinition[];
+  indexOpen: boolean;
+  muted: boolean;
+  onToggleMute: () => void;
+  onToggleIndex: () => void;
+  onCloseIndex: () => void;
   playing: boolean;
+  startingPlayback: boolean;
   volume: number;
   detailsOpen: boolean;
   detailsHintVisible: boolean;
@@ -26,7 +34,14 @@ interface ExperienceControlsProps {
 }
 
 export function ExperienceControls({
+  patterns,
+  indexOpen,
+  muted,
+  onToggleMute,
+  onToggleIndex,
+  onCloseIndex,
   playing,
+  startingPlayback,
   volume,
   detailsOpen,
   detailsHintVisible,
@@ -49,7 +64,12 @@ export function ExperienceControls({
     <>
       <div className="interfaceLayer controlsLayer">
         <ControlBar
+          muted={muted}
+          indexOpen={indexOpen}
+          onToggleMute={onToggleMute}
+          onToggleIndex={onToggleIndex}
           playing={playing}
+          startingPlayback={startingPlayback}
           volume={volume}
           detailsOpen={detailsOpen}
           detailsHintVisible={detailsHintVisible}
@@ -69,7 +89,22 @@ export function ExperienceControls({
         />
       </div>
 
-      <DetailsPanel open={detailsOpen} pattern={pattern} audio={audio} onClose={onCloseDetails} />
+      <DetailsPanel
+        open={detailsOpen}
+        pattern={pattern}
+        audio={audio}
+        onClose={onCloseDetails}
+        patterns={patterns}
+        onSelectChapter={onSwitchChapter}
+      />
+      {indexOpen && (
+        <ChapterIndex
+          patterns={patterns}
+          currentId={pattern.id}
+          onSelect={onSwitchChapter}
+          onClose={onCloseIndex}
+        />
+      )}
     </>
   );
 }

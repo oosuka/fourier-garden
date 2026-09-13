@@ -1,3 +1,5 @@
+import { observation } from "./observation";
+import { study } from "./study";
 import { createFiveActSections } from "../analyticDefinition";
 import { DIRICHLET_LANTERNS_SCORE } from "./audio/score";
 import { createDirichletLanternsAudioProgram } from "./audio/synthesis";
@@ -19,7 +21,7 @@ export const dirichletLanternsPattern: DirichletLanternsPatternDefinition = {
     composition: "four-kernel-lantern-columns",
     motion: "scan-static-finite-kernels",
     space: "deep-vertical-analysis-columns",
-    palette: "amber-white-crimson-navy",
+    palette: "amber-ivory-copper",
     timbre: "odd-harmonic-packet-piko",
     rhythm: "sparse-main-side-lobe-responses",
     time: "staged-order-accumulation",
@@ -77,6 +79,8 @@ export const dirichletLanternsPattern: DirichletLanternsPatternDefinition = {
     poeticLines: ["有限の灯は跳躍を照らし、", "消えない越波を輪郭に残す。"],
     canvasAriaLabel: "Dirichlet核の中心峰、側葉、矩形波部分和、Fejér平均の比較",
   },
+  observation,
+  study,
   education: {
     gentleTitle: "鋭い角を波だけで描くと、縁に揺れが残る。",
     gentleBody:

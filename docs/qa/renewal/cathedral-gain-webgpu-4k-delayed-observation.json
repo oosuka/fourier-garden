@@ -1,0 +1,47 @@
+{
+  "chapter": "spectral-cathedral",
+  "renderer": "webgpu",
+  "width": 3840,
+  "height": 2160,
+  "pixelRatio": 1,
+  "rasterWidth": 3840,
+  "rasterHeight": 2160,
+  "quality": "high",
+  "seed": "qa",
+  "postProcessing": "default",
+  "audioSampleRateHz": 48000,
+  "clock": "audio-presentation-estimate",
+  "mutedAtStart": false,
+  "volumeAtStart": 0.35,
+  "playingAtStart": true,
+  "motionAtStart": "full",
+  "physicalLatencyMeasured": false,
+  "status": "complete",
+  "reason": null,
+  "durationSeconds": 60.00019999999925,
+  "frames": 3587,
+  "averageFps": 59.783134056220554,
+  "cpuSubmissionP95Ms": 6.5999999940395355,
+  "frameIntervalP95Ms": 17.200000001117587,
+  "maxFrameIntervalMs": 82.40000000037253,
+  "intervalsOver50Ms": 2,
+  "slowFrames": [
+    {
+      "elapsedSeconds": 58.48259999999963,
+      "frameIntervalMs": 82.40000000037253,
+      "cpuSubmissionMs": 7.699999988079071
+    },
+    {
+      "elapsedSeconds": 58.56680000000075,
+      "frameIntervalMs": 50.20000000111759,
+      "cpuSubmissionMs": 12
+    }
+  ],
+  "slowFramesOmitted": 0,
+  "synchronizationSamples": 3587,
+  "visualLeadP95Ms": 6.9333333431131905,
+  "visualLeadMinMs": -13.79999998061976,
+  "visualLeadMaxMs": -4.733333325930289,
+  "firstScoreSeconds": 29.363167666668232,
+  "lastScoreSeconds": 89.36283433333483
+}

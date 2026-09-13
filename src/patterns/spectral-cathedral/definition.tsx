@@ -1,3 +1,5 @@
+import { observation } from "./observation";
+import { study } from "./study";
 import "./details/details.css";
 
 import { SPECTRAL_CATHEDRAL_SCORE } from "./audio/score";
@@ -34,13 +36,13 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
     composition: "rectangular-wave-surface-columns",
     motion: "standing-wave-vertical-propagation",
     space: "deep-cathedral-vault",
-    palette: "cyan-silver-low-gold",
-    timbre: "dry-faceted-single-mode-piko",
+    palette: "quartz-green-amber",
+    timbre: "quartz-contact-modal-body",
     rhythm: "five-four-constant-grid",
     time: "standing-breath-seventy-five",
     audio: {
       onsetPattern: "constant-five-four-sixteenths-with-long-form-rotation",
-      articulation: "dry-short-single-partial",
+      articulation: "decaying-second-partial-finite-body",
       pitchMapping: "normalized-square-root-eigenvalue",
       spatialGesture: "central-faceted-pan",
       wetCharacter: "short-low-wet-room",
@@ -104,7 +106,7 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
     observatoryLabel: "SPECTRAL CATHEDRAL OBSERVATORY",
     formulaEyebrow: "DIRICHLET EIGENMODE SUM / 固有モード展開",
     formulaSummary:
-      "Analytic standing-wave synthesis · constant piko sonification of eigenvalue ratios.",
+      "Analytic standing waves · quartz-like pulses from eigenmodes and absolute phase.",
     annotationContext: "ANALYTIC EIGENVALUE MODES / 解析的固有モード",
     annotations: [
       { label: "λ = 3", value: "(1, 1)" },
@@ -129,15 +131,17 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
     mode: "sonification",
     baseFrequencyHz: 420,
     initialVolume: 0.35,
-    roomSeconds: 0.75,
+    roomSeconds: 0.55,
     sonificationLatex:
       "f_{mn}=420+560\\frac{\\sqrt{\\lambda_{mn}}-\\sqrt{3}}{\\sqrt{27}-\\sqrt{3}},\\quad " +
       "f_{mn}^{L/R}=f_{mn}(1\\mp d),\\quad " +
-      "w_{mn}=\\frac{|a_{mn}|}{\\max|a|},\\quad " +
+      "w_{mn}=\\left(\\frac{|a_{mn}|}{\\max|a|}\\right)^{0.6},\\quad " +
       "d_{mn}=|\\cos(\\omega_{mn}t_e)|,\\ v_{mn}=|\\sin(\\omega_{mn}t_e)|",
     score: SPECTRAL_CATHEDRAL_SCORE,
     createProgram: createSpectralCathedralAudioProgram,
   },
+  observation,
+  study,
   education: {
     gentleTitle: "ひとつの境界の中に、異なる揺れ方が重なっている。",
     gentleBody:
@@ -148,9 +152,9 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
     scopeNotice:
       "固有値、固有関数、係数は解析式から直接得ています。表示軸は固有値λであり、Hzスペクトル、DFT、FFT、数値固有値解析ではありません。",
     sonificationBody:
-      "音声は波動場の無加工再生ではありません。√λを420-980 Hzの安全なpiko帯域へ圧縮し、係数絶対値比、係数符号の開始位相を保持します。75秒・18小節・5幕は全16分スロットで発音し、局所4 slot形を小節ごとに回転して全周期の強弱、明度、wet、定位幅を別位相で動かします。左右デチューン後の帯域制限、高域抑制EQ、圧縮、短い残響、-1 dBFSリミッターを加えたソニフィケーションです。",
+      "√λを420-980 Hzの基音へ写し、係数の符号を開始位相へ、最大値で正規化した絶対値の0.6乗を聴覚上の強さへ写します。弱い第2部分音が先に消え、丸い基音の響きが残ります。その減衰と柱の局所発光は、発音時のモード変位・速度から生まれます。75秒の一定格子の中で尾長と強弱が変化し、左右デチューン後の帯域制限、EQ、短い残響、-1 dBFSリミッターを通します。数学係数そのものの再生ではありません。",
     poeticLayerBody:
-      "7本の光柱、6本のアーチ、塵状粒子、透明ハロー、短い残光は詩的造形です。発音モードの固有関数値を柱ごとの局所励起へ写し、局所的な光柱とアーチ伝播、粒子帯、緩やかなカメラ軌道を作ります。固定格子面、境界、節線、固有値、係数は変形しません。",
+      "7本の細い光柱、6本のアーチ、塵状粒子と残光は詩的造形です。波面上の観測位置に柱を置き、発音モードの固有関数値と音と同じ有限包絡・発音強度・係数の知覚利得から局所的に励起します。長いアーチの余韻は別の演出です。動きを抑える設定では柱と粒子の位置を固定し、数学の波面・節線と局所的な明滅は続けます。",
   },
   MathematicalDetails: SpectralCathedralMathematicalDetails,
   validate() {
@@ -161,7 +165,7 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
     return async (options) => {
       const scene = await module.createSpectralCathedralScene(options);
       const adapter: PatternScene = {
-        update: (frame) => scene.update(frame.time),
+        update: (frame) => scene.update(frame.time, frame.reducedMotion),
         resize: (viewport) => scene.resize(viewport),
         setQuality: (level) => scene.setQuality(level),
         dispose: () => scene.dispose(),

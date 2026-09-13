@@ -2,7 +2,7 @@ import { AnalyticPatternDetails } from "../../../components/AnalyticPatternDetai
 import { DIRICHLET_ORDERS, fejerSquareWave, squareWavePartialSum } from "../math/model";
 
 const IDENTITIES = [
-  "D_N(x)=\\sum_{n=-N}^{N}e^{inx}=\\frac{\\sin((N+1/2)x)}{\\sin(x/2)},\\qquad D_N(0)=2N+1",
+  "\\begin{aligned}D_N(x)&=\\sum_{n=-N}^{N}e^{inx}=\\frac{\\sin((N+1/2)x)}{\\sin(x/2)},\\\\ D_N(0)&=2N+1\\end{aligned}",
   "S_Ng(x)=\\frac4\\pi\\sum_{1\\le n\\le N,\\ n\\text{ odd}}\\frac{\\sin(nx)}n",
   "\\sigma_Ng(x)=\\frac4\\pi\\sum_{1\\le n\\le N,\\ n\\text{ odd}}\\left(1-\\frac n{N+1}\\right)\\frac{\\sin(nx)}n",
   "F_N(x)=\\frac1{N+1}\\left(\\frac{\\sin((N+1)x/2)}{\\sin(x/2)}\\right)^2\\ge0",

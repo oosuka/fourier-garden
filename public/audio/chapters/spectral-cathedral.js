@@ -4,7 +4,7 @@ import {
   isFiniteNumber,
   isNonnegativeFinite,
   isPositiveFinite,
-} from "./shared.js?v=24";
+} from "./shared.js?v=30";
 
 function hashUnit(eventIndex, modeId, component, salt) {
   const seed =
@@ -40,6 +40,17 @@ function createSpectralCathedralRuntimeVoice(event, mode, modeIndex, preset, fre
       baseWeight:
         partial ** -preset.partialDamping *
         getSpectralCathedralLowCutWeight((leftFrequencyHz + rightFrequencyHz) * 0.5),
+      leftStepSine: Math.sin((2 * Math.PI * leftFrequencyHz) / sampleRate),
+      leftStepCosine: Math.cos((2 * Math.PI * leftFrequencyHz) / sampleRate),
+      rightStepSine: Math.sin((2 * Math.PI * rightFrequencyHz) / sampleRate),
+      rightStepCosine: Math.cos((2 * Math.PI * rightFrequencyHz) / sampleRate),
+      leftSine: 0,
+      leftCosine: 1,
+      rightSine: 0,
+      rightCosine: 1,
+      lastFrame: -1,
+      lastEventTime: -1,
+      rotationCount: 0,
     });
   }
 
@@ -161,6 +172,36 @@ function findLatestSpectralCathedralEventIndex(events, localTimeSeconds) {
   return latest;
 }
 
+function sampleCarrier(partial, absoluteTimeSeconds, absoluteEventTimeSeconds, startPhase) {
+  const frame = Math.round(absoluteTimeSeconds * sampleRate);
+  const sameEvent = partial.lastEventTime === absoluteEventTimeSeconds;
+  if (sameEvent && partial.lastFrame === frame) return;
+  if (sameEvent && frame === partial.lastFrame + 1 && partial.rotationCount < 1_024) {
+    const leftSine = partial.leftSine;
+    const rightSine = partial.rightSine;
+    partial.leftSine =
+      leftSine * partial.leftStepCosine + partial.leftCosine * partial.leftStepSine;
+    partial.leftCosine =
+      partial.leftCosine * partial.leftStepCosine - leftSine * partial.leftStepSine;
+    partial.rightSine =
+      rightSine * partial.rightStepCosine + partial.rightCosine * partial.rightStepSine;
+    partial.rightCosine =
+      partial.rightCosine * partial.rightStepCosine - rightSine * partial.rightStepSine;
+    partial.rotationCount++;
+  } else {
+    const phase = partial.partial * startPhase;
+    const leftPhase = 2 * Math.PI * partial.leftFrequencyHz * absoluteTimeSeconds + phase;
+    const rightPhase = 2 * Math.PI * partial.rightFrequencyHz * absoluteTimeSeconds + phase;
+    partial.leftSine = Math.sin(leftPhase);
+    partial.leftCosine = Math.cos(leftPhase);
+    partial.rightSine = Math.sin(rightPhase);
+    partial.rightCosine = Math.cos(rightPhase);
+    partial.rotationCount = 0;
+  }
+  partial.lastFrame = frame;
+  partial.lastEventTime = absoluteEventTimeSeconds;
+}
+
 function accumulateSpectralCathedralRuntimeEvent(
   runtime,
   event,
@@ -206,21 +247,23 @@ function accumulateSpectralCathedralRuntimeEvent(
         const partial = voice.partials[partialIndex];
         const partialPosition = (partial.partial - 1) / Math.max(1, voice.partials.length - 1);
         const dampingBrightness = 1 + (brightness - 0.5) * 0.24 * partialPosition;
-        const weight = partial.baseWeight * dampingBrightness;
-        const partialStartPhase = partial.partial * startPhase;
-        bellLeft +=
-          weight *
-          Math.sin(Math.PI * 2 * partial.leftFrequencyHz * absoluteTimeSeconds + partialStartPhase);
-        bellRight +=
-          weight *
-          Math.sin(
-            Math.PI * 2 * partial.rightFrequencyHz * absoluteTimeSeconds + partialStartPhase,
-          );
+        const contact =
+          partial.partial === 1
+            ? 1
+            : Math.exp(
+                (-subgrainAgeSeconds * (partial.partial - 1)) / (0.11 - 0.05 * expressionVelocity),
+              );
+        const weight = partial.baseWeight * dampingBrightness * contact;
+        sampleCarrier(partial, absoluteTimeSeconds, absoluteEventTimeSeconds, startPhase);
+        bellLeft += weight * partial.leftSine;
+        bellRight += weight * partial.rightSine;
       }
       const wood =
-        event.woodAttackGain *
-        woodScale *
-        renderRuntimeWood(voice, subgrainAgeSeconds, runtime.woodAttackSeconds);
+        event.woodAttackGain > 0
+          ? event.woodAttackGain *
+            woodScale *
+            renderRuntimeWood(voice, subgrainAgeSeconds, runtime.woodAttackSeconds)
+          : 0;
       eventLeft += voice.normalizedGain * voice.panLeft * (bellLeft * envelope + wood);
       eventRight += voice.normalizedGain * voice.panRight * (bellRight * envelope + wood);
     }

@@ -2,7 +2,7 @@ import { AnalyticPatternDetails } from "../../../components/AnalyticPatternDetai
 import { LISSAJOUS_RATIOS, greatestCommonDivisor } from "../math/model";
 
 const IDENTITIES = [
-  "\\gamma_{a,b}(s,t)=(as+\\delta_L(t),bs)\\bmod2\\pi,\\qquad \\Gamma_{a,b}=(\\sin\\gamma_1,\\sin\\gamma_2)",
+  "\\begin{aligned}\\gamma_{a,b}(s,t)&=(as+\\delta_L(t),bs)\\bmod2\\pi,\\\\ \\Gamma_{a,b}&=(\\sin\\gamma_1,\\sin\\gamma_2)\\end{aligned}",
   "\\delta_L(t)=\\frac\\pi2+\\frac\\pi3\\sin(0.025t),\\qquad \\frac\\pi6\\le\\delta_L\\le\\frac{5\\pi}6",
   "\\gcd(a,b)=1\\Longrightarrow\\gamma_{a,b}(s+2\\pi,t)=\\gamma_{a,b}(s,t)",
 ];

@@ -214,10 +214,10 @@ function initializeParticles(
     const brightness = base[baseOffset + 5]!;
     const color =
       colorCategory < 0.55
-        ? ([0.18, 1.2, 1.35] as const)
+        ? ([0.32, 0.45, 0.36] as const)
         : colorCategory < 0.9
-          ? ([0.82, 0.98, 1.15] as const)
-          : ([1.25, 0.72, 0.32] as const);
+          ? ([0.6, 0.63, 0.52] as const)
+          : ([0.72, 0.58, 0.35] as const);
     colors[positionOffset] = color[0] * brightness;
     colors[positionOffset + 1] = color[1] * brightness;
     colors[positionOffset + 2] = color[2] * brightness;
@@ -293,6 +293,7 @@ export function updateSpectralCathedralParticles(
   absoluteTimeSeconds: number,
   particleEnergies: readonly number[],
   particleCount: number,
+  reducedMotion = false,
 ): void {
   if (!Number.isFinite(absoluteTimeSeconds) || absoluteTimeSeconds < 0) {
     throw new Error("Spectral Cathedral particle time must be finite and nonnegative");
@@ -317,6 +318,12 @@ export function updateSpectralCathedralParticles(
     const baseX = model.particleBase[baseOffset]!;
     const baseY = model.particleBase[baseOffset + 1]!;
     const baseZ = model.particleBase[baseOffset + 2]!;
+    if (reducedMotion) {
+      model.particlePositions[positionOffset] = baseX;
+      model.particlePositions[positionOffset + 1] = baseY;
+      model.particlePositions[positionOffset + 2] = baseZ;
+      continue;
+    }
     const speed = model.particleBase[baseOffset + 3]!;
     const phase = model.particleBase[baseOffset + 4]!;
     const energy = particleEnergies[model.particleAnchorIndices[index]!]!;

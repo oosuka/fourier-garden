@@ -20,11 +20,11 @@ const CELL_COLUMN_COUNT = SPECTRAL_CATHEDRAL_GRID_COLUMNS - 1;
 const CELL_ROW_COUNT = SPECTRAL_CATHEDRAL_GRID_ROWS - 1;
 const CELL_COUNT = CELL_COLUMN_COUNT * CELL_ROW_COUNT;
 
-const ZERO_COLOR = Object.freeze({ r: 0.012, g: 0.018, b: 0.028 });
-const POSITIVE_LOW = Object.freeze({ r: 0.018, g: 0.11, b: 0.15 });
-const POSITIVE_HIGH = Object.freeze({ r: 0.78, g: 0.96, b: 1 });
-const NEGATIVE_LOW = Object.freeze({ r: 0.055, g: 0.035, b: 0.15 });
-const NEGATIVE_HIGH = Object.freeze({ r: 0.82, g: 0.78, b: 1 });
+const ZERO_COLOR = Object.freeze({ r: 0.012, g: 0.018, b: 0.015 });
+const POSITIVE_LOW = Object.freeze({ r: 0.025, g: 0.095, b: 0.066 });
+const POSITIVE_HIGH = Object.freeze({ r: 0.64, g: 0.88, b: 0.73 });
+const NEGATIVE_LOW = Object.freeze({ r: 0.095, g: 0.052, b: 0.023 });
+const NEGATIVE_HIGH = Object.freeze({ r: 0.88, g: 0.68, b: 0.4 });
 
 export const SPECTRAL_CATHEDRAL_MAX_NODAL_SEGMENTS = CELL_COUNT * 4;
 

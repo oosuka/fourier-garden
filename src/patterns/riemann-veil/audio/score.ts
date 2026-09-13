@@ -25,12 +25,13 @@ function motionAt(index: number) {
   });
 }
 
-function getRiemannEventMapping(index: number): Readonly<{
+export function getRiemannEventMapping(index: number): Readonly<{
   act: number;
   eventTimeSeconds: number;
   indexN: number;
   response: boolean;
   responseStep: 0 | 1 | 2;
+  slotDurationSeconds: number;
 }> {
   const eventsPerAct = RIEMANN_INDEX_COUNT * RIEMANN_EVENTS_PER_INDEX;
   const act = Math.floor(index / eventsPerAct);
@@ -49,6 +50,7 @@ function getRiemannEventMapping(index: number): Readonly<{
     indexN,
     response: responseStep > 0,
     responseStep,
+    slotDurationSeconds: (nextMainTimeSeconds - mainTimeSeconds) / RIEMANN_EVENTS_PER_INDEX,
   };
 }
 
@@ -56,7 +58,7 @@ const actEnergy = [0.72, 0.86, 1.02, 0.7, 0.9] as const;
 
 function getRiemannFrequencyHz(index: number): number {
   const mapping = getRiemannEventMapping(index);
-  const mainFrequencyHz = 460 + ((mapping.indexN - 1) / 18) ** 0.72 * 300;
+  const mainFrequencyHz = 460 + ((mapping.indexN - 1) / 18) ** 0.72 * 240;
   const responseRatio = [1, 0.875, 0.75][mapping.responseStep]!;
   return Math.max(380, mainFrequencyHz * responseRatio);
 }
@@ -74,30 +76,28 @@ export const RIEMANN_VEIL_SCORE: PikoScoreProgram = createEnergyBalancedPikoScor
         gain: (index) => {
           const mapping = getRiemannEventMapping(index);
           const energy = actEnergy[mapping.act]!;
-          const mathematicalGain = mapping.response
-            ? energy * (0.06 + 0.17 / Math.sqrt(mapping.indexN))
-            : (energy * 0.28) / (mapping.indexN * mapping.indexN);
-          return mathematicalGain * motionAt(index).accent;
+          const perceptualGain = mapping.response
+            ? energy * (0.07 + 0.14 / Math.sqrt(mapping.indexN))
+            : (energy * 0.2) / mapping.indexN ** 0.7;
+          // The n² time map crowds early events. Preserve its spacing, but
+          // distribute excitation energy over the available time in each slot.
+          const spacingGain = Math.sqrt(Math.min(1, mapping.slotDurationSeconds / 0.16));
+          return perceptualGain * spacingGain * motionAt(index).accent;
         },
-        pan: (index) => {
-          const mapping = getRiemannEventMapping(index);
-          return (
-            Math.sin(mapping.indexN * mapping.indexN * 0.037 * mapping.eventTimeSeconds) * 0.58
-          );
-        },
-        panMotionDepth: (index) => 0.06 + 0.1 * motionAt(index).motionScale,
+        pan: () => 0,
+        panMotionDepth: (index) => 0.6 + 0.1 * motionAt(index).motionScale,
         panMotionRateRadiansPerSecond: (index) => getRiemannEventMapping(index).indexN ** 2 * 0.037,
         wet: (index) =>
           (getRiemannEventMapping(index).response
             ? 0.13 + getRiemannEventMapping(index).responseStep * 0.02
             : 0.1) * motionAt(index).spaceScale,
         articulation: (index) => ({
-          attackSeconds: getRiemannEventMapping(index).response ? 0.024 : 0.018,
+          attackSeconds: getRiemannEventMapping(index).response ? 0.03 : 0.022,
           decaySeconds:
-            (getRiemannEventMapping(index).response ? 0.2 : 0.17) * motionAt(index).tailScale,
+            (getRiemannEventMapping(index).response ? 0.24 : 0.21) * motionAt(index).tailScale,
           endSeconds: Math.min(
-            0.49,
-            (getRiemannEventMapping(index).response ? 0.4 : 0.36) * motionAt(index).tailScale,
+            0.5,
+            (getRiemannEventMapping(index).response ? 0.48 : 0.42) * motionAt(index).tailScale,
           ),
         }),
         phaseDrift: (index) => getRiemannEventMapping(index).indexN ** 2 * 0.037,

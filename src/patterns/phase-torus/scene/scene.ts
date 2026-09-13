@@ -1,4 +1,8 @@
+import { createPhaseTorusWorkletProgram } from "../audio/synthesis";
 import * as THREE from "three/webgpu";
+import { PHASE_TORUS_SCORE, getPhaseTorusAudioMapping } from "../audio/score";
+import { createEventResonance } from "../../../rendering/analytic/eventResonance";
+import { configurePoeticObjects } from "../../../rendering/analytic/displayLayers";
 import type { RendererBackend } from "../../../core/rendererBackend";
 import { createImmersiveAnalyticScene } from "../../../rendering/analytic/immersiveScene";
 import {
@@ -9,9 +13,9 @@ import {
 } from "../../../rendering/analytic/primitives";
 import type { PatternSceneOptions } from "../../contracts";
 import { evaluateTorusField, getIrrationalTorusPhase } from "../math/model";
-const PALETTE = [0x4beaff, 0x526dff, 0xffc873] as const;
+const PALETTE = [0x9bbc9f, 0x527e6c, 0xdcc38d] as const;
 const HISTORY = 2_048;
-export function createPhaseTorusContent(backend: RendererBackend = "webgpu") {
+export function createPhaseTorusContent(backend: RendererBackend = "webgpu", poeticLayers = true) {
   const group = new THREE.Group();
   const geometry = new THREE.TorusGeometry(3.25, 1.12, 64, 160);
   const positions = geometry.getAttribute("position") as THREE.BufferAttribute;
@@ -25,9 +29,9 @@ export function createPhaseTorusContent(backend: RendererBackend = "webgpu") {
     const theta2 = Math.atan2(z, radial - 3.25);
     const value = evaluateTorusField(theta1, theta2);
     const magnitude = Math.min(1, Math.abs(value) * 1.7);
-    colors[index * 3] = 0.012 + Math.max(0, value) * 0.52 + magnitude * 0.05;
-    colors[index * 3 + 1] = 0.07 + magnitude * 0.48 + Math.max(0, value) * 0.14;
-    colors[index * 3 + 2] = 0.2 + Math.max(0, -value) * 0.72 + magnitude * 0.2;
+    colors[index * 3] = 0.022 + Math.max(0, value) * 0.09 + magnitude * 0.034;
+    colors[index * 3 + 1] = 0.07 + magnitude * 0.085 + Math.max(0, value) * 0.05;
+    colors[index * 3 + 2] = 0.041 + Math.max(0, -value) * 0.07 + magnitude * 0.035;
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   const poeticGeometry = geometry.clone();
@@ -49,33 +53,52 @@ export function createPhaseTorusContent(backend: RendererBackend = "webgpu") {
     );
   }
   poeticPositions.needsUpdate = true;
-  const material = new THREE.MeshBasicMaterial({
+  const material = new THREE.MeshStandardMaterial({
+    roughness: 0.6,
+    metalness: 0.52,
     vertexColors: true,
     transparent: true,
-    opacity: 0.26,
+    opacity: 0.94,
     side: THREE.DoubleSide,
     blending: THREE.NormalBlending,
     depthWrite: false,
-    toneMapped: false,
+    toneMapped: true,
     wireframe: false,
   });
   const torus = new THREE.Mesh(geometry, material);
-  const coefficientGrid = new THREE.Mesh(
-    geometry,
-    new THREE.MeshBasicMaterial({
+  const gridVertices: number[] = [];
+  function segment(a: number, b: number) {
+    gridVertices.push(
+      positions.getX(a),
+      positions.getY(a),
+      positions.getZ(a),
+      positions.getX(b),
+      positions.getY(b),
+      positions.getZ(b),
+    );
+  }
+  // Sparse parameter curves sampled from the same torus, rather than its triangle tessellation.
+  for (let j = 0; j < 64; j += 8)
+    for (let i = 0; i < 160; i++) segment(j * 161 + i, j * 161 + i + 1);
+  for (let i = 0; i < 160; i += 20)
+    for (let j = 0; j < 64; j++) segment(j * 161 + i, (j + 1) * 161 + i);
+  const gridGeometry = new THREE.BufferGeometry();
+  gridGeometry.setAttribute("position", new THREE.Float32BufferAttribute(gridVertices, 3));
+  const parameterGrid = new THREE.LineSegments(
+    gridGeometry,
+    new THREE.LineBasicMaterial({
       color: PALETTE[0],
       transparent: true,
-      opacity: 0.05,
+      opacity: 0.12,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       toneMapped: false,
-      wireframe: true,
     }),
   );
   const poeticMembraneMaterial = new THREE.MeshBasicMaterial({
     vertexColors: true,
     transparent: true,
-    opacity: 0.1,
+    opacity: 0.025,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
@@ -85,34 +108,33 @@ export function createPhaseTorusContent(backend: RendererBackend = "webgpu") {
   const surfaceSparkles = new THREE.Points(
     geometry,
     new THREE.PointsMaterial({
-      color: 0xcdfdff,
+      color: 0xe1e4d0,
       size: 0.012,
       sizeAttenuation: true,
       transparent: true,
-      opacity: 0.13,
+      opacity: 0.008,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       toneMapped: false,
     }),
   );
   const surfaceEchoes = Array.from({ length: 3 }, (_, index) => {
-    const echoMaterial = new THREE.MeshBasicMaterial({
+    const echoMaterial = new THREE.LineBasicMaterial({
       color: PALETTE[(index + 1) % PALETTE.length]!,
       transparent: true,
       opacity: 0.022 - index * 0.004,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       toneMapped: false,
-      wireframe: true,
     });
-    const echo = new THREE.Mesh(geometry, echoMaterial);
+    const echo = new THREE.LineSegments(gridGeometry, echoMaterial);
     echo.scale.setScalar(1.025 + index * 0.026);
     echo.rotation.z = index * 0.045;
     return { echo, echoMaterial, index };
   });
   torus.add(
     poeticMembrane,
-    coefficientGrid,
+    parameterGrid,
     surfaceSparkles,
     ...surfaceEchoes.map(({ echo }) => echo),
   );
@@ -120,22 +142,49 @@ export function createPhaseTorusContent(backend: RendererBackend = "webgpu") {
   group.scale.setScalar(0.9);
   const historyPositions = new Float32Array(HISTORY * 3);
   const history = createLine(historyPositions, PALETTE[2], 0.74);
+  history.line.renderOrder = 3;
+  history.line.material.depthTest = false;
   group.add(history.line);
   const pointPosition = new Float32Array(3);
   const point = createPoints(pointPosition, PALETTE[2], 0.24, backend);
   const pointHaloMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
+    color: 0xf3e7c6,
     transparent: true,
-    opacity: 0.16,
+    opacity: 0.9,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     toneMapped: false,
   });
-  const pointHalo = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 12), pointHaloMaterial);
+  const pointHalo = new THREE.Mesh(new THREE.SphereGeometry(0.027, 16, 12), pointHaloMaterial);
   group.add(pointHalo, point.points);
+  const mappings = PHASE_TORUS_SCORE.events.map((event) =>
+    getPhaseTorusAudioMapping(event.sourceIndex),
+  );
+  const resonance = createEventResonance(PHASE_TORUS_SCORE, backend, {
+    gesture: "orbit",
+    colors: PALETTE,
+    timbre: createPhaseTorusWorkletProgram().timbre,
+    locate(voice, time, target) {
+      const mapping = mappings[voice.event.sourceIndex]!;
+      const [, theta2] = getIrrationalTorusPhase(time);
+      const theta1 =
+        Math.PI / 2 - (mapping.modePhaseAtOrigin + time * mapping.modeRateRadiansPerSecond);
+      const radius = 3.25 + 1.12 * Math.cos(theta2);
+      target.set(radius * Math.cos(theta1), radius * Math.sin(theta1), 1.12 * Math.sin(theta2));
+    },
+  });
+  group.add(resonance.group);
+  configurePoeticObjects(
+    poeticLayers,
+    resonance.group,
+    poeticMembrane,
+    surfaceSparkles,
+    ...surfaceEchoes.map((echo) => echo.echo),
+  );
   return {
     group,
-    update(timeSeconds: number) {
+    update(timeSeconds: number, reducedMotion = false) {
+      const stagingTime = reducedMotion ? 0 : timeSeconds;
       const start = Math.max(0, timeSeconds - 180);
       for (let index = 0; index < HISTORY; index += 1) {
         const sampleTime = start + ((timeSeconds - start) * index) / (HISTORY - 1);
@@ -154,30 +203,28 @@ export function createPhaseTorusContent(backend: RendererBackend = "webgpu") {
       history.attribute.needsUpdate = true;
       point.attribute.needsUpdate = true;
       pointHalo.position.set(pointPosition[0]!, pointPosition[1]!, pointPosition[2]!);
-      torus.rotation.x = -0.48 + Math.sin(timeSeconds * 0.043) * 0.12;
-      torus.rotation.y = Math.sin(timeSeconds * 0.031 + 0.8) * 0.13;
-      torus.rotation.z = timeSeconds * 0.018;
+      // Tilt around x only: the sounding character keeps the same left/right coordinate as its pan.
+      group.rotation.x = -0.78 + Math.sin(stagingTime * 0.043) * 0.08;
+      resonance.update(timeSeconds);
       const energy = evaluateFiveActEnergy(timeSeconds, 84);
       surfaceEchoes.forEach(({ echo, echoMaterial, index }) => {
-        echo.rotation.x = Math.sin(timeSeconds * (0.021 + index * 0.004) + index) * 0.045;
-        echo.rotation.z = index * 0.045 - timeSeconds * (0.006 + index * 0.0015);
-        echoMaterial.opacity = 0.014 + energy * 0.018 + index * 0.004;
+        echo.rotation.x = Math.sin(stagingTime * (0.021 + index * 0.004) + index) * 0.045;
+        echo.rotation.z = index * 0.045 - stagingTime * (0.006 + index * 0.0015);
+        echoMaterial.opacity = 0.022 + energy * 0.018 - index * 0.004;
       });
-      const membraneBreath = 1 + Math.sin(timeSeconds * 0.067 + 0.4) * 0.018;
+      const membraneBreath = 1 + Math.sin(stagingTime * 0.067 + 0.4) * 0.018;
       poeticMembrane.scale.setScalar(membraneBreath);
-      poeticMembrane.rotation.z = Math.sin(timeSeconds * 0.031) * 0.018;
-      poeticMembraneMaterial.opacity = 0.065 + energy * 0.08;
+      poeticMembrane.rotation.z = Math.sin(stagingTime * 0.031) * 0.018;
+      poeticMembraneMaterial.opacity = 0.015 + energy * 0.025;
       (surfaceSparkles.material as THREE.PointsMaterial).size = 0.009 + energy * 0.007;
-      (surfaceSparkles.material as THREE.PointsMaterial).opacity = 0.08 + energy * 0.1;
+      (surfaceSparkles.material as THREE.PointsMaterial).opacity = 0.004 + energy * 0.008;
       (point.points.material as THREE.PointsMaterial).size = 0.28 + energy * 0.2;
-      pointHalo.scale.setScalar(1.4 + energy * 0.7);
-      pointHaloMaterial.opacity = 0.08 + energy * 0.06;
-      material.opacity = 0.2 + energy * 0.1;
-      group.position.y = Math.sin(timeSeconds * 0.026) * 0.16;
+      material.roughness = 0.62 - energy * 0.045;
+      group.position.y = Math.sin(stagingTime * 0.026) * 0.16;
       return {
         energy,
         warmth: 0.48,
-        cameraX: Math.sin(timeSeconds * 0.015) * 0.24,
+        cameraX: Math.sin(stagingTime * 0.015) * 0.24,
       };
     },
   };

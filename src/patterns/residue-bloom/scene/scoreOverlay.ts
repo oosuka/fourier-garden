@@ -2,7 +2,7 @@ import { projectSeriesToVerticalAxis } from "../../../math/fourierSeries";
 import { RESIDUE_BLOOM_SCORE_DEFINITION } from "../audio/score";
 import { RESIDUE_BLOOM_SERIES, RESIDUE_BLOOM_VISUAL_ANGULAR_RATE } from "../math/model";
 
-const PHRASE_COLORS = [0xffc782, 0x78f3ff, 0xa798ff, 0xd5c5c0] as const;
+const PHRASE_COLORS = [0xe4c18b, 0xbecba4, 0x819d89, 0xd5c5ad] as const;
 const HISTORY_PULSE_HALF_WIDTH = 0.045;
 
 export const RESIDUE_BLOOM_HISTORY_SECONDS = 8.6;
@@ -33,9 +33,14 @@ export function getCoronaPresentation(
   harmonicIndex: number,
   strength: number,
   phraseIndex: number,
+  contact = 1,
 ): Readonly<{ opacity: number; colorHex: number }> {
   return {
-    opacity: getCoronaOpacity(RESIDUE_BLOOM_CORONA_WEIGHTS[harmonicIndex] ?? 0, strength),
+    opacity: Math.min(
+      1,
+      getCoronaOpacity(RESIDUE_BLOOM_CORONA_WEIGHTS[harmonicIndex] ?? 0, strength) *
+        (harmonicIndex === 0 ? 1 : Math.max(0, contact)),
+    ),
     colorHex: getPhraseColorHex(phraseIndex),
   };
 }

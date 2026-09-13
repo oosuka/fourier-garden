@@ -13,7 +13,7 @@ const dirichletLanternsAudio = definePikoChapterAudio({
   score: DIRICHLET_LANTERNS_SCORE,
   detuneRatio: 0.001,
   maximumVoices: 18,
-  timbre: { partialRatio: 3, partialGain: 0.045, chirpRatio: 0 },
+  timbre: { partialRatio: 3, partialGain: 0.075, chirpRatio: 0, partialDecayScale: 0.32 },
   graph: DIRICHLET_LANTERNS_AUDIO_GRAPH,
 });
 

@@ -15,6 +15,10 @@ function getPositions(object: THREE.Object3D): Float32Array {
   return geometry.getAttribute("position").array as Float32Array;
 }
 
+function getSurface(group: THREE.Group): THREE.Object3D {
+  return group.children.find((object) => (object as THREE.Mesh).isMesh)!;
+}
+
 function getMotionSignature(group: THREE.Group): number[] {
   const focus = group.children[0];
   return [
@@ -37,6 +41,52 @@ function getMotionSignature(group: THREE.Group): number[] {
 }
 
 describe("new chapter scene continuity", () => {
+  it.each([
+    ["Prime", createPrimeConstellationContent, 3],
+    ["Lissajous", createLissajousOrchardContent, 9],
+    ["Dirichlet", createDirichletLanternsContent, 6],
+    ["Haar", createWaveletRainContent, 66],
+    ["Riemann", createRiemannVeilContent, 5],
+    ["Torus", createPhaseTorusContent, 5],
+  ])(
+    "shows only the mathematical objects in the %s comparison view",
+    (_, createContent, expected) => {
+      const content = createContent("webgpu", false);
+      content.update(17.25);
+      let visibleObjects = 0;
+      content.group.traverseVisible((object) => {
+        if ((object as THREE.Mesh).geometry) visibleObjects++;
+      });
+      expect(visibleObjects).toBe(expected);
+    },
+  );
+
+  it.each([
+    ["Prime", createPrimeConstellationContent],
+    ["Bessel", createBesselTideContent],
+    ["Lissajous", createLissajousOrchardContent],
+    ["Dirichlet", createDirichletLanternsContent],
+    ["Haar", createWaveletRainContent],
+    ["Riemann", createRiemannVeilContent],
+    ["Torus", createPhaseTorusContent],
+  ])("holds the %s staging still with reduced motion", (_, createContent) => {
+    const content = createContent();
+    content.update(0, true);
+    content.group.updateMatrix();
+    const before = content.group.matrix.toArray();
+    content.update(18, true);
+    content.group.updateMatrix();
+    expect(content.group.matrix.toArray()).toEqual(before);
+  });
+
+  it("preserves the Bessel field while removing camera staging and decorative layers", () => {
+    const normal = createBesselTideContent();
+    const reduced = createBesselTideContent("webgpu", false);
+    normal.update(17.25);
+    reduced.update(17.25, true);
+    expect(getPositions(getSurface(reduced.group))).toEqual(getPositions(getSurface(normal.group)));
+  });
+
   it("keeps the exact Bessel surface finite while adding visible depth layers", () => {
     const content = createBesselTideContent();
     content.update(0);
@@ -101,10 +151,12 @@ describe("new chapter scene continuity", () => {
     const boundary = 60 / 9;
     content.update(boundary - 1 / 60);
     const before: number[] = [];
-    for (const line of content.group.children) before.push(...getPositions(line));
+    for (const line of content.group.children)
+      if ((line as THREE.Line).isLine) before.push(...getPositions(line));
     content.update(boundary + 1 / 60);
     const after: number[] = [];
-    for (const line of content.group.children) after.push(...getPositions(line));
+    for (const line of content.group.children)
+      if ((line as THREE.Line).isLine) after.push(...getPositions(line));
     const maximumJump = Math.max(...after.map((value, index) => Math.abs(value - before[index]!)));
 
     expect(maximumJump).toBeLessThan(0.12);
@@ -113,8 +165,8 @@ describe("new chapter scene continuity", () => {
   it("renders distinct partial-sum and Fejer comparison curves", () => {
     const content = createDirichletLanternsContent();
     content.update(40);
-    const partial = getPositions(content.group.children.at(-2)!);
-    const fejer = getPositions(content.group.children.at(-1)!);
+    const partial = getPositions(content.group.getObjectByName("dirichlet-partial")!);
+    const fejer = getPositions(content.group.getObjectByName("dirichlet-fejer")!);
 
     expect(partial.some((value, index) => Math.abs(value - fejer[index]!) > 1e-4)).toBe(true);
   });

@@ -11,8 +11,8 @@ export interface ResidueBloomVisualResponse {
   warmth: number;
   sectionDensity: number;
   coronaStrength: number;
+  coronaContact: number;
   spokeNodeOpacity: number;
-  historyPulseOpacity: number;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
@@ -42,11 +42,16 @@ export function getResidueBloomVisualResponse(
   frame: MusicalScoreFrame,
 ): ResidueBloomVisualResponse {
   const impact = clamp(frame.visualImpact, 0, 1.4);
-  const phraseEmphasis = [1.12, 0.88, 0.92, 1][frame.event.phraseIndex]!;
-  const emphasizedImpact = clamp(impact * phraseEmphasis, 0, 1.4);
+  const emphasizedImpact = impact;
   const tail = clamp(frame.visualTail, 0, 1);
   const phraseWarmth = [0.9, 0.12, 0.18, 0.62][frame.event.phraseIndex]!;
   const phasorWarmth = (frame.event.normalizedPhasorY + 1) * 0.5;
+  let totalImpact = 0;
+  let totalContact = 0;
+  for (const impulse of frame.recentImpulses) {
+    totalImpact += impulse.impact;
+    totalContact += impulse.impact * impulse.contact;
+  }
 
   return {
     haloScale: clamp(0.8 + emphasizedImpact * 0.75 + tail * 0.15, 0.8, 2.05),
@@ -58,8 +63,8 @@ export function getResidueBloomVisualResponse(
     burstEnergy: clamp(emphasizedImpact * 1.08 + tail * 0.2, 0, 1.45),
     warmth: clamp(phraseWarmth * 0.7 + phasorWarmth * 0.3, 0, 1),
     sectionDensity: getSectionDensity(frame.event.section, frame.event.sectionProgress),
-    coronaStrength: clamp(emphasizedImpact * 0.84 + tail * 0.16, 0, 1),
-    spokeNodeOpacity: clamp(emphasizedImpact * 0.92 + tail * 0.13, 0, 1),
-    historyPulseOpacity: clamp(emphasizedImpact * 0.98 + tail * 0.18, 0, 1),
+    coronaStrength: clamp(impact * 0.84, 0, 1),
+    coronaContact: totalImpact > 0 ? totalContact / totalImpact : 0,
+    spokeNodeOpacity: clamp(impact * 0.92, 0, 1),
   };
 }

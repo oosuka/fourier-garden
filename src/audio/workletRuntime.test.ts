@@ -81,6 +81,25 @@ describe("AudioWorklet runtime", () => {
     expect(() => processor.createState(createMobiusChoirWorkletProgram())).not.toThrow();
   });
 
+  it("silences a Möbius carrier crossing the frequency guard through modal phase", () => {
+    const source = createMobiusChoirWorkletProgram();
+    const modes = source.modes.map((mode) => ({
+      ...mode,
+      baseFrequencyHz: (900 - 0.01) / (1 + source.synthesis.stereoDetuneRatio),
+    }));
+    const program = { ...source, modes };
+    const processor = loadWorkletProcessor(2_000);
+    sendWorkletMessage(processor, { type: "configure", program });
+    sendWorkletMessage(processor, { type: "seek", seconds: 0.04 });
+    sendWorkletMessage(processor, { type: "active", value: true });
+    processor.fade = 1;
+    const outputs = createWorkletOutputs(128);
+    processor.process([], outputs);
+    expect(
+      outputs.every((bus) => bus.every((channel) => channel.every((sample) => sample === 0))),
+    ).toBe(true);
+  });
+
   it.each(
     [44_100, 48_000, 96_000].flatMap((sampleRate) =>
       [0.01, 10.7, 28.3, 42.4, 56.46, 56.52].map(
@@ -146,6 +165,38 @@ describe("AudioWorklet runtime", () => {
     },
   );
 
+  it("keeps Cathedral carriers aligned through subgrain overlap, phase reanchoring and long seeks", () => {
+    const sampleRate = 48_000;
+    const program = createSpectralCathedralWorkletProgram();
+    const processor = loadWorkletProcessor(sampleRate);
+    sendWorkletMessage(processor, { type: "configure", program });
+    sendWorkletMessage(processor, { type: "active", value: true });
+    for (const startTime of [0.035, 75.04, 3600.125, 0.035]) {
+      sendWorkletMessage(processor, { type: "seek", seconds: startTime });
+      processor.fade = 1;
+      let maximumError = 0;
+      for (let block = 0; block < 128; block++) {
+        const outputs = createWorkletOutputs(128);
+        processor.process([], outputs);
+        for (let frame = 0; frame < 128; frame++) {
+          const expected = renderSpectralCathedralSample(
+            program,
+            startTime + (block * 128 + frame) / sampleRate,
+            sampleRate,
+          );
+          maximumError = Math.max(
+            maximumError,
+            Math.abs(outputs[0]![0]![frame]! - expected.dryLeft),
+            Math.abs(outputs[0]![1]![frame]! - expected.dryRight),
+            Math.abs(outputs[1]![0]![frame]! - expected.wetLeft),
+            Math.abs(outputs[1]![1]![frame]! - expected.wetRight),
+          );
+        }
+      }
+      expect(maximumError).toBeLessThan(1e-7);
+    }
+  });
+
   it("repeats exactly after seeking to the same absolute time", () => {
     const program = createSpectralCathedralWorkletProgram();
     const processor = loadWorkletProcessor(48_000);
@@ -163,6 +214,38 @@ describe("AudioWorklet runtime", () => {
     processor.process([], repeated);
 
     expect(repeated).toEqual(first);
+  });
+
+  it("matches the woven Möbius tail through overlap, cycle boundaries and long seeks", () => {
+    const sampleRate = 48_000;
+    const program = createMobiusChoirWorkletProgram();
+    const processor = loadWorkletProcessor(sampleRate);
+    sendWorkletMessage(processor, { type: "configure", program });
+    sendWorkletMessage(processor, { type: "active", value: true });
+    for (const startTime of [0.08, 56.47, 3600.125, 0.08]) {
+      sendWorkletMessage(processor, { type: "seek", seconds: startTime });
+      processor.fade = 1;
+      let maximumError = 0;
+      for (let block = 0; block < 128; block++) {
+        const outputs = createWorkletOutputs(128);
+        processor.process([], outputs);
+        for (let frame = 0; frame < 128; frame++) {
+          const expected = renderMobiusChoirSample(
+            program,
+            startTime + (block * 128 + frame) / sampleRate,
+            sampleRate,
+          );
+          maximumError = Math.max(
+            maximumError,
+            Math.abs(outputs[0]![0]![frame]! - expected.dryLeft),
+            Math.abs(outputs[0]![1]![frame]! - expected.dryRight),
+            Math.abs(outputs[1]![0]![frame]! - expected.wetLeft),
+            Math.abs(outputs[1]![1]![frame]! - expected.wetRight),
+          );
+        }
+      }
+      expect(maximumError).toBeLessThan(1e-7);
+    }
   });
 
   it.each([createSpectralCathedralWorkletProgram(), createMobiusChoirWorkletProgram()])(

@@ -18,6 +18,10 @@ export interface MusicalScoreDefinition {
   attackSeconds: number;
   decaySeconds: number;
   releaseSeconds: number;
+  minimumNoteSeconds: number;
+  maximumNoteSeconds: number;
+  contactDecaySeconds: number;
+  contactSustain: number;
   antiAliasRatio: number;
   stereoDetuneRatio: number;
   timbreDamping: number;
@@ -54,6 +58,7 @@ export interface MusicalScoreEvent {
 }
 
 export interface EvaluatedMusicalScoreEvent extends MusicalScoreEvent {
+  absoluteStep: number;
   absoluteTimeSeconds: number;
   accent: number;
   brightness: number;
@@ -77,6 +82,8 @@ export interface RecentMusicalImpulse {
   event: EvaluatedMusicalScoreEvent;
   ageSeconds: number;
   impact: number;
+  contact: number;
+  excitation: number;
   tail: number;
 }
 
@@ -98,12 +105,16 @@ export const RESIDUE_BLOOM_SCORE_DEFINITION: MusicalScoreDefinition = {
   stepsPerBeat: 4,
   totalBars: 48,
   carrierMultipliers: [9, 8, 8, 9],
-  attackSeconds: 0.012,
-  decaySeconds: 0.11,
-  releaseSeconds: 0.055,
+  attackSeconds: 0.022,
+  decaySeconds: 0.145,
+  releaseSeconds: 0.07,
+  minimumNoteSeconds: 0.27,
+  maximumNoteSeconds: 0.34,
+  contactDecaySeconds: 0.045,
+  contactSustain: 0.12,
   antiAliasRatio: 0.9,
   stereoDetuneRatio: 0.00125,
-  timbreDamping: 3.2,
+  timbreDamping: 2.2,
   outputGain: getChapterOutputGain("residue-bloom"),
   sections: [
     { id: "intro", startBar: 0, barCount: 8 },
@@ -190,19 +201,59 @@ function smoothstep01(value: number): number {
   return clamped * clamped * (3 - 2 * clamped);
 }
 
-function getNoteEnvelope(
+export interface ResidueBloomNoteShape {
+  attackSeconds: number;
+  decaySeconds: number;
+  releaseSeconds: number;
+  endSeconds: number;
+  gain: number;
+  contactPeak: number;
+  contactDecaySeconds: number;
+  contactSustain: number;
+}
+
+export function getResidueBloomNoteShape(
+  definition: MusicalScoreDefinition,
+  event: EvaluatedMusicalScoreEvent,
+): ResidueBloomNoteShape {
+  const accentRatio = clamp((event.baseAccent - 0.18) / 1.28, 0, 1);
+  const durationRatio = accentRatio * 0.7 + event.normalizedPhasorRadius * 0.3;
+  return {
+    attackSeconds: definition.attackSeconds * (1.1 - event.brightness * 0.25),
+    decaySeconds:
+      definition.decaySeconds *
+      (0.88 + event.normalizedPhasorRadius * 0.24) *
+      (0.7 + 0.55 * accentRatio),
+    releaseSeconds: definition.releaseSeconds,
+    endSeconds: lerp(definition.minimumNoteSeconds, definition.maximumNoteSeconds, durationRatio),
+    gain: event.active ? event.baseGain * event.accent ** 0.75 : 0,
+    contactPeak: 0.7 + event.brightness * 0.6,
+    contactDecaySeconds: definition.contactDecaySeconds,
+    contactSustain: definition.contactSustain,
+  };
+}
+
+export function getResidueBloomNoteEnvelope(
+  shape: ResidueBloomNoteShape,
   localTimeSeconds: number,
-  attackSeconds: number,
-  decaySeconds: number,
-  releaseSeconds: number,
-  stepSeconds: number,
 ): number {
+  if (localTimeSeconds <= 0 || localTimeSeconds >= shape.endSeconds) return 0;
   const attack =
-    localTimeSeconds < attackSeconds
-      ? smoothstep01(localTimeSeconds / attackSeconds)
-      : Math.exp(-(localTimeSeconds - attackSeconds) / decaySeconds);
-  const release = smoothstep01((stepSeconds - localTimeSeconds) / releaseSeconds);
+    localTimeSeconds < shape.attackSeconds
+      ? smoothstep01(localTimeSeconds / shape.attackSeconds)
+      : Math.exp(-(localTimeSeconds - shape.attackSeconds) / shape.decaySeconds);
+  const release = smoothstep01((shape.endSeconds - localTimeSeconds) / shape.releaseSeconds);
   return attack * release;
+}
+
+export function getResidueBloomContact(shape: ResidueBloomNoteShape, ageSeconds: number): number {
+  if (ageSeconds < 0 || ageSeconds >= shape.endSeconds) return 0;
+  return (
+    shape.contactSustain +
+    (1 - shape.contactSustain) *
+      shape.contactPeak *
+      Math.exp(-Math.max(0, ageSeconds - shape.attackSeconds) / shape.contactDecaySeconds)
+  );
 }
 
 function getSection(
@@ -393,6 +444,7 @@ export function evaluateScoreEvent(
 
   return {
     ...event,
+    absoluteStep: cycleIndex * program.totalSteps + event.globalStep,
     absoluteTimeSeconds,
     brightness: clamp(event.baseBrightness * 0.72 + phasorBrightness * 0.28, 0, 1),
     accent: event.active ? event.baseAccent * (0.9 + phasor.normalizedRadius * 0.2) : 0,
@@ -416,17 +468,8 @@ export function evaluateMusicalScore(
   const localStepTimeSeconds = cycleTimeSeconds - globalStep * program.stepSeconds;
   const baseEvent = program.events[globalStep]!;
   const event = evaluateScoreEvent(program, baseEvent, cycleIndex);
-  const accentDecayScale = clamp(0.16 + event.baseAccent * 1.08, 0.52, 1.55);
-  const decayScale = (0.88 + event.normalizedPhasorRadius * 0.24) * accentDecayScale;
-  const noteEnvelope = event.active
-    ? getNoteEnvelope(
-        localStepTimeSeconds,
-        program.definition.attackSeconds,
-        program.definition.decaySeconds * decayScale,
-        program.definition.releaseSeconds,
-        program.stepSeconds,
-      )
-    : 0;
+  const shape = getResidueBloomNoteShape(program.definition, event);
+  const noteEnvelope = event.active ? getResidueBloomNoteEnvelope(shape, localStepTimeSeconds) : 0;
   const recentImpulses: RecentMusicalImpulse[] = [];
   const maximumImpulseAgeSeconds = 0.75;
   const maximumStepOffset = Math.ceil(maximumImpulseAgeSeconds / program.stepSeconds);
@@ -447,18 +490,22 @@ export function evaluateMusicalScore(
     const recentBaseEvent = program.events[eventIndex]!;
     if (!recentBaseEvent.active) continue;
     const recentEvent = evaluateScoreEvent(program, recentBaseEvent, eventCycleIndex);
-    const visualAttack = smoothstep01(eventAgeSeconds / 0.025);
-    const impact =
-      recentEvent.accent *
-      recentEvent.visualIntensity *
-      visualAttack *
-      Math.exp(-Math.max(0, eventAgeSeconds - 0.025) / 0.18);
+    const recentShape = getResidueBloomNoteShape(program.definition, recentEvent);
+    const impact = recentShape.gain * getResidueBloomNoteEnvelope(recentShape, eventAgeSeconds);
 
     recentImpulses.push({
       event: recentEvent,
       ageSeconds: eventAgeSeconds,
       impact: clamp(impact, 0, 1.4),
-      tail: clamp(Math.exp(-eventAgeSeconds / 0.42), 0, 1),
+      contact: getResidueBloomContact(recentShape, eventAgeSeconds),
+      excitation: recentShape.gain,
+      tail: clamp(
+        recentShape.gain *
+          smoothstep01(eventAgeSeconds / recentShape.attackSeconds) *
+          Math.exp(-eventAgeSeconds / 0.42),
+        0,
+        1,
+      ),
     });
   }
 

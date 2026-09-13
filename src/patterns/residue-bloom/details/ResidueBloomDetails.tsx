@@ -36,7 +36,8 @@ export function ResidueBloomDetails({ pattern }: { pattern: ResidueBloomPatternD
         <p>{pattern.education.mathematicalBody}</p>
         <p>
           各発音の絶対イベント時刻 tₑ における z(0.31tₑ) を ΣAₖ
-          で正規化します。pₓは定位、pᵧは合成後ローパスの明るさ、pᵣはアクセントと減衰へ写像します。
+          で正規化します。pₓは定位、pᵧは各調波の色付けと初期接触、pᵣはアクセントと減衰へ写像します。
+          色付けは1極フィルターの定常利得・位相を各調波へ適用してから有限包絡を掛けます。
           残響送出は区間プロファイルから決まり、144秒の音楽形式が反復しても数学時刻はリセットしません。
         </p>
         <p className="scopeNotice">{pattern.education.scopeNotice}</p>

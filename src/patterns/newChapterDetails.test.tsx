@@ -40,4 +40,18 @@ describe("new chapter Details information contract", () => {
     expect(markup.match(/<tr>/g)?.length ?? 0).toBeGreaterThanOrEqual(10);
     expect(markup.match(/analyticProfileItem/g)?.length ?? 0).toBeGreaterThanOrEqual(4);
   });
+
+  it("keeps the Lissajous identity in layout-safe rows", () => {
+    const Details = lissajousOrchardPattern.MathematicalDetails;
+    const markup = renderToStaticMarkup(<Details />);
+
+    expect(markup).toMatch(/class="detailsFormula"[^>]*>[\s\S]*mtable/);
+  });
+
+  it("keeps the Dirichlet kernel identity in layout-safe rows", () => {
+    const Details = dirichletLanternsPattern.MathematicalDetails;
+    const markup = renderToStaticMarkup(<Details />);
+
+    expect(markup).toMatch(/class="detailsFormula"[^>]*>[\s\S]*mtable/);
+  });
 });

@@ -14,7 +14,7 @@ const lissajousOrchardAudio = definePikoChapterAudio({
   score: LISSAJOUS_ORCHARD_SCORE,
   detuneRatio: 0.0008,
   maximumVoices: 16,
-  timbre: { partialRatio: 4 / 3, partialGain: 0.045, chirpRatio: -0.014 },
+  timbre: { partialRatio: 4 / 3, partialGain: 0.09, chirpRatio: 0, partialDecayScale: 1.8 },
   graph: LISSAJOUS_ORCHARD_AUDIO_GRAPH,
 });
 

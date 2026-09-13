@@ -41,7 +41,10 @@ export const WAVELET_RAIN_SCORE: PikoScoreProgram = createEnergyBalancedPikoScor
           DYADIC_ACCENTS[index % DYADIC_ACCENTS.length]! *
           (index > 39 && index < 240 ? 1 : 0.72) *
           motionAt(index).accent,
-        pan: (index) => HAAR_COEFFICIENTS[index % 63]!.start * 1.6 - 0.8,
+        pan: (index) => {
+          const coefficient = HAAR_COEFFICIENTS[index % 63]!;
+          return (coefficient.start + 2 ** (-coefficient.j - 1)) * 1.6 - 0.8;
+        },
         panMotionDepth: (index) => 0.08 + 0.08 * motionAt(index).motionScale,
         panMotionRateRadiansPerSecond: (index) => 2 ** HAAR_COEFFICIENTS[index % 63]!.j * 0.07,
         wet: (index) =>

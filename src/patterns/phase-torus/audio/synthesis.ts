@@ -16,8 +16,9 @@ const phaseTorusAudio = definePikoChapterAudio({
   maximumVoices: 22,
   timbre: {
     partialRatio: (1 + Math.sqrt(5)) / 2,
-    partialGain: 0.055,
-    chirpRatio: 0.022,
+    partialGain: 0.12,
+    chirpRatio: -0.01,
+    partialDecayScale: 1.4,
   },
   graph: PHASE_TORUS_AUDIO_GRAPH,
 });

@@ -81,7 +81,10 @@ const executableWorkletSource = composeWorkletSource(
   workletSource,
 );
 
-export function loadWorkletProcessor(sampleRate: number): WorkletProcessorStub {
+export function loadWorkletProcessor(
+  sampleRate: number,
+  clock = { currentFrame: 0 },
+): WorkletProcessorStub {
   let Processor: (new () => WorkletProcessorStub) | undefined;
 
   class AudioWorkletProcessorStub {
@@ -100,6 +103,9 @@ export function loadWorkletProcessor(sampleRate: number): WorkletProcessorStub {
       Processor = processorConstructor;
     },
     sampleRate,
+    get currentFrame() {
+      return clock.currentFrame;
+    },
   });
   vm.runInContext(executableWorkletSource, context);
 

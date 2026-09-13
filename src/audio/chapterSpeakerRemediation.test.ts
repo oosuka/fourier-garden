@@ -4,9 +4,7 @@ import { getLongListeningMetrics } from "./audioMetrics";
 import { CHAPTER_LOUDNESS_REFERENCE_SAMPLE_RATE } from "./chapterLoudness";
 import { createDirichletLanternsAudioProgram } from "../patterns/dirichlet-lanterns/audio/synthesis";
 import { createLissajousOrchardAudioProgram } from "../patterns/lissajous-orchard/audio/synthesis";
-import { createMobiusChoirAudioProgram } from "../patterns/mobius-choir/audio/synthesis";
 import { createPhaseTorusAudioProgram } from "../patterns/phase-torus/audio/synthesis";
-import { createPrimeConstellationAudioProgram } from "../patterns/prime-constellation/audio/synthesis";
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   buildMusicalScoreProgram,
@@ -31,8 +29,8 @@ function cyclicGaps(program: PikoWorkletProgram): number[] {
     .concat(program.score.cycleSeconds - times.at(-1)! + times[0]!);
 }
 
-describe("Mac built-in speaker listening remediation", () => {
-  it("gives Residue Bloom a clearly audible multi-bar arc without dropping sixteenth notes", () => {
+describe("chapter score and sound character", () => {
+  it("gives Residue Bloom a multi-bar gain arc without dropping sixteenth notes", () => {
     const score = buildMusicalScoreProgram(
       RESIDUE_BLOOM_SCORE_DEFINITION,
       RESIDUE_BLOOM_SERIES,
@@ -63,19 +61,6 @@ describe("Mac built-in speaker listening remediation", () => {
     }
   });
 
-  it("separates Prime sparkle from the darker legato Möbius ribbon", () => {
-    const prime = createPrimeConstellationAudioProgram();
-    const mobius = createMobiusChoirAudioProgram();
-    const primeProgram = prime.worklet as PikoWorkletProgram;
-    const mobiusEndings = mobius.worklet.synthesis.articulations;
-
-    expect(mean(Object.values(mobiusEndings).map((entry) => entry.endSeconds))).toBeGreaterThan(
-      mean(primeProgram.score.events.map((event) => event.endSeconds)) + 0.04,
-    );
-    expect(mobius.graph.dryLowPassHz).toBeLessThanOrEqual(960);
-    expect(prime.graph.dryLowPassHz - mobius.graph.dryLowPassHz).toBeGreaterThanOrEqual(700);
-  });
-
   it("separates dyadic Wavelet rain from the isochronous Dirichlet lantern march", () => {
     const dirichlet = createDirichletLanternsAudioProgram();
     const wavelet = createWaveletRainAudioProgram();
@@ -94,7 +79,7 @@ describe("Mac built-in speaker listening remediation", () => {
     expect(dirichlet.graph.dryLowPassHz - wavelet.graph.dryLowPassHz).toBeGreaterThanOrEqual(400);
   });
 
-  it("folds Riemann responses downward and removes the painful upper-mid concentration", () => {
+  it("folds Riemann responses downward and limits upper-mid energy", () => {
     const audio = createRiemannVeilAudioProgram();
     const program = audio.worklet as PikoWorkletProgram;
     const firstActBySource = program.score.events

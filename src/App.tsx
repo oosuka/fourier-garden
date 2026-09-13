@@ -1,5 +1,5 @@
 import { renderToString } from "katex";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo, type CSSProperties } from "react";
 
 import {
   ChapterTransition,
@@ -10,21 +10,37 @@ import {
 import { ExperienceControls } from "./app/ExperienceControls";
 import { useFourierGardenController } from "./app/useFourierGardenController";
 import { CanvasStage } from "./components/CanvasStage";
+import { ChapterAfterimage } from "./components/ChapterAfterimage";
+
+const ExperienceQa = lazy(() => import("./qa/ExperienceQa"));
 
 export function App() {
   const controller = useFourierGardenController();
   const {
     patterns,
+    qaCapture,
+    silentPlayback,
+    captureFrame,
+    seekForQa,
     patternIndex,
     pattern,
     transport,
     audio,
     entered,
     playing,
+    startingPlayback,
     switchingChapter,
     transitionPattern,
+    transitionSource,
+    transitionEcho,
+    captureSceneRef,
     transitionLeaving,
     detailsOpen,
+    indexOpen,
+    muted,
+    toggleMute,
+    toggleIndex,
+    closeIndex,
     detailsHintVisible,
     fullscreen,
     volume,
@@ -32,6 +48,8 @@ export function App() {
     sceneGeneration,
     sceneError,
     audioError,
+    uiNotice,
+    dismissNotice,
     interfaceHidden,
     revealUi,
     dismissDetailsHint,
@@ -42,6 +60,9 @@ export function App() {
     switchChapter,
     handleSceneStatus,
     handleSceneError,
+    retryScene,
+    retryAudio,
+    continueSilently,
     handleVolume,
     toggleFullscreen,
   } = controller;
@@ -56,9 +77,10 @@ export function App() {
 
   return (
     <main
-      className={`app app--${pattern.kind} ${detailsOpen ? "app--details" : ""} ${
+      className={`app app--${pattern.kind} ${!entered ? "app--entry" : ""} ${detailsOpen || indexOpen ? "app--panel" : ""} ${detailsOpen ? "app--details" : ""} ${
         interfaceHidden ? "app--uiHidden" : ""
       }`}
+      style={{ "--chapter-accent": pattern.observation.accent } as CSSProperties}
       onPointerMove={revealUi}
       onPointerDown={revealUi}
     >
@@ -70,29 +92,46 @@ export function App() {
         sceneGeneration={sceneGeneration}
         onStatus={handleSceneStatus}
         onError={handleSceneError}
+        onFrame={captureFrame}
+        captureRef={captureSceneRef}
       />
+
+      {transitionEcho && <ChapterAfterimage state={transitionEcho} />}
 
       <div className="edgeVignette" aria-hidden="true" />
 
       {transitionPattern && (
         <ChapterTransition
           pattern={transitionPattern}
+          source={transitionSource}
           chapterCount={patterns.length}
           leaving={transitionLeaving}
         />
       )}
 
-      <PatternPresentation pattern={pattern} formula={formula} />
+      {entered && <PatternPresentation pattern={pattern} formula={formula} />}
       <ExperienceStatus
         sceneStatus={sceneStatus}
         sceneError={sceneError}
         audioError={audioError}
+        uiNotice={uiNotice}
+        onDismissNotice={dismissNotice}
         entered={entered}
+        onRetryScene={retryScene}
+        onRetryAudio={retryAudio}
+        onContinueSilent={continueSilently}
       />
 
       {entered && (
         <ExperienceControls
+          patterns={patterns}
+          indexOpen={indexOpen}
+          muted={muted}
+          onToggleMute={toggleMute}
+          onToggleIndex={toggleIndex}
+          onCloseIndex={closeIndex}
           playing={playing}
+          startingPlayback={startingPlayback}
           volume={volume}
           detailsOpen={detailsOpen}
           detailsHintVisible={detailsHintVisible}
@@ -114,7 +153,25 @@ export function App() {
       )}
 
       {!entered && (
-        <EntryScreen sceneLoading={sceneStatus === "loading"} onEnter={() => void handleEnter()} />
+        <EntryScreen
+          sceneLoading={sceneStatus !== "ready"}
+          onEnter={(sound) => void handleEnter(sound)}
+        />
+      )}
+      {qaCapture && (
+        <Suspense fallback={null}>
+          <ExperienceQa
+            capture={qaCapture}
+            audio={audio}
+            transport={transport}
+            chapter={pattern.id}
+            muted={muted}
+            volume={volume}
+            silentPlayback={silentPlayback}
+            ready={sceneStatus === "ready" && !switchingChapter}
+            onSeek={seekForQa}
+          />
+        </Suspense>
       )}
     </main>
   );

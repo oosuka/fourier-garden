@@ -3,6 +3,7 @@ import type { WebGLRenderer } from "three";
 
 import { selectRendererBackend, type RendererBackend } from "../../core/rendererBackend";
 import type {
+  FrameContext,
   PatternScene,
   PatternSceneOptions,
   QualityLevel,
@@ -15,6 +16,8 @@ import {
   type CinematicPostProcessor,
 } from "../cinematic/postProcessing";
 
+import { disposeObjectResources } from "./disposeResources";
+
 type SceneRenderer = THREE.WebGPURenderer | WebGLRenderer;
 
 export interface AnalyticSceneFrame {
@@ -26,7 +29,7 @@ export interface AnalyticSceneFrame {
 
 export interface AnalyticSceneContent {
   group: THREE.Group;
-  update(timeSeconds: number): AnalyticSceneFrame;
+  update(timeSeconds: number, reducedMotion?: boolean): AnalyticSceneFrame;
   setQuality?(level: QualityLevel): void;
   dispose?(): void;
 }
@@ -38,31 +41,7 @@ export interface ImmersiveAnalyticSceneConfig {
   extent: Readonly<{ x: number; y: number; z: number }>;
   camera: Readonly<{ distance: number; height: number; targetY: number; fovDegrees: number }>;
   exposure: number;
-  createContent(backend: RendererBackend): AnalyticSceneContent;
-}
-
-function disposeObject(root: THREE.Object3D): void {
-  root.traverse((object) => {
-    const renderable = object as THREE.Mesh & {
-      geometry?: THREE.BufferGeometry;
-      material?: THREE.Material | THREE.Material[];
-    };
-    renderable.geometry?.dispose();
-    const materials = Array.isArray(renderable.material)
-      ? renderable.material
-      : renderable.material
-        ? [renderable.material]
-        : [];
-    for (const material of materials) {
-      const texturedMaterial = material as THREE.Material & {
-        alphaMap?: THREE.Texture | null;
-        map?: THREE.Texture | null;
-      };
-      texturedMaterial.map?.dispose();
-      if (texturedMaterial.alphaMap !== texturedMaterial.map) texturedMaterial.alphaMap?.dispose();
-      material.dispose();
-    }
-  });
+  createContent(backend: RendererBackend, poeticLayers: boolean): AnalyticSceneContent;
 }
 
 class ImmersiveAnalyticScene implements PatternScene {
@@ -82,8 +61,14 @@ class ImmersiveAnalyticScene implements PatternScene {
     seed: number,
     poeticLayers: boolean,
   ) {
-    this.scene.background = new THREE.Color(0x010208);
-    this.content = config.createContent(backend);
+    this.scene.background = new THREE.Color(0x060a08);
+    this.content = config.createContent(backend, poeticLayers);
+    const ambient = new THREE.HemisphereLight(0xe5dfc4, 0x1d3429, 1.3);
+    const key = new THREE.DirectionalLight(0xf2e5c4, 3.2);
+    key.position.set(-3, 6, 7);
+    const rim = new THREE.DirectionalLight(config.palette[0], 2.1);
+    rim.position.set(5, -2, 2);
+    this.scene.add(ambient, key, rim);
     this.environment = poeticLayers
       ? new CinematicEnvironmentLayer({
           backend,
@@ -109,26 +94,33 @@ class ImmersiveAnalyticScene implements PatternScene {
     this.postProcessor.setQuality(this.quality);
   }
 
-  update(frame: { time: number }): void {
+  update(frame: FrameContext): void {
     if (this.disposed) throw new Error("Analytic scene has been disposed");
-    const response = this.content.update(frame.time);
+    const stagingTime = frame.reducedMotion ? 0 : frame.time;
+    const response = this.content.update(frame.time, frame.reducedMotion);
     const cameraDistance =
-      this.config.camera.distance * (this.aspect > 2 ? 1.06 : 1) +
-      Math.cos(frame.time * 0.031) * 0.24;
-    const orbit = Math.sin(frame.time * 0.071) * 0.36 + Math.sin(frame.time * 0.019 + 1.2) * 0.18;
+      this.config.camera.distance * Math.max(1, 1.55 / this.aspect) * (this.aspect > 2 ? 1.06 : 1) +
+      Math.cos(stagingTime * 0.031) * 0.24;
+    const orbit = Math.sin(stagingTime * 0.071) * 0.36 + Math.sin(stagingTime * 0.019 + 1.2) * 0.18;
     this.camera.position.set(
       (response.cameraX ?? 0) + orbit,
       this.config.camera.height +
         (response.cameraY ?? 0) +
-        Math.sin(frame.time * 0.049 + 0.7) * 0.16,
+        Math.sin(stagingTime * 0.049 + 0.7) * 0.16,
       cameraDistance,
     );
     this.camera.lookAt(
-      Math.sin(frame.time * 0.023) * 0.14,
-      this.config.camera.targetY + Math.cos(frame.time * 0.027) * 0.1,
+      Math.sin(stagingTime * 0.023) * 0.14,
+      this.config.camera.targetY + Math.cos(stagingTime * 0.027) * 0.1,
       0,
     );
-    this.environment?.update(frame.time, response.energy, response.warmth, this.camera);
+    this.environment?.update(
+      stagingTime,
+      response.energy,
+      response.warmth,
+      this.camera,
+      frame.reducedMotion,
+    );
     this.postProcessor?.setEnergy(response.energy);
     if (this.postProcessor) this.postProcessor.render();
     else this.renderer.render(this.scene, this.camera);
@@ -141,7 +133,7 @@ class ImmersiveAnalyticScene implements PatternScene {
     this.camera.near = 0.1;
     this.camera.far = 100;
     this.camera.updateProjectionMatrix();
-    this.environment?.resize(this.aspect);
+    this.environment?.resize(this.aspect, viewport.pixelRatio);
     if (this.postProcessor) {
       this.postProcessor.resize(viewport.width, viewport.height, viewport.pixelRatio);
     } else {
@@ -161,7 +153,7 @@ class ImmersiveAnalyticScene implements PatternScene {
     if (this.disposed) return;
     this.disposed = true;
     this.content.dispose?.();
-    disposeObject(this.content.group);
+    disposeObjectResources(this.content.group);
     this.environment?.dispose();
     this.postProcessor?.dispose();
     this.renderer.dispose();
@@ -211,7 +203,8 @@ async function createSceneForBackend(
   const renderer = await createRenderer(options, backend);
   let scene: ImmersiveAnalyticScene | null = null;
   try {
-    const poeticLayers = new URLSearchParams(window.location.search).get("poetic") !== "off";
+    const poeticLayers =
+      options.poeticLayers ?? new URLSearchParams(window.location.search).get("poetic") !== "off";
     scene = new ImmersiveAnalyticScene(renderer, backend, config, options.seed, poeticLayers);
     await scene.initialize();
     return scene;

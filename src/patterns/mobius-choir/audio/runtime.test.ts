@@ -1,15 +1,26 @@
 import { describe, expect, it } from "vitest";
 
-import { createMobiusChoirWorkletProgram } from "./synthesis";
+import { createMobiusChoirWorkletProgram, getMobiusChoirPartials } from "./synthesis";
 import { createMobiusChoirRuntime, getMobiusChoirMaximumOscillatorCount } from "./runtime";
 
 describe("Möbius Choir realtime runtime", () => {
+  it("excludes a carrier whose modal phase pushes it over 0.45 Fs", () => {
+    const source = createMobiusChoirWorkletProgram();
+    const mode = {
+      ...source.modes[0]!,
+      baseFrequencyHz: (900 - 0.01) / (1 + source.synthesis.stereoDetuneRatio),
+    };
+    const program = { ...source, modes: [mode, ...source.modes.slice(1)] };
+    const runtime = createMobiusChoirRuntime(program, 2_000);
+    expect(runtime.events[0]!.voices[0]!.partials).toHaveLength(0);
+    expect(getMobiusChoirPartials(mode, 2_000, 1)[0]!.included).toBe(false);
+  });
+
   it("precomputes mode, voice, pan, partial, and formant data", () => {
     const runtime = createMobiusChoirRuntime(createMobiusChoirWorkletProgram(), 48_000);
 
     expect(runtime.events).toHaveLength(256);
     for (const event of runtime.events) {
-      expect(event.partialCount).toBe(1);
       expect(event.amplitudeMotionDepth).toBeGreaterThan(0);
       expect(event.brightnessMotionDepth).toBeGreaterThan(0);
       expect(event.panMotion).toBeGreaterThan(0);
@@ -32,8 +43,14 @@ describe("Möbius Choir realtime runtime", () => {
         expect(voice.partials.length).toBeLessThanOrEqual(event.partialCount);
         expect(voice.partials.length).toBeGreaterThan(0);
         for (const partial of voice.partials) {
-          expect(partial.leftFrequencyHz).toBeLessThan(0.45 * runtime.sampleRate);
-          expect(partial.rightFrequencyHz).toBeLessThan(0.45 * runtime.sampleRate);
+          expect(
+            partial.leftFrequencyHz +
+              (partial.partial * voice.modalAngularFrequency) / (2 * Math.PI),
+          ).toBeLessThan(0.45 * runtime.sampleRate);
+          expect(
+            partial.rightFrequencyHz +
+              (partial.partial * voice.modalAngularFrequency) / (2 * Math.PI),
+          ).toBeLessThan(0.45 * runtime.sampleRate);
           expect(Number.isFinite(partial.startWeight)).toBe(true);
           expect(Number.isFinite(partial.endWeight)).toBe(true);
         }

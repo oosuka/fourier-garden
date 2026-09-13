@@ -16,6 +16,10 @@ import {
 import { evaluateMobiusChoirVisualFrame } from "./visualResponse";
 
 describe("Möbius Choir strict scene contracts", () => {
+  it("keeps the fitted camera still when reduced motion is requested", () => {
+    const base = getMobiusChoirCameraPlacement(16 / 9);
+    expect(getMobiusChoirChoreographedCameraPlacement(base, 43.5, true)).toEqual(base);
+  });
   it("skips a zero-vertex nodal draw while preserving nonempty contours", () => {
     expect(getMobiusChoirNodalVisibility(0)).toBe(false);
     expect(getMobiusChoirNodalVisibility(1)).toBe(true);

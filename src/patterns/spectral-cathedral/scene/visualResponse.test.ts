@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { SPECTRAL_CATHEDRAL_SCORE } from "../audio/score";
+import {
+  createSpectralCathedralAudioModes,
+  getSpectralCathedralBellEnvelope,
+} from "../audio/synthesis";
 import { createSpectralCathedralLightAnchors } from "./poetic";
 import {
   createSpectralCathedralModeInfluenceMatrix,
@@ -11,6 +15,49 @@ const anchors = createSpectralCathedralLightAnchors();
 const matrix = createSpectralCathedralModeInfluenceMatrix(anchors);
 
 describe("Spectral Cathedral visual response", () => {
+  it("includes the sounding event and modal gain in the first local excitation", () => {
+    const frame = evaluateSpectralCathedralVisualFrame(0.04, matrix);
+    const event = SPECTRAL_CATHEDRAL_SCORE.events[0]!;
+    const mode = createSpectralCathedralAudioModes().find(
+      (candidate) => candidate.id === event.modeIds[0],
+    )!;
+    // At t=0 all modal displacements are 1, so the shared decay multiplier is 1.2.
+    const expected =
+      getSpectralCathedralBellEnvelope(0.04, "pulse", undefined, 1.2) *
+      event.baseGain *
+      mode.normalizedGain;
+    expect(Math.max(...frame.pillars.map((pillar) => pillar.impact))).toBeCloseTo(expected, 12);
+  });
+
+  it("keeps a quieter modal coefficient in the local response when events overlap", () => {
+    const event = SPECTRAL_CATHEDRAL_SCORE.events[1]!;
+    const mode = createSpectralCathedralAudioModes().find(
+      (candidate) => candidate.id === event.modeIds[0],
+    )!;
+    const isolatedMatrix = {
+      pillarCount: 2,
+      byModeId: new Map([
+        [SPECTRAL_CATHEDRAL_SCORE.events[0]!.modeIds[0]!, [1, 0]],
+        [mode.id, [0, 1]],
+      ]),
+    };
+    const age = 0.04;
+    const frame = evaluateSpectralCathedralVisualFrame(
+      event.localTimeSeconds + age,
+      isolatedMatrix,
+    );
+    const decayScale =
+      0.82 + 0.38 * Math.abs(Math.cos(mode.modalAngularFrequency * event.localTimeSeconds));
+    const expected =
+      getSpectralCathedralBellEnvelope(age, event.gesture, undefined, decayScale) *
+      0.92 *
+      event.baseGain *
+      mode.normalizedGain;
+
+    expect(mode.normalizedGain).toBeLessThan(1);
+    expect(frame.pillars[0]!.impact).toBeGreaterThan(0);
+    expect(frame.pillars[1]!.impact).toBeCloseTo(expected, 12);
+  });
   it("maps modes to distinct bounded pillar influence patterns", () => {
     const rows = [1, 4, 8, 12].map((modeId) => matrix.byModeId.get(modeId)!);
 
@@ -27,7 +74,8 @@ describe("Spectral Cathedral visual response", () => {
     const frame = evaluateSpectralCathedralVisualFrame(0.08, matrix);
     const impacts = frame.pillars.map((pillar) => pillar.impact);
 
-    expect(Math.max(...impacts) - Math.min(...impacts)).toBeGreaterThan(0.2);
+    expect(Math.max(...impacts)).toBeGreaterThan(0);
+    expect(Math.min(...impacts)).toBeLessThan(Math.max(...impacts) * 0.5);
   });
 
   it("propagates energy through arches with index-dependent timing", () => {
@@ -43,12 +91,12 @@ describe("Spectral Cathedral visual response", () => {
     const afterglow = evaluateSpectralCathedralVisualFrame(0.18, matrix);
 
     expect(idle.onsetEnergy).toBeLessThan(0.05);
-    expect(onset.onsetEnergy).toBeGreaterThan(0.5);
+    expect(onset.onsetEnergy).toBeGreaterThan(afterglow.onsetEnergy);
     expect(onset.collectiveEnergy).toBeGreaterThan(afterglow.collectiveEnergy);
     expect(afterglow.collectiveEnergy).toBeGreaterThan(afterglow.onsetEnergy);
   });
 
-  it("repeats the poetic score while absolute mathematics remains independent", () => {
+  it("repeats the score's sections while modal excitation follows absolute time", () => {
     const first = evaluateSpectralCathedralVisualFrame(
       SPECTRAL_CATHEDRAL_SCORE.cycleSeconds + 0.08,
       matrix,
@@ -58,28 +106,12 @@ describe("Spectral Cathedral visual response", () => {
       matrix,
     );
 
-    const firstValues = [
-      first.dramaturgy.audioEnergy,
-      first.dramaturgy.visualEnergy,
-      first.dramaturgy.motionEnergy,
-      first.collectiveEnergy,
-      first.onsetEnergy,
-      ...first.pillars.flatMap(Object.values),
-      ...first.arches.flatMap(Object.values),
-      ...first.particles.flatMap(Object.values),
-    ];
-    const nextValues = [
-      next.dramaturgy.audioEnergy,
-      next.dramaturgy.visualEnergy,
-      next.dramaturgy.motionEnergy,
-      next.collectiveEnergy,
-      next.onsetEnergy,
-      ...next.pillars.flatMap(Object.values),
-      ...next.arches.flatMap(Object.values),
-      ...next.particles.flatMap(Object.values),
-    ];
     expect(next.dramaturgy.sectionId).toBe(first.dramaturgy.sectionId);
-    nextValues.forEach((value, index) => expect(value).toBeCloseTo(firstValues[index]!, 12));
+    expect(next.dramaturgy.audioEnergy).toBeCloseTo(first.dramaturgy.audioEnergy, 12);
+    expect(next.onsetEnergy).not.toBeCloseTo(first.onsetEnergy, 6);
+    expect(next.pillars.map((pillar) => pillar.impact)).not.toEqual(
+      first.pillars.map((pillar) => pillar.impact),
+    );
   });
 
   it("keeps every visual control finite and bounded", () => {

@@ -32,7 +32,6 @@ import {
   renderSpectralCathedralStereo,
   validateSpectralCathedralWorkletProgram,
 } from "./synthesis";
-import { getChapterOutputGain } from "../../../audio/chapterLoudness";
 
 type MetricValues = ArrayLike<number> & Iterable<number>;
 
@@ -82,7 +81,7 @@ describe("Spectral Cathedral audio mapping", () => {
         12,
       );
       expect(mode.normalizedGain).toBeCloseTo(
-        Math.abs(source.coefficient) / maximumCoefficient,
+        (Math.abs(source.coefficient) / maximumCoefficient) ** 0.6,
         12,
       );
       expect(mode.modalAngularFrequency).toBeCloseTo(
@@ -91,68 +90,6 @@ describe("Spectral Cathedral audio mapping", () => {
       );
       expect(mode.coefficientPhaseOffset).toBe(source.coefficient < 0 ? Math.PI : 0);
     }
-  });
-
-  it("uses the approved piko synthesis constants", () => {
-    expect(SPECTRAL_CATHEDRAL_SYNTHESIS).toEqual({
-      maximumPartials: 1,
-      partialDamping: 8,
-      articulations: {
-        toll: {
-          attackSeconds: 0.008,
-          decaySeconds: 0.048,
-          fadeStartSeconds: 0.122,
-          endSeconds: 0.15,
-          woodAttackGain: 0,
-          subgrainOffsetsSeconds: [0],
-          subgrainGains: [0.86],
-        },
-        answer: {
-          attackSeconds: 0.008,
-          decaySeconds: 0.05,
-          fadeStartSeconds: 0.122,
-          endSeconds: 0.15,
-          woodAttackGain: 0,
-          subgrainOffsetsSeconds: [0, 0.086],
-          subgrainGains: [0.92, 0.18],
-        },
-        cascade: {
-          attackSeconds: 0.006,
-          decaySeconds: 0.046,
-          fadeStartSeconds: 0.116,
-          endSeconds: 0.145,
-          woodAttackGain: 0,
-          subgrainOffsetsSeconds: [0, 0.043, 0.086],
-          subgrainGains: [1, 0.16, 0.18],
-        },
-        pulse: {
-          attackSeconds: 0.006,
-          decaySeconds: 0.044,
-          fadeStartSeconds: 0.112,
-          endSeconds: 0.14,
-          woodAttackGain: 0,
-          subgrainOffsetsSeconds: [0, 0.086],
-          subgrainGains: [1, 0.18],
-        },
-        choir: {
-          attackSeconds: 0.009,
-          decaySeconds: 0.052,
-          fadeStartSeconds: 0.126,
-          endSeconds: 0.155,
-          woodAttackGain: 0,
-          subgrainOffsetsSeconds: [0, 0.086],
-          subgrainGains: [0.8, 0.18],
-        },
-      },
-      maximumEventSeconds: 0.25,
-      woodAttackSeconds: 0.04,
-      woodMinimumHz: 420,
-      woodMaximumHz: 980,
-      woodComponentCount: 1,
-      stereoDetuneRatio: 0.00125,
-      antiAliasRatio: 0.9,
-      outputGain: getChapterOutputGain("spectral-cathedral"),
-    });
   });
 
   it("keeps deterministic subgrain offsets and gains inside each gesture envelope", () => {
@@ -230,7 +167,7 @@ describe("Spectral Cathedral audio mapping", () => {
     };
     const partials = getSpectralCathedralPartials(mode, sampleRate, SPECTRAL_CATHEDRAL_SYNTHESIS);
 
-    expect(partials).toHaveLength(1);
+    expect(partials.every((candidate) => !candidate.included)).toBe(true);
     expect(partials[0]).toMatchObject({
       partial: 1,
       included: false,
@@ -298,11 +235,11 @@ describe("Spectral Cathedral piko reference DSP", () => {
   });
 
   it.each([
-    ["toll", 0.15],
-    ["answer", 0.15],
-    ["cascade", 0.145],
-    ["pulse", 0.14],
-    ["choir", 0.155],
+    ["toll", 0.31],
+    ["answer", 0.25],
+    ["cascade", 0.215],
+    ["pulse", 0.205],
+    ["choir", 0.34],
   ] as const)("closes the %s envelope at its exact end", (gesture, endSeconds) => {
     expect(getSpectralCathedralBellEnvelope(0, gesture)).toBe(0);
     expect(getSpectralCathedralBellEnvelope(0.01, gesture)).toBeGreaterThan(0);
@@ -438,10 +375,10 @@ describe("Spectral Cathedral piko reference DSP", () => {
     expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.16);
     expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.18);
     expect(onsets.medianSeconds).toBeLessThanOrEqual(0.34);
-    expect(onsets.pulseScore).toBeGreaterThan(0.12);
+    expect(onsets.onsetCount).toBeGreaterThanOrEqual(240);
   }, 15_000);
 
-  it("keeps the reference-like pulse profile without a sharp upper-band glare", () => {
+  it("keeps the modal pulse legible without a sharp upper-band glare", () => {
     const sampleRate = 12_000;
     const program = createSpectralCathedralWorkletProgram();
     const rendered = renderSpectralCathedralStereo({
@@ -459,38 +396,8 @@ describe("Spectral Cathedral piko reference DSP", () => {
     expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.68);
     expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.18);
     expect(onsets.medianSeconds).toBeLessThanOrEqual(0.34);
-    expect(onsets.pulseScore).toBeGreaterThan(0.12);
+    expect(onsets.onsetCount).toBeGreaterThanOrEqual(240);
   }, 15_000);
-
-  it("renders the renewed piko engine as a narrow-band constant pulse train", () => {
-    const sampleRate = 12_000;
-    const program = createSpectralCathedralWorkletProgram();
-    const rendered = renderSpectralCathedralStereo({
-      program,
-      startTimeSeconds: 0,
-      durationSeconds: program.score.cycleSeconds,
-      sampleRate,
-    });
-    const bands = getBandEnergyRatios(rendered.left, rendered.right, sampleRate);
-    const continuity = getFrameRmsContinuity(
-      rendered.left,
-      rendered.right,
-      sampleRate,
-      0.02,
-      0.0015,
-    );
-    const onsets = estimateOnsetSpacing(rendered.left, rendered.right, sampleRate);
-
-    expect(bands.below250Hz).toBeLessThanOrEqual(0.01);
-    expect(bands.between400HzAnd3000Hz).toBeGreaterThanOrEqual(0.92);
-    expect(bands.between1200HzAnd10000Hz).toBeLessThanOrEqual(0.025);
-    expect(bands.between1800HzAnd10000Hz).toBeLessThanOrEqual(0.003);
-    expect(continuity.maximumLowRmsSeconds).toBeLessThanOrEqual(0.16);
-    expect(onsets.medianSeconds).toBeGreaterThanOrEqual(0.19);
-    expect(onsets.medianSeconds).toBeLessThanOrEqual(0.23);
-    expect(onsets.p90Seconds - onsets.p10Seconds).toBeLessThanOrEqual(0.06);
-    expect(onsets.pulseScore).toBeGreaterThanOrEqual(0.12);
-  }, 20_000);
 
   it("builds a structured-clone-safe complete worklet program", () => {
     const program = createSpectralCathedralWorkletProgram();

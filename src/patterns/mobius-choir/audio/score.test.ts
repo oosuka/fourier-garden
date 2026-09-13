@@ -15,7 +15,7 @@ function getMaximumRun(events: readonly MobiusChoirScoreEvent[]): number {
 }
 
 describe("Möbius Choir score", () => {
-  it("builds the 256-event reference-like five-act piko score", () => {
+  it("builds the 256-event five-act voice score", () => {
     expect(MOBIUS_CHOIR_SCORE.bpm).toBe(68);
     expect(MOBIUS_CHOIR_SCORE.beatsPerBar).toBe(4);
     expect(MOBIUS_CHOIR_SCORE.slotsPerBeat).toBe(4);
@@ -59,7 +59,7 @@ describe("Möbius Choir score", () => {
     }
   });
 
-  it("uses a constant sixteenth-note piko clock across the full cycle", () => {
+  it("uses a constant sixteenth-note clock across the full cycle", () => {
     expect(MOBIUS_CHOIR_SCORE.slotsPerBeat).toBe(4);
     expect(MOBIUS_CHOIR_SCORE.slotSeconds).toBeCloseTo(15 / 68, 12);
     expect(MOBIUS_CHOIR_SCORE.events).toHaveLength(256);
@@ -83,12 +83,6 @@ describe("Möbius Choir score", () => {
   });
 
   it("keeps density and register constant while varying gain, motion, and space by act", () => {
-    const sectionEvents = MOBIUS_CHOIR_SCORE.sections.map((section) =>
-      MOBIUS_CHOIR_SCORE.events.filter((event) => event.section === section.id),
-    );
-    expect(
-      sectionEvents.map((events) => new Set(events.map((event) => event.partialCount))),
-    ).toEqual([new Set([1]), new Set([1]), new Set([1]), new Set([1]), new Set([1])]);
     expect(
       Math.max(...MOBIUS_CHOIR_SCORE.events.map((event) => event.stereoSpread)),
     ).toBeGreaterThan(0.9);
@@ -149,7 +143,7 @@ describe("Möbius Choir score", () => {
     }
   });
 
-  it("uses only single-mode piko events", () => {
+  it("uses only single-mode events", () => {
     const allowedModeSets = new Set(["1", "2", "3", "4", "5", "6"]);
     for (const event of MOBIUS_CHOIR_SCORE.events) {
       expect(allowedModeSets.has(event.modeIds.join(","))).toBe(true);

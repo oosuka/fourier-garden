@@ -14,7 +14,7 @@ const primeConstellationAudio = definePikoChapterAudio({
   score: PRIME_CONSTELLATION_SCORE,
   detuneRatio: 0.001,
   maximumVoices: 18,
-  timbre: { partialRatio: 1.5, partialGain: 0.055, chirpRatio: 0.012 },
+  timbre: { partialRatio: 1.5, partialGain: 0.12, chirpRatio: 0.003, partialDecayScale: 0.35 },
   graph: PRIME_CONSTELLATION_AUDIO_GRAPH,
 });
 

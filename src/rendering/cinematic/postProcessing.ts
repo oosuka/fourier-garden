@@ -18,15 +18,24 @@ export interface CinematicPostProfile {
 const POST_PROFILES: Readonly<Record<QualityLevel, Readonly<CinematicPostProfile>>> = Object.freeze(
   {
     low: Object.freeze({ enabled: false, strength: 0, radius: 0, threshold: 1 }),
-    medium: Object.freeze({ enabled: true, strength: 0.86, radius: 0.26, threshold: 0.82 }),
-    high: Object.freeze({ enabled: true, strength: 1.2, radius: 0.38, threshold: 0.76 }),
-    ultra: Object.freeze({ enabled: true, strength: 1.48, radius: 0.46, threshold: 0.7 }),
+    medium: Object.freeze({ enabled: true, strength: 0.48, radius: 0.26, threshold: 0.82 }),
+    high: Object.freeze({ enabled: true, strength: 0.62, radius: 0.38, threshold: 0.76 }),
+    ultra: Object.freeze({ enabled: true, strength: 0.78, radius: 0.46, threshold: 0.7 }),
   },
 );
 
 // Above the reference display raster, UnrealBloom's extra full-frame passes miss the
 // 60 fps budget on the fallback renderer. Direct rendering preserves native math lines.
 const WEBGL_BLOOM_MAX_RASTER_PIXELS = 6_000_000;
+
+// The scene remains native resolution. Only the diffuse light is area-limited,
+// so a high-DPI or 4K display does not multiply all eleven bloom targets.
+const WEBGPU_BLOOM_PIXEL_BUDGET: Readonly<Record<QualityLevel, number>> = {
+  low: 262_144,
+  medium: 524_288,
+  high: 1_048_576,
+  ultra: 2_097_152,
+};
 
 export interface CinematicPostProcessor {
   readonly mode: CinematicPostMode;
@@ -161,6 +170,7 @@ class WebGpuPostProcessor extends BasePostProcessor {
   private readonly scenePass;
   private readonly bloomNode;
   private readonly pipeline: THREE.RenderPipeline;
+  private rasterPixels = 1;
 
   constructor(
     private readonly renderer: THREE.WebGPURenderer,
@@ -174,6 +184,7 @@ class WebGpuPostProcessor extends BasePostProcessor {
     this.pipeline = new THREE.RenderPipeline(renderer);
     this.pipeline.outputNode = sceneColor.add(this.bloomNode);
     this.applyProfile();
+    this.applyBloomResolution();
   }
 
   render(): void {
@@ -187,6 +198,19 @@ class WebGpuPostProcessor extends BasePostProcessor {
     assertViewport(width, height, pixelRatio);
     this.renderer.setPixelRatio(pixelRatio);
     this.renderer.setSize(width, height, false);
+    this.rasterPixels = width * height * pixelRatio ** 2;
+    this.applyBloomResolution();
+  }
+
+  override setQuality(level: QualityLevel): void {
+    super.setQuality(level);
+    this.applyBloomResolution();
+  }
+
+  private applyBloomResolution(): void {
+    this.bloomNode.setResolutionScale(
+      Math.min(0.5, Math.sqrt(WEBGPU_BLOOM_PIXEL_BUDGET[this.quality] / this.rasterPixels)),
+    );
   }
 
   protected applyProfile(): void {
@@ -200,6 +224,8 @@ class WebGpuPostProcessor extends BasePostProcessor {
     if (this.disposed) return;
     this.disposed = true;
     this.pipeline.dispose();
+    this.bloomNode.dispose();
+    this.scenePass.dispose();
   }
 }
 
@@ -214,6 +240,8 @@ interface WebGlBloomLike {
   strength: number;
   radius: number;
   threshold: number;
+  materialHighPassFilter: THREE.ShaderMaterial;
+  dispose(): void;
 }
 
 class WebGlPostProcessor extends BasePostProcessor {
@@ -272,6 +300,9 @@ class WebGlPostProcessor extends BasePostProcessor {
     if (this.disposed) return;
     this.disposed = true;
     this.composer.dispose();
+    this.bloomPass.dispose();
+    // Three r185's UnrealBloomPass.dispose does not release this owned shader.
+    this.bloomPass.materialHighPassFilter.dispose();
   }
 }
 
@@ -299,6 +330,11 @@ export async function createCinematicPostProcessor({
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = exposure;
+
+  const query = new URLSearchParams(window.location.search);
+  if (query.get("qa") === "1" && query.get("post") === "direct") {
+    return new DirectPostProcessor(renderer, scene, camera);
+  }
 
   try {
     if (backend === "webgpu") {

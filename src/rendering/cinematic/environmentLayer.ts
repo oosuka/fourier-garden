@@ -118,13 +118,24 @@ export class CinematicEnvironmentLayer {
     this.resize(options.extent.x / options.extent.y);
   }
 
-  update(timeSeconds: number, energy: number, warmth: number, camera?: THREE.Camera): void {
+  update(
+    timeSeconds: number,
+    energy: number,
+    warmth: number,
+    camera?: THREE.Camera,
+    reducedMotion = false,
+  ): void {
     if (this.disposed) throw new Error("Cinematic environment layer has been disposed");
     if (!Number.isFinite(timeSeconds) || timeSeconds < 0) {
       throw new Error("Cinematic environment time must be finite and nonnegative");
     }
     assertBounded("Cinematic environment energy", energy);
     assertBounded("Cinematic environment warmth", warmth);
+    if (reducedMotion) {
+      timeSeconds = 0;
+      energy = 0;
+      warmth = 0.5;
+    }
     this.sceneTime.value = timeSeconds;
     this.sceneEnergy.value = energy;
     this.sceneWarmth.value = warmth;
@@ -135,9 +146,10 @@ export class CinematicEnvironmentLayer {
     this.lightStructures.update(timeSeconds, energy, warmth);
   }
 
-  resize(aspect: number): void {
+  resize(aspect: number, pixelRatio = 1): void {
     if (this.disposed) throw new Error("Cinematic environment layer has been disposed");
     const span = getCinematicViewportSpan(aspect);
+    this.particles.setPixelRatio(pixelRatio);
     this.group.scale.set(
       Math.max(1, span.x / this.extent.x),
       1,

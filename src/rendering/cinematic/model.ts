@@ -47,9 +47,9 @@ export const CINEMATIC_PARTICLE_BUDGETS: Readonly<
 });
 
 const CHAPTER_PALETTES: Readonly<Record<CinematicChapterId, readonly [number, number, number]>> = {
-  "residue-bloom": [0x78f3ff, 0xa798ff, 0xffc782],
-  "spectral-cathedral": [0x62eaff, 0xb678ff, 0xffb56e],
-  "mobius-choir": [0x76efff, 0xa766ff, 0xffbd78],
+  "residue-bloom": [0xcac69b, 0x778c72, 0xe2c58d],
+  "spectral-cathedral": [0xb6cec3, 0x667e78, 0xd8cd9f],
+  "mobius-choir": [0xd6c4be, 0x8d909c, 0xc6ac8f],
 };
 
 export const CINEMATIC_ENVIRONMENT_PROFILES: Readonly<

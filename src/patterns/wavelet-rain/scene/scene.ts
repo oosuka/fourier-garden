@@ -1,4 +1,8 @@
+import { createWaveletRainWorkletProgram } from "../audio/synthesis";
 import * as THREE from "three/webgpu";
+import { getPikoEnvelope } from "../../../audio/pikoProgram";
+import { createEventResonance } from "../../../rendering/analytic/eventResonance";
+import { configurePoeticObjects } from "../../../rendering/analytic/displayLayers";
 import { createImmersiveAnalyticScene } from "../../../rendering/analytic/immersiveScene";
 import {
   createAnalyticProfile,
@@ -8,7 +12,7 @@ import {
 import type { PatternSceneOptions } from "../../contracts";
 import { WAVELET_RAIN_SCORE } from "../audio/score";
 import { HAAR_COEFFICIENTS, evaluateHaarProjection } from "../math/model";
-const PALETTE = [0x54eaff, 0x4b84ff, 0xa55cff] as const;
+const PALETTE = [0xd5ddd5, 0x7c9198, 0x9bafa5] as const;
 
 function findScoreEventIndex(localTimeSeconds: number): number {
   let lower = 0;
@@ -44,7 +48,7 @@ export function getWaveletRainVisualEvent(timeSeconds: number): Readonly<{
   const coefficientIndex = event.sourceIndex % HAAR_COEFFICIENTS.length;
   const coefficient = HAAR_COEFFICIENTS[coefficientIndex]!;
   const progress = Math.max(0, Math.min(1, (localTime - event.timeSeconds) / eventDurationSeconds));
-  const pulse = Math.sin(Math.PI * progress) ** 0.72;
+  const pulse = getPikoEnvelope(event, localTime - event.timeSeconds);
   return {
     eventIndex: event.sourceIndex,
     coefficientIndex,
@@ -54,7 +58,10 @@ export function getWaveletRainVisualEvent(timeSeconds: number): Readonly<{
   };
 }
 
-export function createWaveletRainContent() {
+export function createWaveletRainContent(
+  backend: "webgpu" | "webgl" = "webgpu",
+  poeticLayers = true,
+) {
   const group = new THREE.Group();
   const cells = HAAR_COEFFICIENTS.map((coefficient) => {
     const width = Math.max(0.035, (coefficient.end - coefficient.start) * 9.6);
@@ -63,8 +70,7 @@ export function createWaveletRainContent() {
     const material = new THREE.MeshBasicMaterial({
       color,
       transparent: true,
-      opacity: 0.08 + Math.min(0.38, Math.abs(coefficient.value) * 1.05),
-      blending: THREE.AdditiveBlending,
+      opacity: 0.025 + Math.sqrt(Math.min(1, Math.abs(coefficient.value))) * 0.085,
       depthWrite: false,
       side: THREE.DoubleSide,
       toneMapped: false,
@@ -75,10 +81,68 @@ export function createWaveletRainContent() {
       3.2 - coefficient.j * 1.05,
       -coefficient.j * 0.38,
     );
-    mesh.scale.y = 0.6 + Math.min(1.4, Math.abs(coefficient.value) * 3);
+    mesh.scale.y = 0.72;
     group.add(mesh);
     return { coefficient, mesh, material, baseY: mesh.position.y };
   });
+  const supportPositions = new Float32Array(HAAR_COEFFICIENTS.length * 8 * 3);
+  const supportColors = new Float32Array(supportPositions.length);
+  const supportColor = new THREE.Color();
+  HAAR_COEFFICIENTS.forEach((coefficient, index) => {
+    const left = (coefficient.start - 0.5) * 9.6;
+    const right = (coefficient.end - 0.5) * 9.6;
+    const centerY = 3.2 - coefficient.j * 1.05;
+    const top = centerY + 0.62 * 0.36;
+    const bottom = centerY - 0.62 * 0.36;
+    const z = -coefficient.j * 0.38 + 0.01;
+    supportPositions.set(
+      [
+        left,
+        top,
+        z,
+        right,
+        top,
+        z,
+        right,
+        top,
+        z,
+        right,
+        bottom,
+        z,
+        right,
+        bottom,
+        z,
+        left,
+        bottom,
+        z,
+        left,
+        bottom,
+        z,
+        left,
+        top,
+        z,
+      ],
+      index * 24,
+    );
+    supportColor.set(coefficient.value >= 0 ? PALETTE[0] : PALETTE[2]);
+    for (let vertex = 0; vertex < 8; vertex++)
+      supportColor.toArray(supportColors, index * 24 + vertex * 3);
+  });
+  const supportGeometry = new THREE.BufferGeometry();
+  supportGeometry.setAttribute("position", new THREE.BufferAttribute(supportPositions, 3));
+  supportGeometry.setAttribute("color", new THREE.BufferAttribute(supportColors, 3));
+  const supports = new THREE.LineSegments(
+    supportGeometry,
+    new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.24,
+      depthWrite: false,
+      toneMapped: false,
+    }),
+  );
+  supports.name = "haar-supports";
+  group.add(supports);
   const dropGeometry = new THREE.SphereGeometry(1, 10, 7);
   const positiveDropMaterial = new THREE.MeshBasicMaterial({
     color: PALETTE[0],
@@ -129,13 +193,23 @@ export function createWaveletRainContent() {
       attribute: thread.attribute,
     };
   });
-  const reconstructionPositions = new Float32Array(512 * 3);
-  for (let index = 0; index < 512; index += 1) {
-    const x = index / 511;
-    reconstructionPositions[index * 3] = (x - 0.5) * 9.6;
-    reconstructionPositions[index * 3 + 1] = evaluateHaarProjection(x) * 0.8 - 3.7;
+  const reconstructionPositions = new Float32Array(128 * 3);
+  for (let index = 0; index < 64; index += 1) {
+    const value = evaluateHaarProjection((index + 0.5) / 64) * 0.8 - 3.7;
+    reconstructionPositions.set(
+      [(index / 64 - 0.5) * 9.6, value, 0, ((index + 1) / 64 - 0.5) * 9.6, value, 0],
+      index * 6,
+    );
   }
-  const reconstruction = createLine(reconstructionPositions, 0xd9fbff, 0.8);
+  const reconstructionBase = createLine(reconstructionPositions, 0xece7dc, 0.8);
+  const reconstruction = {
+    ...reconstructionBase,
+    line: new THREE.LineSegments(
+      reconstructionBase.line.geometry,
+      reconstructionBase.line.material,
+    ),
+  };
+  reconstruction.line.name = "haar-projection";
   const reconstructionEchoes = Array.from({ length: 4 }, (_, index) => {
     const material = new THREE.LineBasicMaterial({
       color: PALETTE[index % PALETTE.length]!,
@@ -145,7 +219,7 @@ export function createWaveletRainContent() {
       depthWrite: false,
       toneMapped: false,
     });
-    const line = new THREE.Line(reconstruction.line.geometry, material);
+    const line = new THREE.LineSegments(reconstruction.line.geometry, material);
     line.position.z = -0.18 - index * 0.2;
     group.add(line);
     return { line, material, index };
@@ -162,37 +236,59 @@ export function createWaveletRainContent() {
   }
   const impactRing = createLine(impactRingPositions, 0xd9fbff, 0.36);
   group.add(scan.line, impactRing.line);
+  const resonance = createEventResonance(WAVELET_RAIN_SCORE, backend, {
+    gesture: "rain",
+    colors: PALETTE,
+    timbre: createWaveletRainWorkletProgram().timbre,
+    locate(voice, _time, target) {
+      const coefficient = HAAR_COEFFICIENTS[voice.event.sourceIndex % HAAR_COEFFICIENTS.length]!;
+      target.set(
+        ((coefficient.start + coefficient.end) / 2 - 0.5) * 9.6,
+        3.2 - coefficient.j * 1.05,
+        -coefficient.j * 0.38 + 0.02,
+      );
+    },
+  });
+  group.add(resonance.group);
+  configurePoeticObjects(
+    poeticLayers,
+    resonance.group,
+    impactRing.line,
+    ...coefficientDrops.map((drop) => drop.mesh),
+    ...rainThreads.map((thread) => thread.line),
+    ...reconstructionEchoes.map((echo) => echo.line),
+  );
   return {
     group,
-    update(timeSeconds: number) {
+    update(timeSeconds: number, reducedMotion = false) {
+      const stagingTime = reducedMotion ? 0 : timeSeconds;
+      resonance.update(timeSeconds);
       const visualEvent = getWaveletRainVisualEvent(timeSeconds);
       const observation = visualEvent.supportPosition;
       scan.line.position.x = observation * 9.6;
       cells.forEach(({ coefficient, mesh, material, baseY }, index) => {
         const active = index === visualEvent.coefficientIndex;
-        material.opacity = Math.min(
-          0.68,
-          (0.1 + Math.abs(coefficient.value) * 1.12) *
-            (active ? 1.28 + visualEvent.pulse * 0.48 : 1),
-        );
-        mesh.position.y =
-          baseY +
-          Math.sin(timeSeconds * (0.32 + coefficient.j * 0.04) + index) * 0.17 +
-          (active ? visualEvent.pulse * 0.12 : 0);
-        mesh.rotation.z = Math.sin(timeSeconds * 0.09 + index * 0.73) * 0.018;
+        material.opacity =
+          0.025 +
+          Math.sqrt(Math.min(1, Math.abs(coefficient.value))) * 0.085 +
+          (active ? visualEvent.pulse * 0.075 : 0);
+        mesh.position.y = baseY;
+        mesh.rotation.z = 0;
       });
       coefficientDrops.forEach(({ coefficient, index, mesh, centerX, baseY, radius }) => {
         const ambientProgress =
-          (((timeSeconds * (0.032 + coefficient.j * 0.004) + index * 0.173) % 1) + 1) % 1;
+          (((stagingTime * (0.032 + coefficient.j * 0.004) + index * 0.173) % 1) + 1) % 1;
         const active = index === visualEvent.coefficientIndex;
-        const fallProgress = active
-          ? 1 - (1 - visualEvent.progress) ** 2.2
-          : ambientProgress * 0.72;
+        const fallProgress = reducedMotion
+          ? 0
+          : active
+            ? 1 - (1 - visualEvent.progress) ** 2.2
+            : ambientProgress * 0.72;
         mesh.position.x =
-          centerX + Math.sin(timeSeconds * 0.21 + index * 1.17) * (0.025 + coefficient.j * 0.006);
+          centerX + Math.sin(stagingTime * 0.21 + index * 1.17) * (0.025 + coefficient.j * 0.006);
         mesh.position.y = baseY - fallProgress * (baseY + 3.55);
         mesh.position.z =
-          0.4 + coefficient.j * 0.09 + Math.sin(timeSeconds * 0.16 + index * 0.53) * 0.12;
+          0.4 + coefficient.j * 0.09 + Math.sin(stagingTime * 0.16 + index * 0.53) * 0.12;
         const response = active ? 1 + visualEvent.pulse * 1.45 : 0.72 + ambientProgress * 0.2;
         mesh.scale.set(
           radius * (0.56 + response * 0.12),
@@ -202,9 +298,9 @@ export function createWaveletRainContent() {
       });
       rainThreads.forEach(
         ({ coefficient, index, centerX, startY, length, positions, attribute, line }) => {
-          const pulse = Math.sin(timeSeconds * (0.36 + coefficient.j * 0.025) + index * 0.61);
+          const pulse = Math.sin(stagingTime * (0.36 + coefficient.j * 0.025) + index * 0.61);
           const sway =
-            Math.sin(timeSeconds * 0.21 + index * 1.17) * (0.035 + coefficient.j * 0.008);
+            Math.sin(stagingTime * 0.21 + index * 1.17) * (0.035 + coefficient.j * 0.008);
           positions[0] = centerX + sway;
           positions[1] = startY + pulse * 0.12;
           positions[3] = centerX - sway * 0.6;
@@ -217,15 +313,15 @@ export function createWaveletRainContent() {
         },
       );
       reconstructionEchoes.forEach(({ line, material, index }) => {
-        line.position.x = Math.sin(timeSeconds * (0.043 + index * 0.006) + index) * 0.08;
+        line.position.x = Math.sin(stagingTime * (0.043 + index * 0.006) + index) * 0.08;
         line.position.y =
-          Math.cos(timeSeconds * (0.052 + index * 0.004) - index) * (0.05 + index * 0.025);
-        material.opacity = 0.07 + index * 0.018 + Math.sin(timeSeconds * 0.18 + index) ** 2 * 0.05;
+          Math.cos(stagingTime * (0.052 + index * 0.004) - index) * (0.05 + index * 0.025);
+        material.opacity = 0.07 + index * 0.018 + Math.sin(stagingTime * 0.18 + index) ** 2 * 0.05;
       });
-      group.rotation.y = Math.sin(timeSeconds * 0.031) * 0.07;
-      group.rotation.z = Math.sin(timeSeconds * 0.019 + 0.6) * 0.018;
+      group.rotation.y = Math.sin(stagingTime * 0.031) * 0.07;
+      group.rotation.z = Math.sin(stagingTime * 0.019 + 0.6) * 0.018;
       impactRing.line.position.set((observation - 0.5) * 9.6, -3.72, 0.46);
-      impactRing.line.scale.setScalar(0.18 + visualEvent.progress * 0.92);
+      impactRing.line.scale.setScalar(reducedMotion ? 0.3 : 0.18 + visualEvent.progress * 0.92);
       (impactRing.line.material as THREE.LineBasicMaterial).opacity =
         0.12 + visualEvent.pulse * 0.72;
       return { energy: evaluateFiveActEnergy(timeSeconds, 64), warmth: 0.12 };
