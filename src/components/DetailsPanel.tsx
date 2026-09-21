@@ -35,9 +35,10 @@ export function DetailsPanel({
       renderToString(pattern.audio.sonificationLatex, { throwOnError: false, displayMode: true }),
     [pattern.audio.sonificationLatex],
   );
+  const scrollResetKey = `${pattern.id}:${tab}`;
   useLayoutEffect(() => {
-    if (content.current) content.current.scrollTop = 0;
-  }, [pattern.id, tab]);
+    if (scrollResetKey && content.current) content.current.scrollTop = 0;
+  }, [scrollResetKey]);
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement;

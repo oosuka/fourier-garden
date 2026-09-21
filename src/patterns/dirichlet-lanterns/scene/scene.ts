@@ -116,7 +116,7 @@ export function createDirichletLanternsContent(
     group,
     update(timeSeconds: number, reducedMotion = false) {
       const stagingTime = reducedMotion ? 0 : timeSeconds;
-      const frame = resonance.update(timeSeconds);
+      const frame = resonance.update(timeSeconds, reducedMotion);
       const selected = mappings[frame.focus?.sourceIndex ?? 0]!.orderIndex;
       const cycleTime = ((timeSeconds % 60) + 60) % 60;
       const fejerFocus =

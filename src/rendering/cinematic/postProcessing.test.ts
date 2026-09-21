@@ -68,6 +68,60 @@ describe("cinematic post processing", () => {
     processor.dispose();
     expect(released.toSorted()).toEqual(["bright", "high-pass"]);
   });
+  it("synchronizes WebGL bloom to the latest viewport when quality re-enables it", async () => {
+    const resizeBloom = vi.spyOn(UnrealBloomPass.prototype, "setSize");
+    const processor = await createCinematicPostProcessor({
+      renderer: new THREE.WebGPURenderer(),
+      backend: "webgl",
+      scene: new THREE.Scene(),
+      camera: new THREE.PerspectiveCamera(),
+      exposure: 1,
+    });
+    processor.resize(1_440, 900, 1);
+    processor.setQuality("low");
+    processor.resize(1_024, 640, 2);
+    processor.setQuality("high");
+
+    expect(resizeBloom.mock.calls.at(-1)).toEqual([2_048, 1_280]);
+    processor.dispose();
+  });
+  it("syncs WebGL bloom only for viewport changes, not quality or energy updates", async () => {
+    const resizeBloom = vi.spyOn(UnrealBloomPass.prototype, "setSize");
+    const processor = await createCinematicPostProcessor({
+      renderer: new THREE.WebGPURenderer(),
+      backend: "webgl",
+      scene: new THREE.Scene(),
+      camera: new THREE.PerspectiveCamera(),
+      exposure: 1,
+    });
+
+    processor.setQuality("low");
+    processor.resize(1_440, 900, 1);
+    processor.setQuality("high");
+    expect(resizeBloom.mock.calls.at(-1)).toEqual([1_440, 900]);
+
+    processor.setQuality("low");
+    processor.resize(1_024, 640, 2);
+    processor.setQuality("high");
+    expect(resizeBloom.mock.calls.at(-1)).toEqual([2_048, 1_280]);
+
+    processor.resize(1_024, 640, 3);
+    expect(resizeBloom.mock.calls.at(-1)).toEqual([3_072, 1_920]);
+
+    processor.resize(3_840, 2_160, 1);
+    const beforeReturnToBloom = resizeBloom.mock.calls.length;
+    processor.resize(2_880, 1_920, 1);
+    expect(resizeBloom.mock.calls.length).toBeGreaterThan(beforeReturnToBloom);
+    expect(resizeBloom.mock.calls.at(-1)).toEqual([2_880, 1_920]);
+
+    const synchronizedCalls = resizeBloom.mock.calls.length;
+    processor.setQuality("high");
+    processor.setQuality("high");
+    processor.setEnergy(0.35);
+    processor.setEnergy(0.7);
+    expect(resizeBloom.mock.calls).toHaveLength(synchronizedCalls);
+    processor.dispose();
+  });
   it("keeps bloom below the material cores and reduces it with decorative quality", () => {
     expect(getCinematicPostProfile("low")).toEqual({
       enabled: false,

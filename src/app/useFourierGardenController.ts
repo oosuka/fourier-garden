@@ -20,6 +20,21 @@ interface SceneReadyWaiter {
   resolve: (ready: boolean) => void;
 }
 
+function createDeferredControllerDisposer(
+  playbackOperation: { current: number },
+  audio: { current: AudioEngine },
+  departingAudio: { current: Set<AudioEngine> },
+  capturedEcho: { current: ChapterEcho | null },
+): DeferredDisposer {
+  return new DeferredDisposer(() => {
+    ++playbackOperation.current;
+    void audio.current.dispose();
+    for (const retiring of departingAudio.current) void retiring.dispose();
+    departingAudio.current.clear();
+    capturedEcho.current?.dispose();
+  });
+}
+
 export function useFourierGardenController() {
   const patterns = useMemo(() => getPatternRegistry(window.location.search), []);
   const qaConfig = useMemo(
@@ -45,24 +60,19 @@ export function useFourierGardenController() {
   const departingAudio = useRef(new Set<AudioEngine>());
   const capturedEcho = useRef<ChapterEcho | null>(null);
   const captureSceneRef = useRef<ChapterFrameCapture | null>(null);
+  const unmountDisposerRef = useRef<DeferredDisposer | null>(null);
   const [transitionEcho, setTransitionEcho] = useState<ChapterAfterimageState | null>(null);
   const playbackOperation = useRef(0);
-  const unmountDisposer = useMemo(
-    () =>
-      new DeferredDisposer(() => {
-        ++playbackOperation.current;
-        void audioRef.current.dispose();
-        for (const retiring of departingAudio.current) void retiring.dispose();
-        departingAudio.current.clear();
-        capturedEcho.current?.dispose();
-      }),
-    [],
-  );
   const [entered, setEntered] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [startingPlayback, setStartingPlayback] = useState(false);
   const playbackIntent = useRef(false);
-  const usingSilentClock = useRef(false);
+  const [silentPlayback, setSilentPlayback] = useState(false);
+  const silentPlaybackRef = useRef(false);
+  const setSilentPlaybackMode = useCallback((silent: boolean) => {
+    silentPlaybackRef.current = silent;
+    setSilentPlayback(silent);
+  }, []);
   const [switchingChapter, setSwitchingChapter] = useState(false);
   const [transitionPattern, setTransitionPattern] = useState<PatternDefinition | null>(null);
   const [transitionSource, setTransitionSource] = useState<PatternDefinition | null>(null);
@@ -125,15 +135,18 @@ export function useFourierGardenController() {
     [qaCapture],
   );
 
+  const scheduleUiHide = useCallback(() => {
+    window.clearTimeout(hideTimer.current);
+    if (!entered || !playing || detailsOpen || indexOpen) return;
+    hideTimer.current = window.setTimeout(() => {
+      setUiVisible(false);
+    }, 4_000);
+  }, [detailsOpen, entered, indexOpen, playing]);
+
   const revealUi = useCallback(() => {
     setUiVisible(true);
-    window.clearTimeout(hideTimer.current);
-    if (entered && playing && !detailsOpen && !indexOpen) {
-      hideTimer.current = window.setTimeout(() => {
-        setUiVisible(false);
-      }, 4_000);
-    }
-  }, [detailsOpen, entered, playing, indexOpen]);
+    scheduleUiHide();
+  }, [scheduleUiHide]);
 
   const showDetailsHint = useCallback((patternId: string) => {
     if (detailsDiscovered.current || hintedPatternIds.current.has(patternId)) return;
@@ -216,7 +229,7 @@ export function useFourierGardenController() {
   const startPlayback = useCallback(() => {
     if (document.hidden || sceneStatusRef.current !== "ready") return Promise.resolve(false);
     transport.pause();
-    if (usingSilentClock.current) return Promise.resolve(startSilentPlayback());
+    if (silentPlaybackRef.current) return Promise.resolve(startSilentPlayback());
     const operation = ++playbackOperation.current;
     const targetAudio = audioError ? replaceAudio(muted) : audioRef.current;
     return playAudio(targetAudio, transport.currentTime, operation);
@@ -227,13 +240,21 @@ export function useFourierGardenController() {
       if (sceneStatus !== "ready") return;
       setMuted(!sound);
       audio.setMuted(!sound);
-      usingSilentClock.current = !sound;
+      setSilentPlaybackMode(!sound);
       setEntered(true);
       showDetailsHint(pattern.id);
       await startPlayback();
       revealUi();
     },
-    [pattern.id, revealUi, showDetailsHint, startPlayback, audio, sceneStatus],
+    [
+      pattern.id,
+      revealUi,
+      showDetailsHint,
+      startPlayback,
+      audio,
+      sceneStatus,
+      setSilentPlaybackMode,
+    ],
   );
 
   const togglePlayback = useCallback(() => {
@@ -341,7 +362,7 @@ export function useFourierGardenController() {
         if (operation !== playbackOperation.current) return;
 
         if (resumeAfterSwitch && ready && !document.hidden) {
-          if (usingSilentClock.current) startSilentPlayback();
+          if (silentPlaybackRef.current) startSilentPlayback();
           else
             await playAudio(
               nextAudio,
@@ -379,7 +400,10 @@ export function useFourierGardenController() {
           if (sceneReadyResolver.current?.generation === nextSceneGeneration) {
             sceneReadyResolver.current = null;
           }
-          showDetailsHint(nextPattern.id);
+          if (!detailsDiscovered.current && !hintedPatternIds.current.has(nextPattern.id)) {
+            hintedPatternIds.current.add(nextPattern.id);
+            setDetailsHintVisible(true);
+          }
         }
       }
     },
@@ -391,7 +415,7 @@ export function useFourierGardenController() {
       patterns,
       playAudio,
       startSilentPlayback,
-      showDetailsHint,
+      departingAudio,
       switchingChapter,
       transport,
       muted,
@@ -420,7 +444,7 @@ export function useFourierGardenController() {
       if (status === "ready" && resumeAfterRecovery.current) {
         resumeAfterRecovery.current = false;
         if (document.hidden) autoPaused.current = true;
-        else if (usingSilentClock.current) startSilentPlayback();
+        else if (silentPlaybackRef.current) startSilentPlayback();
         else void playAudio(audioRef.current, transport.currentTime, ++playbackOperation.current);
       }
     },
@@ -437,18 +461,18 @@ export function useFourierGardenController() {
     transport.pause();
     const position = transport.currentTime;
     const replacement = replaceAudio(false);
-    usingSilentClock.current = false;
+    setSilentPlaybackMode(false);
     setMuted(false);
     void playAudio(replacement, position, ++playbackOperation.current);
-  }, [replaceAudio, playAudio, transport]);
+  }, [replaceAudio, playAudio, transport, setSilentPlaybackMode]);
 
   const continueSilently = useCallback(() => {
     pausePlayback();
-    usingSilentClock.current = true;
+    setSilentPlaybackMode(true);
     setMuted(true);
     audio.setMuted(true);
     startSilentPlayback();
-  }, [audio, pausePlayback, startSilentPlayback]);
+  }, [audio, pausePlayback, startSilentPlayback, setSilentPlaybackMode]);
 
   const retryScene = useCallback(() => {
     sceneReadyResolver.current?.resolve(false);
@@ -461,13 +485,13 @@ export function useFourierGardenController() {
   }, []);
 
   const toggleMute = useCallback(() => {
-    if (muted && usingSilentClock.current) {
+    if (muted && silentPlaybackRef.current) {
       if (audioError && playbackIntent.current) {
         retryAudio();
         revealUi();
         return;
       }
-      usingSilentClock.current = false;
+      setSilentPlaybackMode(false);
       setMuted(false);
       audio.setMuted(false);
       if (playbackIntent.current) void startPlayback();
@@ -477,7 +501,7 @@ export function useFourierGardenController() {
     audio.setMuted(!muted);
     setMuted(!muted);
     revealUi();
-  }, [audio, audioError, muted, revealUi, retryAudio, startPlayback]);
+  }, [audio, audioError, muted, revealUi, retryAudio, startPlayback, setSilentPlaybackMode]);
 
   const toggleIndex = useCallback(() => {
     setIndexOpen((value) => !value);
@@ -527,7 +551,7 @@ export function useFourierGardenController() {
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, [pausePlayback, qaCapture, startPlayback]);
+  }, [pausePlayback, qaCapture, startPlayback, departingAudio]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -561,9 +585,9 @@ export function useFourierGardenController() {
   }, [entered, revealUi, toggleDetails, toggleFullscreen, togglePlayback, toggleIndex, toggleMute]);
 
   useEffect(() => {
-    revealUi();
+    scheduleUiHide();
     return () => window.clearTimeout(hideTimer.current);
-  }, [revealUi]);
+  }, [scheduleUiHide]);
 
   useEffect(() => {
     for (const candidate of [patterns[patternIndex - 1], patterns[patternIndex + 1]]) {
@@ -571,13 +595,23 @@ export function useFourierGardenController() {
     }
   }, [patternIndex, patterns]);
 
-  useEffect(() => unmountDisposer.mount(), [unmountDisposer]);
+  useEffect(() => {
+    if (!unmountDisposerRef.current) {
+      unmountDisposerRef.current = createDeferredControllerDisposer(
+        playbackOperation,
+        audioRef,
+        departingAudio,
+        capturedEcho,
+      );
+    }
+    return unmountDisposerRef.current.mount();
+  }, []);
   useEffect(() => () => window.clearTimeout(transitionTimer.current), []);
 
   return {
     patterns,
     qaCapture,
-    silentPlayback: usingSilentClock.current,
+    silentPlayback,
     captureFrame: qaCapture ? captureFrame : undefined,
     seekForQa,
     patternIndex,

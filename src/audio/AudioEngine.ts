@@ -1,5 +1,11 @@
-import { createSeededRandom } from "../core/seed";
 import { createWorkletConfigureMessage, type AudioEngineProgram } from "./audioProgram";
+import {
+  AUDIO_DEFAULT_FADE_IN_SECONDS,
+  AUDIO_MASTER_FADE_OUT_SECONDS,
+  AUDIO_START_LEAD_SECONDS,
+  connectAudioOutputGraph,
+  volumeToMasterGain,
+} from "./outputGraph";
 import { getAudibleContextTime } from "./presentationClock";
 import {
   measureSynchronization,
@@ -9,25 +15,9 @@ import {
 
 const VOLUME_KEY = "fourier-garden:volume";
 const DEFAULT_VOLUME = 0.35;
-const MASTER_FADE_OUT_SECONDS = 0.16;
-const START_LEAD_SECONDS = 0.05;
 // Chromium's compressor look-ahead. Device latency is obtained separately from its timestamp.
 const GRAPH_LATENCY_SECONDS = 0.006;
-
-export function createLimiterCurve(ceilingDbfs: number, length = 2_049): Float32Array<ArrayBuffer> {
-  if (!Number.isFinite(ceilingDbfs)) {
-    throw new Error("Limiter ceiling must be finite");
-  }
-  if (!Number.isInteger(length) || length < 2) {
-    throw new Error("Limiter curve length must be an integer of at least two");
-  }
-
-  const ceiling = 10 ** (ceilingDbfs / 20);
-  return Float32Array.from({ length }, (_, index) => {
-    const input = (index / (length - 1)) * 2 - 1;
-    return Math.max(-ceiling, Math.min(ceiling, input));
-  });
-}
+export { createLimiterCurve } from "./outputGraph";
 
 export class AudioEngine {
   private context: AudioContext | null = null;
@@ -185,95 +175,24 @@ export class AudioEngine {
       source.port.start();
       source.port.postMessage(createWorkletConfigureMessage(this.program.worklet));
 
-      const highPass = new BiquadFilterNode(context, {
-        type: "highpass",
-        frequency: this.program.graph.dryHighPassHz,
-        Q: this.program.graph.dryHighPassQ,
-      });
-      const highShelf = new BiquadFilterNode(context, {
-        type: "highshelf",
-        frequency: this.program.graph.dryHighShelfHz,
-        gain: this.program.graph.dryHighShelfGainDb,
-      });
-      const softLowPass = new BiquadFilterNode(context, {
-        type: "lowpass",
-        frequency: this.program.graph.dryLowPassHz,
-        Q: this.program.graph.dryLowPassQ,
-      });
-      const dry = new GainNode(context, { gain: this.program.graph.dryGain });
-      const wetHighPass = new BiquadFilterNode(context, {
-        type: "highpass",
-        frequency: this.program.graph.wetHighPassHz,
-        Q: this.program.graph.wetHighPassQ,
-      });
-      const wetLowPass = new BiquadFilterNode(context, {
-        type: "lowpass",
-        frequency: this.program.graph.wetLowPassHz,
-        Q: this.program.graph.wetLowPassQ,
-      });
-      const wet = new GainNode(context, { gain: this.program.graph.wetGain });
-      const convolver = new ConvolverNode(context, {
-        buffer: this.createImpulse(
-          context,
-          this.program.graph.roomSeconds,
-          this.program.graph.roomDecay,
-        ),
-      });
-      const compressor = new DynamicsCompressorNode(context, {
-        threshold: this.program.graph.compressor.thresholdDb,
-        knee: this.program.graph.compressor.kneeDb,
-        ratio: this.program.graph.compressor.ratio,
-        attack: this.program.graph.compressor.attackSeconds,
-        release: this.program.graph.compressor.releaseSeconds,
-      });
-      const limiter =
-        this.program.graph.limiterCeilingDbfs === null
-          ? null
-          : new WaveShaperNode(context, {
-              curve: createLimiterCurve(this.program.graph.limiterCeilingDbfs),
-              oversample: "4x",
-            });
-      const analyser = new AnalyserNode(context, {
-        fftSize: 2_048,
-        smoothingTimeConstant: 0.86,
-      });
-      const master = new GainNode(context, {
-        gain: 0,
-      });
-
-      source.connect(highPass, 0, 0).connect(highShelf).connect(softLowPass);
-      softLowPass.connect(dry).connect(compressor);
-      source
-        .connect(wetHighPass, 1, 0)
-        .connect(convolver)
-        .connect(wetLowPass)
-        .connect(wet)
-        .connect(compressor);
-      if (limiter) {
-        compressor.connect(limiter).connect(analyser);
-      } else {
-        compressor.connect(analyser);
-      }
-      analyser.connect(master).connect(context.destination);
+      const output = connectAudioOutputGraph(
+        context,
+        {
+          connectDry: (destination) => {
+            source.connect(destination, 0, 0);
+          },
+          connectWet: (destination) => {
+            source.connect(destination, 1, 0);
+          },
+        },
+        this.program.graph,
+      );
 
       this.context = context;
       this.source = source;
-      this.master = master;
-      this.analyser = analyser;
-      this.audioNodes = [
-        highPass,
-        highShelf,
-        softLowPass,
-        dry,
-        wetHighPass,
-        wetLowPass,
-        wet,
-        convolver,
-        compressor,
-        ...(limiter ? [limiter] : []),
-        analyser,
-        master,
-      ];
+      this.master = output.master;
+      this.analyser = output.analyser;
+      this.audioNodes = output.nodes;
     } catch (error) {
       await context.close();
       throw error;
@@ -282,7 +201,10 @@ export class AudioEngine {
     }
   }
 
-  async play(positionSeconds: number, fadeInSeconds = 0.065): Promise<number> {
+  async play(
+    positionSeconds: number,
+    fadeInSeconds = AUDIO_DEFAULT_FADE_IN_SECONDS,
+  ): Promise<number> {
     if (!Number.isFinite(positionSeconds) || positionSeconds < 0) {
       throw new Error("Audio position must be finite and nonnegative");
     }
@@ -298,7 +220,7 @@ export class AudioEngine {
     const context = this.context;
     if (!context || this.disposed) throw new Error("AudioEngine has been disposed");
     const epoch =
-      Math.ceil((context.currentTime + START_LEAD_SECONDS) * context.sampleRate) /
+      Math.ceil((context.currentTime + AUDIO_START_LEAD_SECONDS) * context.sampleRate) /
       context.sampleRate;
     this.source?.port.postMessage({
       type: "start",
@@ -314,7 +236,7 @@ export class AudioEngine {
     ++this.playbackRequest;
     this.latestPosition = null;
     this.source?.port.postMessage({ type: "active", value: false });
-    this.rampMaster(0, MASTER_FADE_OUT_SECONDS);
+    this.rampMaster(0, AUDIO_MASTER_FADE_OUT_SECONDS);
     this.active = false;
   }
 
@@ -394,7 +316,7 @@ export class AudioEngine {
       preserveTail || (this.active && this.context !== null && this.master !== null);
     const duration = preserveTail
       ? Math.min(0.85, Math.max(0.5, this.program.graph.roomSeconds))
-      : MASTER_FADE_OUT_SECONDS;
+      : AUDIO_MASTER_FADE_OUT_SECONDS;
     this.departure = { start: this.context?.currentTime ?? performance.now() / 1_000, duration };
     ++this.playbackRequest;
     this.latestPosition = null;
@@ -415,23 +337,6 @@ export class AudioEngine {
   }
 
   private volumeToGain(volume: number): number {
-    return volume * volume * 0.72;
-  }
-
-  private createImpulse(context: AudioContext, seconds: number, decay: number): AudioBuffer {
-    const length = Math.floor(context.sampleRate * seconds);
-    const buffer = context.createBuffer(2, length, context.sampleRate);
-    const random = createSeededRandom(41_041);
-
-    for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
-      const data = buffer.getChannelData(channel);
-      for (let index = 0; index < length; index += 1) {
-        const envelope = Math.pow(1 - index / length, decay);
-        const diffusion = Math.sin(index * (0.0113 + channel * 0.0007)) * 0.18;
-        data[index] = ((random() * 2 - 1) * 0.82 + diffusion) * envelope;
-      }
-    }
-
-    return buffer;
+    return volumeToMasterGain(volume);
   }
 }

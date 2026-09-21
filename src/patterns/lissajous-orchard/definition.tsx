@@ -99,7 +99,7 @@ export const lissajousOrchardPattern: LissajousOrchardPatternDefinition = {
     mode: "sonification",
     initialVolume: 0.35,
     roomSeconds: 0.68,
-    sonificationLatex: "a:b\\mapsto\\text{left/right subdivision ratio}",
+    sonificationLatex: "f=440+12r+90(x+1)+50(y+1)\\,\\mathrm{Hz}",
     score: LISSAJOUS_ORCHARD_SCORE,
     createProgram: createLissajousOrchardAudioProgram,
   },

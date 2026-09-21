@@ -155,31 +155,30 @@ export function AnalyticPatternDetails({
         <p className="analyticSectionDescription">
           厳密に保持する量、知覚帯域へ圧縮する量、数学層の外側に加える演出を区別します。
         </p>
-        <div className="analyticTableScroll">
-          <table>
-            <thead>
-              <tr>
-                <th>数学量 / 層</th>
-                <th>区分</th>
-                <th>局所映像</th>
-                <th>音響写像</th>
-              </tr>
-            </thead>
-            <tbody>
-              {causality.map((row) => (
-                <tr key={row.id}>
-                  <td>{row.quantity}</td>
-                  <td>
+        <div className="causalityEntries">
+          {causality.map((row) => (
+            <section className="causalityEntry" key={row.id}>
+              <h3>{row.quantity}</h3>
+              <dl>
+                <div>
+                  <dt>区分</dt>
+                  <dd>
                     <span className={`causalityStatus causalityStatus--${row.status}`}>
                       {row.status}
                     </span>
-                  </td>
-                  <td>{row.visual}</td>
-                  <td>{row.audio}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </dd>
+                </div>
+                <div>
+                  <dt>局所映像</dt>
+                  <dd>{row.visual}</dd>
+                </div>
+                <div>
+                  <dt>音響写像</dt>
+                  <dd>{row.audio}</dd>
+                </div>
+              </dl>
+            </section>
+          ))}
         </div>
       </section>
     </>

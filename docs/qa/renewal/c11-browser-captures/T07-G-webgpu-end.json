@@ -1,0 +1,197 @@
+{
+  "chapter": "dirichlet-lanterns",
+  "renderer": "webgpu",
+  "width": 1440,
+  "height": 900,
+  "pixelRatio": 1,
+  "rasterWidth": 1440,
+  "rasterHeight": 900,
+  "quality": "high",
+  "seed": "qa",
+  "postProcessing": "default",
+  "audioSampleRateHz": null,
+  "clock": "performance",
+  "mutedAtStart": true,
+  "volumeAtStart": 0.35,
+  "playingAtStart": true,
+  "motionAtStart": "full",
+  "physicalLatencyMeasured": false,
+  "status": "complete",
+  "reason": null,
+  "durationSeconds": 60,
+  "frames": 2988,
+  "averageFps": 49.8,
+  "cpuSubmissionP95Ms": 22.299999982118607,
+  "frameIntervalP95Ms": 33.40000000002328,
+  "maxFrameIntervalMs": 600,
+  "intervalsOver50Ms": 65,
+  "slowFrames": [
+    {
+      "elapsedSeconds": 2.9,
+      "frameIntervalMs": 83.69999999995343,
+      "cpuSubmissionMs": 7.899999976158142
+    },
+    {
+      "elapsedSeconds": 3.21670000000007,
+      "frameIntervalMs": 66.59999999997672,
+      "cpuSubmissionMs": 4.199999988079071
+    },
+    {
+      "elapsedSeconds": 5.3,
+      "frameIntervalMs": 83.29999999993015,
+      "cpuSubmissionMs": 15.600000023841858
+    },
+    {
+      "elapsedSeconds": 5.41670000000007,
+      "frameIntervalMs": 66.70000000006985,
+      "cpuSubmissionMs": 29.5
+    },
+    {
+      "elapsedSeconds": 5.8,
+      "frameIntervalMs": 66.59999999997672,
+      "cpuSubmissionMs": 15.400000005960464
+    },
+    {
+      "elapsedSeconds": 5.983400000000024,
+      "frameIntervalMs": 83.40000000002328,
+      "cpuSubmissionMs": 29.099999994039536
+    },
+    {
+      "elapsedSeconds": 6.233400000000024,
+      "frameIntervalMs": 50.5,
+      "cpuSubmissionMs": 11.699999988079071
+    },
+    {
+      "elapsedSeconds": 6.765900000000023,
+      "frameIntervalMs": 66.79999999993015,
+      "cpuSubmissionMs": 14.800000011920929
+    },
+    {
+      "elapsedSeconds": 6.833400000000023,
+      "frameIntervalMs": 67.5,
+      "cpuSubmissionMs": 34
+    },
+    {
+      "elapsedSeconds": 6.933400000000023,
+      "frameIntervalMs": 50.09999999997672,
+      "cpuSubmissionMs": 5
+    },
+    {
+      "elapsedSeconds": 7.383400000000023,
+      "frameIntervalMs": 116.69999999995343,
+      "cpuSubmissionMs": 26.19999998807907
+    },
+    {
+      "elapsedSeconds": 7.75,
+      "frameIntervalMs": 50.699999999953434,
+      "cpuSubmissionMs": 38.900000005960464
+    },
+    {
+      "elapsedSeconds": 7.800100000000093,
+      "frameIntervalMs": 50.10000000009313,
+      "cpuSubmissionMs": 22.700000017881393
+    },
+    {
+      "elapsedSeconds": 7.86670000000007,
+      "frameIntervalMs": 66.59999999997672,
+      "cpuSubmissionMs": 385.7999999821186
+    },
+    {
+      "elapsedSeconds": 8.283300000000047,
+      "frameIntervalMs": 416.5999999999767,
+      "cpuSubmissionMs": 264.7000000178814
+    },
+    {
+      "elapsedSeconds": 8.616700000000069,
+      "frameIntervalMs": 333.4000000000233,
+      "cpuSubmissionMs": 52.19999998807907
+    },
+    {
+      "elapsedSeconds": 9.21670000000007,
+      "frameIntervalMs": 600,
+      "cpuSubmissionMs": 50.10000002384186
+    },
+    {
+      "elapsedSeconds": 9.383400000000023,
+      "frameIntervalMs": 166.69999999995343,
+      "cpuSubmissionMs": 40.599999994039536
+    },
+    {
+      "elapsedSeconds": 9.46670000000007,
+      "frameIntervalMs": 83.30000000004657,
+      "cpuSubmissionMs": 48.5
+    },
+    {
+      "elapsedSeconds": 9.533400000000023,
+      "frameIntervalMs": 66.69999999995343,
+      "cpuSubmissionMs": 19.900000005960464
+    },
+    {
+      "elapsedSeconds": 9.75,
+      "frameIntervalMs": 50.79999999993015,
+      "cpuSubmissionMs": 31.69999998807907
+    },
+    {
+      "elapsedSeconds": 9.833400000000024,
+      "frameIntervalMs": 83.40000000002328,
+      "cpuSubmissionMs": 29.900000005960464
+    },
+    {
+      "elapsedSeconds": 9.96670000000007,
+      "frameIntervalMs": 66.59999999997672,
+      "cpuSubmissionMs": 35.10000002384186
+    },
+    {
+      "elapsedSeconds": 10.083400000000024,
+      "frameIntervalMs": 83.40000000002328,
+      "cpuSubmissionMs": 49.5
+    },
+    {
+      "elapsedSeconds": 10.16670000000007,
+      "frameIntervalMs": 83.30000000004657,
+      "cpuSubmissionMs": 46.19999998807907
+    },
+    {
+      "elapsedSeconds": 10.216800000000047,
+      "frameIntervalMs": 50.09999999997672,
+      "cpuSubmissionMs": 34.099999994039536
+    },
+    {
+      "elapsedSeconds": 10.433400000000024,
+      "frameIntervalMs": 83.90000000002328,
+      "cpuSubmissionMs": 82.10000002384186
+    },
+    {
+      "elapsedSeconds": 10.533400000000023,
+      "frameIntervalMs": 100,
+      "cpuSubmissionMs": 39.60000002384186
+    },
+    {
+      "elapsedSeconds": 10.633400000000023,
+      "frameIntervalMs": 50.79999999993015,
+      "cpuSubmissionMs": 50.30000001192093
+    },
+    {
+      "elapsedSeconds": 10.700100000000093,
+      "frameIntervalMs": 66.70000000006985,
+      "cpuSubmissionMs": 63.5
+    },
+    {
+      "elapsedSeconds": 10.76670000000007,
+      "frameIntervalMs": 66.59999999997672,
+      "cpuSubmissionMs": 36.599999994039536
+    },
+    {
+      "elapsedSeconds": 10.933400000000024,
+      "frameIntervalMs": 166.69999999995343,
+      "cpuSubmissionMs": 44.89999997615814
+    }
+  ],
+  "slowFramesOmitted": 33,
+  "synchronizationSamples": 0,
+  "visualLeadP95Ms": null,
+  "visualLeadMinMs": null,
+  "visualLeadMaxMs": null,
+  "firstScoreSeconds": 576.3171999999881,
+  "lastScoreSeconds": 636.2767999999821
+}

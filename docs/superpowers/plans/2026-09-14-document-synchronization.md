@@ -6,7 +6,7 @@
 
 **Architecture:** `AGENTS.md`、README、設計・数学・音響・視覚・因果文書を現行の正本とし、`docs/qa/renewal/`の進捗・台帳・証拠を実測の記録とする。`docs/history/`、`design-qa.md`、元の依頼文は履歴・原文として凍結し、現在の完成根拠へ再利用しない。
 
-**Tech Stack:** Markdown、`rtk rg`、Node.js 24.19.0のJSON／リンク監査、npmの既存検証コマンド、Git。
+**計画作成時のTech Stack:** Markdown、`rtk rg`、Node.js 24.19.0のJSON／リンク監査、npmの既存検証コマンド、Git。この記述は2026年9月14日の実施環境を示す履歴。
 
 **Spec:** `docs/superpowers/specs/2026-09-06-renewal-design.md` と `docs/qa/renewal/renewal-request.md`
 

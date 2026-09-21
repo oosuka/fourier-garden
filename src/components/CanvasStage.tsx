@@ -65,11 +65,16 @@ export function CanvasStage({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playingRef = useRef(playing);
   const onFrameRef = useRef(onFrame);
+  const patternRef = useRef(pattern);
 
   useEffect(() => {
     playingRef.current = playing;
     onFrameRef.current = onFrame;
   }, [playing, onFrame]);
+
+  useEffect(() => {
+    patternRef.current = pattern;
+  }, [pattern]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -165,7 +170,7 @@ export function CanvasStage({
 
     const initializeScene = async () => {
       failed = false;
-      factory ??= await pattern.loadScene();
+      factory ??= await patternRef.current.loadScene();
       if (disposed) return;
       const nextScene = await factory({
         canvas,
@@ -249,7 +254,7 @@ export function CanvasStage({
       scene?.dispose();
       scene = null;
     };
-  }, [onError, onStatus, pattern, sceneGeneration, transport, captureRef]);
+  }, [onError, onStatus, sceneGeneration, transport, captureRef]);
 
   return (
     <canvas

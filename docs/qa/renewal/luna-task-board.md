@@ -1,6 +1,6 @@
 # Luna継続作業の台帳
 
-2026年9月13日作成。最終更新・文書監査: 2026年9月14日。実行手順と完了条件は
+2026年9月13日作成。最終更新: 2026年9月22日。実行手順と完了条件は
 [引き継ぎプロンプト](luna-handoff.md) を使う。
 V2は制作中。前タスクの終了は引き継ぎの完了を意味し、下の項目の合格を意味しない。
 
@@ -15,27 +15,26 @@ V2は制作中。前タスクの終了は引き継ぎの完了を意味し、下
 - 合格時は日時、対象版、証拠ファイル、対象条件を追記する。影響する修正が入った時だけ合格を取り消す。
 - 同じブラウザ試行が複数カードの条件を満たした場合、同じ証拠を参照してよい。測定していない条件へ拡張しない。
 
-次の1件：**T06-G**。PrimeのWebGL2 4Kは再計測待ちとして残し、全章の時間・因果・高DPI・連続動作カードを進める。
-2026年9月14日の文書監査では、全Markdownのリンク、10章の構造、QA JSON 39件、計画と台帳の対応を確認した。
-`npm run check`は725成功・1skip、音響性能は75成功。これは文書と自動検証の同期確認であり、V2完成判定ではない。
+次の1件：**macOSの手動ロック解除後にT06-Gを再実施**。C00–C10cは実施記録済み。C11の初回T06-G/L・T07-GはOSロックの影響を除外できず合格に数えない。証拠と制約は[進捗記録](progress.md)および[C11計測JSON](c11-continuous-observation-2026-09-22.json)を参照する。C12の監査・31要件表・最終checkは未完。
+2026年9月21日のC08で全10章の数学主張・音響／視覚写像・有限計算の限界を台帳へ反映した。LissajousとPhase Torusの音高説明を現行スコアへ合わせ、対象テスト103件と型検査を確認。これは文書と有限回帰の同期確認であり、V2完成判定ではない。
 
 ## 共通作業
 
 | ID | 推論 | 作業 | 初期状態 | 証拠・次の行動 |
 | --- | --- | --- | --- | --- |
 | G00 | high | 作業ツリー、版、正本、既存証拠の確認 | 合格 | 2026-09-14。`feat/renewal`、版1.0.0、Volta Node 24.19.0 / npm 11.19.0、commit `9202169`、作業ツリーcleanを確認。巻き戻しなし |
-| U01 | high | 音あり／なし入口・取消・初発音 | 一部済 | App／AudioEngineの既存テストと過去操作あり。最終版で不足を補う |
-| U02 | high | キーボード・focus・音量・fullscreen | 一部済 | 入力中Space、停止中消音解除、全画面失敗を含める |
-| U03 | high | 全10章の移動・連続選択・ノート併用遷移 | 一部済 | 残像・残響、古い世代、実験値とタブの保持 |
-| U04 | high | reduced motion・contrast・支援技術の状態 | 一部済 | scene用queryとOSのCSS設定を分けて記録 |
+| U01 | high | 音あり／なし入口・取消・初発音 | 合格 (C09) | 音なし入場・開始取消・audio init失敗/retry・scene recoveryと通常開始の状態回帰。初発音の実聴・物理AV遅延は未測定 |
+| U02 | high | キーボード・focus・音量・fullscreen | 合格 (C09) | Space/D/F/Escape、focus復元、入力中Space、章目録矢印/Home/End、fullscreen失敗表示を確認。Chrome fullscreen自体は環境制限で開始せず |
+| U03 | high | 全10章の移動・連続選択・ノート併用遷移 | 合格 (C09) | 10章を章目録から連続選択。ノートtab、Haar J=0、chapter change後のscroll resetはUI・回帰で確認。知覚残響はC10/C11に残す |
+| U04 | high | reduced motion・contrast・支援技術の状態 | 一部済 | C06でOS設定（CSS）とscene用QA queryを分離し、reduced flagを7章×両rendererで確認。contrast・支援技術全体は未完 |
 | L01 | xhigh | 音声／scene失敗・GPU復旧・非表示復帰 | 一部済 | 既存回帰はある。実操作と対象版の対応を確認 |
 | L02 | xhigh | 両rendererで章を2巡し、所有資源と破棄を確認 | 証拠不足 | 実GPUメモリを測れない場合は区別して記録 |
 | A01 | xhigh | 全周期レンダー・帯域・校正・参照／Worklet | 一部済 | 現行基準 `audio-residue-v2.json`。最終音響版で比較 |
-| A02 | high | DSP性能・隣接章の音響差 | 一部済 | 2026-09-14の現行版で75テスト成功。Node VM代表block p95最大1.176 ms。隣接章の知覚評価とブラウザ音声スレッドは未完 |
+| A02 | high | DSP性能・隣接章の音響差 | 一部済 | 2026-09-22の現行版で[`qa:audio-performance`](progress.md)75テスト成功。Node VM代表block p95最大1.104 ms（Möbius、目標1.333 ms未満）。隣接章の知覚評価とブラウザ音声スレッドは未完 |
 | R01 | xhigh | 最終の読み取り専用数学監査 | 未実施 | M01〜M10を根拠に、独立して1章ずつ確認 |
 | R02 | xhigh | 最終の読み取り専用DSP監査 | 未実施 | A01/A02、音源・Worklet・時計 |
 | R03 | xhigh | 最終の読み取り専用描画・性能・寿命監査 | 未実施 | V/P/T、共有rendering、L01/L02 |
-| D01 | high | 正本・進捗・実装計画・31要件対応の同期 | 未実施 | 下の31要件表へ具体的な証拠を記入 |
+| D01 | high | 正本・進捗・実装計画・31要件対応の同期 | 一部済 | 2026-09-22に現行根拠と限界を31行へ記入。独立監査と最終版の追加同期はC12で継続 |
 | F01 | high | 最終checkと証拠に基づく完成判定 | 未実施 | 全必須カード、FIX、残る未測定を確認 |
 
 ## 全章・両renderer
@@ -55,10 +54,10 @@ Tの連続10分は今回提案する観察窓で、元依頼が指定した時�
 | 04 Möbius | WebGL2 | V04-L 合格 | P04-L 既存証拠 | T04-L 合格 | 2026-09-14。V04-Lの表示条件に加え、実ブラウザ639×789 CSS・DPR2・canvas CSS1024×789／実ラスタ2048×1578で約615秒・10周回以上の前景連続観察、開始／終盤60秒計測、pause/resume、8945.448秒への長い絶対seek、56.4→56.5秒の逆seek／周回境界、帯の進行波・節線・声部リボン・局所発光の追従を確認。[開始](luna-mobius-choir-webgl-dpr2-t04-start.json)／[終盤](luna-mobius-choir-webgl-dpr2-t04-end.json)。音色の知覚評価、物理AV遅延、実GPU完了時間は未測定 |
 | 05 Bessel | WebGPU | V05-G 合格 | P05-G 合格 | T05-G 合格 | 2026-09-14。V05-G/P05-Gの表示条件に加え、実ブラウザ639×789 CSS・DPR2・canvas CSS1024×789／実ラスタ2048×1578で約614秒・8周回以上の前景連続観察、開始／終盤60秒計測、pause/resume、8945.448秒への長い絶対seek、71.9→72秒の逆seek／周回境界、円盤の節円・節径・中心明暗・局所共鳴の追従を確認。[開始](luna-bessel-tide-webgpu-dpr2-t05-start.json)／[終盤](luna-bessel-tide-webgpu-dpr2-t05-end.json)。音色の知覚評価、物理AV遅延、実GPU完了時間は未測定 |
 | 05 Bessel | WebGL2 | V05-L 合格 | P05-L 合格 | T05-L 合格 | 2026-09-14。V05-L/P05-Lの表示条件に加え、実ブラウザ639×789 CSS・DPR2・canvas CSS1024×789／実ラスタ2048×1578で約630秒・8周回以上の前景連続観察、開始／終盤60秒計測、pause/resume、8945.448秒への長い絶対seek、71.9→72秒の逆seek／周回境界、円盤の節円・節径・中心明暗・局所共鳴の追従を確認。[開始](luna-bessel-tide-webgl-dpr2-t05-start.json)／[終盤](luna-bessel-tide-webgl-dpr2-t05-end.json)。音色の知覚評価、物理AV遅延、実GPU完了時間は未測定 |
-| 06 Lissajous | WebGPU | V06-G 合格 | P06-G 合格 | T06-G 証拠不足 | V06-Gの表示・操作に加え、2026-09-13の4K・DPR1・high・seed=qa・通常motion・48kHz・音量35%・ノート閉でcomplete、60.0168秒、3601フレーム、50ms超0回。[JSON](luna-lissajous-orchard-webgpu-4k-01.json) |
-| 06 Lissajous | WebGL2 | V06-L 合格 | P06-L 合格 | T06-L 証拠不足 | V06-Lの表示・操作に加え、2026-09-13の4K・DPR1・high・seed=qa・通常motion・48kHz・音量35%・ノート閉でcomplete、60.0002秒、3600フレーム、50ms超0回。[JSON](luna-lissajous-orchard-webgl-4k-01.json) |
-| 07 Dirichlet | WebGPU | V07-G 合格 | P07-G 合格 | T07-G 証拠不足 | 2026-09-13。V07-Gの表示・操作に加え、4K・DPR1・high・seed=qa・通常motion・48kHz・音量35%・ノート閉でcomplete、60.0169秒、3601フレーム、50ms超0回。[JSON](luna-dirichlet-lanterns-webgpu-4k-01.json) |
-| 07 Dirichlet | WebGL2 | V07-L 合格 | P07-L 合格 | T07-L 証拠不足 | 2026-09-13。V07-Lの表示・操作に加え、4K・DPR1・high・seed=qa・通常motion・48kHz・音量35%・ノート閉でcomplete、60.0002秒、3600フレーム、50ms超0回。[JSON](luna-dirichlet-lanterns-webgl-4k-01.json) |
+| 06 Lissajous | WebGPU | V06-G 合格 | P06-G 合格 | T06-G 要再計測 | 2026-09-22に10分超観察・seek等を試行。終盤60秒は50ms超4回・最大250.1ms。終了後にMacロックを確認したため前景証拠として不採用。開始／終盤JSONと条件は[C11記録](c11-continuous-observation-2026-09-22.json) |
+| 06 Lissajous | WebGL2 | V06-L 合格 | P06-L 合格 | T06-L 要再計測 | 2026-09-22に10分超観察・seek等を試行。終盤60秒は50ms超5回・最大165.5ms。Macの同時点ロック状態は未確認。前景証拠として不採用し、再実施する。[C11記録](c11-continuous-observation-2026-09-22.json) |
+| 07 Dirichlet | WebGPU | V07-G 合格 | P07-G 合格 | T07-G 要再計測 | 2026-09-22に10分超観察・seek等を試行。終盤60秒49.8fps、最大600ms、50ms超65回（記録外33回）。直後にMacロックを確認。原因は未確定、合格に数えず[C11記録](c11-continuous-observation-2026-09-22.json) |
+| 07 Dirichlet | WebGL2 | V07-L 合格 | P07-L 合格 | T07-L 証拠不足 | 連続観察は未実施。4K P07-Lの証拠は[luna-dirichlet-lanterns-webgl-4k-01.json](luna-dirichlet-lanterns-webgl-4k-01.json) |
 | 08 Haar | WebGPU | V08-G 合格 | P08-G 合格 | T08-G 証拠不足 | 2026-09-13。3比率の全景／ノート、J=0/3/6、reduced motion、KaTeX幅を実画面で確認。4Kは[luna-wavelet-rain-webgpu-4k-01.json](luna-wavelet-rain-webgpu-4k-01.json) |
 | 08 Haar | WebGL2 | V08-L 合格 | P08-L 合格 | T08-L 証拠不足 | 2026-09-13。3比率の全景／ノート、reduced motion、KaTeX幅を実画面で確認。4Kは[luna-wavelet-rain-webgl-4k-01.json](luna-wavelet-rain-webgl-4k-01.json) |
 | 09 Riemann | WebGPU | V09-G 合格 | P09-G 合格 | T09-G 証拠不足 | 2026-09-13。3比率の全景／ノート、M=12→96→48、数学詳細、reduced motion、0／16／32／48／64／80秒の5幕境界、WebGPUのerror／warnログ空を確認。4K記録は[luna-riemann-veil-webgpu-4k-01.json](luna-riemann-veil-webgpu-4k-01.json) |
@@ -77,16 +76,16 @@ P04-G/Lは `mobius-dpr-webgpu-4k.json`／`mobius-dpr-webgl-4k.json`。
 
 | ID | 章 | 状態 | 主な確認点 |
 | --- | --- | --- | --- |
-| M01 | Residue | 一部済 | 4k+1、係数、フェーザ、投影、144秒周回、ソニフィケーションの重み |
-| M02 | Cathedral | 一部済 | 固有モード、境界、λ、音響モード利得と局所光 |
-| M03 | Prime | 一部済 | 素数集合、位相、有限計算、点とpan |
-| M04 | Möbius | 一部済 | 継ぎ目の符号、許容モード、埋め込み、位相 |
-| M05 | Bessel | 一部済 | 根、節径・節円、発音モード、境界 |
-| M06 | Lissajous | 一部済 | 周波数比、位相、平面、句の選択 |
-| M07 | Dirichlet | 一部済 | 核、有限部分和、Gibbs、Fejérの重み、固定倍率 |
-| M08 | Haar | 一部済 | 平均、63係数、64半開区間、射影と積分 |
-| M09 | Riemann | 一部済 | n²と1/n²、有限／無限、滑らかさの主張 |
-| M10 | Torus | 一部済 | 共通変換、有理比の帰還、無理比の非帰還、有限図の限界 |
+| M01 | Residue | 合格 (C08) | 13項、4k+1、係数、フェーザ、投影、有限包絡を照合。`chapter-claim-ledger.md` C08表 |
+| M02 | Cathedral | 合格 (C08) | 境界、λ、12モード、係数正規化と光柱の演出境界を照合。C08表 |
+| M03 | Prime | 合格 (C08) | 25素数、位相、正規化有限和、音高圧縮、点とpanを照合。C08表 |
+| M04 | Möbius | 合格 (C08) | 継ぎ目符号、6許容モード、平坦商空間と3D埋め込みの差を照合。C08表 |
+| M05 | Bessel | 合格 (C08) | Dirichlet根、10 radial class、17実モード、節線、64点求積限界を照合。C08表 |
+| M06 | Lissajous | 合格 (C08) | 閉軌道、9×32点、288等間隔イベント、現行音高式を照合。詳細回帰で288件とブラウザ表示を確認 |
+| M07 | Dirichlet | 合格 (C08) | 有限核、D_N(0)、奇数支持、Fejér重みと主張範囲を照合。C08表 |
+| M08 | Haar | 合格 (C08) | 63 wavelet＋scaling、V₆の64半開区間、支持・積分と利得分離を照合。C08表 |
+| M09 | Riemann | 合格 (C08) | n²／1/n²、有限部分和、音高・数学gain分離、無限極限の限界を照合。詳細回帰で285件 |
+| M10 | Torus | 合格 (C08) | 24指標、√2流、有理比較、現行音高式と有限履歴の限界を照合。詳細回帰で420件とブラウザ表示を確認 |
 
 ## 不具合カード
 
@@ -97,53 +96,55 @@ P04-G/Lは `mobius-dpr-webgpu-4k.json`／`mobius-dpr-webgl-4k.json`。
 | --- | --- | --- | --- | --- | --- | --- |
 | FIX-001 | V06-G | 1440×900でLissajousの第1恒等式がclientWidth=361px／scrollWidth=364px。長い単一行が原因 | `aligned`の2行へ整理。`src/patterns/newChapterDetails.test.tsx`へ行構造の回帰を追加 | 対象回帰15件成功、build成功。修正後3比率の式幅超過なし | 修正前のV06-G式幅観察 | 解決 |
 | FIX-002 | V07-G | 1440×900でDirichletの第1恒等式がclientWidth=361px／scrollWidth=369px。長い単一行が原因 | `aligned`の2行へ整理。`src/patterns/newChapterDetails.test.tsx`へ行構造の回帰を追加 | 対象回帰16件成功、build成功。修正後3比率の数学詳細4件に幅超過なし | 修正前のV07-G式幅観察 | 解決 |
+| FIX-003 | C04 / Q3 | 1440×900の詳細幅361pxで共有因果表が列幅不足となり本文が切れていた。共有の数式縮小でWavelet Rainの恒等式に5pxの横溢れも発生 | 因果説明を縦積みの見出し＋ラベル付きdlへ変更し、数値表の横スクロールは維持。文字を折り返し、Wavelet式を意味単位で2行に整理。詳細回帰を追加 | 詳細テスト27/27成功。Chromeで全10章と1440×900・1920×1080・2560×1080を確認。数式・因果欄の横溢れなし | 修正前の因果表とWavelet式の幅観察 | 解決 |
+| FIX-004 | C05 / U02 | 1440×900で観察ノートを開くと、950px以下のcontainer規則が音量rangeを非表示にしていた | rangeを56px（最小48px）で残し、数値output・時刻を先に省略。native rangeとmuteのARIA状態を維持 | 回帰11/11成功。Chrome 1440×900・1024×640でrange表示、キーボード増減・Tab focus・停止中muteを確認。1024幅で隣接操作と重ならない | 修正前のrange非表示状態 | 解決 |
+| FIX-005 | C06 / Q4 | 共通event-resonanceが全motion modeでvoice ageを波紋半径と位相、core拡大に使い、reduced時も装飾が伸長していた | 必須reduced flagを7sceneから渡し、波紋だけ固定。絶対時刻・局所位置・数学場・有限包絡明度を維持 | 単体＋7scene回帰39/39成功。WebGPU/WebGL2の7章を各0.020s/0.600s、1440×900・DPR1・QA reducedで確認。OS CSS設定も別経路で確認 | reduced motionの装飾に対する旧挙動 | 解決 |
+| FIX-006 | C07 / L01/R03 | lowまたは4K direct中のresize/DPR更新後、highでbloomへ戻ってもEffectComposer/UnrealBloomPassが旧viewport寸法のまま残った | 適用済みwidth/height/DPRを追跡し、bloom modeでviewportが変わる時だけcomposerを同期。`setEnergy`からは再確保しない | 修正前回帰2件RED。修正後postProcessing 9/9、typecheck成功。初回low→high、1024×640 DPR2、DPRのみ、4K direct→bloom、反復quality/energyを実passで確認。WebGL2 resize確認済み | low→highまたはdirect→bloom復帰後の旧size | 解決 |
 
 ## 元の31要件への対応
 
-「主な担当」は検証の入口。D01で具体的な成果物・測定・観察へ結び付ける。
-カードの名前があるだけで要件が満たされたと扱わない。
+現在参照できる根拠と限界を列挙する。仕様文書は意図の根拠であり、実測や完成証明ではない。
+各要件の最終評価はC11の完了、独立監査、C12での全証拠確認後に行う。
 
-| 要件 | 主な担当・既存設計 | 最終の証拠／限界 |
+| 要件 | 主な担当・既存設計 | 現行の根拠／限界 |
 | --- | --- | --- |
-| 01 最上位の目的 | V/T/M、product vision | 未整理 |
-| 02 商業作品の総合品質 | V/T/U、R、F01 | 未整理 |
-| 03 Art Direction | V/T、visual design | 未整理 |
-| 04 Graphics | V/T、R03 | 未整理 |
-| 05 Chapter固有性 | V/T、A02、Atlas | 未整理 |
-| 06 時間演出 | T全章、dramaturgy | 未整理 |
-| 07 Sound | A01/A02、T、audio design | 未整理 |
-| 08 Sound × Visual | T/M、因果対応表 | 未整理 |
-| 09 Audio-Visual Causality | T/M、R01/R02 | 未整理 |
-| 10 Synchronization | T、U01/U03、L01、R02 | 未整理 |
-| 11 Cross-Modal Design | T、A02、visual/audio design | 未整理 |
-| 12 数学の強化と監査 | M全章、R01 | 未整理 |
-| 13 知的に面白い数学 | V/M、数学実験と関連章 | 未整理 |
-| 14 数学と演出 | M/T、因果対応表 | 未整理 |
-| 15 UI / UX | U01〜U04、V | 未整理 |
-| 16 Opening Experience | U01、Tの開始、同期回帰 | 未整理 |
-| 17 Chapter Transition | U03、L01/L02、残像・残響 | 未整理 |
-| 18 Discoverability | U01〜U03、V | 未整理 |
-| 19 Micro Interaction | U02/U04、V | 未整理 |
-| 20 Camera | V/T、R03 | 未整理 |
-| 21 Performance | P/T、A02、L02、R03 | 未整理 |
-| 22 Accessibility | U02/U04、V | 未整理 |
-| 23 Architecture | L01/L02、R、architecture | 未整理 |
-| 24 AGENTS / Documentation | D01、既存の文書再編 | 未整理 |
-| 25 QA | V/P/T/M/U/L/A、F01 | 未整理 |
-| 26 Audio-Visual QA | T、A01/A02、R01/R02 | 未整理 |
-| 27 自発的な改善 | 既存改善と根拠のあるFIX | 未整理 |
-| 28 禁止された完成状態の排除 | R、D01、F01 | 未整理 |
+| 01 最上位の目的 | V/T/M、product vision | `docs/product-vision.md`「品質の判断」「制作範囲」は方針を定義。利用者による体験価値評価ではない。 |
+| 02 商業作品の総合品質 | V/T/U、R、F01 | 品質レビュー「完成判定を支える証拠の不足」とprogress C01–C11に現状を記録。全体の商業品質判定は未実施、V2完成ではない。 |
+| 03 Art Direction | V/T、visual design | `docs/visual-design.md`「共通言語」「章の素材と運動」と一部表示観察。全章・長時間での一貫性は未証明。 |
+| 04 Graphics | V/T、R03 | `docs/visual-design.md`「厳密表示」、performance T01–T05とV01/V02/V04記録。T06-G/L終盤は外れ値、T07-Gはロック疑いで再計測。全章合格ではない。 |
+| 05 Chapter固有性 | V/T、A02、Atlas | `docs/chapter-atlas.md`、`docs/audio-design.md`「聴感の基準」、claim ledgerに章別差を記載。設計・一部観察であり、設定差は聴感上の個性を証明しない。 |
+| 06 時間演出 | T全章、dramaturgy | Atlasの章別「音楽形式」「観察から実験へ」とT01–T05の複数周回記録。T06–T10連続観察は未完。 |
+| 07 Sound | A01/A02、T、audio design | `docs/audio-design.md`「聴感の基準」「回帰条件」、C10a–bの[`final-audio-output-2026-09-21.json`](final-audio-output-2026-09-21.json)。Offline出力の有限性・レベルを測定。ブラウザ実音、スピーカー、快適さは未評価。 |
+| 08 Sound × Visual | T/M、因果対応表 | `docs/architecture.md`「イベントと状態」、因果表とC10c記録。共有時計・イベント設計と画面状態を記録したが、同時知覚評価ではない。 |
+| 09 Audio-Visual Causality | T/M、R01/R02 | `docs/sound-shape-causality.md`、claim ledger、C10c JSONの10章×3イベント・90状態。無音QA観察のため物理音・知覚上の一体感は未評価。 |
+| 10 Synchronization | T、U01/U03、L01、R02 | `docs/architecture.md`「音と光の時計」、T01–T05のpause/resume/seek/wrap、C10cのQA時計照合。物理出音／画面走査遅延は未測定。C11再実施が必要。 |
+| 11 Cross-Modal Design | T、A02、visual/audio design | `docs/audio-design.md`の材質・局所共鳴、`docs/visual-design.md`の章素材、因果表。意図と写像はあるが、両感覚の価値向上を示す知覚証拠はない。 |
+| 12 数学の強化と監査 | M全章、R01 | `docs/mathematical-model.md`、claim ledger C08、M01–M10合格。7 files／103 testsで有限モデルを照合。一般定理や無限極限を有限テストが証明するものではない。 |
+| 13 知的に面白い数学 | V/M、数学実験と関連章 | Atlas「観察から実験へ」、`docs/mathematical-exploration.md`、C04全章タブとC08のLissajous/Torus操作。学習効果・初心者の理解度は未調査。 |
+| 14 数学と演出 | M/T、因果対応表 | 数学正本の「詩的な造形層／正確性の不変条件」、claim ledger、C08。保持・圧縮・演出を区分。全装飾が数学的に必然とは主張しない。 |
+| 15 UI / UX | U01〜U04、V | progress C04/C05/C09、詳細・音量・App等の回帰と10章の実操作。共通操作の確認であり、独立ユーザビリティ評価・全体アクセシビリティ監査ではない。 |
+| 16 Opening Experience | U01、Tの開始、同期回帰 | C09で音なし入場・取消・audio init失敗/retryの回帰を確認。音あり初発の聴感・物理AV遅延は未測定。 |
+| 17 Chapter Transition | U03、L01/L02、残像・残響 | `docs/architecture.md`「イベントと状態」、C09の連続選択・旧scene通知回帰。知覚残響、全故障経路、寿命監査L01/L02は未完。 |
+| 18 Discoverability | U01〜U03、V | C09で章目録・詳細・操作を実使用し、`docs/qa-guide.md`に入口を記載。説明なしで機能に気づくかの評価はない。 |
+| 19 Micro Interaction | U02/U04、V | C05/C09で音量range、Arrow操作、Tab/focus、Space/D/F/Escape、Home/End、1024×640を確認。hover/press時間などの全項目は未測定。 |
+| 20 Camera | V/T、R03 | `docs/visual-design.md`の章別素材・運動と表示記録。カメラ全動作、酔い、観察妨害を評価した記録は不足し、合格扱いしない。 |
+| 21 Performance | P/T、A02、L02、R03 | `docs/performance.md`の4K/T01–T05 DPR2連続観察とC11 raw captures。T06終盤に50ms超、T07-Gはロック直後に重大な停止。T07-L–T10、P03-L、L02は未完。GPU完了時間・メモリは未測定。 |
+| 22 Accessibility | U02/U04、V | C06で7章×2rendererのreduced motionとOS `matchMedia`、C09でkeyboard/range確認。U04一部済。contrast・screen reader等の監査は未完。 |
+| 23 Architecture | L01/L02、R、architecture | `docs/architecture.md`各節、C09の世代通知・失敗回帰。L01/L02の全故障経路・2巡資源寿命監査は未完。 |
+| 24 AGENTS / Documentation | D01、既存の文書再編 | `AGENTS.md`の開発マップと目的別正本、claim ledger、今回の31行対応表。D01は一部済で、C12の独立監査・最終同期が残る。 |
+| 25 QA | V/P/T/M/U/L/A、F01 | `docs/qa-guide.md`、progress、task boardに条件と測定結果を保存。全章両rendererのT、共通L/R/D/Fは未完。 |
+| 26 Audio-Visual QA | T、A01/A02、R01/R02 | T01–T05の局所応答観察とC10cの90 visual states、別系統のC10a音声出力。音映像同時評価・物理遅延は未測定。 |
+| 27 自発的な改善 | 既存改善と根拠のあるFIX | 品質レビューQ1–Q5からC01–C07の修正、C08–C10cを実施。改善記録はあるが、品質目標全体の達成ではない。 |
+| 28 禁止された完成状態の排除 | R、D01、F01 | 品質レビュー「完成判定を支える証拠の不足」、C11 raw captures、C12未完記録。現時点でV2完成・全章同一評価とは断定しない。 |
 | 29 調査と方向決定 | 9月6日V2設計、既存実装 | 初期調査は実施済み。全面調査からやり直さない |
-| 30 段階的実装・検証 | progress、FIX、各カード | 未整理 |
-| 31 最終完成条件 | 全カード、D01、F01 | 未完了 |
+| 30 段階的実装・検証 | progress、FIX、各カード | 品質仕上げ計画とprogress C01–C10cを逐次実施・検証。C11は一部試行で無効扱い、C12は未完。 |
+| 31 最終完成条件 | 全カード、D01、F01 | 未達。C11残項目とC12の独立監査・最終check・最終判定が残る。進捗冒頭も制作中を明記。 |
 
-## 次回への短い記録
+## 2026年9月14日の引き継ぎ記録（履歴）
 
 ```text
-実施日時: 2026-09-14
-現在の版／作業ツリー: feat/renewal / commit 9202169 / clean
-終えたID: 文書同期監査、npm run check、qa:audio-performance
-新しい証拠: T05-G/L、現行DSP 75テスト、全Markdownリンク・QA JSON監査
-未解決FIX: Prime WebGL2 4K（P03-L）、T06〜T10の未完証拠、共通U/L/A/M/R/D/Fカード
-次の1件: T06-G
+当時の版／作業ツリー: feat/renewal / commit 9202169 / clean
+当時の次の1件: T06-G
 ```
+
+現行状態はこの文書冒頭と[2026-09-22進捗記録](progress.md)を参照する。

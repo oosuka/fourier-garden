@@ -95,6 +95,10 @@ Cathedral 1.080 ms。Möbiusの部分音と有限尾を増やした分の負荷�
 725テスト成功・1スキップで、format・lint・strict型・production buildも成功した。
 production buildにはThree.js postProcessingの約684 kB chunk警告が残る。
 
+## 2026年9月22日 C10後のDSP再確認
+
+現行版の`rtk proxy npm run qa:audio-performance`は75テスト成功。48 kHz／128標本のNode VM代表block p95最大はMöbiusの1.104 msで、目標1.333 ms未満だった。実行条件と限界は[進捗記録のC10a–b](qa/renewal/progress.md)に記載した。ブラウザの実時間音声スレッド、章切替中の二重graph、聴感上の章間比較を測定した結果ではない。
+
 ## ChromeでのCathedral V2
 
 9月8日、WebGPU、high、seed=qa、CSS 1200×818、DPR 2、実ラスタ2400×1636、
@@ -257,6 +261,20 @@ DOM・AX・画像を取得せず、build・テスト・ソース編集も行わ�
 WebGPUは通常Bloom、WebGL2は600万pixel超の方針によるBloom省略経路で、後処理負荷は同一ではない。
 CPU送出はGPU完了時間ではなく、同期差はWorkletと出力時計に基づく推定である。
 物理的な出音・画面走査遅延、実GPU完了時間、全5幕の連続観察はこの記録では測定していない。
+
+## 2026年9月22日 C11の連続観察（暫定・不採用）
+
+Chrome、1440×900 CSS／実ラスタ、DPR1、high、seed=qa、標準post-processing、無音・performance clockでT06-G/LとT07-Gを試行した。
+開始時はおおむね60 fpsだったが、T06-G終盤は50ms超4回・最大250.1ms、T06-L終盤は5回・最大165.5ms、T07-G終盤は49.8 fps・最大600ms・50ms超65回（記録外33回）となった。
+T07-Gの終盤capture直後にmacOSがロック中と判明した。原因は確定していないため3件とも連続した前景性能の合格根拠に使わず、T06-G/LとT07-Gはロック解除後に再測定する。
+
+| 対象 | 開始capture | 終盤capture | 状態 |
+| --- | --- | --- | --- |
+| T06-G | [JSON](qa/renewal/c11-browser-captures/T06-G-webgpu-start.json) | [JSON](qa/renewal/c11-browser-captures/T06-G-webgpu-end.json) | 要再計測 |
+| T06-L | [JSON](qa/renewal/c11-browser-captures/T06-L-webgl-start.json) | [JSON](qa/renewal/c11-browser-captures/T06-L-webgl-end.json) | 要再計測 |
+| T07-G | [JSON](qa/renewal/c11-browser-captures/T07-G-webgpu-start.json) | [JSON](qa/renewal/c11-browser-captures/T07-G-webgpu-end.json) | 要再計測 |
+
+集約した条件・seek操作・観察上の制限は[C11測定記録](qa/renewal/c11-continuous-observation-2026-09-22.json)にある。これらはDPR2・4K・物理音声・実GPU完了時間の測定ではない。
 
 ## ChromeでのPrime Constellation T03-L 高DPI連続観察
 

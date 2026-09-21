@@ -262,7 +262,7 @@ export function createWaveletRainContent(
     group,
     update(timeSeconds: number, reducedMotion = false) {
       const stagingTime = reducedMotion ? 0 : timeSeconds;
-      resonance.update(timeSeconds);
+      resonance.update(timeSeconds, reducedMotion);
       const visualEvent = getWaveletRainVisualEvent(timeSeconds);
       const observation = visualEvent.supportPosition;
       scan.line.position.x = observation * 9.6;

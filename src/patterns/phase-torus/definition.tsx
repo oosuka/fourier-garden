@@ -100,7 +100,8 @@ export const phaseTorusPattern: PhaseTorusPatternDefinition = {
     mode: "sonification",
     initialVolume: 0.35,
     roomSeconds: 1.08,
-    sonificationLatex: "f_{m,n}=440+520\\,C(|m+n\\sqrt2|)",
+    sonificationLatex:
+      "f_{m,n}=430+390\\min\\left(1,\\frac{|m+n\\sqrt2|}{7}\\right)\\,\\mathrm{Hz}",
     score: PHASE_TORUS_SCORE,
     createProgram: createPhaseTorusAudioProgram,
   },

@@ -77,7 +77,7 @@ export function createEventResonance(
   const contactColor = new THREE.Color(0xf5ebd4);
   return {
     group,
-    update(time: number) {
+    update(time: number, reducedMotion: boolean) {
       const frame = field.sample(time);
       group.userData.sourceIndex = frame.focus?.sourceIndex ?? null;
       core.points.geometry.setDrawRange(0, frame.count);
@@ -93,7 +93,7 @@ export function createEventResonance(
         const color = colors[voice.event.sourceIndex % colors.length]!;
         const light = Math.sqrt(voice.amplitude / maximumGain) * 2.4;
         transform.position.copy(anchor);
-        transform.scale.setScalar(0.02 + 0.05 * Math.sqrt(voice.envelope));
+        transform.scale.setScalar(reducedMotion ? 0.045 : 0.02 + 0.05 * Math.sqrt(voice.envelope));
         transform.updateMatrix();
         beads.setMatrixAt(index, transform.matrix);
         beads.setColorAt(
@@ -107,7 +107,10 @@ export function createEventResonance(
         coreColors[index * 3 + 1] = color.g * light;
         coreColors[index * 3 + 2] = color.b * light;
         const age = voice.ageSeconds;
-        const radius = 0.06 + age * (0.35 + voice.event.frequencyHz / 1800) + voice.contact * 0.12;
+        const motionAge = reducedMotion ? 0 : age;
+        const radius = reducedMotion
+          ? 0.06
+          : 0.06 + age * (0.35 + voice.event.frequencyHz / 1800) + voice.contact * 0.12;
         const tail = Math.sqrt(voice.event.gain / maximumGain) * voice.afterglow;
         for (let segment = 0; segment < segments; segment++) {
           for (let endpoint = 0; endpoint < 2; endpoint++) {
@@ -125,7 +128,7 @@ export function createEventResonance(
                 break;
               }
               case "ripple":
-                z = Math.sin(angle * 3 + age * 4) * radius * 0.04;
+                z = Math.sin(angle * 3 + motionAge * 4) * radius * 0.04;
                 break;
               case "string":
                 x = (unit - 0.5) * radius * 5;

@@ -1,4 +1,4 @@
-import type * as THREE from "three";
+import * as THREE from "three/webgpu";
 import { describe, expect, it } from "vitest";
 
 import { createBesselTideContent } from "./bessel-tide/scene/scene";
@@ -9,6 +9,17 @@ import { createPrimeConstellationContent } from "./prime-constellation/scene/sce
 import { createRiemannVeilContent } from "./riemann-veil/scene/scene";
 import { WAVELET_RAIN_SCORE } from "./wavelet-rain/audio/score";
 import { createWaveletRainContent, getWaveletRainVisualEvent } from "./wavelet-rain/scene/scene";
+
+function getRelativeStrokePositions(strokes: THREE.LineSegments, anchors: Float32Array): number[] {
+  const positions = strokes.geometry.getAttribute("position").array as Float32Array;
+  const activeVertexCount = strokes.geometry.drawRange.count;
+  const positionsPerVoice = 32 * 2 * 3;
+  return Array.from({ length: activeVertexCount * 3 }, (_, offset) => {
+    const voiceIndex = Math.floor(offset / positionsPerVoice);
+    const axis = offset % 3;
+    return positions[offset]! - anchors[voiceIndex * 3 + axis]!;
+  });
+}
 
 function getPositions(object: THREE.Object3D): Float32Array {
   const geometry = (object as THREE.Line).geometry;
@@ -78,6 +89,54 @@ describe("new chapter scene continuity", () => {
     content.group.updateMatrix();
     expect(content.group.matrix.toArray()).toEqual(before);
   });
+
+  it.each([
+    ["Prime", createPrimeConstellationContent],
+    ["Bessel", createBesselTideContent],
+    ["Lissajous", createLissajousOrchardContent],
+    ["Dirichlet", createDirichletLanternsContent],
+    ["Haar", createWaveletRainContent],
+    ["Riemann", createRiemannVeilContent],
+    ["Torus", createPhaseTorusContent],
+  ])(
+    "limits only the %s shared event decoration under reduced motion",
+    (_chapter, createContent) => {
+      const normal = createContent();
+      const reduced = createContent();
+      normal.update(0.12, false);
+      reduced.update(0.12, true);
+
+      const normalLayer = normal.group.getObjectByName("event-resonance") as THREE.Group;
+      const reducedLayer = reduced.group.getObjectByName("event-resonance") as THREE.Group;
+      const normalStrokes = normalLayer.children.find(
+        (child) => (child as THREE.LineSegments).isLineSegments,
+      ) as THREE.LineSegments;
+      const reducedStrokes = reducedLayer.children.find(
+        (child) => (child as THREE.LineSegments).isLineSegments,
+      ) as THREE.LineSegments;
+      const normalCore = normalLayer.getObjectByName(
+        "finite-envelope-cores",
+      ) as THREE.InstancedMesh;
+      const reducedCore = reducedLayer.getObjectByName(
+        "finite-envelope-cores",
+      ) as THREE.InstancedMesh;
+      const normalCorePoints = normalLayer.children
+        .filter((child) => child instanceof THREE.Points)
+        .find((child) => child.geometry.getAttribute("color") !== undefined)!;
+      const reducedCorePoints = reducedLayer.children
+        .filter((child) => child instanceof THREE.Points)
+        .find((child) => child.geometry.getAttribute("color") !== undefined)!;
+      const normalCorePositions = normalCorePoints.geometry.getAttribute("position").array;
+      const reducedCorePositions = reducedCorePoints.geometry.getAttribute("position").array;
+      expect(reducedStrokes.geometry.drawRange.count).toBeGreaterThan(0);
+      expect(getRelativeStrokePositions(reducedStrokes, reducedCorePositions)).not.toEqual(
+        getRelativeStrokePositions(normalStrokes, normalCorePositions as Float32Array),
+      );
+      expect(reducedCore.instanceMatrix.array.slice(0, 16)).not.toEqual(
+        normalCore.instanceMatrix.array.slice(0, 16),
+      );
+    },
+  );
 
   it("preserves the Bessel field while removing camera staging and decorative layers", () => {
     const normal = createBesselTideContent();

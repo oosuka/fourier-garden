@@ -1,0 +1,42 @@
+{
+  "chapter": "dirichlet-lanterns",
+  "renderer": "webgpu",
+  "width": 1440,
+  "height": 900,
+  "pixelRatio": 1,
+  "rasterWidth": 1440,
+  "rasterHeight": 900,
+  "quality": "high",
+  "seed": "qa",
+  "postProcessing": "default",
+  "audioSampleRateHz": null,
+  "clock": "performance",
+  "mutedAtStart": true,
+  "volumeAtStart": 0.35,
+  "playingAtStart": true,
+  "motionAtStart": "full",
+  "physicalLatencyMeasured": false,
+  "status": "complete",
+  "reason": null,
+  "durationSeconds": 60.015600000000006,
+  "frames": 3587,
+  "averageFps": 59.76779370696951,
+  "cpuSubmissionP95Ms": 7.300000011920929,
+  "frameIntervalP95Ms": 18.299999999995634,
+  "maxFrameIntervalMs": 51.30000000000018,
+  "intervalsOver50Ms": 1,
+  "slowFrames": [
+    {
+      "elapsedSeconds": 2.3005,
+      "frameIntervalMs": 51.30000000000018,
+      "cpuSubmissionMs": 4.699999988079071
+    }
+  ],
+  "slowFramesOmitted": 0,
+  "synchronizationSamples": 0,
+  "visualLeadP95Ms": null,
+  "visualLeadMinMs": null,
+  "visualLeadMaxMs": null,
+  "firstScoreSeconds": 1.772899999976158,
+  "lastScoreSeconds": 61.78359999999404
+}

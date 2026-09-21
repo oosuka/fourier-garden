@@ -205,7 +205,7 @@ export function createPhaseTorusContent(backend: RendererBackend = "webgpu", poe
       pointHalo.position.set(pointPosition[0]!, pointPosition[1]!, pointPosition[2]!);
       // Tilt around x only: the sounding character keeps the same left/right coordinate as its pan.
       group.rotation.x = -0.78 + Math.sin(stagingTime * 0.043) * 0.08;
-      resonance.update(timeSeconds);
+      resonance.update(timeSeconds, reducedMotion);
       const energy = evaluateFiveActEnergy(timeSeconds, 84);
       surfaceEchoes.forEach(({ echo, echoMaterial, index }) => {
         echo.rotation.x = Math.sin(stagingTime * (0.021 + index * 0.004) + index) * 0.045;

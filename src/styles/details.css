@@ -358,7 +358,7 @@
 }
 
 .mathIdentity--compact .katex {
-  font-size: 10.5px;
+  font-size: 12px;
 }
 
 .parameterList {
@@ -377,6 +377,14 @@
 
 .parameterList dt {
   color: rgba(175, 207, 214, 0.55);
+}
+
+.parameterList dt,
+.parameterList dd {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
 }
 
 .parameterList dd {
@@ -568,34 +576,74 @@
   background: #101610;
 }
 
-.causalitySection table {
-  min-width: 570px;
+.causalityEntries {
+  display: grid;
+  min-width: 0;
 }
 
-.causalitySection th,
-.causalitySection td {
-  max-width: 175px;
-  padding-inline: 6px;
-  white-space: normal;
-  line-height: 1.55;
-  vertical-align: top;
+.causalityEntry {
+  min-width: 0;
+  padding: 11px 0 12px;
+  border-top: 1px solid rgba(139, 204, 218, 0.08);
+}
+
+.causalityEntry h3 {
+  min-width: 0;
+  margin: 0 0 8px;
+  color: rgba(218, 239, 242, 0.82);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.causalityEntry dl {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  margin: 0;
+}
+
+.causalityEntry dl > div {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 0.28fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.causalityEntry dt,
+.causalityEntry dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.causalityEntry dt {
+  color: rgba(165, 201, 209, 0.5);
+  font-size: 10px;
+  line-height: 1.8;
+}
+
+.causalityEntry dd {
+  color: rgba(208, 232, 236, 0.72);
+  font-size: 13px;
+  line-height: 1.8;
 }
 
 .causalityStatus {
   display: inline-block;
-  border: 1px solid rgba(113, 225, 238, 0.2);
-  border-radius: 8px;
-  padding: 1px 5px;
+  padding: 0 4px;
+  border-left: 1px solid rgba(113, 225, 238, 0.42);
   color: rgba(170, 236, 240, 0.76);
   font-size: 10px;
 }
 
 .causalityStatus--圧縮 {
-  border-color: rgba(184, 145, 255, 0.25);
+  border-color: rgba(184, 145, 255, 0.5);
   color: rgba(206, 181, 255, 0.8);
 }
 
 .causalityStatus--演出 {
-  border-color: rgba(255, 202, 126, 0.26);
+  border-color: rgba(255, 202, 126, 0.52);
   color: rgba(255, 219, 166, 0.8);
 }

@@ -90,7 +90,7 @@ export function createRiemannVeilContent(
     update(timeSeconds: number, reducedMotion = false) {
       const stagingTime = reducedMotion ? 0 : timeSeconds;
       focus.line.position.x = (getRiemannObservation(timeSeconds) / Math.PI) * 7.4;
-      resonance.update(timeSeconds);
+      resonance.update(timeSeconds, reducedMotion);
       veilEchoes.forEach(({ layerIndex, echoIndex, line, material }) => {
         const drift = Math.sin(
           stagingTime * (0.047 + echoIndex * 0.006) + layerIndex * 1.3 + echoIndex,

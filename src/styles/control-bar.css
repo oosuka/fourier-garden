@@ -221,7 +221,11 @@
   box-shadow: 0 0 8px #dcd1a026;
 }
 @container (max-width: 950px) {
-  .volumeControl input,
+  .volumeControl input {
+    width: 56px;
+    min-width: 48px;
+    flex-shrink: 0;
+  }
   .volumeControl output,
   .timeDisplay {
     display: none;

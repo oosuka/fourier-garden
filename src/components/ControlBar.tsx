@@ -69,8 +69,7 @@ export function ControlBar({
   const [detailsHintPaused, setDetailsHintPaused] = useState(false);
   useEffect(() => {
     let frame = 0;
-    let displayedSecond = Math.floor(transport.currentTime);
-    setTime(displayedSecond);
+    let displayedSecond = Number.NaN;
     const update = () => {
       const nextSecond = Math.floor(transport.currentTime);
       if (nextSecond !== displayedSecond) {

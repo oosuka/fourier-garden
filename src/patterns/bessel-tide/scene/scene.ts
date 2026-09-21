@@ -218,7 +218,7 @@ export function createBesselTideContent(backend: RendererBackend = "webgpu", poe
         contourData[index * 3 + 2] = positions[source + 2]! + 0.01;
       }
       contourAttribute.needsUpdate = true;
-      const eventFrame = resonance.update(timeSeconds);
+      const eventFrame = resonance.update(timeSeconds, reducedMotion);
       const sourceIndex = eventFrame.focus?.sourceIndex ?? 0;
       group.userData.sourceIndex = sourceIndex;
       const mode = BESSEL_MODES[sourceIndex % BESSEL_MODES.length]!;

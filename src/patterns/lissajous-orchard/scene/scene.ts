@@ -130,7 +130,7 @@ export function createLissajousOrchardContent(
         glowMaterial.opacity = mix(0.2, 0.74, heroWeight);
         glowMaterial.size = mix(0.026, 0.075, heroWeight);
       });
-      resonance.update(timeSeconds);
+      resonance.update(timeSeconds, reducedMotion);
       const energy = evaluateFiveActEnergy(timeSeconds, 60);
       group.rotation.y = Math.sin(stagingTime * 0.041) * 0.14;
       group.rotation.z = Math.sin(stagingTime * 0.027 + 0.8) * 0.055;

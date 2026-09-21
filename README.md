@@ -53,7 +53,7 @@ Fourier Gardenは、数学的構造から音と光をリアルタイムに生成
 ## ローカルで起動する
 
 最新版macOS／デスクトップChromeを対象に、WebGPUを通常経路、WebGL2をフォールバックに使います。
-Node.js `24.19.0`、npm `11.19.0`をVoltaで固定しています。
+Node.js `24.21.0`、npm `11.19.1`をVoltaで固定しています。
 
 ```bash
 rtk proxy npm install

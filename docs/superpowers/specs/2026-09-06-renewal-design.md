@@ -63,7 +63,7 @@ focus復元、reduced motionを整える。音なしでも作品が進む。
 
 ## 文書・技術・完了判定
 
-Node 24.19.0／npm 11.19.0、React、Three.js、Viteを維持する。依存を増やさない。
+Node.js 24.21.0／npm 11.19.1をVoltaで固定する。React、Three.js、Viteは`package.json`の固定版を使い、依存を増やさない。
 AGENTS.mdを短い地図へ整理し、数学、音響、視覚、因果、QA、性能を目的別文書へ分離する。
 旧版の履歴は履歴として保存し、現行仕様と区別する。
 各段階で型、lint、テスト、build、ブラウザの検証を行う。最後に全10章・複数時刻・

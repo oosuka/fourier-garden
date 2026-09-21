@@ -248,6 +248,7 @@ class WebGlPostProcessor extends BasePostProcessor {
   private width = 1;
   private height = 1;
   private pixelRatio = 1;
+  private composerViewport: { width: number; height: number; pixelRatio: number } | undefined;
 
   get mode(): CinematicPostMode {
     return getWebGlViewportPostMode(
@@ -283,10 +284,30 @@ class WebGlPostProcessor extends BasePostProcessor {
     this.pixelRatio = pixelRatio;
     this.renderer.setPixelRatio(pixelRatio);
     this.renderer.setSize(width, height, false);
-    if (this.mode === "webgl-bloom") {
-      this.composer.setPixelRatio(pixelRatio);
-      this.composer.setSize(width, height);
+    this.syncComposerViewport();
+  }
+
+  override setQuality(level: QualityLevel): void {
+    super.setQuality(level);
+    this.syncComposerViewport();
+  }
+
+  private syncComposerViewport(): void {
+    if (this.mode !== "webgl-bloom") return;
+    if (
+      this.composerViewport?.width === this.width &&
+      this.composerViewport.height === this.height &&
+      this.composerViewport.pixelRatio === this.pixelRatio
+    ) {
+      return;
     }
+    this.composer.setPixelRatio(this.pixelRatio);
+    this.composer.setSize(this.width, this.height);
+    this.composerViewport = {
+      width: this.width,
+      height: this.height,
+      pixelRatio: this.pixelRatio,
+    };
   }
 
   protected applyProfile(): void {

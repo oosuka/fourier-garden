@@ -1,0 +1,1290 @@
+{
+  "schema": "fourier-garden-local-causality-selection-v1",
+  "generatedAt": "2026-09-21T15:25:59.910Z",
+  "audioReport": "final-audio-output-2026-09-21.json",
+  "browserTarget": {
+    "renderer": "WebGL2",
+    "viewportCss": [1440, 900],
+    "dpr": 1,
+    "audio": "silent entry; physical sound not evaluated"
+  },
+  "timeStates": {
+    "preOnsetSeconds": -0.02,
+    "postOnsetSeconds": 0.02,
+    "decayAge": "endSeconds/2"
+  },
+  "chapters": [
+    {
+      "id": "residue-bloom",
+      "cycleSeconds": 144,
+      "selected": [
+        {
+          "kind": "introduction",
+          "windowStartSeconds": 0,
+          "event": {
+            "sourceIndex": 0,
+            "localOnsetSeconds": 0,
+            "gain": 0.38880000000000003,
+            "pan": 0.26,
+            "panKind": "per-mode stereoSpread/basePan",
+            "attackSeconds": 0.022,
+            "decaySeconds": 0.145,
+            "endSeconds": 0.34,
+            "section": "intro",
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 495,
+            "visualCoordinate": {
+              "section": "intro",
+              "globalStep": 0
+            },
+            "absoluteOnsetSeconds": 144,
+            "visualAnchor": "epicycle phasor (x,y); mathematical waveform remains separate",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "143.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "144.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "144.170"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "dense",
+          "windowStartSeconds": 91,
+          "windowStereoRms": 0.005337365703996411,
+          "event": {
+            "sourceIndex": 490,
+            "localOnsetSeconds": 91.875,
+            "gain": 1.072575,
+            "pan": 0.8062499999999999,
+            "panKind": "per-mode stereoSpread/basePan",
+            "attackSeconds": 0.022,
+            "decaySeconds": 0.145,
+            "endSeconds": 0.34,
+            "section": "bloom",
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 440,
+            "visualCoordinate": {
+              "section": "bloom",
+              "globalStep": 490
+            },
+            "absoluteOnsetSeconds": 235.875,
+            "visualAnchor": "epicycle phasor (x,y); mathematical waveform remains separate",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "235.855"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "235.895"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "236.045"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "quietest-window",
+          "windowStartSeconds": 98,
+          "windowStereoRms": 0.0008361309250142063,
+          "event": {
+            "sourceIndex": 527,
+            "localOnsetSeconds": 98.8125,
+            "gain": 0.35324999999999995,
+            "pan": 0.49890625,
+            "panKind": "per-mode stereoSpread/basePan",
+            "attackSeconds": 0.022,
+            "decaySeconds": 0.145,
+            "endSeconds": 0.34,
+            "section": "hush",
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 495,
+            "visualCoordinate": {
+              "section": "hush",
+              "globalStep": 527
+            },
+            "absoluteOnsetSeconds": 242.8125,
+            "visualAnchor": "epicycle phasor (x,y); mathematical waveform remains separate",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "242.792"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "242.833"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "242.982"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "spectral-cathedral",
+      "cycleSeconds": 75,
+      "selected": [
+        {
+          "kind": "introduction",
+          "windowStartSeconds": 0,
+          "event": {
+            "sourceIndex": 0,
+            "localOnsetSeconds": 0,
+            "gain": 0.5323869986736196,
+            "pan": 0.13311063183964963,
+            "panKind": "per-mode stereoSpread/basePan",
+            "attackSeconds": 0.007,
+            "decaySeconds": 0.068,
+            "endSeconds": 0.205,
+            "section": "illumination",
+            "gesture": "pulse",
+            "modeIds": [1],
+            "frequencyHz": null,
+            "visualCoordinate": {
+              "modeIds": [1]
+            },
+            "absoluteOnsetSeconds": 75,
+            "visualAnchor": "modeIds on modal wavefront; column impact is localized, nodal/wavefront math remains",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "74.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "75.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "75.103"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "dense",
+          "windowStartSeconds": 46,
+          "windowStereoRms": 0.006668089679805039,
+          "event": {
+            "sourceIndex": 222,
+            "localOnsetSeconds": 46.25,
+            "gain": 0.8726030368035018,
+            "pan": 0.3380506230592987,
+            "panKind": "per-mode stereoSpread/basePan",
+            "attackSeconds": 0.013,
+            "decaySeconds": 0.138,
+            "endSeconds": 0.34,
+            "section": "resonance",
+            "gesture": "choir",
+            "modeIds": [2],
+            "frequencyHz": null,
+            "visualCoordinate": {
+              "modeIds": [2]
+            },
+            "absoluteOnsetSeconds": 121.25,
+            "visualAnchor": "modeIds on modal wavefront; column impact is localized, nodal/wavefront math remains",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "121.230"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "121.270"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "121.420"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "quietest-window",
+          "windowStartSeconds": 71,
+          "windowStereoRms": 0.0009295095942753068,
+          "event": {
+            "sourceIndex": 341,
+            "localOnsetSeconds": 71.04166666666667,
+            "gain": 0.24566624606069323,
+            "pan": 0.13594446017021494,
+            "panKind": "per-mode stereoSpread/basePan",
+            "attackSeconds": 0.01,
+            "decaySeconds": 0.112,
+            "endSeconds": 0.31,
+            "section": "afterglow",
+            "gesture": "toll",
+            "modeIds": [5],
+            "frequencyHz": null,
+            "visualCoordinate": {
+              "modeIds": [5]
+            },
+            "absoluteOnsetSeconds": 146.04166666666669,
+            "visualAnchor": "modeIds on modal wavefront; column impact is localized, nodal/wavefront math remains",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "146.022"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "146.062"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "146.197"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "prime-constellation",
+      "cycleSeconds": 60,
+      "selected": [
+        {
+          "kind": "introduction",
+          "windowStartSeconds": 0,
+          "event": {
+            "sourceIndex": 0,
+            "localOnsetSeconds": 0,
+            "gain": 0.4949731681491154,
+            "pan": 0.0045493901775139605,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.011,
+            "decaySeconds": 0.11805797624508299,
+            "endSeconds": 0.247359569275412,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 440,
+            "visualCoordinate": {
+              "sourceIndex": 0
+            },
+            "absoluteOnsetSeconds": 60,
+            "visualAnchor": "sourceIndex selects prime p and its time-varying phase point",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "59.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "60.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "60.124"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "dense",
+          "windowStartSeconds": 21,
+          "windowStereoRms": 0.005468690744917231,
+          "event": {
+            "sourceIndex": 55,
+            "localOnsetSeconds": 21.065263157894737,
+            "gain": 1.0923259575635627,
+            "pan": 0.0045493901775139605,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.011,
+            "decaySeconds": 0.12130557895883684,
+            "endSeconds": 0.2541640701994677,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 597.0953918784617,
+            "visualCoordinate": {
+              "sourceIndex": 55
+            },
+            "absoluteOnsetSeconds": 81.06526315789473,
+            "visualAnchor": "sourceIndex selects prime p and its time-varying phase point",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "81.045"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "81.085"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "81.192"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "quietest-window",
+          "windowStartSeconds": 9,
+          "windowStereoRms": 0.000492213326690901,
+          "event": {
+            "sourceIndex": 24,
+            "localOnsetSeconds": 9.199999999999996,
+            "gain": 0.22392191381596702,
+            "pan": 0.0045493901775139605,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.007,
+            "decaySeconds": 0.06337330956873612,
+            "endSeconds": 0.12674661913747223,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 920,
+            "visualCoordinate": {
+              "sourceIndex": 24
+            },
+            "absoluteOnsetSeconds": 69.19999999999999,
+            "visualAnchor": "sourceIndex selects prime p and its time-varying phase point",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "69.180"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "69.220"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "69.263"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "mobius-choir",
+      "cycleSeconds": 56.470588235294116,
+      "selected": [
+        {
+          "kind": "introduction",
+          "windowStartSeconds": 0,
+          "event": {
+            "sourceIndex": 0,
+            "localOnsetSeconds": 0,
+            "gain": 0.3670421088972776,
+            "pan": 0.64,
+            "panKind": "per-mode stereoSpread/basePan",
+            "attackSeconds": 0.027,
+            "decaySeconds": 0.14,
+            "endSeconds": 0.36,
+            "section": "breath",
+            "gesture": "call",
+            "modeIds": [1],
+            "frequencyHz": null,
+            "visualCoordinate": {
+              "modeIds": [1]
+            },
+            "absoluteOnsetSeconds": 56.470588235294116,
+            "visualAnchor": "modeIds locate voice on Möbius band; modal displacement/velocity control contact",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "56.451"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "56.491"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "56.651"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "dense",
+          "windowStartSeconds": 45,
+          "windowStereoRms": 0.004684468220452365,
+          "event": {
+            "sourceIndex": 208,
+            "localOnsetSeconds": 45.88235294117647,
+            "gain": 0.6916471989593928,
+            "pan": 0.96,
+            "panKind": "per-mode stereoSpread/basePan",
+            "attackSeconds": 0.028,
+            "decaySeconds": 0.13,
+            "endSeconds": 0.33,
+            "section": "interweave",
+            "gesture": "turn",
+            "modeIds": [1],
+            "frequencyHz": null,
+            "visualCoordinate": {
+              "modeIds": [1]
+            },
+            "absoluteOnsetSeconds": 102.35294117647058,
+            "visualAnchor": "modeIds locate voice on Möbius band; modal displacement/velocity control contact",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "102.333"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "102.373"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "102.518"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "quietest-window",
+          "windowStartSeconds": 17,
+          "windowStereoRms": 0.0013671438674834552,
+          "event": {
+            "sourceIndex": 81,
+            "localOnsetSeconds": 17.86764705882353,
+            "gain": 0.2747704586557662,
+            "pan": 0.9699994448788936,
+            "panKind": "per-mode stereoSpread/basePan",
+            "attackSeconds": 0.028,
+            "decaySeconds": 0.13,
+            "endSeconds": 0.33,
+            "section": "antiphon",
+            "gesture": "turn",
+            "modeIds": [6],
+            "frequencyHz": null,
+            "visualCoordinate": {
+              "modeIds": [6]
+            },
+            "absoluteOnsetSeconds": 74.33823529411765,
+            "visualAnchor": "modeIds locate voice on Möbius band; modal displacement/velocity control contact",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "74.318"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "74.358"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "74.503"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "bessel-tide",
+      "cycleSeconds": 72,
+      "selected": [
+        {
+          "kind": "introduction",
+          "windowStartSeconds": 0,
+          "event": {
+            "sourceIndex": 0,
+            "localOnsetSeconds": 0,
+            "gain": 0.3697512409539091,
+            "pan": -0.014793894267248253,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.014,
+            "decaySeconds": 0.1403995051303139,
+            "endSeconds": 0.3563987437923353,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 420,
+            "visualCoordinate": {
+              "sourceIndex": 0
+            },
+            "absoluteOnsetSeconds": 72,
+            "visualAnchor": "(m,n) sets radius; pan sets theta on exact Bessel field",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "71.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "72.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "72.178"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "dense",
+          "windowStartSeconds": 34,
+          "windowStereoRms": 0.006788440102655483,
+          "event": {
+            "sourceIndex": 204,
+            "localOnsetSeconds": 34,
+            "gain": 0.6927851468774262,
+            "pan": -0.014793894267248253,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.014,
+            "decaySeconds": 0.13901225386312158,
+            "endSeconds": 0.3528772598063855,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 420,
+            "visualCoordinate": {
+              "sourceIndex": 204
+            },
+            "absoluteOnsetSeconds": 106,
+            "visualAnchor": "(m,n) sets radius; pan sets theta on exact Bessel field",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "105.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "106.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "106.176"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "quietest-window",
+          "windowStartSeconds": 67,
+          "windowStereoRms": 0.000701770796814117,
+          "event": {
+            "sourceIndex": 406,
+            "localOnsetSeconds": 67.66666666666667,
+            "gain": 0.02694431331662757,
+            "pan": -0.7347938942672483,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.014,
+            "decaySeconds": 0.16247054946418146,
+            "endSeconds": 0.37980128446172284,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 786.4160389174056,
+            "visualCoordinate": {
+              "sourceIndex": 406
+            },
+            "absoluteOnsetSeconds": 139.66666666666669,
+            "visualAnchor": "(m,n) sets radius; pan sets theta on exact Bessel field",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "139.647"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "139.687"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "139.857"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "lissajous-orchard",
+      "cycleSeconds": 60,
+      "selected": [
+        {
+          "kind": "introduction",
+          "windowStartSeconds": 0,
+          "event": {
+            "sourceIndex": 0,
+            "localOnsetSeconds": 0,
+            "gain": 0.32816256139335503,
+            "pan": 0.03432900347965965,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.012,
+            "decaySeconds": 0.12359585882388259,
+            "endSeconds": 0.3001613714294291,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 693.1364622417976,
+            "visualCoordinate": {
+              "sourceIndex": 0
+            },
+            "absoluteOnsetSeconds": 60,
+            "visualAnchor": "ratio and parameter locate impulse on exact Lissajous curve",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "59.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "60.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "60.150"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "dense",
+          "windowStartSeconds": 45,
+          "windowStereoRms": 0.0047304277153660725,
+          "event": {
+            "sourceIndex": 216,
+            "localOnsetSeconds": 45,
+            "gain": 0.8907400322647087,
+            "pan": 0.09259423534840505,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.012,
+            "decaySeconds": 0.17535272492587625,
+            "endSeconds": 0.42585661767712807,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 662.3618309214824,
+            "visualCoordinate": {
+              "sourceIndex": 216
+            },
+            "absoluteOnsetSeconds": 105,
+            "visualAnchor": "ratio and parameter locate impulse on exact Lissajous curve",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "104.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "105.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "105.213"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "quietest-window",
+          "windowStartSeconds": 59,
+          "windowStereoRms": 0.0014790529480843812,
+          "event": {
+            "sourceIndex": 285,
+            "localOnsetSeconds": 59.375,
+            "gain": 0.15871344504297719,
+            "pan": -0.0983657990390972,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.008,
+            "decaySeconds": 0.083666411399611,
+            "endSeconds": 0.2165483589166402,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 698.7893984386843,
+            "visualCoordinate": {
+              "sourceIndex": 285
+            },
+            "absoluteOnsetSeconds": 119.375,
+            "visualAnchor": "ratio and parameter locate impulse on exact Lissajous curve",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "119.355"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "119.395"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "119.483"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "dirichlet-lanterns",
+      "cycleSeconds": 60,
+      "selected": [
+        {
+          "kind": "introduction",
+          "windowStartSeconds": 0,
+          "event": {
+            "sourceIndex": 0,
+            "localOnsetSeconds": 0,
+            "gain": 0.17297183797718896,
+            "pan": -0.6691998409131301,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.006,
+            "decaySeconds": 0.08870928032617117,
+            "endSeconds": 0.2027640693169627,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 440,
+            "visualCoordinate": {
+              "sourceIndex": 0
+            },
+            "absoluteOnsetSeconds": 60,
+            "visualAnchor": "order/harmonic/packet locate kernel main peak or side-lobe",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "59.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "60.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "60.101"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "dense",
+          "windowStartSeconds": 57,
+          "windowStereoRms": 0.005542923728526749,
+          "event": {
+            "sourceIndex": 304,
+            "localOnsetSeconds": 57,
+            "gain": 0.5835868395099671,
+            "pan": 0.7593715876582985,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.006,
+            "decaySeconds": 0.11692538807733512,
+            "endSeconds": 0.2672580298910517,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 440,
+            "visualCoordinate": {
+              "sourceIndex": 304
+            },
+            "absoluteOnsetSeconds": 117,
+            "visualAnchor": "order/harmonic/packet locate kernel main peak or side-lobe",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "116.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "117.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "117.134"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "quietest-window",
+          "windowStartSeconds": 50,
+          "windowStereoRms": 0.00008354872521548686,
+          "event": {
+            "sourceIndex": 270,
+            "localOnsetSeconds": 50.625,
+            "gain": 0.009084188553528407,
+            "pan": 0.7593715876582985,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.006,
+            "decaySeconds": 0.045223789368700244,
+            "endSeconds": 0.1130594734217506,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 906.6666666666667,
+            "visualCoordinate": {
+              "sourceIndex": 270
+            },
+            "absoluteOnsetSeconds": 110.625,
+            "visualAnchor": "order/harmonic/packet locate kernel main peak or side-lobe",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "110.605"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "110.645"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "110.682"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "wavelet-rain",
+      "cycleSeconds": 64,
+      "selected": [
+        {
+          "kind": "introduction",
+          "windowStartSeconds": 0,
+          "event": {
+            "sourceIndex": 0,
+            "localOnsetSeconds": 0,
+            "gain": 0.5933371705568006,
+            "pan": -0.028794436491552916,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.008,
+            "decaySeconds": 0.18246812473164498,
+            "endSeconds": 0.39534760358523086,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 420,
+            "visualCoordinate": {
+              "sourceIndex": 0
+            },
+            "absoluteOnsetSeconds": 64,
+            "visualAnchor": "coefficient support midpoint x; j selects dyadic y/z scale",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "63.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "64.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "64.198"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "dense",
+          "windowStartSeconds": 25,
+          "windowStereoRms": 0.004378775329815936,
+          "event": {
+            "sourceIndex": 126,
+            "localOnsetSeconds": 25.000000000000004,
+            "gain": 0.5022942009694423,
+            "pan": -0.028794436491552916,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.008,
+            "decaySeconds": 0.19085198266679532,
+            "endSeconds": 0.41351262911138986,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 420,
+            "visualCoordinate": {
+              "sourceIndex": 126
+            },
+            "absoluteOnsetSeconds": 89,
+            "visualAnchor": "coefficient support midpoint x; j selects dyadic y/z scale",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "88.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "89.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "89.207"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "quietest-window",
+          "windowStartSeconds": 58,
+          "windowStereoRms": 0.0007751972807714529,
+          "event": {
+            "sourceIndex": 295,
+            "localOnsetSeconds": 58.72,
+            "gain": 0.10989149350873993,
+            "pan": -0.20379443649155296,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.013000000000000001,
+            "decaySeconds": 0.12284432912190173,
+            "endSeconds": 0.31269465594665896,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 730,
+            "visualCoordinate": {
+              "sourceIndex": 295
+            },
+            "absoluteOnsetSeconds": 122.72,
+            "visualAnchor": "coefficient support midpoint x; j selects dyadic y/z scale",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "122.700"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "122.740"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "122.876"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "riemann-veil",
+      "cycleSeconds": 80,
+      "selected": [
+        {
+          "kind": "introduction",
+          "windowStartSeconds": 0,
+          "event": {
+            "sourceIndex": 0,
+            "localOnsetSeconds": 0,
+            "gain": 0.03957134472384505,
+            "pan": -0.015293965369160924,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.022,
+            "decaySeconds": 0.23018513115952685,
+            "endSeconds": 0.4603702623190537,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 460,
+            "visualCoordinate": {
+              "sourceIndex": 0
+            },
+            "absoluteOnsetSeconds": 80,
+            "visualAnchor": "n and responseStep locate event in finite-sum layer at n-squared phase",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "79.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "80.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "80.230"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "dense",
+          "windowStartSeconds": 32,
+          "windowStereoRms": 0.004928453745007559,
+          "event": {
+            "sourceIndex": 125,
+            "localOnsetSeconds": 32.60572483841182,
+            "gain": 0.14901076034898678,
+            "pan": -0.015293965369160924,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.03,
+            "decaySeconds": 0.26839133652505875,
+            "endSeconds": 0.5,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 394.54543032670773,
+            "visualCoordinate": {
+              "sourceIndex": 125
+            },
+            "absoluteOnsetSeconds": 112.60572483841182,
+            "visualAnchor": "n and responseStep locate event in finite-sum layer at n-squared phase",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "112.586"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "112.626"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "112.856"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "quietest-window",
+          "windowStartSeconds": 62,
+          "windowStereoRms": 0.00035331583036586443,
+          "event": {
+            "sourceIndex": 225,
+            "localOnsetSeconds": 62.3601108033241,
+            "gain": 0.013456328273513708,
+            "pan": -0.015293965369160924,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.022,
+            "decaySeconds": 0.18759837579794628,
+            "endSeconds": 0.37519675159589255,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 700,
+            "visualCoordinate": {
+              "sourceIndex": 225
+            },
+            "absoluteOnsetSeconds": 142.3601108033241,
+            "visualAnchor": "n and responseStep locate event in finite-sum layer at n-squared phase",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "142.340"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "142.380"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "142.548"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "phase-torus",
+      "cycleSeconds": 84,
+      "selected": [
+        {
+          "kind": "introduction",
+          "windowStartSeconds": 0,
+          "event": {
+            "sourceIndex": 0,
+            "localOnsetSeconds": 0,
+            "gain": 0.3632877264455861,
+            "pan": 0.056313269052756104,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.012,
+            "decaySeconds": 0.1302627036941253,
+            "endSeconds": 0.31480153392746946,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 508.79189847507246,
+            "visualCoordinate": {
+              "sourceIndex": 0
+            },
+            "absoluteOnsetSeconds": 84,
+            "visualAnchor": "Fourier mode phase locates impulse on torus",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "83.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "84.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "84.157"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "dense",
+          "windowStartSeconds": 49,
+          "windowStereoRms": 0.004712301290603293,
+          "event": {
+            "sourceIndex": 245,
+            "localOnsetSeconds": 49,
+            "gain": 0.7969235003723749,
+            "pan": 0.056313269052756104,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.012,
+            "decaySeconds": 0.1430630776497185,
+            "endSeconds": 0.39394180802096407,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 485.7142857142857,
+            "visualCoordinate": {
+              "sourceIndex": 245
+            },
+            "absoluteOnsetSeconds": 133,
+            "visualAnchor": "Fourier mode phase locates impulse on torus",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "132.980"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "133.020"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "133.197"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        },
+        {
+          "kind": "quietest-window",
+          "windowStartSeconds": 7,
+          "windowStereoRms": 0.001002613286772728,
+          "event": {
+            "sourceIndex": 38,
+            "localOnsetSeconds": 7.600000000000001,
+            "gain": 0.03972915152890495,
+            "pan": 0.056313269052756104,
+            "panKind": "Piko base pan plus absolute-time modulation",
+            "attackSeconds": 0.012,
+            "decaySeconds": 0.14910837590401654,
+            "endSeconds": 0.3632127105354249,
+            "section": null,
+            "gesture": null,
+            "modeIds": null,
+            "frequencyHz": 666.3756954252174,
+            "visualCoordinate": {
+              "sourceIndex": 38
+            },
+            "absoluteOnsetSeconds": 91.6,
+            "visualAnchor": "Fourier mode phase locates impulse on torus",
+            "browserStates": [
+              {
+                "phase": "onset-before",
+                "qaClockSeconds": "91.580"
+              },
+              {
+                "phase": "onset-after",
+                "qaClockSeconds": "91.620"
+              },
+              {
+                "phase": "decay-midpoint",
+                "qaClockSeconds": "91.782"
+              }
+            ],
+            "qaClockMatched": true,
+            "screenshotCaptured": true
+          }
+        }
+      ]
+    }
+  ],
+  "browserObservation": {
+    "capturedAt": "2026-09-21T15:34:31Z",
+    "renderer": "WebGL2",
+    "viewportCss": [1440, 900],
+    "canvasCss": [1440, 900],
+    "devicePixelRatio": 1,
+    "quality": "high",
+    "seed": "qa",
+    "entry": "silent entry; paused; seeked using QA absolute-time control",
+    "visualStatesPerEvent": [
+      "onset-before (-0.020 s)",
+      "onset-after (+0.020 s)",
+      "decay midpoint (endSeconds/2)"
+    ],
+    "eventCount": 30,
+    "stateCount": 90,
+    "screenshots": "captured and visually reviewed in Chrome; PNGs not retained",
+    "physicalAudioEvaluation": "not observed; the browser session used silent entry and no sound audition"
+  }
+}

@@ -1,13 +1,15 @@
 # 設計と実装計画
 
-2026年9月14日確認。現行V2の検証状態は[作業・検証記録](../qa/renewal/progress.md)を参照し、
+2026年9月22日確認。現行V2の検証状態は[作業・検証記録](../qa/renewal/progress.md)を参照し、
 この索引と設計文書の目標を完成判定の代わりに使わない。
 
 ## 現在の制作
 
 - [2026年9月6日 V2設計](specs/2026-09-06-renewal-design.md)
 - [V2実装計画](plans/2026-09-06-renewal.md)
+- [品質仕上げ計画](plans/2026-09-21-luna-quality-completion.md)
 - [作業・検証記録](../qa/renewal/progress.md)
+- [QA台帳](../qa/renewal/luna-task-board.md) · [次タスクへの引き継ぎ](../qa/renewal/luna-handoff.md)
 
 ## Version 1の履歴
 

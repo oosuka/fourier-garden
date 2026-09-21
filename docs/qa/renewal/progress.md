@@ -1,11 +1,26 @@
 # V2 作業・検証記録
 
-2026年9月14日更新。**全体は制作中。完成判定はまだ行っていない。**
+2026年9月22日更新。**全体は制作中。完成判定はまだ行っていない。**
 依頼の全範囲を維持し、[実装計画](../../superpowers/plans/2026-09-06-renewal.md)に従って継続する。
 
 継続用の[引き継ぎプロンプト](luna-handoff.md)、[作業台帳](luna-task-board.md)、
 [元の全31項目の依頼](renewal-request.md)を保存している。この記録の更新完了はV2の完成を意味せず、
 残る検証・修正・仕上げを明示するための作業記録である。
+
+## 現在の状態（2026年9月22日）
+
+- 品質仕上げ計画のC00–C10cは実施・記録済み。C11はT06-G/LとT07-Gを試行したが、Macの画面ロックが判明し、前景継続の証拠として採用していない。詳細と元計測値は[C11記録](c11-continuous-observation-2026-09-22.json)を参照。
+- 次はMacの手動ロック解除後、画面ロックを避ける一時手段を用いてT06-Gから10分の前景観察を再開する。C11の残りとC12の独立監査・完成判定は未完。31要件には現行の証拠と限界を対応づけたが、最終評価は保留。
+- Node.js 24.21.0／npm 11.19.1へ更新し、既存依存を更新済み。実際の固定値は`package.json`のVolta欄を参照。
+
+## 2026年9月22日 文書監査・全体check
+
+- リポジトリ内の全27件のMarkdown文書を確認し、現行のREADME、仕様、計画、進捗、台帳、引き継ぎ、性能記録を同期した。READMEと現行計画のNode/npmおよび依存版をpackage.jsonに合わせた。歴史記録は当時の記録として保持し、日付のある過去の「次作業」は現行指示と誤読しないよう履歴と明記した。
+- luna-task-boardの31要件すべてに現行の根拠と確認限界を記入した。根拠のない完了評価は行わず、独立監査と最終判定を保留している。
+- Markdown内の405件のローカルリンクを検査し、欠落0件。renewal QAの88件のJSONを構文検査し、すべて有効。
+- `rtk proxy npm run format`実施後の`rtk proxy npm run check`は成功。Biome整形確認、Oxlint、strict TypeScript、production buildが成功し、Vitestは100ファイル成功・1 skip、751 tests成功・1 skip。production buildの大容量chunk警告は残る。
+- 最新Oxlintで依存更新後に見つかった17件の問題を、規則無効化なしで修正した。修正後の全体checkに含めて確認。
+- `rtk git diff --check`成功。T06-G/LとT07-Gの画面ロック影響による再計測、C11全項目、C12の独立数学・DSP・描画/性能/寿命監査は未完。したがってV2完成判定は行っていない。
 
 ## 2026年9月14日 文書・検証同期
 
@@ -17,7 +32,7 @@
   現行p95最大はMöbiusの1.176 ms。ブラウザ音声スレッド、実GPU完了時間、物理AV遅延の測定ではない。
 - 全Markdownのローカルリンク、10章の章構造、QA JSONの形式を監査した。現行の連続QA証拠はT01〜T05が両rendererで合格、
   T06〜T09は証拠不足、T10-Gは一部済、T10-Lは証拠不足である。P03-Lの4Kは2試行とも50 ms超が1回あり、要再計測とする。
-- 次の作業単位は[台帳](luna-task-board.md)のT06-G。U／L／A／Mの共通作業、R01〜R03、D01、F01も未完了として保持する。
+- 2026-09-14時点の次作業単位はT06-Gとしていた。後続の実施状況と現在の次作業は、冒頭の状態および最新の追記を参照する。
 
 ## 実装済み
 
@@ -58,13 +73,13 @@
   Three.jsの約684 kB chunk警告は残る。続くMöbiusの埋め込み式の改行は別に検証する。
 - Chromeで新入口、Detailsの幅変更、BesselのWebGPU／WebGL2を観察。V2全10章の網羅的QAは未完。
 
-## 次に完了させる仕事
+## 残る作業
 
-1. 新しい数学実験と残像・残響の遷移を全章・両rendererで操作確認する。
-2. 全10章の個性と5幕を連続観察し、更新したResidueの音・空間・材質・局所応答を仕上げる。
-3. reduced motionを専用シーンの造形まで確認し、キーボード・復旧・遷移の操作QAを通す。
-4. 全章・両renderer・3比率・高DPI・4K60秒・長時間同期・資源ライフサイクルの証拠を残す。
-5. 数学主張台帳、Atlas、因果表、QAを最終実装へ同期し、読み取り専用の数学／DSP／GPU監査を統合する。
+1. macOSの手動ロック解除後、T06-G/LとT07-Gを有効な前景条件で再実施し、T07-L〜T10-G/Lの連続観察を進める。
+2. P03-Lを外れ値込みで再計測し、P02/P04の変更影響と両rendererの資源寿命・故障経路を評価する。
+3. 数学／DSP／描画の独立監査、31要件表の具体的証拠・限界との対応、最終`npm run check`を行う。
+
+作業IDと条件の正本は[作業台帳](luna-task-board.md)、C11の次の操作は[引き継ぎ](luna-handoff.md)を参照する。
 
 音響指標は心地よさの証明ではない。現在の出力時計補償は物理的な音と画面の遅延実測ではない。
 過去の正式完成宣言をV2へ転用しない。利用者への追加試聴要求、未依頼のコミット・公開は行わない。
@@ -705,3 +720,114 @@ Biome、Oxlint、strict型検査、production buildも成功した。
 - Bessel TideのWebGL2を実ブラウザのDPR2条件（viewport 639×789 CSS、canvas CSS1024×789、実ラスタ2048×1578）、quality=high、seed=qa、通常motion、foreground、ノート閉、音量35%で絶対時刻0秒の序盤記録後、約80秒から約631秒まで（開始から約630秒、8周回以上、72秒周期）連続観察した。円形水盤の同心節円・節径、中心の明暗、Bessel場に対応する局所発光と波の変化を継続観察し、周回での表示破綻や固定残像は見られなかった。
 - 序盤の[60秒JSON](luna-bessel-tide-webgl-dpr2-t05-start.json)はcomplete、60.0153秒、3601フレーム、平均60.0014fps、間隔p95 18.6ms、最大18.8ms、50ms超0回、同期推定差p95 4.4353msだった。終盤・絶対600秒の[60秒JSON](luna-bessel-tide-webgl-dpr2-t05-end.json)はcomplete、60秒、3600フレーム、平均60fps、間隔p95 18.5ms、最大18.8ms、50ms超0回、同期推定差p95 4.5000msだった。両方ともDPR2・48kHz・WebGL2・ノート閉で、記録中はDOM／AX／画像を取得していない。
 - 連続窓の終了後にpause/resume、8945.448秒への長い絶対seek、71.9秒への逆seek、72秒で第1幕へ戻る周回境界を確認した。実際の音色の知覚評価、音だけ／映像だけ／同時の知覚比較、物理的な出音・画面走査遅延、実GPU完了時間、実GPUメモリは未測定。次の1件：T06-G。
+
+## 2026年9月21日 21:51 C01 / M08 Haar音響写像
+
+- 対象commit `59e14dd`。実施後も未コミット。変更: `WaveletRainDetails.tsx`、`newChapterDetails.test.tsx`、`docs/sound-shape-causality.md`、`docs/mathematical-model.md`。
+- レビューQ1を再現。詳細には旧基準音高`440+96j`、支持開始pan、シアン/紫の説明があり、スコアは係数`j`から`420+62j`、支持中心pan、符号位相0/π、係数の平方根圧縮と幕・アクセントを使う。画面説明を現行写像へ同期し、灰系色は符号の補助表現であると記録。
+- 回帰 `describes the current Haar audio mapping and matches every score event`: 旧表示でRED。全320発音の周波数・数学gain・位相と、共通energy-balance後のpanを検証し、17/17 GREEN。中間実行でpanをマスタリング前の式と最終score値で直接比較して失敗したため、`createEnergyBalancedPikoScore`と同じ後処理を期待値側にも通す形へ直した。ソース式自体は変更していない。
+- `rtk proxy npm test -- src/patterns/newChapterDetails.test.tsx`: 17/17成功。`rtk proxy npm test`: 726成功、1 skip（100ファイル）。
+- Chrome手動確認: Wavelet Rain、数学詳細、消音状態。スクリーンショット1350×813px。数式表示と段落の折り返しを確認。CSS viewport / DPR / renderer / qualityは未計測。因果表は狭い列で一部文が切れて見え、レビューQ3としてC04で再確認する。画面PNGは保存していない。
+- 無効化した旧証拠: 2026-09-14の全体checkは変更前の履歴としてのみ有効。C01単独の旧表示説明は現行仕様根拠として無効。
+- 次の1件: C02 / M06 Lissajousの音響説明。
+
+## 2026年9月21日 21:57 C02 / M06 Lissajous音響写像
+
+- 対象commit `59e14dd`。実施後も未コミット。変更: `LissajousOrchardDetails.tsx`、`newChapterDetails.test.tsx`、`docs/sound-shape-causality.md`、`docs/mathematical-model.md`。
+- レビューQ1を再現。詳細の左右声部分割・整数和a+b・500–890 Hzを削除し、既存`getLissajousAudioMapping(index)`とスコアに合わせた9比×32点、60秒288発音、等間隔、参照座標からの音高式を表示。基準pan`0.12y`、絶対時刻のpan変調、carrier drift`a/b`を区別した。
+- 回帰 `describes the Lissajous score mapping and matches all 288 events`: 旧表示でRED。全288イベントの時刻・間隔・ratioIndexごとの32件・参照座標からの音高と、panマスタリング後の値を検証し、18/18 GREEN。既存スコアは変更していない。
+- `rtk proxy npm test -- src/patterns/newChapterDetails.test.tsx`: 18/18成功。`rtk proxy npm test`: 727成功、1 skip（100ファイル）。
+- Chrome手動確認: Lissajous Orchard、数学詳細、消音状態。数式と説明段落を確認し、cause tableに更新後の内容が存在することをDOM/AXで確認。スクリーンショット1350×813px。CSS viewport / DPR / renderer / qualityは未計測。狭い列でcausality表の一部が視覚的に切れており、Q3としてC04で再確認する。画面PNGは保存していない。
+- 旧「二声の発音分割」「整数和からの音高」説明は現行根拠として無効。全章のM06数学監査はC08待ち。
+- 次の1件: C03 / M09 Riemann音響写像。
+
+## 2026年9月21日 22:08 C03 / M09 Riemann音響写像
+
+- 対象commit `59e14dd`。実施後も未コミット。変更: `RiemannVeilDetails.tsx`、`newChapterDetails.test.tsx`、`docs/sound-shape-causality.md`、`docs/chapter-claim-ledger.md`。
+- レビューQ1を再現。説明は数学係数`1/n²`と音響gainを分離し、現行スコアのmain `0.20 n^-0.7`、response `.07+.14/√n`、周波数式、spacing correction、masteringを反映。古いmain周波数範囲`460–1,020 Hz`を除き、現在の範囲を記載した。
+- 回帰 `describes the current Riemann audio mapping and matches every score event`: 全285イベントについて2系統の周波数・係数/gainの区別・時刻・panを照合し、19/19 GREEN。既存スコアと数学モデルは変更していない。
+- `rtk proxy npm test -- src/patterns/newChapterDetails.test.tsx`: 19/19成功。`rtk proxy npm test`: 728成功、1 skip（100ファイル）。
+- ChromeでRiemann Veilの説明と因果表を確認。C04後の再確認ではviewport 1440×900 CSS、DPR1、canvas CSS1022×900。renderer・quality・音声出力は未計測。画像ファイルは保存していない。
+- 旧のmain帯域説明は現行根拠として無効。C08での全数学主張監査は未実施。
+- 次の1件: C04 / 共有ノート幅。
+
+## 2026年9月21日 22:19 C04 / 共有ノート幅
+
+- 対象commit `59e14dd`。実施後も未コミット。変更: `AnalyticPatternDetails.tsx`、`details.css`、`WaveletRainDetails.tsx`、`newChapterDetails.test.tsx`。
+- 再現したQ3は、ノートの幅361pxで共有因果表が列不足となり本文が視覚上切れる問題。因果情報を見出し・区分・局所映像・音響写像を持つ縦積み構造へ変更した。数値データ表の横スクロールは保持。詳細のパラメータ文字を12pxへ明示し、数式のコンパクト表示を12pxへ調整した。
+- 数式12px化後、Haarの`g(t)`が361px欄を5px超えることをDOM計測で再現。音声・数学写像は変えず、式をsine項／pulse項の意味境界でaligned 2行にし、幅超過を解消。
+- 回帰を追加し、7つの分析章で見出し・ラベル付きdlが表示されること、数値表の横スクロールが存在すること、Haar式の行構造を確認。`rtk proxy npm test -- src/patterns/newChapterDetails.test.tsx`: 27/27成功。
+- Chrome手動確認: viewport 1440×900 / 1920×1080 / 2560×1080 CSS、全条件DPR1。canvas CSSはそれぞれ1022×900 / 1460×1080 / 2080×1080。因果欄幅は361 / 403 / 423pxで、可視テキストの横溢れ・列重なりなし。全10章の数学タブを順に開き、`.detailsFormula`と`.mathIdentity`の横溢れなしを確認。独自詳細の01 Residue、02 Cathedralも確認。renderer・quality・音声出力と音映像品質は未計測。画面PNGは保存していない。
+- 共有UI変更後の全体`rtk proxy npm test`: 734成功、1失敗、1 skip（100ファイル）。唯一の失敗は`spectral-cathedral`代表Worklet block p95が1.408msで1.333ms上限を超えた性能タイミング検査。続けて単独実行した`rtk proxy npm test -- src/audio/workletRuntime.test.ts`は75/75成功。原因は確定しておらず、C12の全体checkで再実行する。
+- 因果表の旧表示・Haar式の旧幅観察を無効化。次の1件: C05 / ノート併用時の音量。
+
+## 2026年9月21日 22:35 C05 / ノート併用時の音量range
+
+- 対象commit `59e14dd`。実施後も未コミット。変更: `src/styles/control-bar.css`、`src/components/ControlBar.test.tsx`、`src/components/controlBarStyles.test.ts`。`ControlBar.tsx`のrange・ARIA・入力イベントは既存仕様を保持。
+- Chromeで修正前を再現: 1440×900 CSS viewport、DPR1、数学ノートopen、再生中・消音状態でrangeはDOMにあるがcomputed `display:none`・幅0。原因は950px以下のcontainer規則がinputもoutput/timeと一緒に非表示にしていたこと。
+- 先に追加したスタイル回帰は修正前に失敗し、幅56px・最小48px・非表示でないことを検証する形に更新。追加のrange回帰はaccessible name「音量」、native min/max/step、消音中の35%表示を確認。`rtk proxy npm test -- src/components/ControlBar.test.tsx src/components/controlBarStyles.test.ts`: 11/11成功。
+- 修正後のChrome確認: 1440×900 CSS viewport・DPR1（canvas CSS 1022×900）および1024×640（canvas CSS664×640）、どちらもノートopenでrangeが56px・visible。1024×640で再生・消音・range、章ナビ、ノート、全画面の矩形に重なりなし。ArrowRightで35→36→37%、ArrowLeftを2回で35%へ戻した。rangeとTab先の章移動ボタンに2pxのfocus-visible outlineを確認。停止中に消音解除・再消音しても選択音量35%は保持され、試行後は再生中・消音状態へ戻した。画像ファイルは保存していない。renderer・quality・音声出力の聴取は未測定。
+- C05範囲の旧証拠はなし。U02全体（入力中Space、全画面失敗等）は未完。次の1件: C06 / reduced motionと局所装飾。
+
+## 2026年9月21日 22:48 C06 / reduced motionと局所装飾
+
+- 対象commit `59e14dd`。実施後も未コミット。変更: `src/rendering/analytic/eventResonance.ts`、7章のscene、`eventResonance.test.ts`、`newChapterScenes.test.ts`。数学時刻・score・包絡は変更せず、reduced motionでは波紋の成長・拡大だけを抑えた。
+- 回帰は修正前RED。固定anchorで同じvoiceを0.2秒と0.8秒に読み、reduced時の相対stroke形状とcore寸法が固定、明度・局所位置は絶対時刻／有限包絡に追従、通常時は相対形状とcore寸法が変化、双方で有限包絡後に消えることを確認。7scene call siteすべてが必須flagを渡す。
+- `rtk proxy npm test -- src/rendering/analytic/eventResonance.test.ts src/patterns/newChapterScenes.test.ts`: 39/39成功。全10章の既存scene reduced staging testを含む。
+- ChromeのWebGPU／WebGL2で対象7章（Prime、Bessel、Lissajous、Dirichlet、Haar、Riemann、Torus）を各0.020秒・0.600秒へseek。両rendererとも1440×900 CSS、DPR1、canvas／実ラスタ1440×900、quality=high、seed=qa、QA scene flag=reduced、音なし入場後pause・mute、`matchMedia`はfalse。全14状態でbackend・scene motion・時刻表示が一致。WebGPUはPrime onset／Bessel onset・tail、WebGL2はBessel onset／tailを画面確認。画面PNGは保存していない。WebGL2のconsole error／warningは空。
+- macOS「視差効果を減らす」を一時的にonにし、queryの`motion=reduced`を外した画面でも`matchMedia=true`、scene `data-motion=reduced`、CSSのbutton animation/transition duration `1e-05s`を確認。その後設定を元のoffに戻し、別途QA queryだけがsceneをreducedにする状態（`matchMedia=false`）も確認。
+- `newChapterScenes.test.ts`と`eventResonance.test.ts`でPointsをtype-only namespace経由に誤って狭められず`geometry`を参照していた箇所を、runtime `instanceof THREE.Points`の絞り込みに修正。型検査で見つかった表示status値のunion違反4件も`保持/圧縮/演出`へ整理し、音響写像の説明文に変換の詳細を残した。
+- 無効化した旧証拠: motionが伝わらない共通event-resonance層の挙動。WebGPU/WebGL2の連続10分・実音の聴取は未実施。次の1件: C07 / WebGL composer復帰時のviewport同期。
+
+## 2026年9月21日 23:00 C07 / WebGL composer viewport復帰
+
+- 対象commit `59e14dd`。実施後も未コミット。変更: `src/rendering/cinematic/postProcessing.ts`、`postProcessing.test.ts`。
+- RED: 実`UnrealBloomPass`を使う回帰で、1440×900 high→low→1024×640 DPR2→high後も最後のBloom `setSize` が1440×900のまま。また初回low→highではThree.js初期サイズ300×150が残った。原因は低品質／4K direct中にcomposer viewportが進んでも、bloomへ戻るquality変更時に同期しなかったこと。
+- `WebGlPostProcessor`がcomposerへ適用済みのCSS幅・高さ・DPRを保持し、bloom有効かつ未同期時だけpixel ratio/sizeを更新。`resize`と`setQuality`後に同期を試みるが、`applyProfile`（`setEnergy`でも呼ばれる）には置かない。同サイズのquality/energy反復で不要な再確保をしない。
+- 回帰は初回low→high、low中resize→high復帰、DPRのみ変更、4K direct→通常bloom、同サイズquality反復、複数setEnergyを実passのサイズ呼び出しで確認。`rtk proxy npm test -- src/rendering/cinematic/postProcessing.test.ts`: 9/9成功。`rtk proxy npm run typecheck`: 成功。C01–C06で見つかった型エラー4件とPoints narrowingもこのtypecheck前に修正済み。
+- Chrome WebGL2、quality=high、1440×900 / 1024×640 / 1920×1080 CSS、DPR1、観察ノートopen。canvas CSS／実ラスタは順に1022×900／664×640／1460×1080で追従し、backendはWebGL。現行アプリとQA panelに通常quality変更UIはなく、隠れたstateは操作せず、quality transitionはpassを使う単体回帰で確認。4K境界も単体回帰。console error／warningなし。画面PNGは保存していない。
+- composerの古いviewport寸法が残る旧挙動を無効化。CSS/DPRのブラウザresizeは確認、物理GPU完了時間・実GPUメモリは未計測。次の1件: C08 / 全10章の数学主張照合。
+
+## 2026年9月21日 23:13 C08 / 全10章の数学主張・写像照合
+
+- 対象commit `59e14dd`。変更後も未コミット。実装差分は`lissajous-orchard/definition.tsx`と`phase-torus/definition.tsx`、説明テスト。正本・記録は`mathematical-model.md`、`sound-shape-causality.md`、`chapter-claim-ledger.md`、`luna-task-board.md`、この記録、実装計画。
+- 10章の有限数学モデル、既存の主張、score・sceneの写像、表示上の近似と詩的造形を照合。数学核の誤りは見つからず、Lissajousの式とPhase Torusの式が現行scoreと異なる古い説明だったため、UI・因果表・数学モデル正本を現行写像に同期。根や一般定理はモデル／既存有限テストと一次資料の適用範囲を確認し、有限観察から強めない。
+- `rtk proxy npm test -- src/patterns/newChapterDetails.test.tsx src/patterns/newChapters.test.ts src/patterns/renewalMathematics.test.ts src/patterns/mathematicalStudies.test.ts src/patterns/residue-bloom/math/model.test.ts src/patterns/spectral-cathedral/math/model.test.ts src/patterns/mobius-choir/math/model.test.ts`: 7 files、103/103成功。Lissajous全288・Riemann全285・Haar全320・Torus全420イベントの写像回帰を含む。`rtk proxy npm run typecheck`: 成功。
+- ChromeでLissajousとPhase Torusの数学ノートを表示。1920×1080 CSS viewport、WebGL2、high、DPR1、QA scene、音なし入場後のミュート状態。Lissajousの9比×32点、288発音・等間隔・基準音高式と、Torusの現行`430+390 min(1,|m+n√2|/7) Hz`を因果行・音響式で確認。数式の改行・表示欠落なし。画面PNGは保存していない。
+- 台帳に各章の根拠、音響写像、視覚写像、保持／圧縮／演出と有限計算の限界を1行ずつ記録。NIST DLMF Bessel直交式、MIT Fejér/Haar資料の参照を適用範囲付きで維持。
+- 無効化した旧説明: Lissajous「左右声部の発音分割」「整数和から500–890 Hz」、Phase Torus「440+520 C(·)」。実スピーカーの聴感、知覚的一体感、有限履歴による稠密性の実測は未検証。次の1件: C09 / 共通UIの最終操作。
+
+## 2026年9月21日 23:30 C09 / 共通UIの最終操作（U01–U03）
+
+- 対象commit `59e14dd`。実施後も未コミット。C01–C08のUI・数学説明・scene・WebGL復帰差分を保持。
+- `rtk proxy npm test -- src/App.test.tsx src/components/ControlBar.test.tsx src/components/DetailsPanel.test.tsx src/components/CanvasStage.test.tsx src/components/ChapterAfterimage.test.tsx`: 5 files / 41 tests成功。音なし入場、開始の取消、音声初期化失敗からの無音継続・再試行、scene回復、停止中mute変更、章遷移時の旧scene世代通知抑制、旧音響のfade/dispose、focus内Space、章目録Escape、fullscreen失敗表示、実験値保持、tab/chapter navigation時のscroll先頭化を回帰確認。
+- Chrome WebGL2で章目録から全10章を直接・連続選択し、選択後の章見出し・式・章時刻を確認。短時間の遷移overlayが消えた後に旧章タイトルや古いtrailは残らなかった。ノートを開いた状態で章移動し、選択中の数学tabが維持されることを確認。Wavelet Rainで実験J=0、数学tab、章9への移動後に章8へ戻して値とtabが維持されることをAXで確認。章移動時にscroll位置が先頭へ戻る回帰は上記テストで確認。
+- ChromeでSpace・D・F・Escape、rangeにfocusした状態のSpace、章目録のUp/Down/Home/End/Enter、閉じた章目録からEscape後のfocus復帰、停止中のMを操作。range focus中はSpaceが再生を変えず、Dは詳細をtoggleせず、focusが戻る。Fは現在のChrome埋込環境ではfullscreen要求を開始できず、閉じられる失敗案内を表示。UA制限下の失敗表示を成功として扱わない。
+- WebGPU／WebGL2、観察ノートopen、CSS viewport 1024×640・1440×900・2560×1440を確認。WebGPU canvas CSS寸法は順に664×640・1440×900・2100×1440、range表示幅は56・70・70px。WebGL2も同3比率でcanvasはstage内に収まり、range表示幅56・56・70px。どの試行もcanvas CSS幅・高さがviewportを超えず、音量rangeは非表示にならなかった。WebGPU条件: `?qa=1&chapter=wavelet-rain&time=0&renderer=webgpu&quality=high&seed=qa&motion=normal`、DPR1、音声mute、音量35%。PNGは保存していない。
+- 初回音声開始の物理出力、旧残響を含む音の知覚評価、物理AV遅延は未測定。fullscreen失敗はこのブラウザ環境の制限。対象UI回帰は現行コードでPASS。次の1件: C10a / 実出力graphの測定経路。
+
+## 2026年9月22日 00:15 C10a–b / 最終出力graph・全周期比較
+
+- 対象commit `59e14dd`。既存変更を保持し、実施後も未コミット。変更: `src/audio/outputGraph.ts`を新設してAudioEngineの共通EQ／room／dynamics／master接続を抽出、`src/audio/AudioEngine.ts`から共有接続関数を呼ぶ。QA entry `audio-output-qa.html`、`src/qa/audioOutputReportPage.ts`、`vite.config.ts`を追加・更新。JSON exportリンクを追加。
+- ライブとQAが同一の実出力graph関数を通る。dry: highpass→high-shelf→lowpass→gain、wet: highpass→seeded convolver→lowpass→gain、合流後compressor→設定時のみoversample 4x limiter→analyser→master→destination。deterministic IR seed 41041、音量0.35／master gain 0.0882、48 kHz stereo、transport先行50 ms、fade-in 65 ms、IR尾全長＋0.5 s。停止測定では入力を0.16 s rampで絞りmaster levelを保持する。
+- Chrome OfflineAudioContextで10章を各全周期＋残響尾までレンダーし、[JSON](final-audio-output-2026-09-21.json)へ全1秒窓を保存。`generatedAt`はUTC `2026-09-21T15:06:05.327Z`。finiteは全章true、Worklet runtime errorなし、全章の1秒窓に完全無音なし、開始sample/transport開始/final sampleは0、周期終了step差の最大0.000136、残響後padding RMSは最大5.84e-8。全周期sample peak最大0.03542（−29.0 dBFS）、mono/stereo差は最大−3.16 dB（Möbius）、隣接章差が3 dB超はDirichlet→Haar −4.87 dBとRiemann→Torus +3.61 dBの2組。sample peakをtrue peak、RMSをLUFSとは呼ばない。
+- 3 dB差は調査目安に該当。8 kHz未マスターdry全周期RMS=0.023±0.05 dBは`chapterLoudness.test.ts`で全章再確認済み。最終graphはdry/wet比・room長・局所scoreの密度／帯域が章ごとに異なり、数値だけで出力欠陥としない。Dirichletの最小1秒窓(50 s, RMS 8.35e-5)はsourceIndex 267–271の440 Hz主音より後の806.7–940 Hz高調波群で、gain 0.0091–0.0164・end 0.110–0.124 s。51 sに440 Hz主発音(gain 0.485)が来てRMS 0.00441へ戻るため、これはscoreに記述された高次側葉の弱い有限発音で、無音故障とは判断しない。均一化や音量変更はしない。2組の全周期レベル差は引き続き聴感確認が必要だが、利用者の追加試聴は完了条件にしない。
+- 最初の10章一括計測はResidueが13秒以降ゼロと出て単独レンダーと不整合だったため無効化。単独と今回の一括ではResidueの全周期RMS／peak／尾が一致し無音は再現しない。初回結果の原因は未確定。今回の完全な一括結果を採用した。
+- `rtk proxy npm test -- src/audio/chapterLoudness.test.ts src/audio/audioEngine.test.ts src/audio/audioMetrics.test.ts src/audio/workletRuntime.test.ts`: 4 files / 102 tests成功。`rtk proxy npm run qa:audio-performance`: Worklet 75/75成功、代表block p95最大1.104 ms（Möbius）で1.333 ms未満。これはNode VM性能で、Chrome realtime audio thread性能ではない。Offline出力品質とは別の証拠。
+- UI renderer/viewportは対象外。ブラウザ実音の聴取、聴感上の章間音量、物理出音遅延は未測定。C10cではイベント別の局所因果だけをChromeで観察する。次の1件: C10c / 導入・密集・静寂イベントの局所因果。
+
+## 2026年9月22日 00:34 C10c / 導入・密集・静寂イベントの局所因果
+
+- 対象commit `59e14dd`。既存変更を保持し、実施後も未コミット。イベント表は[局所因果選定・Chrome観察JSON](c10c-local-causality-2026-09-22.json)。全10章について導入・密集・静寂窓から各1 eventを選び、`sourceIndex`、次周期を含む絶対onset、有限attack/decay/end、score gain、panとその表現種別、章ごとの視覚座標・anchorを記録した。モード別stereoSpreadを単一panner値とみなさない。
+- ChromeのQA sceneで各30 eventのonset直前・直後と有限包絡中点、計90状態をseekしてスクリーンショットで確認。全状態でQA絶対時刻の表示が要求時刻と一致した。条件: WebGL2、CSS viewport/canvas 1440×900、DPR1、quality=high、seed=qa、音なし入場・停止、QA絶対時刻入力。選定座標へ反応する点・柱impact・モード帯・曲線点・kernel峰・wavelet cell・有限場層などを見分け、数学場／主曲線は装飾の余韻と分けて観察した。画面PNGは保存していない。
+- 選定値と90個のQA時計値はJSONに記録。画像は全状態で撮影し目視確認したが、大きな一時録画は作成していない。共有時計・画面描画状態を確認した列と、音の知覚評価を区別し、実際の音は無音入場で未聴取。同時体験、聴感上の価値・快適さ、物理AV遅延は評価していない。追加の利用者試聴は要求しない。
+- C10c対象にコード修正なし。最終音響出力JSONはC10a–bの証拠として継続使用し、画面・聴取品質の証拠へ流用しない。次の1件: C11 / T06–T10連続観察、P03-L再測定、両rendererの資源寿命。
+
+## 2026年9月22日 01:18 C11中間 / T06-G/L・T07-G
+
+- C11実測はChrome、CSS viewport 1440×900、DPR1、canvas/raster 1440×900、quality=high、seed=qa、default post-processing、motion=full。`音なしで入る`で開始し、performance clock／消音を維持した。開始・終盤各60秒のQA JSONは[`c11-browser-captures`](c11-browser-captures/)に保存。実際の音は聴取していない。画面は複数時点で観察したがPNGは保持していない。
+- T06-GはQA 624.494秒まで進み、pause/resume、絶対時刻599.8→600.172秒（60秒score cycle境界）→150秒への逆seekを確認。開始capture 59.68fps、interval p95 17.6ms、50ms超1件（最大50.1ms）。終盤は59.22fps、p95 18.2ms、50ms超4件、最大250.1ms。開始／終盤JSONを保存した。絶対seek等を含む実時間は10分を超えた。
+- T06-LはQA 626.032秒まで進み、pause/resume、599.8→600.225秒→120秒への逆seekを確認。開始capture 59.87fps、p95 18.3ms、50ms超0件。終盤は59.37fps、p95 18.2ms、50ms超5件、最大165.5ms（最終captureの約55.6–56.7秒に集中）。ページは10分超経過した。
+- T07-GはQA 644.493秒まで進み、pause/resume、599.8→600.486秒（60秒cycle境界）→120秒への逆seekを確認。開始capture 59.77fps、p95 18.3ms、50ms超1件（51.3ms、2.30秒地点）。終盤は49.8fps、p95 33.4ms、最大600ms、50ms超65件、記録外33件。開始／終盤JSONを保存し、外れ値を除去せず保持した。
+- T07-G終盤計測の直後、CUAはmacOSがロック中・自動解除不可（`apps=[]`）と報告。終盤の遅延集中と時間帯が重なるためOS idle lockが原因候補だが、直接因果は未確定。T06-G/Lの終盤にも50ms超があり、その時点ではlock状態を確認していない。これらを安定した前景計測の合格根拠にせず、T06-G/L・T07-Gはロック防止条件で10分窓全体を再実施する。ロック画面越しのスクリーンショットを目視QA扱いしない。
+- C11未完: T06-G/LおよびT07-Gの有効な前景再実施、T07-L〜T10-L/G、P03-L元外れ値を保持した再測定、P02/P04影響査定、両rendererの2巡disposeと既存故障経路QA。Macの手動unlockが必要。解除後はQA時間だけでなく、OS idle lockを避ける一時手段を使い、ロック状態を測定前後に確認する。次の1件: ロック解除後にT06-Gから再開。

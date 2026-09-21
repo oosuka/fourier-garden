@@ -104,7 +104,7 @@ export function createPrimeConstellationContent(
       centroidPosition[0] = sum.real * 3.2;
       centroidPosition[1] = 0;
       centroidPosition[2] = sum.imaginary * 3.2 + 0.5;
-      const eventFrame = resonance.update(timeSeconds);
+      const eventFrame = resonance.update(timeSeconds, reducedMotion);
       const activeIndex = (eventFrame.focus?.sourceIndex ?? 0) % PRIME_SUPPORT.length;
       (highlight.points.material as THREE.PointsMaterial).opacity =
         eventFrame.voices[0]?.envelope ?? 0;
