@@ -6,7 +6,7 @@
 
 **Architecture:** 数学核・絶対transport・共通数学イベント・章固有の音響と局所座標を保つ。説明は実装の写像へ合わせる。共有UI、装飾のmotion方針、WebGL復帰を狭い責務で修正し、変更範囲に対応した証拠だけ再取得する。
 
-**Tech Stack:** Node 24.21.0 / npm 11.19.1、React 19.3.0、TypeScript 7.0.2、Three.js 0.186.0、Vite 8.3.0、Vitest 5.0.1、Oxlint 1.85.0、Biome 2.5.14。Voltaと依存の固定版は`package.json`を正本とする。新規依存は原則不要。
+**Tech Stack:** Node 24.21.0 / npm 11.19.1、`@types/node` 24.13.6、React 19.3.0、TypeScript 7.0.2、Three.js 0.186.0、Vite 8.3.0、Vitest 5.0.1、Oxlint 1.85.0、Biome 2.5.14。Voltaと依存の固定版は`package.json`を正本とする。新規依存は原則不要。
 
 **Spec:** [V2設計](../specs/2026-09-06-renewal-design.md)、[原依頼31要件](../../qa/renewal/renewal-request.md)、[今回の品質レビュー](../../qa/renewal/2026-09-21-quality-review.md)。この文書は追加の設計・実行指示で、原依頼の品質目標を下げない。
 
@@ -296,6 +296,7 @@ expect(resizeBloom.mock.calls.at(-1)).toEqual([2048, 1280]);
   既存台帳の10分は提案された観察窓。採用している以上、短いseekを10分連続観察と書かない。
   前景で開始から終盤まで変化・静寂・局所応答を確認し、開始/終盤の計測、pause/resume、
   長い絶対seek、逆seek、周回境界を記録する。
+  T06-G/Lは2026-09-22に基準viewportで約10分を再計測したが、開始・終端とも50ms超の間隔が残り、pause/resumeも再計測していないため合格へ進めない。
 - [ ] 既存T01–T05のラスタ・時計証拠を活用し、足りない全景/局所因果だけ補う。
   全ての10分観察を理由なくやり直さない。
 - [ ] P03-Lは元の50ms超フレームを含む結果を保存したまま条件を揃えて再測定。
@@ -312,7 +313,7 @@ expect(resizeBloom.mock.calls.at(-1)).toEqual([2048, 1280]);
   読み取り専用監査でR01/R02のImportantを回帰追加と実測で解消し、R03のWebGPU失敗経路・dispose・sceneReady待機を実装確認した。故障注入テスト、全C11条件、A01の全組合せ測定は未完として残す。
 - [x] `luna-task-board.md` の31要件表へ現行の根拠と確認限界を記入。最終評価はC11と独立監査後に行う。
   要件名とカード名だけの対応表で終えない。README/正本/進捗/計画の現在形を揃える。
-- [x] `rtk proxy npm run check` を2026-09-22の現行ソース版で実施。format/lint/strict TypeScript/build成功、Vitest 102 files passed / 760 tests passed / 0 skipped。レポート生成専用の環境変数ゲートは維持し、通常回帰からskipを除去した。audio-performanceは75/75成功、p95最大1.269ms（Möbius）。
+- [x] `rtk proxy npm run check` を2026-09-22の現行ソース版で実施。format/lint/strict TypeScript/build成功、Vitest 102 files passed / 760 tests passed / 0 skipped。レポート生成専用の環境変数ゲートは維持し、通常回帰からskipを除去した。audio-performanceは75/75成功、p95最大1.092ms（Möbius）。
   音響変更があればaudio-performanceと変更後レンダー、描画変更があれば影響する両rendererのQAを追加する。
 - [x] `rtk git diff --check` と変更一覧を確認。Markdownリンクとrenewal QA JSONも検査し、無関係な変更・巨大な一時成果物・秘密がないことを確認する。
 - [x] 最終回答に修正内容、対象版、検証結果、残る未測定、完了/未完の判定を簡潔に記す。

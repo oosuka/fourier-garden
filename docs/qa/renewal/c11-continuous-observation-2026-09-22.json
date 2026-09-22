@@ -159,5 +159,51 @@
     "status": "supplemental-evidence",
     "summary": "画面ロックなしで約608秒の前景観察、絶対150秒へのseek後の再生、開始／終端60秒を取得した。CSS1348×813・DPR2で、開始captureは50ms超1回、終端captureは0回。計画の1440×900 CSS／DPR1条件ではないためT06-L合格には拡張しない。"
   },
-  "next": "Unlock macOS manually; restart the dev server/browser QA as needed. Before repeating 10-minute foreground runs, use a temporary idle-prevention process for the authorized QA window. Re-run T06-G and T06-L at the plan's target viewport, then T07-G completely; continue T07-L through T10-L."
+  "targetViewportRerun": {
+    "id": "T06-target-viewport-rerun-2026-09-22",
+    "status": "measured-not-passed",
+    "conditions": "1440x900 CSS, DPR1, 1440x900 raster, high, seed=qa, default post-processing, silent entry, performance clock; caffeinate -dims was active during the foreground window.",
+    "foregroundObservation": "T06-L and T06-G each continued for about 10 minutes after seeking to absolute 150 seconds. No lock was observed during these runs. Pause/resume was not repeated in this rerun; the earlier raw cases retain that operation.",
+    "cases": [
+      {
+        "id": "T06-L",
+        "renderer": "webgl",
+        "startFile": "c11-browser-captures/T06-L-webgl-start-target-2026-09-22.json",
+        "endFile": "c11-browser-captures/T06-L-webgl-end-target-2026-09-22.json",
+        "start": {
+          "averageFps": 59.8995,
+          "frameIntervalP95Ms": 17.7,
+          "maxFrameIntervalMs": 51,
+          "over50Ms": 1
+        },
+        "end": {
+          "averageFps": 59.8832,
+          "frameIntervalP95Ms": 18.3,
+          "maxFrameIntervalMs": 50.1,
+          "over50Ms": 1
+        },
+        "limits": "Both windows contain an interval over 50ms; retain as target-condition evidence but do not promote T06-L to pass."
+      },
+      {
+        "id": "T06-G",
+        "renderer": "webgpu",
+        "startFile": "c11-browser-captures/T06-G-webgpu-start-target-2026-09-22.json",
+        "endFile": "c11-browser-captures/T06-G-webgpu-end-target-2026-09-22.json",
+        "start": {
+          "averageFps": 59.7666,
+          "frameIntervalP95Ms": 18.6,
+          "maxFrameIntervalMs": 66.2,
+          "over50Ms": 2
+        },
+        "end": {
+          "averageFps": 59.8655,
+          "frameIntervalP95Ms": 18.7,
+          "maxFrameIntervalMs": 52.1,
+          "over50Ms": 2
+        },
+        "limits": "Both windows contain intervals over 50ms; retain as target-condition evidence but do not promote T06-G to pass."
+      }
+    ]
+  },
+  "next": "Treat the target-viewport T06 rerun as measured but not passed. Diagnose the repeatable 50ms-class frame stalls without filtering the raw captures, then repeat T06-G/L with pause-resume included. Continue T07-G/L through T10-L, P03-L, and L02 afterward."
 }

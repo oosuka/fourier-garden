@@ -9,21 +9,28 @@
 
 ## 現在の状態（2026年9月22日）
 
-- 品質仕上げ計画のC00–C10cは実施・記録済み。C11はT06-G/LとT07-Gを試行したが、Macの画面ロックが判明し、前景継続の証拠として採用していない。ロック解除後のT06-Lは約608秒の補助観察を行ったものの、基準viewportではなく開始窓に50ms超過が1回あるため合格へ拡張していない。詳細と元計測値は[C11記録](c11-continuous-observation-2026-09-22.json)および[T06-L補助記録](c11-browser-captures/T06-L-webgl-unlocked-observation-2026-09-22.json)を参照。
-- 次はMacの手動ロック解除後、T06-Gから10分の前景観察を再開する。C11の残りとC12の最終判定は未完。31要件には現行の証拠と限界を対応づけたが、最終評価は保留。
-- Node.js 24.21.0／npm 11.19.1へ更新し、既存依存を更新済み。実際の固定値は`package.json`のVolta欄を参照。
+- 品質仕上げ計画のC00–C10cは実施・記録済み。C11は初回T06-G/L・T07-Gを画面ロック影響で不採用とし、ロック解除後のT06-L補助観察も基準viewport外だった。今回、T06-G/Lを1440×900 CSS・DPR1で再計測したが、開始／終端窓に50ms超の間隔が残ったため、証拠は保存しつつ合格へ拡張していない。詳細は[C11記録](c11-continuous-observation-2026-09-22.json)を参照。
+- 次はT06-G/Lの50ms級停止の原因切り分けと再計測、その後T07-G/L〜T10-L、P03-L、L02を進める。C11の残りとC12の最終判定は未完。31要件には現行の証拠と限界を対応づけたが、最終評価は保留。
+- Node.js 24.21.0／npm 11.19.1へ更新し、`@types/node`はランタイムに合わせて24.13.6へ固定した。`npm ls`は整合し、auditの脆弱性は0件。実際の固定値は`package.json`のVolta欄を参照する。
 
 ## 2026年9月22日 文書監査・全体check
 
 - リポジトリ内の全28件のMarkdown文書を確認し、現行のREADME、仕様、計画、進捗、台帳、引き継ぎ、性能記録を同期した。READMEと現行計画のNode/npmおよび依存版をpackage.jsonに合わせた。歴史記録は当時の記録として保持し、日付のある過去の「次作業」は現行指示と誤読しないよう履歴と明記した。
 - luna-task-boardの31要件すべてに現行の根拠と確認限界を記入した。根拠のない完了評価は行わず、独立監査と最終判定を保留している。
-- Markdown内の411件のローカルリンクを検査し、欠落0件。renewal QAの92件のJSONを構文検査し、すべて有効。
+- Markdown内の417件のローカルリンクを検査し、欠落0件。renewal QAの96件のJSONを構文検査し、すべて有効。
 - `rtk proxy npm run check`は成功。Biome整形確認、Oxlint、strict TypeScript、production buildが成功し、Vitestは102ファイル成功・760 tests成功・skip 0件。production buildの大容量chunk警告は残る。
 - skipの原因は、レポート名がない通常実行で`renewalAudioReport.test.ts`全体を無効化する`describe.skipIf`だった。10章dry指標の検証を常時実行する`renewalAudioReportModel.test.ts`へ分離し、JSON出力だけを`FOURIER_GARDEN_RENEWAL_AUDIO_REPORT`指定時に行うよう整理した。通常checkの検証範囲を増やし、明示的なレポート生成手順は維持している。
 - 最新Oxlintで依存更新後に見つかった17件の問題を、規則無効化なしで修正した。修正後の全体checkに含めて確認。
-- `rtk proxy npm run qa:audio-performance`は75/75成功。48kHz・128標本のNode VM代表block p95最大はMöbiusの1.269ms（目標1.333ms未満）。[10章8kHz dry指標](audio-c12-anti-alias-2026-09-22.json)も再生成した。
+- `rtk proxy npm run qa:audio-performance`は75/75成功。48kHz・128標本のNode VM代表block p95最大はMöbiusの1.092ms（目標1.333ms未満）。[10章8kHz dry指標](audio-c12-anti-alias-2026-09-22.json)も再生成した。
 - C12の独立数学監査はCriticalなし、Besselの高精度数値比較とHaar全基底直交性を追加してImportantを解消。DSP監査はantiAliasRatioの上限をTS／Workletとも0.9へ統一し、境界回帰を追加。描画・寿命監査の指摘（専用3章のWebGPU失敗時フォールバック、Residue dispose冪等化、sceneReady待機解決）も実装し、故障注入テストは未実施として記録する。A01の全章×全サンプルレート×全周期の参照／Worklet網羅測定は未実施。
 - `rtk git diff --check`成功。T06-G、T07-G、T07-L〜T10、P03-L、L02の再計測・寿命証拠、C11全項目、C12の文書最終同期は未完。したがってV2完成判定は行っていない。
+
+## 2026年9月22日 C11基準viewport再計測
+
+- Chromeのviewport capabilityで1440×900 CSS、DPR1、実ラスタ1440×900を設定し、high・seed=qa・標準post-processing・無音入場・performance clockで計測した。`caffeinate -dims`をQA窓だけで有効にし、前景観察中にmacOSロックは確認されなかった。
+- T06-Lは絶対150秒へseek後に約10分観察。開始は59.8995fps、間隔p95 17.7ms、最大51.0ms、50ms超1回。終端は59.8832fps、p95 18.3ms、最大50.1ms、50ms超1回。[開始](c11-browser-captures/T06-L-webgl-start-target-2026-09-22.json)／[終端](c11-browser-captures/T06-L-webgl-end-target-2026-09-22.json)。
+- T06-Gは同条件で約10分観察。開始は59.7666fps、間隔p95 18.6ms、最大66.2ms、50ms超2回。終端は59.8655fps、p95 18.7ms、最大52.1ms、50ms超2回。[開始](c11-browser-captures/T06-G-webgpu-start-target-2026-09-22.json)／[終端](c11-browser-captures/T06-G-webgpu-end-target-2026-09-22.json)。
+- 4窓ともraw captureを保持し、外れ値の除去や合格窓だけの選択はしていない。基準viewportの実測は進んだが、50ms超条件によりT06-G/Lは「測定済み・不合格」。pause/resumeは初回raw試行にあり、今回の再計測では繰り返していない。T07-G/L〜T10-L、P03-L、L02は未完。
 
 ## 2026年9月14日 文書・検証同期
 

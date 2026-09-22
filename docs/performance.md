@@ -97,7 +97,7 @@ Three.js postProcessingの約684 kB chunk警告は当時の記録である。
 
 ## 2026年9月22日 C10後のDSP再確認
 
-現行版の`rtk proxy npm run qa:audio-performance`は75テスト成功。48 kHz／128標本のNode VM代表block p95最大はMöbiusの1.269 msで、目標1.333 ms未満だった。`npm run check`は102テストファイル・760テスト成功・0スキップで、production buildのpostProcessing chunkは約1.1 MBの警告が残る。実行条件と限界は[進捗記録](qa/renewal/progress.md)に記載した。ブラウザの実時間音声スレッド、章切替中の二重graph、聴感上の章間比較を測定した結果ではない。
+現行版の`rtk proxy npm run qa:audio-performance`は75テスト成功。48 kHz／128標本のNode VM代表block p95最大はMöbiusの1.092 msで、目標1.333 ms未満だった。`npm run check`は102テストファイル・760テスト成功・0スキップで、production buildのpostProcessing chunkは約1.1 MBの警告が残る。実行条件と限界は[進捗記録](qa/renewal/progress.md)に記載した。ブラウザの実時間音声スレッド、章切替中の二重graph、聴感上の章間比較を測定した結果ではない。
 
 ## ChromeでのCathedral V2
 
@@ -275,6 +275,19 @@ T07-Gの終盤capture直後にmacOSがロック中と判明した。原因は確
 | T07-G | [JSON](qa/renewal/c11-browser-captures/T07-G-webgpu-start.json) | [JSON](qa/renewal/c11-browser-captures/T07-G-webgpu-end.json) | 要再計測 |
 
 集約した条件・seek操作・観察上の制限は[C11測定記録](qa/renewal/c11-continuous-observation-2026-09-22.json)にある。これらはDPR2・4K・物理音声・実GPU完了時間の測定ではない。
+
+## 2026年9月22日 C11基準viewport再計測（測定済み・不合格）
+
+Chromeのviewport capabilityでCSS 1440×900、DPR1、実ラスタ1440×900を設定した。high、seed=qa、標準post-processing、無音入場、performance clock、`caffeinate -dims`有効の前景窓で、T06-G/Lを絶対150秒へseekして約10分観察した。観察中のmacOSロックは確認されなかった。
+
+| 対象 | 区間 | 平均fps | 間隔p95 ms | 最大間隔ms | 50 ms超 | 記録 |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| T06-L WebGL2 | 開始 | 59.8995 | 17.7 | 51.0 | 1 | [JSON](qa/renewal/c11-browser-captures/T06-L-webgl-start-target-2026-09-22.json) |
+| T06-L WebGL2 | 終端 | 59.8832 | 18.3 | 50.1 | 1 | [JSON](qa/renewal/c11-browser-captures/T06-L-webgl-end-target-2026-09-22.json) |
+| T06-G WebGPU | 開始 | 59.7666 | 18.6 | 66.2 | 2 | [JSON](qa/renewal/c11-browser-captures/T06-G-webgpu-start-target-2026-09-22.json) |
+| T06-G WebGPU | 終端 | 59.8655 | 18.7 | 52.1 | 2 | [JSON](qa/renewal/c11-browser-captures/T06-G-webgpu-end-target-2026-09-22.json) |
+
+開始・終端のいずれにも50ms超の間隔があるため、T06-G/Lの連続観察合格には数えない。raw captureは外れ値を除去せず保存した。今回の再計測ではpause/resumeを繰り返していないため、既存raw試行の操作記録と合わせてもC11全条件の完了とはしない。物理出音・AV遅延・実GPU完了時間・メモリ・知覚評価は未測定である。
 
 ## ChromeでのPrime Constellation T03-L 高DPI連続観察
 
