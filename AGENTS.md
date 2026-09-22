@@ -1,6 +1,6 @@
 # Fourier Garden 開発マップ
 
-数学から音と光を生成するデスクトップ向け作品。現在は全10章を対象にVersion 2を制作中。
+数学から音と光を生成するデスクトップ向け作品。全10章のVersion 2.0.0は2026年9月22日に現状品質で受入済み。
 過去の完成宣言やQA結果を、変更後の品質証拠として使わない。
 
 ## 最初に読む文書
@@ -8,7 +8,7 @@
 | 目的 | 正本・入口 |
 | --- | --- |
 | 作品と操作 | [README](README.md)、[作品の方針](docs/product-vision.md) |
-| 現在の制作 | [V2設計](docs/superpowers/specs/2026-09-06-renewal-design.md)、[実装計画](docs/superpowers/plans/2026-09-06-renewal.md)、[進捗](docs/qa/renewal/progress.md) |
+| V2の設計・実装・検証 | [V2設計](docs/superpowers/specs/2026-09-06-renewal-design.md)、[実装計画](docs/superpowers/plans/2026-09-06-renewal.md)、[進捗](docs/qa/renewal/progress.md) |
 | 責務とライフサイクル | [アーキテクチャ](docs/architecture.md) |
 | 定義・係数・位相・音響式 | [数学モデル](docs/mathematical-model.md) |
 | 音響 | [音響設計](docs/audio-design.md) |
