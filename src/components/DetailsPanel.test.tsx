@@ -204,6 +204,54 @@ describe("DetailsPanel visibility", () => {
     getContext.mockRestore();
   });
 
+  it("moves focus to the new heading when the open panel changes chapters", async () => {
+    const firstPattern = patternRegistry[0]!;
+    const nextPattern = patternRegistry[1]!;
+    const audio = new AudioEngine(
+      firstPattern.audio.createProgram(),
+      firstPattern.audio.initialVolume,
+    );
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <DetailsPanel
+          open
+          pattern={firstPattern}
+          audio={audio}
+          onClose={() => {}}
+          patterns={patternRegistry}
+          onSelectChapter={() => {}}
+        />,
+      );
+    });
+    const relatedChapter = container.querySelector<HTMLButtonElement>(".relatedStudies button");
+    if (!relatedChapter) throw new Error("Missing related chapter control");
+    relatedChapter.focus();
+
+    await act(async () => {
+      root.render(
+        <DetailsPanel
+          open
+          pattern={nextPattern}
+          audio={audio}
+          onClose={() => {}}
+          patterns={patternRegistry}
+          onSelectChapter={() => {}}
+        />,
+      );
+    });
+
+    expect(document.activeElement).toBe(container.querySelector(".detailsHeader h2"));
+
+    await act(async () => root.unmount());
+    container.remove();
+    getContext.mockRestore();
+  });
+
   it("shows the actual finite model and local mapping in mathematical reading mode", async () => {
     const pattern = patternRegistry[0]!;
     const audio = new AudioEngine(pattern.audio.createProgram(), pattern.audio.initialVolume);

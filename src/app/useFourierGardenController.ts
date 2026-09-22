@@ -441,11 +441,14 @@ export function useFourierGardenController() {
           sceneReadyResolver.current = null;
         }
       }
-      if (status === "ready" && resumeAfterRecovery.current) {
+      if (status === "ready" && (resumeAfterRecovery.current || autoPaused.current)) {
         resumeAfterRecovery.current = false;
         if (document.hidden) autoPaused.current = true;
-        else if (silentPlaybackRef.current) startSilentPlayback();
-        else void playAudio(audioRef.current, transport.currentTime, ++playbackOperation.current);
+        else {
+          autoPaused.current = false;
+          if (silentPlaybackRef.current) startSilentPlayback();
+          else void playAudio(audioRef.current, transport.currentTime, ++playbackOperation.current);
+        }
       }
     },
     [pausePlayback, playAudio, startSilentPlayback, transport],

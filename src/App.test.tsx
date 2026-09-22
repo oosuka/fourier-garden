@@ -237,6 +237,28 @@ describe("App entry gate", () => {
     await unmountApp(mounted);
   });
 
+  it("restarts an auto-paused visit when a background scene recovery becomes ready", async () => {
+    let hidden = false;
+    const hiddenProperty = vi.spyOn(document, "hidden", "get").mockImplementation(() => hidden);
+    const mounted = await mountApp();
+    const audio = audioMockState.instances[0]!;
+    await click(mounted.container, ".enterButton");
+    const scene = sceneMockState.scenes.at(-1)!;
+
+    hidden = true;
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    await act(async () => scene.notify("loading"));
+    hidden = false;
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    expect(audio.play).toHaveBeenCalledTimes(1);
+
+    await act(async () => scene.notify("ready"));
+    expect(audio.play).toHaveBeenCalledTimes(2);
+
+    await unmountApp(mounted);
+    hiddenProperty.mockRestore();
+  });
+
   it("starts the next chapter while the old reverberation is still releasing", async () => {
     vi.useFakeTimers();
     const mounted = await mountApp();

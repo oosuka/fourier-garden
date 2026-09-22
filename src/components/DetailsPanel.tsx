@@ -29,6 +29,7 @@ export function DetailsPanel({
   const [studyValues, setStudyValues] = useState<Readonly<Record<string, number>>>({});
   const heading = useRef<HTMLHeadingElement>(null);
   const content = useRef<HTMLDivElement>(null);
+  const returnFocus = useRef<HTMLElement | null>(null);
   const MathematicalDetails = pattern.MathematicalDetails;
   const sonification = useMemo(
     () =>
@@ -36,18 +37,22 @@ export function DetailsPanel({
     [pattern.audio.sonificationLatex],
   );
   const scrollResetKey = `${pattern.id}:${tab}`;
+  const focusHeadingKey = open ? pattern.id : null;
   useLayoutEffect(() => {
     if (scrollResetKey && content.current) content.current.scrollTop = 0;
   }, [scrollResetKey]);
   useEffect(() => {
     if (!open) return;
-    const previous = document.activeElement;
-    heading.current?.focus({ preventScroll: true });
+    returnFocus.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     return () => {
-      if (previous instanceof HTMLElement && previous.isConnected)
-        previous.focus({ preventScroll: true });
+      if (returnFocus.current?.isConnected) returnFocus.current.focus({ preventScroll: true });
+      returnFocus.current = null;
     };
   }, [open]);
+  useEffect(() => {
+    if (focusHeadingKey) heading.current?.focus({ preventScroll: true });
+  }, [focusHeadingKey]);
   return (
     <aside
       id="observation-notes"
