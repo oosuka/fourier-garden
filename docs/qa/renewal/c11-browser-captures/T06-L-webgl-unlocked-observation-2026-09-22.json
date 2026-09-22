@@ -1,0 +1,44 @@
+{
+  "task": "T06-L",
+  "status": "supplemental-evidence",
+  "chapter": "lissajous-orchard",
+  "renderer": "webgl",
+  "quality": "high",
+  "seed": "qa",
+  "viewport": {
+    "cssWidth": 1348,
+    "cssHeight": 813,
+    "pixelRatio": 2,
+    "rasterWidth": 2696,
+    "rasterHeight": 1626
+  },
+  "continuousObservation": {
+    "startedAtQaSeconds": 150,
+    "endedAtQaSeconds": 758,
+    "observedSeconds": 608,
+    "foregroundLockObserved": false,
+    "absoluteSeekSeconds": 150,
+    "seekResumed": true,
+    "motion": "full",
+    "audio": "muted"
+  },
+  "captures": {
+    "start": "T06-L-webgl-start-unlocked.json",
+    "end": "T06-L-webgl-end-unlocked.json"
+  },
+  "startCapture": {
+    "durationSeconds": 60.0001,
+    "averageFps": 59.799900333499444,
+    "frameIntervalP95Ms": 17.60000000000582,
+    "maxFrameIntervalMs": 100,
+    "intervalsOver50Ms": 1
+  },
+  "endCapture": {
+    "durationSeconds": 60.01559999999998,
+    "averageFps": 59.8844300481875,
+    "frameIntervalP95Ms": 18.5,
+    "maxFrameIntervalMs": 49.90000000002328,
+    "intervalsOver50Ms": 0
+  },
+  "limitation": "補助証拠。計画の基準1440x900 CSS/DPR1ではなく、開始窓に50ms超過1回があるためT06-Lの合格判定へは単独で拡張しない。物理AV遅延と実GPU完了時間は未測定。"
+}

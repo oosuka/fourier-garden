@@ -78,6 +78,34 @@ describe("new chapter mathematical contracts", () => {
     );
   });
 
+  it("independently checks the Bessel radial projection against a finer integral", () => {
+    const sampleCount = 4_096;
+    const rawCoefficients = BESSEL_MODES.map((mode) => {
+      let radialIntegral = 0;
+      const normalization = Math.SQRT2 / Math.abs(besselJ(mode.m + 1, mode.zero));
+      for (let index = 0; index < sampleCount; index += 1) {
+        const radius = (index + 0.5) / sampleCount;
+        const radialInitial =
+          (1 - radius * radius) * (mode.m === 0 ? 1 : 2 ** -mode.m * radius ** mode.m);
+        radialIntegral +=
+          radialInitial * normalization * besselJ(mode.m, mode.zero * radius) * radius;
+      }
+      const angular =
+        mode.m === 0
+          ? Math.sqrt(2 * Math.PI)
+          : Math.sqrt(Math.PI) *
+            (mode.q === "cos"
+              ? Math.cos(mode.m * (Math.PI / 7))
+              : Math.sin(mode.m * (Math.PI / 7)));
+      return (radialIntegral / sampleCount) * angular;
+    });
+    const coefficientNorm = rawCoefficients.reduce((sum, value) => sum + Math.abs(value), 0);
+
+    BESSEL_MODES.forEach((mode, index) => {
+      expect(mode.coefficient).toBeCloseTo(rawCoefficients[index]! / coefficientNorm, 5);
+    });
+  });
+
   it("maps Bessel coefficient magnitude and angular component into gain and pan", () => {
     const maximumMagnitude = Math.max(...BESSEL_MODES.map((mode) => Math.abs(mode.coefficient)));
     BESSEL_MODES.forEach((mode, index) => {
@@ -159,6 +187,34 @@ describe("new chapter mathematical contracts", () => {
       64 * integrateWaveletTarget(start, end),
       10,
     );
+  });
+
+  it("keeps the scaling function and sixty-three Haar wavelets orthonormal", () => {
+    const basis = [
+      { level: -1, translation: 0 },
+      ...HAAR_COEFFICIENTS.map((coefficient) => ({
+        level: coefficient.j,
+        translation: coefficient.k,
+      })),
+    ];
+    const values = basis.map(({ level, translation }) =>
+      Array.from({ length: 64 }, (_, cell) => {
+        const time = (cell + 0.5) / 64;
+        if (level < 0) return 1;
+        const width = 2 ** -level;
+        const start = translation * width;
+        if (time < start || time >= start + width) return 0;
+        return time < start + width / 2 ? 2 ** (level / 2) : -(2 ** (level / 2));
+      }),
+    );
+
+    for (let left = 0; left < values.length; left += 1) {
+      for (let right = 0; right < values.length; right += 1) {
+        const innerProduct =
+          values[left]!.reduce((sum, value, cell) => sum + value * values[right]![cell]!, 0) / 64;
+        expect(innerProduct).toBeCloseTo(left === right ? 1 : 0, 12);
+      }
+    }
   });
 
   it("keeps Riemann displays finite and adequately sampled for quadratic support", () => {

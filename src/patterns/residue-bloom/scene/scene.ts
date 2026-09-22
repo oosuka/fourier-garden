@@ -196,6 +196,7 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
   private readonly connector: DynamicLine;
   private postProcessor: CinematicPostProcessor | null = null;
   private quality: QualityLevel = "high";
+  private disposed = false;
   private viewport: Viewport = {
     width: 1,
     height: 1,
@@ -347,17 +348,17 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
     this.scene.add(this.atmosphereGroup, this.fieldGroup, this.epicycleGroup);
   }
 
-  static async create({
-    canvas,
-    seed,
-    onDeviceLost,
-    poeticLayers = true,
-    preserveDrawingBuffer = false,
-  }: ResidueBloomSceneOptions): Promise<ResidueBloomScene> {
-    const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
-    const backend = selectRendererBackend(forceWebGL, "gpu" in navigator);
-    canvas.dataset.rendererBackend = backend;
-
+  private static async createForBackend(
+    {
+      canvas,
+      seed,
+      onDeviceLost,
+      poeticLayers = true,
+      preserveDrawingBuffer = false,
+    }: ResidueBloomSceneOptions,
+    backend: RendererBackend,
+  ): Promise<ResidueBloomScene> {
+    let renderer: SceneRenderer;
     if (backend === "webgl") {
       const { WebGLRenderer } = await import("three");
       const parameters: WebGLRendererParameters = {
@@ -367,25 +368,50 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
         powerPreference: "high-performance",
         preserveDrawingBuffer,
       };
-      const renderer = new WebGLRenderer(parameters);
-      const scene = new ResidueBloomScene(renderer, seed, backend, poeticLayers);
-      await scene.initializePostProcessor();
-      return scene;
+      renderer = new WebGLRenderer(parameters);
+    } else {
+      const webgpu = new THREE.WebGPURenderer({
+        canvas,
+        antialias: true,
+        alpha: false,
+      });
+      const reportDeviceLost = webgpu.onDeviceLost.bind(webgpu);
+      webgpu.onDeviceLost = (info) => {
+        reportDeviceLost(info);
+        onDeviceLost?.();
+      };
+      renderer = webgpu;
     }
 
-    const renderer = new THREE.WebGPURenderer({
-      canvas,
-      antialias: true,
-      alpha: false,
-    });
-    const reportDeviceLost = renderer.onDeviceLost.bind(renderer);
-    renderer.onDeviceLost = (info) => {
-      reportDeviceLost(info);
-      onDeviceLost?.();
-    };
-    await renderer.init();
-    const scene = new ResidueBloomScene(renderer, seed, backend, poeticLayers);
-    await scene.initializePostProcessor();
+    let scene: ResidueBloomScene | null = null;
+    try {
+      if (backend === "webgpu") await (renderer as THREE.WebGPURenderer).init();
+      scene = new ResidueBloomScene(renderer, seed, backend, poeticLayers);
+      await scene.initializePostProcessor();
+      return scene;
+    } catch (error) {
+      if (scene) scene.dispose();
+      else renderer.dispose();
+      throw error;
+    }
+  }
+
+  static async create(options: ResidueBloomSceneOptions): Promise<ResidueBloomScene> {
+    const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
+    const requestedBackend = selectRendererBackend(forceWebGL, "gpu" in navigator);
+    options.canvas.dataset.rendererBackend = requestedBackend;
+
+    try {
+      const scene = await ResidueBloomScene.createForBackend(options, requestedBackend);
+      options.canvas.dataset.rendererBackend = requestedBackend;
+      return scene;
+    } catch (error) {
+      if (requestedBackend !== "webgpu") throw error;
+      console.warn("WebGPU Residue Bloom initialization failed; falling back to WebGL.", error);
+    }
+
+    const scene = await ResidueBloomScene.createForBackend(options, "webgl");
+    options.canvas.dataset.rendererBackend = "webgl";
     return scene;
   }
 
@@ -508,6 +534,8 @@ class ResidueBloomScene implements ResidueBloomSceneInstance {
   }
 
   dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
     if (this.environmentLayer) {
       this.scene.remove(this.environmentLayer.group);
       this.environmentLayer.dispose();

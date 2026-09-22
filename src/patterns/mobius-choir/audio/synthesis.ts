@@ -88,6 +88,7 @@ interface MobiusChoirRenderOptions {
 }
 
 const LIMITER_CEILING = 10 ** (-1 / 20);
+const MAX_ANTI_ALIAS_RATIO = 0.9;
 const MOBIUS_CHOIR_NORMALIZATION_COMPENSATION = 0.86;
 
 export const MOBIUS_CHOIR_SYNTHESIS = {
@@ -178,7 +179,7 @@ export const MOBIUS_CHOIR_SYNTHESIS = {
   breathMaximumHz: 920,
   breathComponentCount: 1,
   stereoDetuneRatio: 0.00125,
-  antiAliasRatio: 0.9,
+  antiAliasRatio: MAX_ANTI_ALIAS_RATIO,
   outputGain: getChapterOutputGain("mobius-choir"),
 } as const satisfies MobiusChoirSynthesisPreset;
 
@@ -565,6 +566,13 @@ export function validateMobiusChoirWorkletProgram(program: MobiusChoirWorkletPro
     ) {
       throw new Error("Möbius Choir articulation mora ranges are invalid");
     }
+  }
+  if (
+    !Number.isFinite(program.synthesis.antiAliasRatio) ||
+    program.synthesis.antiAliasRatio <= 0 ||
+    program.synthesis.antiAliasRatio > MAX_ANTI_ALIAS_RATIO
+  ) {
+    throw new Error("Möbius Choir synthesis range is invalid");
   }
   if (!Number.isFinite(program.normalization) || program.normalization <= 0) {
     throw new Error("Möbius Choir normalization must be positive and finite");

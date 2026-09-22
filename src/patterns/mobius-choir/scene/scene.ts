@@ -542,22 +542,36 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
   }
 }
 
-export async function createMobiusChoirScene({
-  canvas,
-  seed = 0,
-  poeticLayers = true,
-  onDeviceLost,
-  preserveDrawingBuffer,
-}: MobiusChoirSceneOptions): Promise<MobiusChoirScene> {
-  const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
-  const backend = selectRendererBackend(forceWebGL, "gpu" in navigator);
-  canvas.dataset.rendererBackend = backend;
+async function createMobiusChoirSceneForBackend(
+  {
+    canvas,
+    seed = 0,
+    poeticLayers = true,
+    onDeviceLost,
+    preserveDrawingBuffer,
+  }: MobiusChoirSceneOptions,
+  backend: RendererBackend,
+): Promise<MobiusChoirScene> {
+  let renderer: SceneRenderer;
   if (backend === "webgl") {
     const { WebGLRenderer } = await import("three");
-    const renderer = new WebGLRenderer(
+    renderer = new WebGLRenderer(
       getMobiusChoirWebGLRendererParameters({ canvas, preserveDrawingBuffer }),
     );
-    const scene = new MobiusChoirSceneImplementation(
+  } else {
+    const webgpu = new THREE.WebGPURenderer({ canvas, antialias: true, alpha: false });
+    const reportDeviceLost = webgpu.onDeviceLost.bind(webgpu);
+    webgpu.onDeviceLost = (info) => {
+      reportDeviceLost(info);
+      onDeviceLost?.();
+    };
+    renderer = webgpu;
+  }
+
+  let scene: MobiusChoirSceneImplementation | null = null;
+  try {
+    if (backend === "webgpu") await (renderer as THREE.WebGPURenderer).init();
+    scene = new MobiusChoirSceneImplementation(
       renderer,
       backend,
       canvas,
@@ -567,23 +581,30 @@ export async function createMobiusChoirScene({
     );
     await scene.initializePostProcessor();
     return scene;
+  } catch (error) {
+    if (scene) scene.dispose();
+    else renderer.dispose();
+    throw error;
+  }
+}
+
+export async function createMobiusChoirScene(
+  options: MobiusChoirSceneOptions,
+): Promise<MobiusChoirScene> {
+  const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
+  const requestedBackend = selectRendererBackend(forceWebGL, "gpu" in navigator);
+  options.canvas.dataset.rendererBackend = requestedBackend;
+
+  try {
+    const scene = await createMobiusChoirSceneForBackend(options, requestedBackend);
+    options.canvas.dataset.rendererBackend = requestedBackend;
+    return scene;
+  } catch (error) {
+    if (requestedBackend !== "webgpu") throw error;
+    console.warn("WebGPU Möbius Choir initialization failed; falling back to WebGL.", error);
   }
 
-  const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, alpha: false });
-  const reportDeviceLost = renderer.onDeviceLost.bind(renderer);
-  renderer.onDeviceLost = (info) => {
-    reportDeviceLost(info);
-    onDeviceLost?.();
-  };
-  await renderer.init();
-  const scene = new MobiusChoirSceneImplementation(
-    renderer,
-    backend,
-    canvas,
-    seed,
-    poeticLayers,
-    onDeviceLost,
-  );
-  await scene.initializePostProcessor();
+  const scene = await createMobiusChoirSceneForBackend(options, "webgl");
+  options.canvas.dataset.rendererBackend = "webgl";
   return scene;
 }

@@ -188,6 +188,13 @@ describe("Möbius Choir synthesis", () => {
     expect(() => validateMobiusChoirWorkletProgram(invalid)).toThrow(/mode set/i);
   });
 
+  it("rejects anti-alias ratios that leave the carrier guard at Nyquist", () => {
+    const program = structuredClone(createMobiusChoirWorkletProgram());
+    program.synthesis.antiAliasRatio = 1;
+
+    expect(() => validateMobiusChoirWorkletProgram(program)).toThrow(/synthesis range/i);
+  });
+
   it("renders bounded, near-zero-DC windows with finite articulations", () => {
     const rendered = renderMobiusChoirStereo({
       program: createMobiusChoirWorkletProgram(),

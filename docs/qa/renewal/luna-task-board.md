@@ -15,26 +15,26 @@ V2は制作中。前タスクの終了は引き継ぎの完了を意味し、下
 - 合格時は日時、対象版、証拠ファイル、対象条件を追記する。影響する修正が入った時だけ合格を取り消す。
 - 同じブラウザ試行が複数カードの条件を満たした場合、同じ証拠を参照してよい。測定していない条件へ拡張しない。
 
-次の1件：**macOSの手動ロック解除後にT06-Gを再実施**。C00–C10cは実施記録済み。C11の初回T06-G/L・T07-GはOSロックの影響を除外できず合格に数えない。証拠と制約は[進捗記録](progress.md)および[C11計測JSON](c11-continuous-observation-2026-09-22.json)を参照する。C12の監査・31要件表・最終checkは未完。
+次の1件：**macOSの手動ロック解除後にT06-Gを再実施**。C00–C10cは実施記録済み。C11の初回T06-G/L・T07-GはOSロックの影響を除外できず、追加のT06-L補助観察も基準viewport外かつ開始窓に50ms超過があるため合格に数えない。証拠と制約は[進捗記録](progress.md)、[C11計測JSON](c11-continuous-observation-2026-09-22.json)、[T06-L補助記録](c11-browser-captures/T06-L-webgl-unlocked-observation-2026-09-22.json)を参照する。C11の残りとF01最終判定は未完。
 2026年9月21日のC08で全10章の数学主張・音響／視覚写像・有限計算の限界を台帳へ反映した。LissajousとPhase Torusの音高説明を現行スコアへ合わせ、対象テスト103件と型検査を確認。これは文書と有限回帰の同期確認であり、V2完成判定ではない。
 
 ## 共通作業
 
 | ID | 推論 | 作業 | 初期状態 | 証拠・次の行動 |
 | --- | --- | --- | --- | --- |
-| G00 | high | 作業ツリー、版、正本、既存証拠の確認 | 合格 | 2026-09-14。`feat/renewal`、版1.0.0、Volta Node 24.19.0 / npm 11.19.0、commit `9202169`、作業ツリーcleanを確認。巻き戻しなし |
+| G00 | high | 作業ツリー、版、正本、既存証拠の確認 | 合格 | 2026-09-22。`feat/renewal`、版1.0.0、Volta Node 24.21.0 / npm 11.19.1、直近commit `cde445d`を確認。既存変更を保持し、追加変更はこの記録後に検証する。巻き戻しなし |
 | U01 | high | 音あり／なし入口・取消・初発音 | 合格 (C09) | 音なし入場・開始取消・audio init失敗/retry・scene recoveryと通常開始の状態回帰。初発音の実聴・物理AV遅延は未測定 |
 | U02 | high | キーボード・focus・音量・fullscreen | 合格 (C09) | Space/D/F/Escape、focus復元、入力中Space、章目録矢印/Home/End、fullscreen失敗表示を確認。Chrome fullscreen自体は環境制限で開始せず |
 | U03 | high | 全10章の移動・連続選択・ノート併用遷移 | 合格 (C09) | 10章を章目録から連続選択。ノートtab、Haar J=0、chapter change後のscroll resetはUI・回帰で確認。知覚残響はC10/C11に残す |
 | U04 | high | reduced motion・contrast・支援技術の状態 | 一部済 | C06でOS設定（CSS）とscene用QA queryを分離し、reduced flagを7章×両rendererで確認。contrast・支援技術全体は未完 |
 | L01 | xhigh | 音声／scene失敗・GPU復旧・非表示復帰 | 一部済 | 既存回帰はある。実操作と対象版の対応を確認 |
 | L02 | xhigh | 両rendererで章を2巡し、所有資源と破棄を確認 | 証拠不足 | 実GPUメモリを測れない場合は区別して記録 |
-| A01 | xhigh | 全周期レンダー・帯域・校正・参照／Worklet | 一部済 | 現行基準 `audio-residue-v2.json`。最終音響版で比較 |
-| A02 | high | DSP性能・隣接章の音響差 | 一部済 | 2026-09-22の現行版で[`qa:audio-performance`](progress.md)75テスト成功。Node VM代表block p95最大1.104 ms（Möbius、目標1.333 ms未満）。隣接章の知覚評価とブラウザ音声スレッドは未完 |
-| R01 | xhigh | 最終の読み取り専用数学監査 | 未実施 | M01〜M10を根拠に、独立して1章ずつ確認 |
-| R02 | xhigh | 最終の読み取り専用DSP監査 | 未実施 | A01/A02、音源・Worklet・時計 |
-| R03 | xhigh | 最終の読み取り専用描画・性能・寿命監査 | 未実施 | V/P/T、共有rendering、L01/L02 |
-| D01 | high | 正本・進捗・実装計画・31要件対応の同期 | 一部済 | 2026-09-22に現行根拠と限界を31行へ記入。独立監査と最終版の追加同期はC12で継続 |
+| A01 | xhigh | 全周期レンダー・帯域・校正・参照／Worklet | 一部済 | [10章8kHz dry指標](audio-c12-anti-alias-2026-09-22.json)を再生成。全章×全サンプルレート×全周期の参照／Worklet網羅測定は未実施 |
+| A02 | high | DSP性能・隣接章の音響差 | 一部済 | 2026-09-22の現行版で[`qa:audio-performance`](progress.md)75/75成功。Node VM代表block p95最大1.269 ms（Möbius、目標1.333 ms未満）。隣接章の知覚評価とブラウザ音声スレッドは未完 |
+| R01 | xhigh | 最終の読み取り専用数学監査 | 合格 (C12監査) | Criticalなし。Besselは4096分割の独立比較、Haarはscaling＋63 waveletの全64×64内積を追加。Bessel関数・零点表自体の外部高精度照合は未実施 |
+| R02 | xhigh | 最終の読み取り専用DSP監査 | 合格 (C12監査) | TS／WorkletのantiAliasRatio上限を0.9へ統一し、structured-clone境界とWorklet契約を回帰。全組合せA01網羅測定と物理出音は未測定 |
+| R03 | xhigh | 最終の読み取り専用描画・性能・寿命監査 | 一部済 | 専用3章のWebGPU失敗時破棄／WebGLフォールバック、Residue dispose冪等化、sceneReady待機解決を実装確認。故障注入テスト、C11・L02・実GPUメモリは未完 |
+| D01 | high | 正本・進捗・実装計画・31要件対応の同期 | 一部済 | 2026-09-22のskip解消・監査修正・補助証拠を追記。C11の残りとF01最終版の同期は継続 |
 | F01 | high | 最終checkと証拠に基づく完成判定 | 未実施 | 全必須カード、FIX、残る未測定を確認 |
 
 ## 全章・両renderer
@@ -55,7 +55,7 @@ Tの連続10分は今回提案する観察窓で、元依頼が指定した時�
 | 05 Bessel | WebGPU | V05-G 合格 | P05-G 合格 | T05-G 合格 | 2026-09-14。V05-G/P05-Gの表示条件に加え、実ブラウザ639×789 CSS・DPR2・canvas CSS1024×789／実ラスタ2048×1578で約614秒・8周回以上の前景連続観察、開始／終盤60秒計測、pause/resume、8945.448秒への長い絶対seek、71.9→72秒の逆seek／周回境界、円盤の節円・節径・中心明暗・局所共鳴の追従を確認。[開始](luna-bessel-tide-webgpu-dpr2-t05-start.json)／[終盤](luna-bessel-tide-webgpu-dpr2-t05-end.json)。音色の知覚評価、物理AV遅延、実GPU完了時間は未測定 |
 | 05 Bessel | WebGL2 | V05-L 合格 | P05-L 合格 | T05-L 合格 | 2026-09-14。V05-L/P05-Lの表示条件に加え、実ブラウザ639×789 CSS・DPR2・canvas CSS1024×789／実ラスタ2048×1578で約630秒・8周回以上の前景連続観察、開始／終盤60秒計測、pause/resume、8945.448秒への長い絶対seek、71.9→72秒の逆seek／周回境界、円盤の節円・節径・中心明暗・局所共鳴の追従を確認。[開始](luna-bessel-tide-webgl-dpr2-t05-start.json)／[終盤](luna-bessel-tide-webgl-dpr2-t05-end.json)。音色の知覚評価、物理AV遅延、実GPU完了時間は未測定 |
 | 06 Lissajous | WebGPU | V06-G 合格 | P06-G 合格 | T06-G 要再計測 | 2026-09-22に10分超観察・seek等を試行。終盤60秒は50ms超4回・最大250.1ms。終了後にMacロックを確認したため前景証拠として不採用。開始／終盤JSONと条件は[C11記録](c11-continuous-observation-2026-09-22.json) |
-| 06 Lissajous | WebGL2 | V06-L 合格 | P06-L 合格 | T06-L 要再計測 | 2026-09-22に10分超観察・seek等を試行。終盤60秒は50ms超5回・最大165.5ms。Macの同時点ロック状態は未確認。前景証拠として不採用し、再実施する。[C11記録](c11-continuous-observation-2026-09-22.json) |
+| 06 Lissajous | WebGL2 | V06-L 合格 | P06-L 合格 | T06-L 一部済 | 2026-09-22にロック解除後の約608秒前景観察と開始／終端60秒を取得。CSS1348×813・DPR2で、開始は50ms超1回、終端は0回。基準1440×900・DPR1ではないため補助証拠とし、再実施を残す。[T06-L補助記録](c11-browser-captures/T06-L-webgl-unlocked-observation-2026-09-22.json) |
 | 07 Dirichlet | WebGPU | V07-G 合格 | P07-G 合格 | T07-G 要再計測 | 2026-09-22に10分超観察・seek等を試行。終盤60秒49.8fps、最大600ms、50ms超65回（記録外33回）。直後にMacロックを確認。原因は未確定、合格に数えず[C11記録](c11-continuous-observation-2026-09-22.json) |
 | 07 Dirichlet | WebGL2 | V07-L 合格 | P07-L 合格 | T07-L 証拠不足 | 連続観察は未実施。4K P07-Lの証拠は[luna-dirichlet-lanterns-webgl-4k-01.json](luna-dirichlet-lanterns-webgl-4k-01.json) |
 | 08 Haar | WebGPU | V08-G 合格 | P08-G 合格 | T08-G 証拠不足 | 2026-09-13。3比率の全景／ノート、J=0/3/6、reduced motion、KaTeX幅を実画面で確認。4Kは[luna-wavelet-rain-webgpu-4k-01.json](luna-wavelet-rain-webgpu-4k-01.json) |
@@ -80,10 +80,10 @@ P04-G/Lは `mobius-dpr-webgpu-4k.json`／`mobius-dpr-webgl-4k.json`。
 | M02 | Cathedral | 合格 (C08) | 境界、λ、12モード、係数正規化と光柱の演出境界を照合。C08表 |
 | M03 | Prime | 合格 (C08) | 25素数、位相、正規化有限和、音高圧縮、点とpanを照合。C08表 |
 | M04 | Möbius | 合格 (C08) | 継ぎ目符号、6許容モード、平坦商空間と3D埋め込みの差を照合。C08表 |
-| M05 | Bessel | 合格 (C08) | Dirichlet根、10 radial class、17実モード、節線、64点求積限界を照合。C08表 |
+| M05 | Bessel | 合格 (C08/C12監査) | Dirichlet根、10 radial class、17実モード、節線、64点求積を照合。4096分割中点積分による係数比較を追加。Bessel関数・零点表自体の外部高精度照合は未実施 |
 | M06 | Lissajous | 合格 (C08) | 閉軌道、9×32点、288等間隔イベント、現行音高式を照合。詳細回帰で288件とブラウザ表示を確認 |
 | M07 | Dirichlet | 合格 (C08) | 有限核、D_N(0)、奇数支持、Fejér重みと主張範囲を照合。C08表 |
-| M08 | Haar | 合格 (C08) | 63 wavelet＋scaling、V₆の64半開区間、支持・積分と利得分離を照合。C08表 |
+| M08 | Haar | 合格 (C08/C12監査) | 63 wavelet＋scaling、V₆の64半開区間、支持・積分と利得分離を照合。全64基底の単位ノルム・相互直交を64セル中点で追加確認 |
 | M09 | Riemann | 合格 (C08) | n²／1/n²、有限部分和、音高・数学gain分離、無限極限の限界を照合。詳細回帰で285件 |
 | M10 | Torus | 合格 (C08) | 24指標、√2流、有理比較、現行音高式と有限履歴の限界を照合。詳細回帰で420件とブラウザ表示を確認 |
 
@@ -100,6 +100,9 @@ P04-G/Lは `mobius-dpr-webgpu-4k.json`／`mobius-dpr-webgl-4k.json`。
 | FIX-004 | C05 / U02 | 1440×900で観察ノートを開くと、950px以下のcontainer規則が音量rangeを非表示にしていた | rangeを56px（最小48px）で残し、数値output・時刻を先に省略。native rangeとmuteのARIA状態を維持 | 回帰11/11成功。Chrome 1440×900・1024×640でrange表示、キーボード増減・Tab focus・停止中muteを確認。1024幅で隣接操作と重ならない | 修正前のrange非表示状態 | 解決 |
 | FIX-005 | C06 / Q4 | 共通event-resonanceが全motion modeでvoice ageを波紋半径と位相、core拡大に使い、reduced時も装飾が伸長していた | 必須reduced flagを7sceneから渡し、波紋だけ固定。絶対時刻・局所位置・数学場・有限包絡明度を維持 | 単体＋7scene回帰39/39成功。WebGPU/WebGL2の7章を各0.020s/0.600s、1440×900・DPR1・QA reducedで確認。OS CSS設定も別経路で確認 | reduced motionの装飾に対する旧挙動 | 解決 |
 | FIX-006 | C07 / L01/R03 | lowまたは4K direct中のresize/DPR更新後、highでbloomへ戻ってもEffectComposer/UnrealBloomPassが旧viewport寸法のまま残った | 適用済みwidth/height/DPRを追跡し、bloom modeでviewportが変わる時だけcomposerを同期。`setEnergy`からは再確保しない | 修正前回帰2件RED。修正後postProcessing 9/9、typecheck成功。初回low→high、1024×640 DPR2、DPRのみ、4K direct→bloom、反復quality/energyを実passで確認。WebGL2 resize確認済み | low→highまたはdirect→bloom復帰後の旧size | 解決 |
+| FIX-007 | C12 / R02 | Cathedral／Möbiusのstructured-clone入力がantiAliasRatio=1を受け入れ、Nyquist近傍まで拡張できる | TS validatorとAudioWorklet validatorを0.9以下へ統一。境界値1の回帰とWorklet契約検査を追加 | 対象3ファイル52/52成功、全体check 760/760成功、audio-performance 75/75成功 | 外部programの過大ratio受入 | 解決 |
+| FIX-008 | C12 / R03 | 専用3章のWebGPU init／scene／post初期化失敗時にrenderer破棄とWebGL再試行がなく、Residue disposeも非冪等だった | 3章にbackend単位のtry/catch、失敗時dispose、WebGL fallbackを追加。Residue disposeへガードを追加 | typecheck、lint、format、全体check成功。故障注入テストは未実施 | 実GPU初期化失敗・部分post初期化の実測 | 実装確認済み・故障注入未実施 |
+| FIX-009 | C12 / R03 | アンマウント中に章切替がsceneReadyを待つとresolverが残り、非同期処理が解決しない | controller disposerでpending resolverをfalse解決・消去し、既存世代無効化と同時に破棄 | typecheck、lint、format、全体check成功。Reactアンマウント故障注入は未実施 | sceneReady待機中のアンマウント実測 | 実装確認済み・故障注入未実施 |
 
 ## 元の31要件への対応
 

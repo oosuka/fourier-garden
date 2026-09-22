@@ -409,6 +409,13 @@ describe("Spectral Cathedral piko reference DSP", () => {
     expect(cloned).toEqual(program);
   });
 
+  it("rejects anti-alias ratios that leave the carrier guard at Nyquist", () => {
+    const program = structuredClone(createSpectralCathedralWorkletProgram());
+    program.synthesis.antiAliasRatio = 1;
+
+    expect(() => validateSpectralCathedralWorkletProgram(program)).toThrow(/synthesis range/i);
+  });
+
   it("rejects incomplete modes, events, references, and cycle times", () => {
     const program = createSpectralCathedralWorkletProgram();
     const missingMode = {

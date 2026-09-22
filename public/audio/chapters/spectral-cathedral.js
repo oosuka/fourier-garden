@@ -409,7 +409,7 @@ function validateSpectralCathedralProgram(program) {
     isNonnegativeFinite(preset.stereoDetuneRatio) &&
     preset.stereoDetuneRatio < 1 &&
     isPositiveFinite(preset.antiAliasRatio) &&
-    preset.antiAliasRatio <= 1
+    preset.antiAliasRatio <= 0.9
   );
 }
 

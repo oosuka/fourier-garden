@@ -153,5 +153,11 @@
       "limits": "Silent playback; no perceptual audio assessment. This is the only case where the lock was explicitly detected, so earlier end-capture hiccups must also be treated as potentially contaminated until rerun."
     }
   ],
-  "next": "Unlock macOS manually; restart the dev server/browser QA as needed. Before repeating 10-minute foreground runs, use a temporary idle-prevention process for the authorized QA window. Re-run T06-G, T06-L and T07-G completely; then continue T07-L through T10-L."
+  "supplementalObservation": {
+    "id": "T06-L-unlocked-2026-09-22",
+    "file": "c11-browser-captures/T06-L-webgl-unlocked-observation-2026-09-22.json",
+    "status": "supplemental-evidence",
+    "summary": "画面ロックなしで約608秒の前景観察、絶対150秒へのseek後の再生、開始／終端60秒を取得した。CSS1348×813・DPR2で、開始captureは50ms超1回、終端captureは0回。計画の1440×900 CSS／DPR1条件ではないためT06-L合格には拡張しない。"
+  },
+  "next": "Unlock macOS manually; restart the dev server/browser QA as needed. Before repeating 10-minute foreground runs, use a temporary idle-prevention process for the authorized QA window. Re-run T06-G and T06-L at the plan's target viewport, then T07-G completely; continue T07-L through T10-L."
 }

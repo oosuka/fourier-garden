@@ -25,9 +25,12 @@ function createDeferredControllerDisposer(
   audio: { current: AudioEngine },
   departingAudio: { current: Set<AudioEngine> },
   capturedEcho: { current: ChapterEcho | null },
+  sceneReadyResolver: { current: SceneReadyWaiter | null },
 ): DeferredDisposer {
   return new DeferredDisposer(() => {
     ++playbackOperation.current;
+    sceneReadyResolver.current?.resolve(false);
+    sceneReadyResolver.current = null;
     void audio.current.dispose();
     for (const retiring of departingAudio.current) void retiring.dispose();
     departingAudio.current.clear();
@@ -605,6 +608,7 @@ export function useFourierGardenController() {
         audioRef,
         departingAudio,
         capturedEcho,
+        sceneReadyResolver,
       );
     }
     return unmountDisposerRef.current.mount();

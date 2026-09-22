@@ -57,6 +57,11 @@ describe("AudioWorklet mathematical contract", () => {
     );
   });
 
+  it("keeps the dedicated chapter anti-alias ratio below Nyquist", () => {
+    expect(spectralCathedralSource).toContain("preset.antiAliasRatio <= 0.9");
+    expect(mobiusChoirSource).toContain("preset.antiAliasRatio <= 0.9");
+  });
+
   it("does not define musical masks or carrier sequences", () => {
     expect(chapterSources).not.toMatch(
       /QUARTER_NOTES|EIGHTH_NOTES|TWELVE_NOTES|SIXTEENTH_NOTES|carrierMultipliers/,

@@ -83,6 +83,8 @@ interface SpectralCathedralRenderOptions {
   sampleRate: number;
 }
 
+const MAX_ANTI_ALIAS_RATIO = 0.9;
+
 export const SPECTRAL_CATHEDRAL_SYNTHESIS = {
   maximumPartials: 2,
   partialDamping: 2.8,
@@ -139,7 +141,7 @@ export const SPECTRAL_CATHEDRAL_SYNTHESIS = {
   woodMaximumHz: 980,
   woodComponentCount: 1,
   stereoDetuneRatio: 0.00125,
-  antiAliasRatio: 0.9,
+  antiAliasRatio: MAX_ANTI_ALIAS_RATIO,
   outputGain: getChapterOutputGain("spectral-cathedral"),
 } as const satisfies SpectralCathedralSynthesisPreset;
 
@@ -510,7 +512,7 @@ export function validateSpectralCathedralWorkletProgram(
     preset.stereoDetuneRatio >= 1 ||
     !Number.isFinite(preset.antiAliasRatio) ||
     preset.antiAliasRatio <= 0 ||
-    preset.antiAliasRatio > 1
+    preset.antiAliasRatio > MAX_ANTI_ALIAS_RATIO
   ) {
     throw new Error("Spectral Cathedral synthesis range is invalid");
   }

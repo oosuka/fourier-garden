@@ -88,14 +88,15 @@ Lunaというモデル名だけを理由に、数学・音響の正しさや完�
 - 音声・sceneの失敗復旧、scene世代管理、描画例外でのrAF停止、全画面失敗の案内。
 - 目的別文書とAGENTSの整理。
 
-最新の自動検証：
+最新の自動検証（2026年9月22日）：
 
-- 2026-09-14の現行版 `npm run check` は **725成功・1skip**、99ファイル成功・1skip。
-  整形、Lint、strict型、production build成功。Three.js postProcessingの約684 kB chunk警告は残る。
+- 現行版 `npm run check` は **760成功・0skip**、102ファイル成功・0skip。
+  整形、Lint、strict型、production build成功。Three.js postProcessingの大容量chunk警告は残る。
+- `renewalAudioReport.test.ts`の環境変数依存skipを除去し、10章dry指標を通常回帰へ移した。JSON出力の環境変数ゲートは維持する。
 - その後のMöbius埋め込み式の表示上の改行は、関連3テストと整形・Lint・型・buildで別に検証した。
-- 2026-09-14の `qa:audio-performance` は75テスト成功。48 kHz / 128標本のNode VM p95は全章1.333 ms未満。
-  最大はMöbius 1.176 ms。ブラウザ音声スレッドの実測とは別。
-- 全Markdownのローカルリンク、10章の構造、QA JSON 39件のJSON形式を監査し、欠落・不正はなかった。
+- `qa:audio-performance` は75テスト成功。48 kHz / 128標本のNode VM p95は全章1.333 ms未満、最大はMöbius 1.269 ms。ブラウザ音声スレッドの実測とは別。
+- antiAliasRatio修正後の10章8kHz dry指標は[再生成レポート](audio-c12-anti-alias-2026-09-22.json)に保存した。全章×全サンプルレート×全周期の参照／Worklet網羅測定は未実施。
+- 全28件のMarkdownにある411件のローカルリンク、10章の構造、QA JSON 92件のJSON形式を監査し、欠落・不正はなかった。
 - 全周期音響の現行比較入口は [audio-residue-v2.json](audio-residue-v2.json)。比較前後の説明は進捗と音響正本を読む。
 
 直近の修正を戻さないこと：
@@ -131,7 +132,7 @@ WebGPUはBloom、WebGL2は600万pixel超でBloomを省く通常経路。同じ�
 
 上表は4K 60秒（P）の記録であり、全幕・高DPI・連続動作（T）の合格を意味しない。
 T01〜T05は両rendererのDPR2・序盤／終盤60秒・連続観察・seek／逆seek・周回境界を記録済み。
-2026年9月22日にT06-G/LとT07-Gを試したが、T07-G終盤の直後にmacOSロックが判明し、T06終盤も50ms超を含むため、いずれも前景継続の合格証拠に数えない。開始／終盤captureと限界は[C11記録](c11-continuous-observation-2026-09-22.json)を参照する。T07-L〜T09は4K記録のみで、Tの連続窓と局所因果の証拠が不足している。T10-Gは一部済、T10-Lは証拠不足。
+2026年9月22日にT06-G/LとT07-Gを試したが、T07-G終盤の直後にmacOSロックが判明し、T06終盤も50ms超を含むため、いずれも前景継続の合格証拠に数えない。ロック解除後のT06-Lは約608秒の補助観察を行い、開始／終盤captureを保存したが、基準1440×900 CSS／DPR1ではなく開始窓に50ms超過が1回あるため合格へ拡張しない。[T06-L補助記録](c11-browser-captures/T06-L-webgl-unlocked-observation-2026-09-22.json)と[C11記録](c11-continuous-observation-2026-09-22.json)を参照する。T07-L〜T09は4K記録のみで、Tの連続窓と局所因果の証拠が不足している。T10-Gは一部済、T10-Lは証拠不足。
 音色の知覚評価、物理AV遅延、実GPU完了時間・メモリは全章で未測定である。
 
 ## 4. Lunaでの実行規律
@@ -468,7 +469,7 @@ URL / seed / quality / DPR / CSS / 実ラスタ / 絶対時刻:
 次の1件:
 ```
 
-次の作業は手動ロック解除後のC11再開である。過去のHaar作業開始指示は2026年9月14日の履歴で、現在の進捗を示さない。
+次の作業は手動ロック解除後のC11再開である。T06-Lの補助観察は保存済みだが、T06-Gを基準条件で再実施し、T07-L〜T10・P03-L・L02を順に進める。過去のHaar作業開始指示は2026年9月14日の履歴で、現在の進捗を示さない。
 旧タブIDへは接続せず、現在のブラウザ状態を確認して新しいQAセッションを開始する。
 
 ## 推論設定の根拠

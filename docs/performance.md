@@ -91,13 +91,13 @@ Cathedral 1.080 ms。Möbiusの部分音と有限尾を増やした分の負荷�
 | Torus | 0.348 |
 
 これはNode VMの代表block計測であり、ブラウザ音声スレッドの期限、章切替中の二重グラフ、
-実機の出音遅延を測定したものではない。現在の`npm run check`は99テストファイル成功・1スキップ、
-725テスト成功・1スキップで、format・lint・strict型・production buildも成功した。
-production buildにはThree.js postProcessingの約684 kB chunk警告が残る。
+実機の出音遅延を測定したものではない。2026年9月14日時点の`npm run check`は99テストファイル成功・1スキップ、
+723テスト成功・1スキップで、format・lint・strict型・production buildも成功した。
+Three.js postProcessingの約684 kB chunk警告は当時の記録である。
 
 ## 2026年9月22日 C10後のDSP再確認
 
-現行版の`rtk proxy npm run qa:audio-performance`は75テスト成功。48 kHz／128標本のNode VM代表block p95最大はMöbiusの1.104 msで、目標1.333 ms未満だった。実行条件と限界は[進捗記録のC10a–b](qa/renewal/progress.md)に記載した。ブラウザの実時間音声スレッド、章切替中の二重graph、聴感上の章間比較を測定した結果ではない。
+現行版の`rtk proxy npm run qa:audio-performance`は75テスト成功。48 kHz／128標本のNode VM代表block p95最大はMöbiusの1.269 msで、目標1.333 ms未満だった。`npm run check`は102テストファイル・760テスト成功・0スキップで、production buildのpostProcessing chunkは約1.1 MBの警告が残る。実行条件と限界は[進捗記録](qa/renewal/progress.md)に記載した。ブラウザの実時間音声スレッド、章切替中の二重graph、聴感上の章間比較を測定した結果ではない。
 
 ## ChromeでのCathedral V2
 

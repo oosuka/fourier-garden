@@ -516,42 +516,69 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
   }
 }
 
-export async function createSpectralCathedralScene({
-  canvas,
-  seed = 0,
-  poeticLayers = true,
-  onDeviceLost,
-  preserveDrawingBuffer,
-}: SpectralCathedralSceneOptions): Promise<SpectralCathedralScene> {
-  const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
-  const backend = selectRendererBackend(forceWebGL, "gpu" in navigator);
-  canvas.dataset.rendererBackend = backend;
-
+async function createSpectralCathedralSceneForBackend(
+  {
+    canvas,
+    seed = 0,
+    poeticLayers = true,
+    onDeviceLost,
+    preserveDrawingBuffer,
+  }: SpectralCathedralSceneOptions,
+  backend: RendererBackend,
+): Promise<SpectralCathedralScene> {
+  let renderer: SceneRenderer;
   if (backend === "webgl") {
     const { WebGLRenderer } = await import("three");
-    const renderer = new WebGLRenderer(
+    renderer = new WebGLRenderer(
       getSpectralCathedralWebGLRendererParameters({
         canvas,
         preserveDrawingBuffer,
       }),
     );
-    const scene = new SpectralCathedralStrictScene(renderer, backend, seed, poeticLayers);
-    await scene.initializePostProcessor();
-    return scene;
+  } else {
+    const webgpu = new THREE.WebGPURenderer({
+      canvas,
+      antialias: true,
+      alpha: false,
+    });
+    const reportDeviceLost = webgpu.onDeviceLost.bind(webgpu);
+    webgpu.onDeviceLost = (info) => {
+      reportDeviceLost(info);
+      onDeviceLost?.();
+    };
+    renderer = webgpu;
   }
 
-  const renderer = new THREE.WebGPURenderer({
-    canvas,
-    antialias: true,
-    alpha: false,
-  });
-  const reportDeviceLost = renderer.onDeviceLost.bind(renderer);
-  renderer.onDeviceLost = (info) => {
-    reportDeviceLost(info);
-    onDeviceLost?.();
-  };
-  await renderer.init();
-  const scene = new SpectralCathedralStrictScene(renderer, backend, seed, poeticLayers);
-  await scene.initializePostProcessor();
+  let scene: SpectralCathedralStrictScene | null = null;
+  try {
+    if (backend === "webgpu") await (renderer as THREE.WebGPURenderer).init();
+    scene = new SpectralCathedralStrictScene(renderer, backend, seed, poeticLayers);
+    await scene.initializePostProcessor();
+    return scene;
+  } catch (error) {
+    if (scene) scene.dispose();
+    else renderer.dispose();
+    throw error;
+  }
+}
+
+export async function createSpectralCathedralScene(
+  options: SpectralCathedralSceneOptions,
+): Promise<SpectralCathedralScene> {
+  const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
+  const requestedBackend = selectRendererBackend(forceWebGL, "gpu" in navigator);
+  options.canvas.dataset.rendererBackend = requestedBackend;
+
+  try {
+    const scene = await createSpectralCathedralSceneForBackend(options, requestedBackend);
+    options.canvas.dataset.rendererBackend = requestedBackend;
+    return scene;
+  } catch (error) {
+    if (requestedBackend !== "webgpu") throw error;
+    console.warn("WebGPU Spectral Cathedral initialization failed; falling back to WebGL.", error);
+  }
+
+  const scene = await createSpectralCathedralSceneForBackend(options, "webgl");
+  options.canvas.dataset.rendererBackend = "webgl";
   return scene;
 }
