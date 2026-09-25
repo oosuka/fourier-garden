@@ -24,6 +24,25 @@ describe("foreground experience capture", () => {
     expect(report?.frameIntervalP95Ms).toBeCloseTo(1000 / 60, 8);
   });
 
+  it("completes a 60-second capture at 360 Hz without exhausting sample storage", () => {
+    const capture = new ExperienceCapture();
+    capture.start(60, {
+      chapter: "test",
+      renderer: "webgpu",
+      width: 100,
+      height: 60,
+      pixelRatio: 1,
+      quality: "high",
+      seed: "qa",
+    });
+    for (let frame = 0; frame <= 21_600; frame++)
+      capture.record((frame * 1000) / 360, 1, frame / 360, null);
+
+    expect(capture.report?.status).toBe("complete");
+    expect(capture.report?.durationSeconds).toBeCloseTo(60, 8);
+    expect(capture.report?.frames).toBe(21_600);
+  });
+
   it("preserves stalls and marks a hidden-tab interruption instead of claiming a 60-second pass", () => {
     const capture = new ExperienceCapture();
     capture.start(60, {

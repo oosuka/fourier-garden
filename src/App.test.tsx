@@ -4,12 +4,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "./App";
+import type { ChapterEcho, ChapterFrameCapture } from "./experience/chapterEcho";
 import { getPatternRegistry } from "./patterns/registry";
 
 const audioMockState = vi.hoisted(() => ({
   instances: [] as Array<{
     currentTime: number;
     currentVolume: number;
+    departureGain: number;
     setMuted: ReturnType<typeof vi.fn>;
     play: ReturnType<typeof vi.fn>;
     pause: ReturnType<typeof vi.fn>;
@@ -20,6 +22,7 @@ const audioMockState = vi.hoisted(() => ({
 }));
 
 const sceneMockState = vi.hoisted(() => ({
+  captureEcho: null as (() => ChapterEcho | null) | null,
   scenes: [] as Array<{
     id: string;
     generation: number;
@@ -32,6 +35,7 @@ vi.mock("./audio/AudioEngine", () => ({
     currentTime = 0;
     presentationTime = 0;
     departureSecondsRemaining = 0.5;
+    departureGain = 1;
     currentVolume: number;
     play = vi.fn<() => Promise<number>>(async () => 0.05);
     pause = vi.fn<() => void>();
@@ -64,19 +68,25 @@ vi.mock("./components/CanvasStage", () => ({
     pattern,
     sceneGeneration,
     onStatus,
+    captureRef,
   }: {
     pattern: { id: string };
     sceneGeneration: number;
     onStatus: (status: "loading" | "ready" | "error", generation: number) => void;
+    captureRef?: { current: ChapterFrameCapture | null };
   }) => {
     useEffect(() => {
+      if (captureRef) captureRef.current = async () => sceneMockState.captureEcho?.() ?? null;
       sceneMockState.scenes.push({
         id: pattern.id,
         generation: sceneGeneration,
         notify: (status) => onStatus(status, sceneGeneration),
       });
       onStatus("ready", sceneGeneration);
-    }, [onStatus, pattern.id, sceneGeneration]);
+      return () => {
+        if (captureRef) captureRef.current = null;
+      };
+    }, [onStatus, pattern.id, sceneGeneration, captureRef]);
     return <canvas data-testid={`scene-${pattern.id}`} />;
   },
 }));
@@ -114,6 +124,7 @@ beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   audioMockState.instances.length = 0;
   sceneMockState.scenes.length = 0;
+  sceneMockState.captureEcho = null;
 });
 
 afterEach(() => {
@@ -322,6 +333,42 @@ describe("App entry gate", () => {
     expect(mounted.container.textContent).toContain("Spectral Cathedral");
 
     await unmountApp(mounted);
+  });
+
+  it("releases a captured afterimage when a hidden transition ends", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("requestAnimationFrame", () => 1);
+    vi.stubGlobal("cancelAnimationFrame", () => {});
+    const image = document.createElement("canvas");
+    image.width = 200;
+    image.height = 100;
+    const echo: ChapterEcho = {
+      image,
+      left: 0,
+      top: 0,
+      width: 200,
+      height: 100,
+      dispose: () => {
+        image.width = 0;
+        image.height = 0;
+      },
+    };
+    sceneMockState.captureEcho = () => echo;
+    const mounted = await mountApp();
+    await click(mounted.container, ".enterButton");
+    await click(mounted.container, '.chapterArrow[aria-label="次の章"]');
+    expect(image.width).toBe(200);
+    const hiddenProperty = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+    try {
+      await act(async () => vi.advanceTimersByTimeAsync(2_100));
+
+      expect(mounted.container.querySelector(".chapterAfterimage")).toBeNull();
+      expect(image.width).toBe(0);
+      expect(image.height).toBe(0);
+    } finally {
+      hiddenProperty.mockRestore();
+      await unmountApp(mounted);
+    }
   });
 
   it("exposes all ten formal chapters from the default and legacy preview URLs", () => {

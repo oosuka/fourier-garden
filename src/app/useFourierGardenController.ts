@@ -383,6 +383,8 @@ export function useFourierGardenController() {
               setTransitionPattern(null);
               setTransitionSource(null);
               setTransitionEcho(null);
+              capturedEcho.current?.dispose();
+              capturedEcho.current = null;
             }, CHAPTER_TRANSITION_EXIT_MS);
           },
           Math.max(0, CHAPTER_NOTE_DURATION_MS - (performance.now() - transitionStarted)),
@@ -395,6 +397,8 @@ export function useFourierGardenController() {
           setTransitionPattern(null);
           setTransitionSource(null);
           setTransitionEcho(null);
+          capturedEcho.current?.dispose();
+          capturedEcho.current = null;
         }
       } finally {
         if (operation === playbackOperation.current) {

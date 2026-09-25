@@ -45,6 +45,9 @@ export interface SlowFrameDetail {
 }
 
 const MAXIMUM_SLOW_FRAME_DETAILS = 32;
+// QA capture runs at the display's rAF rate, which can exceed 240 Hz.
+// Allocate before recording so the frame callback never grows these arrays.
+const MAXIMUM_CAPTURE_FPS = 1_000;
 
 export class ExperienceCapture {
   report: ExperienceReport | null = null;
@@ -75,7 +78,7 @@ export class ExperienceCapture {
     this.startedMs = null;
     this.count = this.syncCount = 0;
     this.report = null;
-    const capacity = Math.ceil(seconds * 240) + 2;
+    const capacity = Math.ceil(seconds * MAXIMUM_CAPTURE_FPS) + 2;
     this.intervals = new Float64Array(capacity);
     this.cpu = new Float64Array(capacity);
     this.leads = new Float64Array(capacity);
