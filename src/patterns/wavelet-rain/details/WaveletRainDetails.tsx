@@ -2,7 +2,7 @@ import { AnalyticPatternDetails } from "../../../components/AnalyticPatternDetai
 import { HAAR_COEFFICIENTS, HAAR_SCALING_COEFFICIENT } from "../math/model";
 
 const IDENTITIES = [
-  "g(t)=\\sin(2\\pi t)+0.45\\sin(6\\pi t+\\pi/5)+0.7\\mathbf1_{[3/16,5/16)}-0.55\\mathbf1_{[11/16,13/16)}",
+  "\\begin{aligned}g(t)&=\\sin(2\\pi t)+0.45\\sin(6\\pi t+\\pi/5)\\\\ &\\quad+0.7\\mathbf1_{[3/16,5/16)}-0.55\\mathbf1_{[11/16,13/16)}\\end{aligned}",
   "\\psi_{j,k}(t)=2^{j/2}\\psi(2^jt-k),\\qquad d_{j,k}=\\langle g,\\psi_{j,k}\\rangle",
   "P_6g=c_0\\phi+\\sum_{j=0}^{5}\\sum_{k=0}^{2^j-1}d_{j,k}\\psi_{j,k}",
   "P_6g|_{[r/64,(r+1)/64)}=64\\int_{r/64}^{(r+1)/64}g(t)\\,dt",
@@ -124,21 +124,22 @@ export function WaveletRainDetails() {
           quantity: "支持区間[j,k]",
           status: "保持",
           visual: "六段係数面のセル位置",
-          audio: "支持開始位置を左右定位へ写像",
+          audio: "支持中心を左右定位の基準panへ写像: 1.6(start+2^(-j-1))-0.8",
         },
         {
           id: "haar-coefficient",
           quantity: "係数dⱼₖの絶対値・符号",
           status: "保持",
-          visual: "セル明度とシアン/紫の符号",
-          audio: "強度と開始位相0/π",
+          visual: "セル明度と銀灰/緑灰の補助色。符号は数値・位相にも対応",
+          audio:
+            "|dⱼₖ|は数学係数、符号は開始位相0/π。実出力gainには係数圧縮・幕/アクセント・章内校正を適用",
         },
         {
           id: "haar-scale",
           quantity: "スケールj",
           status: "圧縮",
           visual: "支持幅2⁻ʲと落下粒径",
-          audio: "440+96j Hzと有限包絡",
+          audio: "変調前の基準音高 f_j=420+62j Hz (j=0…5) と有限包絡",
         },
         {
           id: "haar-poetic",

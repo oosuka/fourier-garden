@@ -1,6 +1,19 @@
-import { clamp, isFiniteNumber } from "./shared.js?v=24";
+import { clamp, isFiniteNumber } from "./shared.js?v=30";
 
 const TAU = Math.PI * 2;
+
+function maximumPikoFrequency(program, frequencyHz, phaseDrift, partialRatio = 1) {
+  const left = frequencyHz * (1 - program.detuneRatio) * partialRatio;
+  const right = frequencyHz * (1 + program.detuneRatio) * partialRatio;
+  const chirpStart = 1 + program.timbre.chirpRatio;
+  const driftHz = phaseDrift / TAU;
+  return Math.max(
+    Math.abs(left + driftHz),
+    Math.abs(right + driftHz),
+    Math.abs(left * chirpStart + driftHz),
+    Math.abs(right * chirpStart + driftHz),
+  );
+}
 
 function validEvent(event, cycleSeconds) {
   return (
@@ -16,6 +29,11 @@ function validEvent(event, cycleSeconds) {
     event.pan <= 1 &&
     event.panMotionDepth >= 0 &&
     event.panMotionDepth <= 1 &&
+    (event.panPhaseModulationDepth ?? 0) >= 0 &&
+    (event.panPhaseModulationDepth ?? 0) <= TAU &&
+    (event.panPhaseModulationRate ?? 0) >= 0 &&
+    (event.panPhaseModulationRate ?? 0) <= 32 &&
+    event.mathematicalGain >= 0 &&
     event.wet >= 0 &&
     event.wet <= 1 &&
     event.attackSeconds > 0 &&
@@ -33,6 +51,8 @@ function resetVoice(voice) {
   voice.panMotionDepth = 0;
   voice.panMotionRate = 0;
   voice.panMotionPhase = 0;
+  voice.panPhaseModulationDepth = 0;
+  voice.panPhaseModulationRate = 0;
   voice.wet = 0;
   voice.attack = 0;
   voice.decay = 0;
@@ -49,6 +69,8 @@ function resetVoice(voice) {
   voice.panMotionRotationSine = 0;
   voice.panMotionRotationCosine = 1;
   voice.partialGain = 0;
+  voice.partialDecayMultiplier = 1;
+  voice.contactWeight = 1;
   voice.timbreNormalization = 1;
   voice.oscillatorSines ??= new Float64Array(4);
   voice.oscillatorCosines ??= new Float64Array(4);
@@ -75,6 +97,9 @@ function activateVoice(state, event, eventTime) {
   voice.panMotionDepth = event.panMotionDepth;
   voice.panMotionRate = event.panMotionRateRadiansPerSecond;
   voice.panMotionPhase = event.panMotionPhaseRadians;
+  voice.panPhaseModulationDepth = event.panPhaseModulationDepth ?? 0;
+  voice.panPhaseModulationRate = event.panPhaseModulationRate ?? 0;
+  voice.contactWeight = 0.35 + 0.65 * Math.min(1, Math.sqrt(event.mathematicalGain));
   voice.wet = event.wet;
   voice.attack = event.attackSeconds;
   voice.decay = event.decaySeconds;
@@ -94,12 +119,16 @@ function initializeVoiceSampleState(program, voice, absoluteTimeSeconds) {
   const leftFrequency = voice.frequency * (1 - program.detuneRatio);
   const rightFrequency = voice.frequency * (1 + program.detuneRatio);
   const partialAllowed =
-    Math.max(leftFrequency, rightFrequency) *
-      program.timbre.partialRatio *
-      (1 + Math.max(0, chirpRatio)) <
+    maximumPikoFrequency(program, voice.frequency, voice.phaseDrift, program.timbre.partialRatio) <
     sampleRate * 0.45;
-  voice.partialGain = partialAllowed ? program.timbre.partialGain : 0;
+  const decayScale = program.timbre.partialDecayScale;
+  voice.partialGain = partialAllowed
+    ? program.timbre.partialGain * (decayScale === undefined ? 1 : voice.contactWeight)
+    : 0;
   voice.timbreNormalization = Math.sqrt(1 + voice.partialGain * voice.partialGain);
+  if (decayScale !== undefined) voice.partialGain *= Math.exp(-age / (voice.decay * decayScale));
+  voice.partialDecayMultiplier =
+    decayScale === undefined ? 1 : Math.exp(-timeStep / (voice.decay * decayScale));
   const attackDecayRate = 1 / voice.attack + 1 / voice.decay;
   voice.envelopeDecay = Math.exp(-age / voice.decay);
   voice.envelopeAttackDecay = Math.exp(-age * attackDecayRate);
@@ -140,6 +169,7 @@ function initializeVoiceSampleState(program, voice, absoluteTimeSeconds) {
 function advanceVoiceSampleState(voice) {
   voice.envelopeDecay *= voice.envelopeDecayMultiplier;
   voice.envelopeAttackDecay *= voice.envelopeAttackDecayMultiplier;
+  voice.partialGain *= voice.partialDecayMultiplier;
   if (voice.panMotionDepth > 0) {
     const panMotionSine = voice.panMotionSine;
     const panMotionCosine = voice.panMotionCosine;
@@ -239,7 +269,9 @@ export function createPikoProcessor(kind) {
         program.timbre.partialRatio > 3 ||
         program.timbre.partialGain < 0 ||
         program.timbre.partialGain > 0.18 ||
-        Math.abs(program.timbre.chirpRatio) > 0.045
+        Math.abs(program.timbre.chirpRatio) > 0.045 ||
+        (program.timbre.partialDecayScale !== undefined &&
+          (program.timbre.partialDecayScale < 0.1 || program.timbre.partialDecayScale > 4))
       ) {
         return false;
       }
@@ -248,7 +280,7 @@ export function createPikoProcessor(kind) {
         if (
           !validEvent(event, program.score.cycleSeconds) ||
           event.timeSeconds < previous ||
-          event.frequencyHz * (1 + program.detuneRatio) >= sampleRate * 0.45
+          maximumPikoFrequency(program, event.frequencyHz, event.phaseDrift) >= sampleRate * 0.45
         ) {
           return false;
         }
@@ -302,8 +334,16 @@ export function createPikoProcessor(kind) {
             ? 1
             : 0.5 * (1 + Math.cos((Math.PI * (age - fadeStart)) / (voice.end - fadeStart)));
         const gain = voice.gain * body * fade * program.outputGain;
-        const panMotion =
-          voice.panMotionDepth === 0 ? 0 : voice.panMotionDepth * voice.panMotionSine;
+        const panSine =
+          voice.panPhaseModulationDepth === 0
+            ? voice.panMotionSine
+            : Math.sin(
+                voice.panMotionRate * absoluteTimeSeconds +
+                  voice.panMotionPhase +
+                  voice.panPhaseModulationDepth *
+                    Math.sin(voice.panPhaseModulationRate * absoluteTimeSeconds),
+              );
+        const panMotion = voice.panMotionDepth * panSine;
         const pan = clamp(voice.pan + panMotion, -1, 1);
         const leftPan = Math.sqrt((1 - pan) / 2);
         const rightPan = Math.sqrt((1 + pan) / 2);

@@ -20,6 +20,7 @@ export default defineConfig({
         riemannVeilQa: "riemann-veil-qa.html",
         phaseTorusQa: "phase-torus-qa.html",
         chapterAudioAbQa: "chapter-audio-ab-qa.html",
+        audioOutputQa: "audio-output-qa.html",
       },
     },
   },

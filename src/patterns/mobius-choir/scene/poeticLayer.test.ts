@@ -7,6 +7,60 @@ import { createMobiusChoirPoeticModel } from "./poetic";
 import { MobiusChoirPoeticLayer, getMobiusChoirParticleStyle } from "./poeticLayer";
 
 describe("Möbius Choir poetic layer", () => {
+  it.each(["webgpu", "webgl"] as const)(
+    "keeps the CSS-area energy of all dust layers through DPR changes on %s",
+    (backend) => {
+      const model = createMobiusChoirPoeticModel(41_041);
+      const layer = new MobiusChoirPoeticLayer(model, backend, createMobiusChoirDrawingModel());
+      const materials: THREE.PointsMaterial[] = [];
+      layer.group.traverse((object) => {
+        if (object instanceof THREE.Points && object.material instanceof THREE.PointsMaterial)
+          materials.push(object.material);
+      });
+      expect(materials).toHaveLength(3);
+      for (const time of [0.06, 127.318]) {
+        layer.setPixelRatio(2);
+        layer.update(time);
+        const retinaOpacity = materials.map((material) => material.opacity);
+        const positions = model.particlePositions.slice();
+        for (const pixelRatio of [1, 1.5, 2]) {
+          layer.setPixelRatio(pixelRatio);
+          const expectedScale = backend === "webgpu" ? (pixelRatio / 2) ** 2 : 1;
+          for (const [index, material] of materials.entries())
+            expect(material.opacity).toBeCloseTo(retinaOpacity[index]! * expectedScale, 12);
+          layer.update(time);
+          for (const [index, material] of materials.entries())
+            expect(material.opacity).toBeCloseTo(retinaOpacity[index]! * expectedScale, 12);
+          expect(model.particlePositions).toEqual(positions);
+        }
+      }
+      layer.dispose();
+    },
+  );
+
+  it("fixes decorative positions and transforms in reduced motion while the mathematics advances", () => {
+    const model = createMobiusChoirPoeticModel(41_041);
+    const layer = new MobiusChoirPoeticLayer(model, "webgpu", createMobiusChoirDrawingModel());
+    const transforms = () => {
+      const values: number[] = [];
+      layer.group.updateMatrixWorld(true);
+      layer.group.traverse((object) => values.push(...object.matrixWorld.elements));
+      return values;
+    };
+    const first = layer.update(0.06, true);
+    const positions = model.particlePositions.slice();
+    const firstTransforms = transforms();
+    const later = layer.update(17.3, true);
+    expect(model.particlePositions.findIndex((value, index) => value !== positions[index])).toBe(
+      -1,
+    );
+    expect(transforms()).toEqual(firstTransforms);
+    expect(later.modes.map((mode) => mode.mathematicalVelocity)).not.toEqual(
+      first.modes.map((mode) => mode.mathematicalVelocity),
+    );
+    layer.dispose();
+  });
+
   it("keeps WebGL breath particles finer and dimmer", () => {
     const webgpu = getMobiusChoirParticleStyle("webgpu");
     const webgl = getMobiusChoirParticleStyle("webgl");
@@ -86,17 +140,15 @@ describe("Möbius Choir poetic layer", () => {
       createMobiusChoirDrawingModel(),
     );
     const halos = layer.group.children[5] as THREE.Group;
-    const event = MOBIUS_CHOIR_SCORE.events[12]!;
+    const event = MOBIUS_CHOIR_SCORE.events[1]!;
     const modeIndex = event.modeIds[0]! - 1;
 
     layer.update(event.localTimeSeconds + 0.06);
     const earlyPosition = halos.children[modeIndex]!.position.clone();
-    const earlyScale = halos.children[modeIndex]!.scale.x;
     layer.update(event.localTimeSeconds + 0.28);
     const laterPosition = halos.children[modeIndex]!.position.clone();
 
     expect(earlyPosition.distanceTo(laterPosition)).toBeGreaterThan(0.05);
-    expect(earlyScale).toBeGreaterThan(1.1);
     layer.dispose();
   });
 

@@ -11,6 +11,8 @@ export interface PikoScoreEvent {
   panMotionDepth: number;
   panMotionRateRadiansPerSecond: number;
   panMotionPhaseRadians: number;
+  panPhaseModulationDepth?: number;
+  panPhaseModulationRate?: number;
   wet: number;
   attackSeconds: number;
   decaySeconds: number;
@@ -28,6 +30,8 @@ export interface PikoTimbreProfile {
   partialRatio: number;
   partialGain: number;
   chirpRatio: number;
+  /** Secondary contact decay relative to the carrier decay; omitted preserves a fixed spectrum. */
+  partialDecayScale?: number;
 }
 
 export interface PikoWorkletProgram {
@@ -124,7 +128,9 @@ export function validatePikoProgram(program: PikoWorkletProgram): void {
     program.timbre.partialRatio > 3 ||
     program.timbre.partialGain < 0 ||
     program.timbre.partialGain > 0.18 ||
-    Math.abs(program.timbre.chirpRatio) > 0.045
+    Math.abs(program.timbre.chirpRatio) > 0.045 ||
+    (program.timbre.partialDecayScale !== undefined &&
+      (program.timbre.partialDecayScale < 0.1 || program.timbre.partialDecayScale > 4))
   ) {
     throw new Error("Piko program identity and cycle must be valid");
   }
@@ -148,6 +154,10 @@ export function validatePikoProgram(program: PikoWorkletProgram): void {
       event.pan > 1 ||
       event.panMotionDepth < 0 ||
       event.panMotionDepth > 1 ||
+      (event.panPhaseModulationDepth ?? 0) < 0 ||
+      (event.panPhaseModulationDepth ?? 0) > Math.PI * 2 ||
+      (event.panPhaseModulationRate ?? 0) < 0 ||
+      (event.panPhaseModulationRate ?? 0) > 32 ||
       event.wet < 0 ||
       event.wet > 1 ||
       event.attackSeconds <= 0 ||
@@ -176,7 +186,10 @@ export function getPikoPan(event: PikoScoreEvent, absoluteTimeSeconds: number): 
       ? 0
       : event.panMotionDepth *
         Math.sin(
-          event.panMotionRateRadiansPerSecond * absoluteTimeSeconds + event.panMotionPhaseRadians,
+          event.panMotionRateRadiansPerSecond * absoluteTimeSeconds +
+            event.panMotionPhaseRadians +
+            (event.panPhaseModulationDepth ?? 0) *
+              Math.sin((event.panPhaseModulationRate ?? 0) * absoluteTimeSeconds),
         );
   return Math.max(-1, Math.min(1, event.pan + motion));
 }
@@ -218,6 +231,21 @@ export function createEnergyBalancedPikoScore(score: PikoScoreProgram): PikoScor
   });
 }
 
+/** Relative strength of the secondary contact, shared with the visual material response. */
+export function getPikoContactGain(
+  event: PikoScoreEvent,
+  timbre: PikoTimbreProfile,
+  ageSeconds: number,
+): number {
+  if (timbre.partialDecayScale === undefined) return timbre.partialGain;
+  const weight = 0.35 + 0.65 * Math.min(1, Math.sqrt(event.mathematicalGain));
+  return (
+    timbre.partialGain *
+    weight *
+    Math.exp(-ageSeconds / (event.decaySeconds * timbre.partialDecayScale))
+  );
+}
+
 function getPikoOscillator(
   program: PikoWorkletProgram,
   event: PikoScoreEvent,
@@ -231,17 +259,31 @@ function getPikoOscillator(
     program.timbre.chirpRatio * (ageSeconds - (ageSeconds * ageSeconds) / (2 * event.endSeconds));
   const carrierPhase = Math.PI * 2 * frequencyHz * chirpTime;
   const fundamental = Math.sin(carrierPhase + phaseBase);
-  const partialGain = partialAllowed ? program.timbre.partialGain : 0;
-  if (partialGain === 0) return fundamental;
+  const initialPartialGain = partialAllowed ? getPikoContactGain(event, program.timbre, 0) : 0;
+  if (initialPartialGain === 0) return fundamental;
+  const partialGain = getPikoContactGain(event, program.timbre, ageSeconds);
   const partial = Math.sin(carrierPhase * program.timbre.partialRatio + phaseBase);
-  return (fundamental + partialGain * partial) / Math.sqrt(1 + partialGain * partialGain);
+  return (
+    (fundamental + partialGain * partial) / Math.sqrt(1 + initialPartialGain * initialPartialGain)
+  );
 }
 
-function getPikoMaximumGeneratedFrequency(
+/** Chirp is linear in age, so both endpoints and both detuned channels bound its frequency. */
+export function getPikoMaximumGeneratedFrequency(
   program: PikoWorkletProgram,
-  frequencyHz: number,
+  event: PikoScoreEvent,
+  partialRatio = 1,
 ): number {
-  return frequencyHz * (1 + program.detuneRatio);
+  const left = event.frequencyHz * (1 - program.detuneRatio) * partialRatio;
+  const right = event.frequencyHz * (1 + program.detuneRatio) * partialRatio;
+  const chirpStart = 1 + program.timbre.chirpRatio;
+  const driftHz = event.phaseDrift / (Math.PI * 2);
+  return Math.max(
+    Math.abs(left + driftHz),
+    Math.abs(right + driftHz),
+    Math.abs(left * chirpStart + driftHz),
+    Math.abs(right * chirpStart + driftHz),
+  );
 }
 
 export function renderPikoSample(
@@ -261,12 +303,9 @@ export function renderPikoSample(
       if (envelope === 0) continue;
       const leftFrequency = event.frequencyHz * (1 - program.detuneRatio);
       const rightFrequency = event.frequencyHz * (1 + program.detuneRatio);
-      if (getPikoMaximumGeneratedFrequency(program, event.frequencyHz) >= sampleRate * 0.45)
-        continue;
+      if (getPikoMaximumGeneratedFrequency(program, event) >= sampleRate * 0.45) continue;
       const partialAllowed =
-        Math.max(leftFrequency, rightFrequency) *
-          program.timbre.partialRatio *
-          (1 + Math.max(0, program.timbre.chirpRatio)) <
+        getPikoMaximumGeneratedFrequency(program, event, program.timbre.partialRatio) <
         sampleRate * 0.45;
       const pan = getPikoPan(event, absoluteTimeSeconds);
       const leftPan = Math.sqrt((1 - pan) / 2);
@@ -322,12 +361,9 @@ export function renderPikoStereo(options: {
       if (firstSample >= lastSample) continue;
       const leftFrequency = event.frequencyHz * (1 - program.detuneRatio);
       const rightFrequency = event.frequencyHz * (1 + program.detuneRatio);
-      if (getPikoMaximumGeneratedFrequency(program, event.frequencyHz) >= sampleRate * 0.45)
-        continue;
+      if (getPikoMaximumGeneratedFrequency(program, event) >= sampleRate * 0.45) continue;
       const partialAllowed =
-        Math.max(leftFrequency, rightFrequency) *
-          program.timbre.partialRatio *
-          (1 + Math.max(0, program.timbre.chirpRatio)) <
+        getPikoMaximumGeneratedFrequency(program, event, program.timbre.partialRatio) <
         sampleRate * 0.45;
       for (let sample = firstSample; sample < lastSample; sample += 1) {
         const absoluteTimeSeconds = startTimeSeconds + sample / sampleRate;
@@ -364,6 +400,8 @@ export function createPikoEvents(options: {
   panMotionDepth?(index: number): number;
   panMotionRateRadiansPerSecond?(index: number): number;
   panMotionPhaseRadians?(index: number): number;
+  panPhaseModulationDepth?(index: number): number;
+  panPhaseModulationRate?(index: number): number;
   wet(index: number): number;
   articulation(index: number): Readonly<{
     attackSeconds: number;
@@ -383,6 +421,8 @@ export function createPikoEvents(options: {
     panMotionDepth: options.panMotionDepth?.(index) ?? 0,
     panMotionRateRadiansPerSecond: options.panMotionRateRadiansPerSecond?.(index) ?? 0,
     panMotionPhaseRadians: options.panMotionPhaseRadians?.(index) ?? 0,
+    panPhaseModulationDepth: options.panPhaseModulationDepth?.(index) ?? 0,
+    panPhaseModulationRate: options.panPhaseModulationRate?.(index) ?? 0,
     wet: options.wet(index),
     ...options.articulation(index),
     phaseOffset: options.phase?.(index) ?? 0,

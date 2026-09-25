@@ -144,7 +144,10 @@ function createRuntimeVoice(
       mode.baseFrequencyHz * event.registerMultiplier * partial * (1 - synthesis.stereoDetuneRatio);
     const rightFrequencyHz =
       mode.baseFrequencyHz * event.registerMultiplier * partial * (1 + synthesis.stereoDetuneRatio);
-    if (Math.max(leftFrequencyHz, rightFrequencyHz) >= frequencyLimit) continue;
+    const generatedMaximumHz =
+      Math.max(leftFrequencyHz, rightFrequencyHz) +
+      (partial * mode.modalAngularFrequency) / (2 * Math.PI);
+    if (generatedMaximumHz >= frequencyLimit) continue;
     const averageFrequencyHz = (leftFrequencyHz + rightFrequencyHz) * 0.5;
     partials.push({
       partial,

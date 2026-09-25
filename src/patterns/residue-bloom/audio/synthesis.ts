@@ -7,10 +7,11 @@ import type {
 import { RESIDUE_BLOOM_SERIES } from "../math/model";
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
-  evaluateMusicalScore,
   type MusicalScoreDefinition,
   type MusicalScoreProgram,
 } from "./score";
+
+import { createResidueBloomRuntime, renderResidueBloomSample } from "./runtime";
 
 export interface ResidueBloomAudioPartial {
   harmonic: number;
@@ -70,16 +71,16 @@ export type WorkletConfigurationMessage = WorkletConfigureMessage<ResidueBloomWo
 export const RESIDUE_BLOOM_AUDIO_GRAPH: AudioGraphPreset = {
   dryHighPassHz: 190,
   dryHighPassQ: 0.45,
-  dryHighShelfHz: 1_180,
-  dryHighShelfGainDb: -17,
-  dryLowPassHz: 1_650,
+  dryHighShelfHz: 1_400,
+  dryHighShelfGainDb: -9,
+  dryLowPassHz: 2_200,
   dryLowPassQ: 0.25,
   dryGain: 0.9,
   wetHighPassHz: 220,
   wetHighPassQ: 0.45,
-  wetLowPassHz: 1_180,
+  wetLowPassHz: 1_300,
   wetLowPassQ: 0.25,
-  wetGain: 0.045,
+  wetGain: 0.055,
   roomSeconds: 0.82,
   roomDecay: 1.45,
   compressor: {
@@ -177,56 +178,16 @@ export function renderRhythmicSeries({
   score,
   startTimeSeconds = 0,
 }: RhythmicRenderOptions): number[] {
-  const absoluteStartSeconds = Math.max(0, startTimeSeconds);
-  const carriers = Array.from(
-    new Set(score.events.filter((event) => event.active).map((event) => event.carrierHz)),
+  const runtime = createResidueBloomRuntime(
+    createWorkletConfiguration(score).program,
+    sampleRate,
+    false,
   );
-  const componentsByCarrier = new Map(
-    carriers.map((carrier) => [
-      carrier,
-      getSonificationComponents(score.fundamentalHz, carrier, sampleRate, score.definition).filter(
-        (component) => component.included,
-      ),
-    ]),
+  const start = Math.max(0, startTimeSeconds);
+  return Array.from(
+    { length: Math.floor(durationSeconds * sampleRate) },
+    (_, index) => renderResidueBloomSample(runtime, start + index / sampleRate).dryLeft,
   );
-  const sampleCount = Math.floor(durationSeconds * sampleRate);
-  const samples = Array.from({ length: sampleCount }, () => 0);
-  let filterState = 0;
-
-  for (let sample = 0; sample < sampleCount; sample += 1) {
-    const frame = evaluateMusicalScore(score, absoluteStartSeconds + sample / sampleRate);
-    const components = frame.event.active
-      ? (componentsByCarrier.get(frame.event.carrierHz) ?? [])
-      : [];
-    const normalization = components.reduce(
-      (sum, component) => sum + component.weightedAmplitude,
-      0,
-    );
-    let value = 0;
-
-    for (const component of components) {
-      value +=
-        Math.sin(
-          Math.PI * 2 * component.nominalFrequencyHz * frame.localStepTimeSeconds +
-            component.sinePhase,
-        ) * component.weightedAmplitude;
-    }
-
-    const dryValue =
-      (normalization > 0 ? value / normalization : 0) *
-      frame.noteEnvelope *
-      frame.event.baseGain *
-      frame.event.accent *
-      score.definition.outputGain;
-    const minimumCutoffHz = 520;
-    const maximumCutoffHz = Math.min(2_050, sampleRate * 0.2);
-    const cutoffHz = minimumCutoffHz + (maximumCutoffHz - minimumCutoffHz) * frame.event.brightness;
-    const filterCoefficient = 1 - Math.exp((-2 * Math.PI * cutoffHz) / sampleRate);
-    filterState += (dryValue - filterState) * filterCoefficient;
-    samples[sample] = filterState;
-  }
-
-  return samples;
 }
 
 export function renderResidueBloomStereo({
@@ -235,77 +196,16 @@ export function renderResidueBloomStereo({
   score,
   startTimeSeconds = 0,
 }: RhythmicStereoRenderOptions): Readonly<{ left: Float32Array; right: Float32Array }> {
-  const absoluteStartSeconds = Math.max(0, startTimeSeconds);
-  const carriers = Array.from(
-    new Set(score.events.filter((event) => event.active).map((event) => event.carrierHz)),
-  );
-  const componentsByCarrier = new Map(
-    carriers.map((carrier) => [
-      carrier,
-      getSonificationComponents(score.fundamentalHz, carrier, sampleRate, score.definition).filter(
-        (component) => component.included,
-      ),
-    ]),
-  );
+  const runtime = createResidueBloomRuntime(createWorkletConfiguration(score).program, sampleRate);
+  const start = Math.max(0, startTimeSeconds);
   const sampleCount = Math.floor(durationSeconds * sampleRate);
   const left = new Float32Array(sampleCount);
   const right = new Float32Array(sampleCount);
-  let filterLeft = 0;
-  let filterRight = 0;
-
-  for (let sample = 0; sample < sampleCount; sample += 1) {
-    const frame = evaluateMusicalScore(score, absoluteStartSeconds + sample / sampleRate);
-    const components = frame.event.active
-      ? (componentsByCarrier.get(frame.event.carrierHz) ?? [])
-      : [];
-    const normalization = components.reduce(
-      (sum, component) => sum + component.weightedAmplitude,
-      0,
-    );
-    let leftValue = 0;
-    let rightValue = 0;
-
-    for (const component of components) {
-      const eventPan = frame.event.normalizedPhasorX * 0.28;
-      const partialPan =
-        Math.sin(component.sourceIndex * 2.399963229728653) * 0.24 * frame.event.stereoSpread;
-      const pan = Math.min(0.92, Math.max(-0.92, eventPan + partialPan));
-      const leftPan = Math.sqrt((1 - pan) / 2);
-      const rightPan = Math.sqrt((1 + pan) / 2);
-      leftValue +=
-        Math.sin(
-          Math.PI * 2 * component.leftFrequencyHz * frame.localStepTimeSeconds +
-            component.sinePhase,
-        ) *
-        component.weightedAmplitude *
-        leftPan;
-      rightValue +=
-        Math.sin(
-          Math.PI * 2 * component.rightFrequencyHz * frame.localStepTimeSeconds +
-            component.sinePhase,
-        ) *
-        component.weightedAmplitude *
-        rightPan;
-    }
-
-    const scale =
-      normalization > 0
-        ? (frame.noteEnvelope *
-            frame.event.baseGain *
-            frame.event.accent *
-            score.definition.outputGain) /
-          normalization
-        : 0;
-    const minimumCutoffHz = 520;
-    const maximumCutoffHz = Math.min(2_050, sampleRate * 0.2);
-    const cutoffHz = minimumCutoffHz + (maximumCutoffHz - minimumCutoffHz) * frame.event.brightness;
-    const filterCoefficient = 1 - Math.exp((-2 * Math.PI * cutoffHz) / sampleRate);
-    filterLeft += (leftValue * scale - filterLeft) * filterCoefficient;
-    filterRight += (rightValue * scale - filterRight) * filterCoefficient;
-    left[sample] = filterLeft;
-    right[sample] = filterRight;
+  for (let index = 0; index < sampleCount; index++) {
+    const sample = renderResidueBloomSample(runtime, start + index / sampleRate);
+    left[index] = sample.dryLeft;
+    right[index] = sample.dryRight;
   }
-
   return { left, right };
 }
 

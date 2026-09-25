@@ -83,63 +83,65 @@ interface SpectralCathedralRenderOptions {
   sampleRate: number;
 }
 
+const MAX_ANTI_ALIAS_RATIO = 0.9;
+
 export const SPECTRAL_CATHEDRAL_SYNTHESIS = {
-  maximumPartials: 1,
-  partialDamping: 8,
+  maximumPartials: 2,
+  partialDamping: 2.8,
   articulations: {
     toll: {
-      attackSeconds: 0.008,
-      decaySeconds: 0.048,
-      fadeStartSeconds: 0.122,
-      endSeconds: 0.15,
+      attackSeconds: 0.01,
+      decaySeconds: 0.112,
+      fadeStartSeconds: 0.255,
+      endSeconds: 0.31,
       woodAttackGain: 0,
       subgrainOffsetsSeconds: [0],
       subgrainGains: [0.86],
     },
     answer: {
       attackSeconds: 0.008,
-      decaySeconds: 0.05,
-      fadeStartSeconds: 0.122,
-      endSeconds: 0.15,
+      decaySeconds: 0.082,
+      fadeStartSeconds: 0.205,
+      endSeconds: 0.25,
       woodAttackGain: 0,
       subgrainOffsetsSeconds: [0, 0.086],
       subgrainGains: [0.92, 0.18],
     },
     cascade: {
       attackSeconds: 0.006,
-      decaySeconds: 0.046,
-      fadeStartSeconds: 0.116,
-      endSeconds: 0.145,
+      decaySeconds: 0.064,
+      fadeStartSeconds: 0.165,
+      endSeconds: 0.215,
       woodAttackGain: 0,
       subgrainOffsetsSeconds: [0, 0.043, 0.086],
       subgrainGains: [1, 0.16, 0.18],
     },
     pulse: {
-      attackSeconds: 0.006,
-      decaySeconds: 0.044,
-      fadeStartSeconds: 0.112,
-      endSeconds: 0.14,
+      attackSeconds: 0.007,
+      decaySeconds: 0.068,
+      fadeStartSeconds: 0.155,
+      endSeconds: 0.205,
       woodAttackGain: 0,
       subgrainOffsetsSeconds: [0, 0.086],
       subgrainGains: [1, 0.18],
     },
     choir: {
-      attackSeconds: 0.009,
-      decaySeconds: 0.052,
-      fadeStartSeconds: 0.126,
-      endSeconds: 0.155,
+      attackSeconds: 0.013,
+      decaySeconds: 0.138,
+      fadeStartSeconds: 0.28,
+      endSeconds: 0.34,
       woodAttackGain: 0,
       subgrainOffsetsSeconds: [0, 0.086],
       subgrainGains: [0.8, 0.18],
     },
   },
-  maximumEventSeconds: 0.25,
+  maximumEventSeconds: 0.44,
   woodAttackSeconds: 0.04,
   woodMinimumHz: 420,
   woodMaximumHz: 980,
   woodComponentCount: 1,
   stereoDetuneRatio: 0.00125,
-  antiAliasRatio: 0.9,
+  antiAliasRatio: MAX_ANTI_ALIAS_RATIO,
   outputGain: getChapterOutputGain("spectral-cathedral"),
 } as const satisfies SpectralCathedralSynthesisPreset;
 
@@ -147,15 +149,15 @@ export const SPECTRAL_CATHEDRAL_AUDIO_GRAPH: AudioGraphPreset = {
   dryHighPassHz: 220,
   dryHighPassQ: 0.45,
   dryHighShelfHz: 1_200,
-  dryHighShelfGainDb: -18,
-  dryLowPassHz: 1_300,
+  dryHighShelfGainDb: -9,
+  dryLowPassHz: 1_850,
   dryLowPassQ: 0.25,
   dryGain: 0.92,
   wetHighPassHz: 220,
   wetHighPassQ: 0.45,
-  wetLowPassHz: 1_050,
+  wetLowPassHz: 1_200,
   wetLowPassQ: 0.25,
-  wetGain: 0.02,
+  wetGain: 0.04,
   roomSeconds: 0.55,
   roomDecay: 1.3,
   compressor: {
@@ -185,7 +187,7 @@ export function createSpectralCathedralAudioModes(): SpectralCathedralAudioMode[
     baseFrequencyHz:
       420 +
       ((Math.sqrt(mode.eigenvalue) - minimumRoot) / (maximumRoot - minimumRoot)) * (980 - 420),
-    normalizedGain: Math.abs(mode.coefficient) / maximumCoefficient,
+    normalizedGain: (Math.abs(mode.coefficient) / maximumCoefficient) ** 0.6,
     modalAngularFrequency: SPECTRAL_CATHEDRAL_DEFINITION.waveSpeed * Math.sqrt(mode.eigenvalue),
     coefficientPhaseOffset: mode.coefficient < 0 ? Math.PI : 0,
   }));
@@ -252,6 +254,15 @@ export function evaluateSpectralCathedralModeExpression(
     displacement: Math.abs(Math.cos(phase)),
     velocity: Math.abs(Math.sin(phase)),
   };
+}
+
+export function getSpectralCathedralContactGain(
+  partial: number,
+  ageSeconds: number,
+  modalVelocity: number,
+): number {
+  if (partial === 1) return 1;
+  return Math.exp((-Math.max(0, ageSeconds) * (partial - 1)) / (0.11 - 0.05 * modalVelocity));
 }
 
 function hashUint32(value: number): number {
@@ -501,7 +512,7 @@ export function validateSpectralCathedralWorkletProgram(
     preset.stereoDetuneRatio >= 1 ||
     !Number.isFinite(preset.antiAliasRatio) ||
     preset.antiAliasRatio <= 0 ||
-    preset.antiAliasRatio > 1
+    preset.antiAliasRatio > MAX_ANTI_ALIAS_RATIO
   ) {
     throw new Error("Spectral Cathedral synthesis range is invalid");
   }
@@ -632,7 +643,10 @@ function accumulateSpectralCathedralRuntimeEvent(
       for (const partial of voice.partials) {
         const partialPosition = (partial.partial - 1) / Math.max(1, voice.partials.length - 1);
         const dampingBrightness = 1 + (brightness - 0.5) * 0.24 * partialPosition;
-        const weight = partial.baseWeight * dampingBrightness;
+        const weight =
+          partial.baseWeight *
+          dampingBrightness *
+          getSpectralCathedralContactGain(partial.partial, subgrainAgeSeconds, expressionVelocity);
         const partialStartPhase = partial.partial * startPhase;
         bellLeft +=
           weight *
@@ -645,9 +659,11 @@ function accumulateSpectralCathedralRuntimeEvent(
       }
 
       const wood =
-        event.woodAttackGain *
-        woodScale *
-        renderRuntimeWood(voice, subgrainAgeSeconds, runtime.woodAttackSeconds);
+        event.woodAttackGain > 0
+          ? event.woodAttackGain *
+            woodScale *
+            renderRuntimeWood(voice, subgrainAgeSeconds, runtime.woodAttackSeconds)
+          : 0;
       eventLeft += voice.normalizedGain * voice.panLeft * (bellLeft * envelope + wood);
       eventRight += voice.normalizedGain * voice.panRight * (bellRight * envelope + wood);
     }

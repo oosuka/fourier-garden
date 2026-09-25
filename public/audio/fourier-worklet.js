@@ -1,14 +1,14 @@
-import { besselTideProcessor } from "./chapters/bessel-tide.js?v=24";
-import { dirichletLanternsProcessor } from "./chapters/dirichlet-lanterns.js?v=24";
-import { lissajousOrchardProcessor } from "./chapters/lissajous-orchard.js?v=24";
-import { mobiusChoirProcessor } from "./chapters/mobius-choir.js?v=24";
-import { phaseTorusProcessor } from "./chapters/phase-torus.js?v=24";
-import { primeConstellationProcessor } from "./chapters/prime-constellation.js?v=24";
-import { residueBloomProcessor } from "./chapters/residue-bloom.js?v=24";
-import { riemannVeilProcessor } from "./chapters/riemann-veil.js?v=24";
-import { isFiniteNumber } from "./chapters/shared.js?v=24";
-import { spectralCathedralProcessor } from "./chapters/spectral-cathedral.js?v=24";
-import { waveletRainProcessor } from "./chapters/wavelet-rain.js?v=24";
+import { besselTideProcessor } from "./chapters/bessel-tide.js?v=30";
+import { dirichletLanternsProcessor } from "./chapters/dirichlet-lanterns.js?v=30";
+import { lissajousOrchardProcessor } from "./chapters/lissajous-orchard.js?v=30";
+import { mobiusChoirProcessor } from "./chapters/mobius-choir.js?v=30";
+import { phaseTorusProcessor } from "./chapters/phase-torus.js?v=30";
+import { primeConstellationProcessor } from "./chapters/prime-constellation.js?v=30";
+import { residueBloomProcessor } from "./chapters/residue-bloom.js?v=30";
+import { riemannVeilProcessor } from "./chapters/riemann-veil.js?v=30";
+import { isFiniteNumber } from "./chapters/shared.js?v=30";
+import { spectralCathedralProcessor } from "./chapters/spectral-cathedral.js?v=30";
+import { waveletRainProcessor } from "./chapters/wavelet-rain.js?v=30";
 
 const PROCESSORS = new Map(
   [
@@ -36,6 +36,9 @@ class FourierGardenProcessor extends AudioWorkletProcessor {
     this.sampleCursor = 0;
     this.fade = 0;
     this.hasReportedProgramError = false;
+    this.startFrame = null;
+    this.startPositionFrame = 0;
+    this.observationRequest = null;
 
     this.port.onmessage = ({ data }) => {
       if (!data || typeof data !== "object") return;
@@ -44,9 +47,30 @@ class FourierGardenProcessor extends AudioWorkletProcessor {
       }
       if (data.type === "active") {
         this.active = data.value;
+        this.startFrame = null;
+      }
+      if (
+        data.type === "observe-position" &&
+        Number.isSafeInteger(data.requestId) &&
+        data.requestId >= 0
+      ) {
+        this.observationRequest = data.requestId;
+      }
+      if (
+        data.type === "start" &&
+        isFiniteNumber(data.seconds) &&
+        data.seconds >= 0 &&
+        isFiniteNumber(data.contextTime) &&
+        data.contextTime >= 0
+      ) {
+        this.startFrame = Math.round(data.contextTime * sampleRate);
+        this.startPositionFrame = Math.round(data.seconds * sampleRate);
+        this.active = false;
+        this.chapterProcessor?.resetState(this.chapterState);
       }
       if (data.type === "seek") {
         if (isFiniteNumber(data.seconds)) {
+          this.startFrame = null;
           this.sampleCursor = Math.max(0, Math.round(data.seconds * sampleRate));
           this.chapterProcessor?.resetState(this.chapterState);
         }
@@ -61,6 +85,9 @@ class FourierGardenProcessor extends AudioWorkletProcessor {
     this.sampleCursor = 0;
     this.fade = 0;
     this.hasReportedProgramError = false;
+    this.startFrame = null;
+    this.startPositionFrame = 0;
+    this.observationRequest = null;
 
     const processor =
       program && typeof program === "object" ? PROCESSORS.get(program.kind) : undefined;
@@ -101,10 +128,25 @@ class FourierGardenProcessor extends AudioWorkletProcessor {
     const dryRight = dryOutput[1] ?? dryOutput[0];
     const wetLeft = wetOutput[0];
     const wetRight = wetOutput[1] ?? wetOutput[0];
-    const target = this.active ? 1 : 0;
-
     for (let frame = 0; frame < dryLeft.length; frame += 1) {
+      if (this.startFrame !== null) {
+        const contextFrame = currentFrame + frame;
+        if (contextFrame < this.startFrame) {
+          dryLeft[frame] = dryRight[frame] = wetLeft[frame] = wetRight[frame] = 0;
+          continue;
+        }
+        // A delayed message catches up to the reserved epoch instead of moving the epoch.
+        this.sampleCursor = this.startPositionFrame + contextFrame - this.startFrame;
+        this.startFrame = null;
+        this.active = true;
+      }
+      const target = this.active ? 1 : 0;
       this.fade += (target - this.fade) * 0.0018;
+      if (!this.active && this.fade < 0.0001) {
+        this.fade = 0;
+        dryLeft[frame] = dryRight[frame] = wetLeft[frame] = wetRight[frame] = 0;
+        continue;
+      }
       const program = this.program;
       const processor = this.chapterProcessor;
       const state = this.chapterState;
@@ -139,6 +181,19 @@ class FourierGardenProcessor extends AudioWorkletProcessor {
       }
     }
 
+    // Opt-in diagnostics run once at the block boundary, never in the sample loop.
+    if (this.observationRequest !== null) {
+      this.port.postMessage({
+        type: "position",
+        requestId: this.observationRequest,
+        contextFrame: currentFrame + dryLeft.length,
+        positionFrame: this.sampleCursor,
+        minimumPositionFrame: this.startPositionFrame,
+        sampleRate,
+        active: this.active && this.program !== null,
+      });
+      this.observationRequest = null;
+    }
     return true;
   }
 }

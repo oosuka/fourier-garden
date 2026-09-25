@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 import type { AudioEngineProgram } from "../audio/audioProgram";
+import type { MathematicalStudy } from "../experience/mathematicalStudy";
 
 export interface LocalizedText {
   en: string;
@@ -95,10 +96,22 @@ export interface EducationContent {
   poeticLayerBody: string;
 }
 
+export interface ObservationContent {
+  subject: string;
+  accent: string;
+  invitation: string;
+  question: string;
+  answer: string;
+  mapping: string;
+  background: string;
+  related: readonly { id: string; reason: string }[];
+}
+
 export interface FrameContext {
   time: number;
   delta: number;
   playing: boolean;
+  reducedMotion?: boolean;
 }
 
 export interface Viewport {
@@ -119,6 +132,7 @@ export interface PatternScene {
 export interface PatternSceneOptions {
   canvas: HTMLCanvasElement;
   seed: number;
+  poeticLayers?: boolean;
   onDeviceLost?: () => void;
 }
 
@@ -136,6 +150,8 @@ export interface PatternDefinition {
   dramaturgy: PatternDramaturgy;
   presentation: PatternPresentation;
   education: EducationContent;
+  observation: ObservationContent;
+  study: MathematicalStudy;
   audio: PatternAudioPreset;
   MathematicalDetails: ComponentType;
   validate(): void;

@@ -1,4 +1,8 @@
+import { createLissajousOrchardWorkletProgram } from "../audio/synthesis";
 import * as THREE from "three/webgpu";
+import { LISSAJOUS_ORCHARD_SCORE, getLissajousAudioMapping } from "../audio/score";
+import { createEventResonance } from "../../../rendering/analytic/eventResonance";
+import { configurePoeticObjects } from "../../../rendering/analytic/displayLayers";
 import { createImmersiveAnalyticScene } from "../../../rendering/analytic/immersiveScene";
 import {
   createAnalyticProfile,
@@ -7,7 +11,7 @@ import {
 } from "../../../rendering/analytic/primitives";
 import type { PatternSceneOptions } from "../../contracts";
 import { LISSAJOUS_RATIOS, evaluateLissajous } from "../math/model";
-const PALETTE = [0xff78c8, 0xc96aff, 0xffc66d] as const;
+const PALETTE = [0xc4ce94, 0x799873, 0xd8bd7a] as const;
 const POINTS = 384;
 function smoothstep(edge0: number, edge1: number, value: number): number {
   const unit = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
@@ -18,7 +22,10 @@ function mix(left: number, right: number, amount: number): number {
   return left + (right - left) * amount;
 }
 
-export function createLissajousOrchardContent() {
+export function createLissajousOrchardContent(
+  backend: "webgpu" | "webgl" = "webgpu",
+  poeticLayers = true,
+) {
   const group = new THREE.Group();
   const curves = LISSAJOUS_RATIOS.map((ratio, index) => {
     const positions = new Float32Array((POINTS + 1) * 3);
@@ -38,19 +45,52 @@ export function createLissajousOrchardContent() {
     );
     glow.frustumCulled = false;
     group.add(line.line, glow);
-    return { ratio, positions, line: line.line, attribute: line.attribute, glow };
+    return {
+      ratio,
+      positions,
+      line: line.line,
+      attribute: line.attribute,
+      glow,
+      layout: { scale: 1, x: 0, y: 0, z: 0 },
+    };
   });
+  const mappings = LISSAJOUS_ORCHARD_SCORE.events.map((event) =>
+    getLissajousAudioMapping(event.sourceIndex),
+  );
+  const resonance = createEventResonance(LISSAJOUS_ORCHARD_SCORE, backend, {
+    gesture: "string",
+    colors: PALETTE,
+    timbre: createLissajousOrchardWorkletProgram().timbre,
+    locate(voice, time, target) {
+      const mapping = mappings[voice.event.sourceIndex]!;
+      const curve = curves[mapping.ratioIndex]!;
+      const [x, y] = evaluateLissajous(
+        mapping.ratio[0],
+        mapping.ratio[1],
+        mapping.parameterRadians,
+        time,
+      );
+      target.set(
+        x * curve.layout.scale + curve.layout.x,
+        y * curve.layout.scale + curve.layout.y,
+        curve.layout.z,
+      );
+    },
+  });
+  group.add(resonance.group);
+  configurePoeticObjects(poeticLayers, resonance.group, ...curves.map((curve) => curve.glow));
   return {
     group,
-    update(timeSeconds: number) {
+    update(timeSeconds: number, reducedMotion = false) {
+      const stagingTime = reducedMotion ? 0 : timeSeconds;
       const activePosition = timeSeconds / (60 / 9);
       const activeCycle = Math.floor(activePosition);
       const active = ((activeCycle % 9) + 9) % 9;
       const nextActive = (active + 1) % 9;
-      const transition = smoothstep(0.78, 1, activePosition - activeCycle);
+      const transition = reducedMotion ? 0 : smoothstep(0.78, 1, activePosition - activeCycle);
       curves.forEach((curve, index) => {
-        const activeDistance = (index - active + 9) % 9;
-        const nextDistance = (index - nextActive + 9) % 9;
+        const activeDistance = reducedMotion ? index : (index - active + 9) % 9;
+        const nextDistance = reducedMotion ? index : (index - nextActive + 9) % 9;
         const activeAngle = (activeDistance / 9) * Math.PI * 2 - Math.PI / 2;
         const nextAngle = (nextDistance / 9) * Math.PI * 2 - Math.PI / 2;
         const gridX = mix(Math.cos(activeAngle) * 5.2, Math.cos(nextAngle) * 5.2, transition);
@@ -60,8 +100,13 @@ export function createLissajousOrchardContent() {
           -1.9 - (nextDistance % 3) * 0.34,
           transition,
         );
-        const heroWeight =
-          (index === active ? 1 - transition : 0) + (index === nextActive ? transition : 0);
+        const heroWeight = reducedMotion
+          ? 0
+          : (index === active ? 1 - transition : 0) + (index === nextActive ? transition : 0);
+        curve.layout.scale = mix(0.82, 4.05, heroWeight);
+        curve.layout.x = gridX * (1 - heroWeight);
+        curve.layout.y = gridY * (1 - heroWeight);
+        curve.layout.z = mix(gridZ, 0.55, heroWeight);
         for (let point = 0; point <= POINTS; point += 1) {
           const parameter = (point / POINTS) * Math.PI * 2;
           const [x, y] = evaluateLissajous(curve.ratio[0], curve.ratio[1], parameter, timeSeconds);
@@ -69,12 +114,13 @@ export function createLissajousOrchardContent() {
           const scale = mix(0.82, 4.05, heroWeight);
           curve.positions[offset] = x * scale + gridX * (1 - heroWeight);
           curve.positions[offset + 1] = y * scale + gridY * (1 - heroWeight);
-          curve.positions[offset + 2] =
-            mix(gridZ, 0.55, heroWeight) +
-            Math.sin(parameter * (2 + (index % 3)) - timeSeconds * 0.18) * 0.08 * (1 - heroWeight);
+          curve.positions[offset + 2] = curve.layout.z;
         }
         curve.attribute.needsUpdate = true;
-        const gridOpacity = 0.2 + 0.18 * Math.sin(timeSeconds * 0.7 + index) ** 2;
+        const gridOpacity =
+          reducedMotion && index === active
+            ? 0.94
+            : 0.2 + 0.18 * Math.sin(stagingTime * 0.7 + index) ** 2;
         (curve.line.material as THREE.LineBasicMaterial).opacity = mix(
           gridOpacity,
           0.94,
@@ -84,11 +130,12 @@ export function createLissajousOrchardContent() {
         glowMaterial.opacity = mix(0.2, 0.74, heroWeight);
         glowMaterial.size = mix(0.026, 0.075, heroWeight);
       });
+      resonance.update(timeSeconds, reducedMotion);
       const energy = evaluateFiveActEnergy(timeSeconds, 60);
-      group.rotation.y = Math.sin(timeSeconds * 0.041) * 0.14;
-      group.rotation.z = Math.sin(timeSeconds * 0.027 + 0.8) * 0.055;
-      group.position.y = Math.cos(timeSeconds * 0.036) * 0.12;
-      return { energy, warmth: 0.62, cameraX: Math.sin(timeSeconds * 0.03) * 0.18 };
+      group.rotation.y = Math.sin(stagingTime * 0.041) * 0.14;
+      group.rotation.z = Math.sin(stagingTime * 0.027 + 0.8) * 0.055;
+      group.position.y = Math.cos(stagingTime * 0.036) * 0.12;
+      return { energy, warmth: 0.62, cameraX: Math.sin(stagingTime * 0.03) * 0.18 };
     },
   };
 }

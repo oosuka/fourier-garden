@@ -99,7 +99,7 @@ export interface SpectralCathedralSceneOptions {
 
 export interface SpectralCathedralScene {
   readonly backend: RendererBackend;
-  update(absoluteTimeSeconds: number): void;
+  update(absoluteTimeSeconds: number, reducedMotion?: boolean): void;
   resize(viewport: Viewport): void;
   setQuality(level: QualityLevel): void;
   getStats(): SpectralCathedralSceneStats;
@@ -236,7 +236,9 @@ export function getSpectralCathedralSceneReaction(
 export function getSpectralCathedralChoreographedCameraPlacement(
   base: SpectralCathedralCameraPlacement,
   absoluteTimeSeconds: number,
+  reducedMotion = false,
 ): SpectralCathedralCameraPlacement {
+  if (reducedMotion) return base;
   const choreography = evaluateSpectralCathedralDramaturgy(absoluteTimeSeconds).camera;
   const radiusX = base.positionX - base.targetX;
   const radiusY = base.positionY - base.targetY;
@@ -271,10 +273,9 @@ function createSurface(model: SpectralCathedralDrawingModel): {
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), MATHEMATICAL_BOUND_RADIUS);
 
   const material = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(0.22, 0.46, 1),
     vertexColors: true,
     transparent: true,
-    opacity: 0.4,
+    opacity: 0.62,
     side: THREE.DoubleSide,
     depthWrite: false,
     toneMapped: false,
@@ -308,7 +309,7 @@ function createBoundary(): THREE.Line {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   const material = new THREE.LineBasicMaterial({
-    color: 0xd7f9ff,
+    color: 0xd5dfcf,
     toneMapped: false,
   });
   const boundary = new THREE.Line(geometry, material);
@@ -327,7 +328,7 @@ function createNodalLines(model: SpectralCathedralDrawingModel): {
   geometry.setDrawRange(0, model.nodalSegmentCount * 2);
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), MATHEMATICAL_BOUND_RADIUS);
   const material = new THREE.LineBasicMaterial({
-    color: 0xffc875,
+    color: 0xdbca9f,
     toneMapped: false,
   });
   const lines = new THREE.LineSegments(geometry, material);
@@ -362,7 +363,7 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
     this.renderer = renderer;
     this.backend = backend;
     orientSpectralCathedralCamera(this.camera);
-    this.scene.background = new THREE.Color(0x01030a);
+    this.scene.background = new THREE.Color(0x060a08);
     this.environmentLayer = poeticLayers
       ? new CinematicEnvironmentLayer({
           backend,
@@ -373,15 +374,13 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
             "ultra",
             getSpectralCathedralPoeticQuality("ultra", backend).particleCount,
           ),
-          palette: [0x62eaff, 0xb678ff, 0xffb56e],
+          palette: [0xb6cec3, 0x667e78, 0xd8cd9f],
           extent: { x: 24, y: 16, z: 24 },
         })
       : null;
     this.poeticLayer = poeticLayers
       ? new SpectralCathedralPoeticLayer(createSpectralCathedralPoeticModel(seed), backend)
       : null;
-    this.poeticLayer?.group.scale.set(1.52, 1.52, 2.08);
-    if (this.poeticLayer) this.poeticLayer.group.position.z = -0.08;
     if (this.environmentLayer) this.scene.add(this.environmentLayer.group);
     if (this.poeticLayer) this.scene.add(this.poeticLayer.group);
     this.scene.add(this.surface.mesh, this.nodalLines.lines, this.boundary);
@@ -398,7 +397,7 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
     this.postProcessor.setQuality(this.quality);
   }
 
-  update(absoluteTimeSeconds: number): void {
+  update(absoluteTimeSeconds: number, reducedMotion = false): void {
     if (this.disposed) {
       throw new Error("Spectral Cathedral scene has been disposed");
     }
@@ -407,7 +406,7 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
     this.surface.colorAttribute.needsUpdate = true;
     this.nodalLines.positionAttribute.needsUpdate = true;
     this.nodalLines.lines.geometry.setDrawRange(0, this.drawingModel.nodalSegmentCount * 2);
-    const visualFrame = this.poeticLayer?.update(absoluteTimeSeconds) ?? null;
+    const visualFrame = this.poeticLayer?.update(absoluteTimeSeconds, reducedMotion) ?? null;
     const dramaturgy =
       visualFrame?.dramaturgy ?? evaluateSpectralCathedralDramaturgy(absoluteTimeSeconds);
     const reaction = visualFrame ? getSpectralCathedralSceneReaction(visualFrame) : null;
@@ -415,8 +414,9 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
       const placement = getSpectralCathedralChoreographedCameraPlacement(
         this.cameraBasePlacement,
         absoluteTimeSeconds,
+        reducedMotion,
       );
-      const cameraDollyScale = reaction?.cameraDollyScale ?? 1;
+      const cameraDollyScale = reducedMotion ? 1 : (reaction?.cameraDollyScale ?? 1);
       this.camera.position.set(
         placement.targetX + (placement.positionX - placement.targetX) * cameraDollyScale,
         placement.targetY + (placement.positionY - placement.targetY) * cameraDollyScale,
@@ -425,11 +425,12 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
       this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     }
     this.environmentLayer?.update(
-      absoluteTimeSeconds,
+      reducedMotion ? 0 : absoluteTimeSeconds,
       reaction?.environmentEnergy ?? dramaturgy.visualEnergy,
       reaction?.warmth ??
         (dramaturgy.sectionId === "afterglow" ? 0.8 : dramaturgy.audioEnergy * 0.5),
       this.camera,
+      reducedMotion,
     );
     this.postProcessor?.setEnergy(reaction?.bloomEnergy ?? dramaturgy.visualEnergy);
     if (this.postProcessor) this.postProcessor.render();
@@ -458,7 +459,8 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
     this.camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
     this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     this.camera.updateProjectionMatrix();
-    this.environmentLayer?.resize(aspect);
+    this.environmentLayer?.resize(aspect, viewport.pixelRatio);
+    this.poeticLayer?.setPixelRatio(viewport.pixelRatio);
     if (this.postProcessor) {
       this.postProcessor.resize(viewport.width, viewport.height, viewport.pixelRatio);
     } else {
@@ -514,41 +516,69 @@ class SpectralCathedralStrictScene implements SpectralCathedralScene {
   }
 }
 
-export async function createSpectralCathedralScene({
-  canvas,
-  seed = 0,
-  poeticLayers = true,
-  onDeviceLost,
-  preserveDrawingBuffer,
-}: SpectralCathedralSceneOptions): Promise<SpectralCathedralScene> {
-  const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
-  const backend = selectRendererBackend(forceWebGL, "gpu" in navigator);
-
+async function createSpectralCathedralSceneForBackend(
+  {
+    canvas,
+    seed = 0,
+    poeticLayers = true,
+    onDeviceLost,
+    preserveDrawingBuffer,
+  }: SpectralCathedralSceneOptions,
+  backend: RendererBackend,
+): Promise<SpectralCathedralScene> {
+  let renderer: SceneRenderer;
   if (backend === "webgl") {
     const { WebGLRenderer } = await import("three");
-    const renderer = new WebGLRenderer(
+    renderer = new WebGLRenderer(
       getSpectralCathedralWebGLRendererParameters({
         canvas,
         preserveDrawingBuffer,
       }),
     );
-    const scene = new SpectralCathedralStrictScene(renderer, backend, seed, poeticLayers);
-    await scene.initializePostProcessor();
-    return scene;
+  } else {
+    const webgpu = new THREE.WebGPURenderer({
+      canvas,
+      antialias: true,
+      alpha: false,
+    });
+    const reportDeviceLost = webgpu.onDeviceLost.bind(webgpu);
+    webgpu.onDeviceLost = (info) => {
+      reportDeviceLost(info);
+      onDeviceLost?.();
+    };
+    renderer = webgpu;
   }
 
-  const renderer = new THREE.WebGPURenderer({
-    canvas,
-    antialias: true,
-    alpha: false,
-  });
-  const reportDeviceLost = renderer.onDeviceLost.bind(renderer);
-  renderer.onDeviceLost = (info) => {
-    reportDeviceLost(info);
-    onDeviceLost?.();
-  };
-  await renderer.init();
-  const scene = new SpectralCathedralStrictScene(renderer, backend, seed, poeticLayers);
-  await scene.initializePostProcessor();
+  let scene: SpectralCathedralStrictScene | null = null;
+  try {
+    if (backend === "webgpu") await (renderer as THREE.WebGPURenderer).init();
+    scene = new SpectralCathedralStrictScene(renderer, backend, seed, poeticLayers);
+    await scene.initializePostProcessor();
+    return scene;
+  } catch (error) {
+    if (scene) scene.dispose();
+    else renderer.dispose();
+    throw error;
+  }
+}
+
+export async function createSpectralCathedralScene(
+  options: SpectralCathedralSceneOptions,
+): Promise<SpectralCathedralScene> {
+  const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
+  const requestedBackend = selectRendererBackend(forceWebGL, "gpu" in navigator);
+  options.canvas.dataset.rendererBackend = requestedBackend;
+
+  try {
+    const scene = await createSpectralCathedralSceneForBackend(options, requestedBackend);
+    options.canvas.dataset.rendererBackend = requestedBackend;
+    return scene;
+  } catch (error) {
+    if (requestedBackend !== "webgpu") throw error;
+    console.warn("WebGPU Spectral Cathedral initialization failed; falling back to WebGL.", error);
+  }
+
+  const scene = await createSpectralCathedralSceneForBackend(options, "webgl");
+  options.canvas.dataset.rendererBackend = "webgl";
   return scene;
 }

@@ -1,0 +1,209 @@
+{
+  "generatedAtUtc": "2026-09-21T16:18:23.518Z",
+  "status": "partial-environment-lock",
+  "conditions": {
+    "browser": "Chrome",
+    "cssViewport": "1440x900",
+    "devicePixelRatio": 1,
+    "canvasRaster": "1440x900",
+    "quality": "high",
+    "seed": "qa",
+    "postProcessing": "default",
+    "motion": "full",
+    "audio": "silent entry, muted, performance clock",
+    "captureDurationSeconds": 60,
+    "physicalAudioLatencyMeasured": false,
+    "visualPngsRetained": false
+  },
+  "cases": [
+    {
+      "id": "T06-G",
+      "chapter": "lissajous-orchard",
+      "renderer": "webgpu",
+      "observation": "10+ minutes were observed; foreground status near the end was not verified until a later case discovered macOS was locked after idle. Repeat the full 10-minute foreground observation after unlock.",
+      "pageStartUtcApprox": "2026-09-21T15:42:04Z",
+      "finalCaptureUtc": "2026-09-21T15:53:02.816Z",
+      "finalQaSeconds": 624.494,
+      "operations": [
+        {
+          "action": "pause-resume",
+          "before": 145.527,
+          "afterPause": 146.044,
+          "afterResume": 147.803
+        },
+        {
+          "action": "seek-forward-cycle-boundary",
+          "from": 180.802,
+          "target": 599.8,
+          "crossedBoundary": 600.172,
+          "boundary": 600
+        },
+        { "action": "reverse-seek", "from": 600.172, "target": 150, "settled": 151.992 }
+      ],
+      "captures": {
+        "startFile": "c11-browser-captures/T06-G-webgpu-start.json",
+        "start": {
+          "fps": 59.6831,
+          "cpuSubmissionP95Ms": 6.4,
+          "frameIntervalP95Ms": 17.6,
+          "maxFrameIntervalMs": 50.1,
+          "over50Ms": 1,
+          "outlierAtSeconds": 2.1167
+        },
+        "endFile": "c11-browser-captures/T06-G-webgpu-end.json",
+        "end": {
+          "fps": 59.2165,
+          "cpuSubmissionP95Ms": 6.2,
+          "frameIntervalP95Ms": 18.2,
+          "maxFrameIntervalMs": 250.1,
+          "over50Ms": 4,
+          "slowFramesOmitted": 0
+        }
+      },
+      "visualObservation": "The large Lissajous path, changing secondary closed curves, and local glowing point were visible in early, middle, and late frames.",
+      "limits": "Silent playback; no perceptual audio assessment. The final capture includes 50ms+ intervals and is retained without filtering. Mac lock status during this case was not checked contemporaneously."
+    },
+    {
+      "id": "T06-L",
+      "chapter": "lissajous-orchard",
+      "renderer": "webgl",
+      "observation": "About 10 minutes elapsed, but foreground status near the end was not verified until a later case discovered macOS was locked after idle. Repeat the full 10-minute foreground observation after unlock.",
+      "pageEntryObservedUtc": "2026-09-21T15:54:17.598Z",
+      "finalCaptureUtc": "2026-09-21T16:04:25.361Z",
+      "finalQaSeconds": 626.032,
+      "operations": [
+        {
+          "action": "pause-resume",
+          "before": 98.078,
+          "afterPause": 98.598,
+          "afterResume": 100.273
+        },
+        {
+          "action": "seek-forward-cycle-boundary",
+          "from": 100.273,
+          "target": 599.8,
+          "crossedBoundary": 600.225,
+          "boundary": 600
+        },
+        { "action": "reverse-seek", "from": 600.225, "target": 120, "settled": 122.028 }
+      ],
+      "captures": {
+        "startFile": "c11-browser-captures/T06-L-webgl-start.json",
+        "start": {
+          "fps": 59.8691,
+          "cpuSubmissionP95Ms": 5.2,
+          "frameIntervalP95Ms": 18.3,
+          "maxFrameIntervalMs": 35.2,
+          "over50Ms": 0
+        },
+        "endFile": "c11-browser-captures/T06-L-webgl-end.json",
+        "end": {
+          "fps": 59.3687,
+          "cpuSubmissionP95Ms": 5.3,
+          "frameIntervalP95Ms": 18.2,
+          "maxFrameIntervalMs": 165.5,
+          "over50Ms": 5,
+          "slowFramesOmitted": 0
+        }
+      },
+      "visualObservation": "Curve positions and local point changed between early, middle, and late frames; the renderer continued drawing after seek and resume.",
+      "limits": "Silent playback; no perceptual audio assessment. Five slow intervals cluster around elapsed seconds 55.6-56.7 of the final capture. Lock relation is plausible but not proven."
+    },
+    {
+      "id": "T07-G",
+      "chapter": "dirichlet-lanterns",
+      "renderer": "webgpu",
+      "observation": "A 10+ minute session was observed, but the final phase may have been behind the macOS lock screen. Do not accept as a valid foreground completion until repeated after unlock.",
+      "pageEntryObservedUtc": "2026-09-21T16:05:10.647Z",
+      "finalCaptureUtc": "2026-09-21T16:15:30.101Z",
+      "finalQaSeconds": 644.493,
+      "operations": [
+        { "action": "pause-resume", "before": 92.739, "afterPause": 93.047, "afterResume": 94.943 },
+        {
+          "action": "seek-forward-cycle-boundary",
+          "from": 94.943,
+          "target": 599.8,
+          "crossedBoundary": 600.486,
+          "boundary": 600
+        },
+        { "action": "reverse-seek", "from": 600.486, "target": 120, "settled": 121.809 }
+      ],
+      "captures": {
+        "startFile": "c11-browser-captures/T07-G-webgpu-start.json",
+        "start": {
+          "fps": 59.7678,
+          "cpuSubmissionP95Ms": 7.3,
+          "frameIntervalP95Ms": 18.3,
+          "maxFrameIntervalMs": 51.3,
+          "over50Ms": 1,
+          "outlierAtSeconds": 2.3005
+        },
+        "endFile": "c11-browser-captures/T07-G-webgpu-end.json",
+        "end": {
+          "fps": 49.8,
+          "cpuSubmissionP95Ms": 22.3,
+          "frameIntervalP95Ms": 33.4,
+          "maxFrameIntervalMs": 600,
+          "over50Ms": 65,
+          "slowFramesOmitted": 33
+        }
+      },
+      "visualObservation": "The Dirichlet wave shape, local peaks, and envelope remained visible and changed across the sampled states.",
+      "environmentFinding": "Immediately after the final capture, CUA reported apps=[], Mac locked, and automatic unlock unavailable. That capture contained a clustered stall, so the lock is a plausible environmental cause, not a proven attribution. Preserve the raw report; no pass claim.",
+      "limits": "Silent playback; no perceptual audio assessment. This is the only case where the lock was explicitly detected, so earlier end-capture hiccups must also be treated as potentially contaminated until rerun."
+    }
+  ],
+  "supplementalObservation": {
+    "id": "T06-L-unlocked-2026-09-22",
+    "file": "c11-browser-captures/T06-L-webgl-unlocked-observation-2026-09-22.json",
+    "status": "supplemental-evidence",
+    "summary": "画面ロックなしで約608秒の前景観察、絶対150秒へのseek後の再生、開始／終端60秒を取得した。CSS1348×813・DPR2で、開始captureは50ms超1回、終端captureは0回。計画の1440×900 CSS／DPR1条件ではないためT06-L合格には拡張しない。"
+  },
+  "targetViewportRerun": {
+    "id": "T06-target-viewport-rerun-2026-09-22",
+    "status": "measured-not-passed",
+    "conditions": "1440x900 CSS, DPR1, 1440x900 raster, high, seed=qa, default post-processing, silent entry, performance clock; caffeinate -dims was active during the foreground window.",
+    "foregroundObservation": "T06-L and T06-G each continued for about 10 minutes after seeking to absolute 150 seconds. No lock was observed during these runs. Pause/resume was not repeated in this rerun; the earlier raw cases retain that operation.",
+    "cases": [
+      {
+        "id": "T06-L",
+        "renderer": "webgl",
+        "startFile": "c11-browser-captures/T06-L-webgl-start-target-2026-09-22.json",
+        "endFile": "c11-browser-captures/T06-L-webgl-end-target-2026-09-22.json",
+        "start": {
+          "averageFps": 59.8995,
+          "frameIntervalP95Ms": 17.7,
+          "maxFrameIntervalMs": 51,
+          "over50Ms": 1
+        },
+        "end": {
+          "averageFps": 59.8832,
+          "frameIntervalP95Ms": 18.3,
+          "maxFrameIntervalMs": 50.1,
+          "over50Ms": 1
+        },
+        "limits": "Both windows contain an interval over 50ms; retain as target-condition evidence but do not promote T06-L to pass."
+      },
+      {
+        "id": "T06-G",
+        "renderer": "webgpu",
+        "startFile": "c11-browser-captures/T06-G-webgpu-start-target-2026-09-22.json",
+        "endFile": "c11-browser-captures/T06-G-webgpu-end-target-2026-09-22.json",
+        "start": {
+          "averageFps": 59.7666,
+          "frameIntervalP95Ms": 18.6,
+          "maxFrameIntervalMs": 66.2,
+          "over50Ms": 2
+        },
+        "end": {
+          "averageFps": 59.8655,
+          "frameIntervalP95Ms": 18.7,
+          "maxFrameIntervalMs": 52.1,
+          "over50Ms": 2
+        },
+        "limits": "Both windows contain intervals over 50ms; retain as target-condition evidence but do not promote T06-G to pass."
+      }
+    ]
+  },
+  "next": "Treat the target-viewport T06 rerun as measured but not passed. Diagnose the repeatable 50ms-class frame stalls without filtering the raw captures, then repeat T06-G/L with pause-resume included. Continue T07-G/L through T10-L, P03-L, and L02 afterward."
+}

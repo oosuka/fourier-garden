@@ -116,7 +116,7 @@ describe("Spectral Cathedral drawing model", () => {
 
     expect(zero.r + zero.g + zero.b).toBeLessThan(0.1);
     expect(positive.g).toBeGreaterThan(negative.g);
-    expect(negative.b).toBeGreaterThan(negative.r);
+    expect(negative.r).toBeGreaterThan(positive.r);
 
     for (const value of [-1, -0.5, 0, 0.5, 1]) {
       expect(

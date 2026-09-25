@@ -223,6 +223,8 @@ describe("Residue Bloom musical score", () => {
     );
 
     expect(previousCycleEvent?.event.absoluteTimeSeconds).toBeCloseTo(expectedTime, 12);
+    expect(previousCycleEvent?.event.absoluteStep).toBe(767);
+    expect(evaluateMusicalScore(program, 143.99).event.absoluteStep).toBe(767);
     expect(previousCycleEvent?.event.normalizedPhasorX).toBeCloseTo(
       expectedEndpoint.x / program.phasorMapping.amplitudeBound,
       12,

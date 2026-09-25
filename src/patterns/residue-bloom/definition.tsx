@@ -1,3 +1,6 @@
+import { createPatternQualityContract } from "../qualityContract";
+import { observation } from "./observation";
+import { study } from "./study";
 import {
   RESIDUE_BLOOM_SCORE_DEFINITION,
   buildMusicalScoreProgram,
@@ -39,13 +42,13 @@ export const residueBloomPattern: ResidueBloomPatternDefinition = {
     composition: "phasor-chain-waveform",
     motion: "unidirectional-rotation-projection",
     space: "split-complex-plane-history",
-    palette: "cyan-violet-gold",
-    timbre: "rounded-harmonic-piko",
+    palette: "gold-thread-sage-ivory",
+    timbre: "silken-harmonic-contact",
     rhythm: "ghosted-four-four-sixteenths",
     time: "absolute-phasor-long-form",
     audio: {
       onsetPattern: "constant-sixteenth-with-ghost-rotation",
-      articulation: "rounded-harmonic-grain",
+      articulation: "overlapping-residue-contact",
       pitchMapping: "residue-harmonics-on-alternating-carriers",
       spatialGesture: "phasor-position-pan",
       wetCharacter: "section-bloom-room",
@@ -55,13 +58,7 @@ export const residueBloomPattern: ResidueBloomPatternDefinition = {
     cycleSeconds: 144,
     expressiveAxes: ["density", "dynamics", "timbre", "space", "motion", "color"],
     localMathMapping: true,
-    qualityContract: {
-      comparableLoudness: true,
-      decayingSonicContinuity: true,
-      nonuniformVisualField: true,
-      localVisualMotion: true,
-      humanReviewRequired: true,
-    },
+    qualityContract: createPatternQualityContract(),
     sections: [
       {
         id: "intro",
@@ -150,14 +147,19 @@ export const residueBloomPattern: ResidueBloomPatternDefinition = {
     initialVolume: 0.35,
     roomSeconds: 0.82,
     sonificationLatex:
-      "w_k=\\frac{A_k}{(k+1)^{3.2}},\\quad " +
-      "f_{k,j}^{L/R}=n_k\\nu_j(1\\mp d),\\quad " +
-      "g_{\\nu_j}^{L/R}(\\tau)=CG_eE_e(\\tau)" +
-      "\\sum_{k\\in K(F_s)}w_kP_k^{L/R}" +
-      "\\sin(2\\pi f_{k,j}^{L/R}\\tau)",
+      "\\begin{aligned}" +
+      "w_k&=\\frac{A_k}{(k+1)^{2.2}}\\\\[4pt]" +
+      "f_{k,e}^{\\sigma}&=n_k\\nu_e(1+\\sigma d)\\\\[4pt]" +
+      "a_{k,e}^{\\sigma}(\\tau)&=w_kT_{k,e}(\\tau)P_{k,e}^{\\sigma}|H_{k,e}^{\\sigma}|\\\\[4pt]" +
+      "\\theta_{k,e}^{\\sigma}(\\tau)&=2\\pi f_{k,e}^{\\sigma}\\tau+\\arg H_{k,e}^{\\sigma}\\\\[4pt]" +
+      "s_e^{\\sigma}(\\tau)&=C_eG_eE_e(\\tau)\\\\" +
+      "&\\quad\\cdot\\sum_{k\\in K_e(F_s)}a_{k,e}^{\\sigma}(\\tau)\\sin\\theta_{k,e}^{\\sigma}(\\tau)" +
+      "\\end{aligned}",
     score: residueBloomScore,
     createProgram: () => createResidueBloomAudioProgram(residueBloomScore),
   },
+  observation,
+  study,
   education: {
     gentleTitle: "見えない音の粒が、ひとつの花になる。",
     gentleBody:
@@ -168,9 +170,9 @@ export const residueBloomPattern: ResidueBloomPatternDefinition = {
     scopeNotice:
       "本章は既知の解析係数から有限フーリエ級数を合成する作品です。未知の信号をDFTで解析する処理や、FFTアルゴリズムの計算過程は表示していません。",
     sonificationBody:
-      "音声は級数そのものを55 Hzで無加工再生したものではありません。音楽形式は48小節で反復しますが、定位・明るさ・アクセント・減衰は各周回の絶対イベント時刻における z(0.31tₑ) から評価します。フェーザ半径はアクセントと減衰へ使い、残響量は区間プロファイルから得ます。同じ調波指数を440 / 495 Hzへ移し、Aₖ/(k+1)^3.2の知覚重み、左右デチューン後のナイキスト制約、equal-power定位を適用します。強い上側調波と長い残響を抑えて全章共通の丸い中域ピコへ寄せますが、13調波の支持と係数由来順序は維持します。",
+      "音声は級数を55 Hzで無加工再生したものではありません。各発音の絶対イベント時刻で z(0.31tₑ) から定位・明るさ・強さ・減衰を導き、48小節の反復でも数学時刻は続きます。残響量は区間プロファイルから決まります。同じ調波指数を440 / 495 Hzへ移し、知覚重みwと0.45 Fs未満の帯域制約を適用します。270〜340 msの有限尾が重なり、高次調波の接触は45 msで先に減衰します。式は一つの発音のdry信号で、τは発音後の秒数、σは左−1／右+1。Eは有限包絡、Tは接触量、Pは定位利得、Hは包絡前の1極定常応答、Gは発音利得、Cは校正と調波重みの正規化です。Kは帯域内の調波集合で、重なる発音を足した後にEQ・残響・出力制御を通します。",
     poeticLayerBody:
-      "粒子、光の膜、星雲、ブルーム、二次トレイルに加え、発音時の調波コロナと履歴パルスも共有イベントスコアへ反応する詩的な造形です。コロナとパルスは厳密な円・主波形と同じ点へ重なる別オブジェクトで、係数、位相、半径、終点、主波形の座標を変形しません。",
+      "粒子、光の膜、星雲、ブルーム、二次トレイルに加え、発音時の調波コロナと履歴パルスも共有イベントスコアへ反応する詩的な造形です。コロナは音と同じ有限包絡・接触量へ従い、履歴パルスには別に短い残光を加えます。厳密な円・主波形と同じ点へ重なる別オブジェクトで、係数、位相、半径、終点、主波形の座標を変形しません。",
   },
   MathematicalDetails: ResidueBloomMathematicalDetails,
   validate() {

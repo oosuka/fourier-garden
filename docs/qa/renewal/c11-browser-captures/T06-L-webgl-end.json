@@ -1,0 +1,62 @@
+{
+  "chapter": "lissajous-orchard",
+  "renderer": "webgl",
+  "width": 1440,
+  "height": 900,
+  "pixelRatio": 1,
+  "rasterWidth": 1440,
+  "rasterHeight": 900,
+  "quality": "high",
+  "seed": "qa",
+  "postProcessing": "default",
+  "audioSampleRateHz": null,
+  "clock": "performance",
+  "mutedAtStart": true,
+  "volumeAtStart": 0.35,
+  "playingAtStart": true,
+  "motionAtStart": "full",
+  "physicalLatencyMeasured": false,
+  "status": "complete",
+  "reason": null,
+  "durationSeconds": 60.014800000000044,
+  "frames": 3563,
+  "averageFps": 59.3686890566993,
+  "cpuSubmissionP95Ms": 5.300000011920929,
+  "frameIntervalP95Ms": 18.20000000006985,
+  "maxFrameIntervalMs": 165.5,
+  "intervalsOver50Ms": 5,
+  "slowFrames": [
+    {
+      "elapsedSeconds": 55.615,
+      "frameIntervalMs": 67.29999999993015,
+      "cpuSubmissionMs": 6.800000011920929
+    },
+    {
+      "elapsedSeconds": 55.980400000000024,
+      "frameIntervalMs": 132.09999999997672,
+      "cpuSubmissionMs": 17.400000005960464
+    },
+    {
+      "elapsedSeconds": 56.065,
+      "frameIntervalMs": 84.59999999997672,
+      "cpuSubmissionMs": 6.300000011920929
+    },
+    {
+      "elapsedSeconds": 56.497100000000096,
+      "frameIntervalMs": 165.5,
+      "cpuSubmissionMs": 7.0999999940395355
+    },
+    {
+      "elapsedSeconds": 56.66330000000005,
+      "frameIntervalMs": 98.40000000002328,
+      "cpuSubmissionMs": 2.2999999821186066
+    }
+  ],
+  "slowFramesOmitted": 0,
+  "synchronizationSamples": 0,
+  "visualLeadP95Ms": null,
+  "visualLeadMinMs": null,
+  "visualLeadMaxMs": null,
+  "firstScoreSeconds": 550.794599999994,
+  "lastScoreSeconds": 610.7925999999941
+}

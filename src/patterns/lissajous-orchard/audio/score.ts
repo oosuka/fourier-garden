@@ -78,15 +78,15 @@ export const LISSAJOUS_ORCHARD_SCORE: PikoScoreProgram = createEnergyBalancedPik
         },
         pan: (index) => {
           const mapping = getLissajousAudioMapping(index);
-          const [x, y] = mapping.point;
-          return Math.max(-0.88, Math.min(0.88, x * 0.7 + y * 0.18));
+          return Math.sin(mapping.ratio[1] * mapping.parameterRadians) * 0.12;
         },
-        panMotionDepth: (index) => 0.08 + 0.1 * motionAt(index).motionScale,
-        panMotionRateRadiansPerSecond: (index) => {
-          const [a, b] = getLissajousAudioMapping(index).ratio;
-          return a / b;
+        panMotionDepth: (index) => 0.6 + 0.1 * motionAt(index).motionScale,
+        panMotionPhaseRadians: (index) => {
+          const mapping = getLissajousAudioMapping(index);
+          return mapping.ratio[0] * mapping.parameterRadians + Math.PI / 2;
         },
-        panMotionPhaseRadians: (index) => getLissajousPhase(index * (60 / eventCount)),
+        panPhaseModulationDepth: () => Math.PI / 3,
+        panPhaseModulationRate: () => 0.025,
         wet: (index) => {
           const [, y] = getLissajousAudioMapping(index).point;
           return (0.055 + (y + 1) * 0.025) * motionAt(index).spaceScale;

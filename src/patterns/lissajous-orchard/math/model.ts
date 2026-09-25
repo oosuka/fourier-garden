@@ -27,5 +27,14 @@ export function evaluateLissajous(
   parameter: number,
   timeSeconds: number,
 ): readonly [number, number] {
-  return [Math.sin(a * parameter + getLissajousPhase(timeSeconds)), Math.sin(b * parameter)];
+  return evaluateLissajousAtPhase(a, b, parameter, getLissajousPhase(timeSeconds));
+}
+
+export function evaluateLissajousAtPhase(
+  a: number,
+  b: number,
+  parameter: number,
+  phase: number,
+): readonly [number, number] {
+  return [Math.sin(a * parameter + phase), Math.sin(b * parameter)];
 }

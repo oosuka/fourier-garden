@@ -127,17 +127,18 @@ export function RiemannVeilDetails() {
         },
         {
           id: "riemann-amplitude",
-          quantity: "振幅1/n²",
+          quantity: "数学係数1/n²",
           status: "保持",
-          visual: "四枚の有限曲線の細部",
-          audio: "主音と応答声部の強度比",
+          visual: "四枚の有限曲線の数学的係数",
+          audio:
+            "数学gain=1/n²。主音gainは0.20 n^-0.7、応答gainは0.07+0.14/√n。間隔補正・幕別エネルギー・長周期アクセント・章内出力校正を適用",
         },
         {
           id: "riemann-pitch",
-          quantity: "項番号nとn²位相",
+          quantity: "項番号n・二次位相n²",
           status: "圧縮",
           visual: "絶対時刻0.037n²t",
-          audio: "460–1,020 Hzへ単調配置",
+          audio: "主音ν_n=460–700 Hz、応答は0.875倍・0.75倍で380–612.5 Hz。いずれも変調前の基準値",
         },
         {
           id: "riemann-poetic",

@@ -1,0 +1,42 @@
+{
+  "chapter": "prime-constellation",
+  "renderer": "webgl",
+  "width": 3840,
+  "height": 2160,
+  "pixelRatio": 1,
+  "rasterWidth": 3840,
+  "rasterHeight": 2160,
+  "quality": "high",
+  "seed": "qa",
+  "postProcessing": "default",
+  "audioSampleRateHz": 48000,
+  "clock": "audio-presentation-estimate",
+  "mutedAtStart": false,
+  "volumeAtStart": 0.35,
+  "playingAtStart": true,
+  "motionAtStart": "full",
+  "physicalLatencyMeasured": false,
+  "status": "complete",
+  "reason": null,
+  "durationSeconds": 60.0002,
+  "frames": 3596,
+  "averageFps": 59.93313355622148,
+  "cpuSubmissionP95Ms": 2.6000000000931323,
+  "frameIntervalP95Ms": 18.60000000000582,
+  "maxFrameIntervalMs": 50.10000000000582,
+  "intervalsOver50Ms": 1,
+  "slowFrames": [
+    {
+      "elapsedSeconds": 55.3003,
+      "frameIntervalMs": 50.10000000000582,
+      "cpuSubmissionMs": 0.7999999998137355
+    }
+  ],
+  "slowFramesOmitted": 0,
+  "synchronizationSamples": 3596,
+  "visualLeadP95Ms": 2.6333333331649555,
+  "visualLeadMinMs": -3.5293333334891486,
+  "visualLeadMaxMs": -0.3000000002799652,
+  "firstScoreSeconds": 31.790351666666666,
+  "lastScoreSeconds": 91.79094866666675
+}

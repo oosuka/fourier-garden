@@ -22,6 +22,54 @@ function makeLayer(
 }
 
 describe("CinematicEnvironmentLayer", () => {
+  it.each(["webgpu", "webgl"] as const)(
+    "keeps subpixel dust energy per CSS area stable across DPR in %s",
+    (backend) => {
+      const layer = new CinematicEnvironmentLayer({
+        backend,
+        chapter: "residue-bloom",
+        seed: 41_041,
+        maximumParticleCount: 256,
+        palette: [0xcac69b, 0x778c72, 0xe2c58d],
+        extent: { x: 46, y: 27, z: 22 },
+      });
+      const buffers = layer.getParticleBuffers();
+      const particleMaterials = layer.group.children.slice(0, 3).map((object) => {
+        if (!(object instanceof THREE.Points) || Array.isArray(object.material))
+          throw new Error("Expected one material per particle band");
+        return object.material;
+      });
+      layer.resize(16 / 10, 2);
+      layer.update(127.318, 0.62, 0.5);
+      const retinaEnergy = particleMaterials.map((material) => material.opacity / 4);
+      layer.resize(16 / 10, 1);
+      layer.update(127.318, 0.62, 0.5);
+      particleMaterials.forEach((material, index) =>
+        expect(material.opacity).toBeCloseTo(retinaEnergy[index]!, 12),
+      );
+      expect(layer.getParticleBuffers()).toBe(buffers);
+      layer.dispose();
+    },
+  );
+
+  it("fixes background geometry in reduced motion while local excitation changes", () => {
+    const layer = makeLayer("residue-bloom", 256);
+    const transforms = () => {
+      const values: number[] = [];
+      layer.group.updateMatrixWorld(true);
+      layer.group.traverse((object) => values.push(...object.matrixWorld.elements));
+      return values;
+    };
+    layer.update(0.2, 0.8, 0.1, undefined, true);
+    const first = transforms();
+    const particles = layer.getParticleBuffers().map((buffer) => buffer.slice());
+    layer.update(19.4, 0.2, 0.9, undefined, true);
+    expect(transforms()).toEqual(first);
+    for (const [index, buffer] of layer.getParticleBuffers().entries())
+      expect(buffer).toEqual(particles[index]);
+    layer.dispose();
+  });
+
   it("uses finer and dimmer depth particles in WebGL2", () => {
     for (const band of [0, 1, 2] as const) {
       const webgpu = getCinematicEnvironmentParticleStyle("webgpu", band);

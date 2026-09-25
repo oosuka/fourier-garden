@@ -131,7 +131,7 @@ export function PhaseTorusDetails() {
           quantity: "組合せ速度|m+n√2|",
           status: "圧縮",
           visual: "文字位相の厳密な進行",
-          audio: "440–960 Hzへ単調写像",
+          audio: "f=430+390 min(1,|m+n√2|/7) Hzへ単調写像",
         },
         {
           id: "torus-poetic",

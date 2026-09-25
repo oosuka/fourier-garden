@@ -1,4 +1,4 @@
-import type * as THREE from "three";
+import * as THREE from "three/webgpu";
 import { describe, expect, it } from "vitest";
 
 import { createBesselTideContent } from "./bessel-tide/scene/scene";
@@ -10,9 +10,24 @@ import { createRiemannVeilContent } from "./riemann-veil/scene/scene";
 import { WAVELET_RAIN_SCORE } from "./wavelet-rain/audio/score";
 import { createWaveletRainContent, getWaveletRainVisualEvent } from "./wavelet-rain/scene/scene";
 
+function getRelativeStrokePositions(strokes: THREE.LineSegments, anchors: Float32Array): number[] {
+  const positions = strokes.geometry.getAttribute("position").array as Float32Array;
+  const activeVertexCount = strokes.geometry.drawRange.count;
+  const positionsPerVoice = 32 * 2 * 3;
+  return Array.from({ length: activeVertexCount * 3 }, (_, offset) => {
+    const voiceIndex = Math.floor(offset / positionsPerVoice);
+    const axis = offset % 3;
+    return positions[offset]! - anchors[voiceIndex * 3 + axis]!;
+  });
+}
+
 function getPositions(object: THREE.Object3D): Float32Array {
   const geometry = (object as THREE.Line).geometry;
   return geometry.getAttribute("position").array as Float32Array;
+}
+
+function getSurface(group: THREE.Group): THREE.Object3D {
+  return group.children.find((object) => (object as THREE.Mesh).isMesh)!;
 }
 
 function getMotionSignature(group: THREE.Group): number[] {
@@ -37,6 +52,100 @@ function getMotionSignature(group: THREE.Group): number[] {
 }
 
 describe("new chapter scene continuity", () => {
+  it.each([
+    ["Prime", createPrimeConstellationContent, 3],
+    ["Lissajous", createLissajousOrchardContent, 9],
+    ["Dirichlet", createDirichletLanternsContent, 6],
+    ["Haar", createWaveletRainContent, 66],
+    ["Riemann", createRiemannVeilContent, 5],
+    ["Torus", createPhaseTorusContent, 5],
+  ])(
+    "shows only the mathematical objects in the %s comparison view",
+    (_, createContent, expected) => {
+      const content = createContent("webgpu", false);
+      content.update(17.25);
+      let visibleObjects = 0;
+      content.group.traverseVisible((object) => {
+        if ((object as THREE.Mesh).geometry) visibleObjects++;
+      });
+      expect(visibleObjects).toBe(expected);
+    },
+  );
+
+  it.each([
+    ["Prime", createPrimeConstellationContent],
+    ["Bessel", createBesselTideContent],
+    ["Lissajous", createLissajousOrchardContent],
+    ["Dirichlet", createDirichletLanternsContent],
+    ["Haar", createWaveletRainContent],
+    ["Riemann", createRiemannVeilContent],
+    ["Torus", createPhaseTorusContent],
+  ])("holds the %s staging still with reduced motion", (_, createContent) => {
+    const content = createContent();
+    content.update(0, true);
+    content.group.updateMatrix();
+    const before = content.group.matrix.toArray();
+    content.update(18, true);
+    content.group.updateMatrix();
+    expect(content.group.matrix.toArray()).toEqual(before);
+  });
+
+  it.each([
+    ["Prime", createPrimeConstellationContent],
+    ["Bessel", createBesselTideContent],
+    ["Lissajous", createLissajousOrchardContent],
+    ["Dirichlet", createDirichletLanternsContent],
+    ["Haar", createWaveletRainContent],
+    ["Riemann", createRiemannVeilContent],
+    ["Torus", createPhaseTorusContent],
+  ])(
+    "limits only the %s shared event decoration under reduced motion",
+    (_chapter, createContent) => {
+      const normal = createContent();
+      const reduced = createContent();
+      normal.update(0.12, false);
+      reduced.update(0.12, true);
+
+      const normalLayer = normal.group.getObjectByName("event-resonance") as THREE.Group;
+      const reducedLayer = reduced.group.getObjectByName("event-resonance") as THREE.Group;
+      const normalStrokes = normalLayer.children.find(
+        (child) => (child as THREE.LineSegments).isLineSegments,
+      ) as THREE.LineSegments;
+      const reducedStrokes = reducedLayer.children.find(
+        (child) => (child as THREE.LineSegments).isLineSegments,
+      ) as THREE.LineSegments;
+      const normalCore = normalLayer.getObjectByName(
+        "finite-envelope-cores",
+      ) as THREE.InstancedMesh;
+      const reducedCore = reducedLayer.getObjectByName(
+        "finite-envelope-cores",
+      ) as THREE.InstancedMesh;
+      const normalCorePoints = normalLayer.children
+        .filter((child) => child instanceof THREE.Points)
+        .find((child) => child.geometry.getAttribute("color") !== undefined)!;
+      const reducedCorePoints = reducedLayer.children
+        .filter((child) => child instanceof THREE.Points)
+        .find((child) => child.geometry.getAttribute("color") !== undefined)!;
+      const normalCorePositions = normalCorePoints.geometry.getAttribute("position").array;
+      const reducedCorePositions = reducedCorePoints.geometry.getAttribute("position").array;
+      expect(reducedStrokes.geometry.drawRange.count).toBeGreaterThan(0);
+      expect(getRelativeStrokePositions(reducedStrokes, reducedCorePositions)).not.toEqual(
+        getRelativeStrokePositions(normalStrokes, normalCorePositions as Float32Array),
+      );
+      expect(reducedCore.instanceMatrix.array.slice(0, 16)).not.toEqual(
+        normalCore.instanceMatrix.array.slice(0, 16),
+      );
+    },
+  );
+
+  it("preserves the Bessel field while removing camera staging and decorative layers", () => {
+    const normal = createBesselTideContent();
+    const reduced = createBesselTideContent("webgpu", false);
+    normal.update(17.25);
+    reduced.update(17.25, true);
+    expect(getPositions(getSurface(reduced.group))).toEqual(getPositions(getSurface(normal.group)));
+  });
+
   it("keeps the exact Bessel surface finite while adding visible depth layers", () => {
     const content = createBesselTideContent();
     content.update(0);
@@ -101,10 +210,12 @@ describe("new chapter scene continuity", () => {
     const boundary = 60 / 9;
     content.update(boundary - 1 / 60);
     const before: number[] = [];
-    for (const line of content.group.children) before.push(...getPositions(line));
+    for (const line of content.group.children)
+      if ((line as THREE.Line).isLine) before.push(...getPositions(line));
     content.update(boundary + 1 / 60);
     const after: number[] = [];
-    for (const line of content.group.children) after.push(...getPositions(line));
+    for (const line of content.group.children)
+      if ((line as THREE.Line).isLine) after.push(...getPositions(line));
     const maximumJump = Math.max(...after.map((value, index) => Math.abs(value - before[index]!)));
 
     expect(maximumJump).toBeLessThan(0.12);
@@ -113,8 +224,8 @@ describe("new chapter scene continuity", () => {
   it("renders distinct partial-sum and Fejer comparison curves", () => {
     const content = createDirichletLanternsContent();
     content.update(40);
-    const partial = getPositions(content.group.children.at(-2)!);
-    const fejer = getPositions(content.group.children.at(-1)!);
+    const partial = getPositions(content.group.getObjectByName("dirichlet-partial")!);
+    const fejer = getPositions(content.group.getObjectByName("dirichlet-fejer")!);
 
     expect(partial.some((value, index) => Math.abs(value - fejer[index]!) > 1e-4)).toBe(true);
   });

@@ -38,6 +38,23 @@ describe("Möbius Choir two-lap poetic topology", () => {
 });
 
 describe("Möbius Choir poetic model", () => {
+  it("keeps small excitation changes local even after a long absolute run", () => {
+    const model = createMobiusChoirPoeticModel(41_041);
+    const velocity = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+    updateMobiusChoirParticles(model, 10_000, velocity, velocity, 34_000);
+    const before = model.particlePositions.slice();
+    updateMobiusChoirParticles(model, 10_000, [0.5001, 0.5, 0.5, 0.5, 0.5, 0.5], velocity, 34_000);
+    let maximumChange = 0;
+    for (let index = 0; index < before.length; index++) {
+      maximumChange = Math.max(
+        maximumChange,
+        Math.abs(before[index]! - model.particlePositions[index]!),
+      );
+    }
+    expect(maximumChange).toBeGreaterThan(0);
+    expect(maximumChange).toBeLessThan(0.001);
+  });
+
   it("uses the approved quality budgets up to 34,000 particles", () => {
     expect(getMobiusChoirPoeticQuality("low")).toEqual({
       particleCount: 10_000,

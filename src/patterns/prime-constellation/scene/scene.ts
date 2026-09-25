@@ -1,4 +1,8 @@
+import { createPrimeConstellationWorkletProgram } from "../audio/synthesis";
 import * as THREE from "three/webgpu";
+import { PRIME_CONSTELLATION_SCORE } from "../audio/score";
+import { createEventResonance } from "../../../rendering/analytic/eventResonance";
+import { configurePoeticObjects } from "../../../rendering/analytic/displayLayers";
 
 import type { RendererBackend } from "../../../core/rendererBackend";
 import { createImmersiveAnalyticScene } from "../../../rendering/analytic/immersiveScene";
@@ -9,18 +13,15 @@ import {
   evaluateFiveActEnergy,
 } from "../../../rendering/analytic/primitives";
 import type { PatternSceneOptions } from "../../contracts";
-import {
-  PRIME_PHRASE_SECONDS,
-  PRIME_PHRASE_TIMES,
-  PRIME_SUPPORT,
-  PRIME_VISUAL_RATE,
-  evaluatePrimeSum,
-} from "../math/model";
+import { PRIME_SUPPORT, PRIME_VISUAL_RATE, evaluatePrimeSum } from "../math/model";
 
-const PALETTE = [0xffc46f, 0xff8c52, 0xf5f7ff] as const;
+const PALETTE = [0xe3bb83, 0xb7764b, 0xe9e1c7] as const;
 const LINK_ECHO_COUNT = 5;
 
-export function createPrimeConstellationContent(backend: RendererBackend = "webgpu") {
+export function createPrimeConstellationContent(
+  backend: RendererBackend = "webgpu",
+  poeticLayers = true,
+) {
   const group = new THREE.Group();
   const positions = new Float32Array(PRIME_SUPPORT.length * 3);
   const linkPositions = new Float32Array((PRIME_SUPPORT.length - 1) * 6);
@@ -55,9 +56,33 @@ export function createPrimeConstellationContent(backend: RendererBackend = "webg
     centroid.points,
     highlight.points,
   );
+  const resonance = createEventResonance(PRIME_CONSTELLATION_SCORE, backend, {
+    gesture: "spark",
+    colors: PALETTE,
+    timbre: createPrimeConstellationWorkletProgram().timbre,
+    locate(voice, time, target) {
+      const prime = PRIME_SUPPORT[voice.event.sourceIndex % PRIME_SUPPORT.length]!;
+      target.set(
+        Math.cos(prime * time * PRIME_VISUAL_RATE) * 4.1,
+        ((prime - 49.5) / 47.5) * 4.8,
+        Math.sin(prime * time * PRIME_VISUAL_RATE) * 2.8,
+      );
+    },
+  });
+  group.add(resonance.group);
+  configurePoeticObjects(
+    poeticLayers,
+    resonance.group,
+    pointHalos.points,
+    pointAuras.points,
+    centroidHalo.points,
+    highlight.points,
+    ...linkEchoes.map((echo) => echo.line),
+  );
   return {
     group,
-    update(timeSeconds: number) {
+    update(timeSeconds: number, reducedMotion = false) {
+      const stagingTime = reducedMotion ? 0 : timeSeconds;
       const x = timeSeconds * PRIME_VISUAL_RATE;
       for (let index = 0; index < PRIME_SUPPORT.length; index += 1) {
         const prime = PRIME_SUPPORT[index]!;
@@ -79,14 +104,10 @@ export function createPrimeConstellationContent(backend: RendererBackend = "webg
       centroidPosition[0] = sum.real * 3.2;
       centroidPosition[1] = 0;
       centroidPosition[2] = sum.imaginary * 3.2 + 0.5;
-      const localTime = timeSeconds % PRIME_PHRASE_SECONDS;
-      let activeIndex = 0;
-      while (
-        activeIndex + 1 < PRIME_PHRASE_TIMES.length &&
-        PRIME_PHRASE_TIMES[activeIndex + 1]! <= localTime
-      ) {
-        activeIndex += 1;
-      }
+      const eventFrame = resonance.update(timeSeconds, reducedMotion);
+      const activeIndex = (eventFrame.focus?.sourceIndex ?? 0) % PRIME_SUPPORT.length;
+      (highlight.points.material as THREE.PointsMaterial).opacity =
+        eventFrame.voices[0]?.envelope ?? 0;
       highlightPosition[0] = positions[activeIndex * 3]!;
       highlightPosition[1] = positions[activeIndex * 3 + 1]!;
       highlightPosition[2] = positions[activeIndex * 3 + 2]!;
@@ -96,14 +117,14 @@ export function createPrimeConstellationContent(backend: RendererBackend = "webg
       links.attribute.needsUpdate = true;
       linkEchoes.forEach((echo, echoIndex) => {
         for (let coordinate = 0; coordinate < linkPositions.length; coordinate += 3) {
-          const phase = timeSeconds * (0.08 + echoIndex * 0.007) + coordinate * 0.013;
+          const phase = stagingTime * (0.08 + echoIndex * 0.007) + coordinate * 0.013;
           echo.positions[coordinate] = linkPositions[coordinate]! + Math.sin(phase) * 0.035;
           echo.positions[coordinate + 1] =
             linkPositions[coordinate + 1]! + Math.cos(phase * 0.83) * 0.045;
           echo.positions[coordinate + 2] = linkPositions[coordinate + 2]! - 0.12 - echoIndex * 0.16;
         }
         echo.attribute.needsUpdate = true;
-        echo.line.rotation.y = Math.sin(timeSeconds * 0.024 + echoIndex) * 0.025;
+        echo.line.rotation.y = Math.sin(stagingTime * 0.024 + echoIndex) * 0.025;
       });
       centroid.attribute.needsUpdate = true;
       centroidHalo.attribute.needsUpdate = true;
@@ -113,9 +134,9 @@ export function createPrimeConstellationContent(backend: RendererBackend = "webg
       (pointHalos.points.material as THREE.PointsMaterial).size = 0.76 + energy * 0.34;
       (pointAuras.points.material as THREE.PointsMaterial).size = 1.28 + energy * 0.54;
       (centroidHalo.points.material as THREE.PointsMaterial).size = 1.5 + energy * 0.8;
-      group.rotation.y = Math.sin(timeSeconds * 0.052) * 0.26;
-      group.rotation.z = Math.sin(timeSeconds * 0.031 + 0.8) * 0.055;
-      return { energy, warmth: 0.82, cameraX: Math.sin(timeSeconds * 0.02) * 0.28 };
+      group.rotation.y = Math.sin(stagingTime * 0.052) * 0.26;
+      group.rotation.z = Math.sin(stagingTime * 0.031 + 0.8) * 0.055;
+      return { energy, warmth: 0.82, cameraX: Math.sin(stagingTime * 0.02) * 0.28 };
     },
   };
 }

@@ -59,7 +59,10 @@ export function createLine(
   positions: Float32Array,
   color: number,
   opacity = 0.82,
-): Readonly<{ line: THREE.Line; attribute: THREE.BufferAttribute }> {
+): Readonly<{
+  line: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
+  attribute: THREE.BufferAttribute;
+}> {
   const geometry = new THREE.BufferGeometry();
   const attribute = new THREE.BufferAttribute(positions, 3);
   geometry.setAttribute("position", attribute);

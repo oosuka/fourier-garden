@@ -1,3 +1,6 @@
+import { createPatternQualityContract } from "../qualityContract";
+import { observation } from "./observation";
+import { study } from "./study";
 import "./details/details.css";
 
 import { MOBIUS_CHOIR_SCORE } from "./audio/score";
@@ -29,13 +32,13 @@ export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
     composition: "single-mobius-band-seam",
     motion: "traveling-wave-orientation-reversal",
     space: "floating-closed-ribbon",
-    palette: "violet-blue-purple",
-    timbre: "dark-overlapping-single-mode-ribbon",
+    palette: "pearl-ivory-slate",
+    timbre: "woven-vowel-modal-voice",
     rhythm: "four-four-continuous-grid",
     time: "two-turn-return",
     audio: {
       onsetPattern: "constant-sixteenth-flow-with-long-form-braid",
-      articulation: "soft-overlapping-finite-tail",
+      articulation: "rounded-vowel-morph-finite-tail",
       pitchMapping: "nonlinear-normalized-mobius-eigenvalue",
       spatialGesture: "wide-seam-crossing-pan",
       wetCharacter: "long-wide-room-tail",
@@ -44,25 +47,19 @@ export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
   dramaturgy: {
     cycleSeconds: MOBIUS_CHOIR_SCORE.cycleSeconds,
     sections: MOBIUS_CHOIR_DRAMATURGY_SECTIONS,
-    expressiveAxes: ["density", "dynamics", "register", "timbre", "space", "motion", "color"],
+    expressiveAxes: ["dynamics", "timbre", "space", "motion", "color"],
     localMathMapping: true,
-    qualityContract: {
-      comparableLoudness: true,
-      decayingSonicContinuity: true,
-      nonuniformVisualField: true,
-      localVisualMotion: true,
-      humanReviewRequired: true,
-    },
+    qualityContract: createPatternQualityContract(),
   },
   presentation: {
     observatoryLabel: "MÖBIUS CHOIR OBSERVATORY",
     formulaEyebrow: "FLAT QUOTIENT TRAVELING WAVE / 平坦商空間の進行波",
-    formulaSummary: "Six analytic modes · one twisted seam · constant piko pulse sonification.",
+    formulaSummary: "Six analytic modes · one twisted seam · finite woven voices.",
     annotationContext: "ALLOWED PARITY / 許容条件",
     annotations: [
       { label: "m+n ODD", value: "6 MODES" },
       { label: "λ ≤ 13", value: "ANALYTIC" },
-      { label: "phase speed", value: "0.14√λₘₙ" },
+      { label: "modal ω", value: "0.14√λₘₙ" },
       { label: "SEAM", value: "x ↦ π−x" },
     ],
     poeticEyebrow: "BREATH / TURN / CONFLUENCE",
@@ -92,31 +89,33 @@ export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
     coefficientLatex:
       "b_{mn}=\\frac{C_M}{1+\\lambda_{mn}},\\quad C_M=\\frac{105}{113},\\quad\\sum b_{mn}=1",
     embeddingLatex:
-      "F(x,y)=\\bigl(w\\cos y,(R+w\\sin y)\\cos2y,(R+w\\sin y)\\sin2y\\bigr),\\ w=x-\\frac\\pi2,\\ R=2.4",
+      "\\begin{aligned}F(x,y)&=\\begin{pmatrix}w\\cos y\\\\(R+w\\sin y)\\cos2y\\\\(R+w\\sin y)\\sin2y\\end{pmatrix}\\\\w&=x-\\frac\\pi2,\\quad R=2.4\\end{aligned}",
   },
   audio: {
     mode: "sonification",
     baseFrequencyHz: 420,
     initialVolume: 0.35,
-    roomSeconds: 0.65,
+    roomSeconds: 1.2,
     sonificationLatex:
-      "f_{mn}^{L/R}=\\left(420+500\\frac{\\sqrt{\\lambda_{mn}}-1}{\\sqrt{13}-1}\\right)(1\\mp d),\\quad \\psi_{mn,q}^{L/R}(t)=2\\pi f_{mn}^{L/R}t+0.14\\sqrt{\\lambda_{mn}}t+q\\pi/2",
+      "f_{mn,r}^{L/R}=r\\left(420+500\\left(\\frac{\\sqrt{\\lambda_{mn}}-1}{\\sqrt{13}-1}\\right)^{1.65}\\right)(1\\mp d),\\quad \\psi_{mn,r,q}^{L/R}(t)=2\\pi f_{mn,r}^{L/R}t+r(0.14\\sqrt{\\lambda_{mn}}t+q\\pi/2)",
     score: MOBIUS_CHOIR_SCORE,
     createProgram: createMobiusChoirAudioProgram,
   },
+  observation,
+  study,
   education: {
-    gentleTitle: "ひとつながりの帯を、短い声が呼び交わす。",
+    gentleTitle: "ひとつながりの帯を、柔らかな声が呼び交わす。",
     gentleBody:
-      "帯の端をひねってつなぐと、声は継ぎ目を越えるたびに横向きを反転し、二周して元へ戻ります。56.470588秒・256イベントの一定パルスで、反転と収束を左右交替する短い電子粒として聴き分けます。",
+      "帯の端をひねってつなぐと、声は継ぎ目を越えるたびに横向きを反転し、二周して元へ戻ります。規則的な発音に、丸い立ち上がりと重なる尾を持たせています。声の倍音がゆっくり変わると、帯上の光にも温度の差が現れます。",
     mathematicalTitle: "Flat Möbius quotient with Dirichlet boundary",
     mathematicalBody:
       "M₁=(0,π)×[0,π]/((x,0)∼(π−x,π))のflat quotientで、x=0,πにDirichlet条件を課します。m+nが奇数のλ≤13に限る6モードを解析的係数bₘₙで合成し、位相は絶対transport時刻に対する0.14√λₘₙtで進みます。",
     scopeNotice:
       "3次元の帯はflat quotientと節線を観察する非等長埋め込みです。埋め込み曲面の誘導計量に対するLaplace–Beltrami固有モードではなく、固定した表側・裏側も定義しません。DFT、FFT、数値固有値解析は使用しません。",
     sonificationBody:
-      "音声は波動場の無加工再生ではありません。√λを420-920 Hzの安全なpiko帯域へ圧縮し、bₘₙの基礎振幅比、許容条件、n>0の正弦・余弦対の位相関係を保持します。carrierを絶対transport時刻で連続評価し、モード変位と速度を振幅と定位へ写します。局所4 slot形へ16小節の長周期輪郭を重ね、強弱、尾長、wet、左右運動を非同期に変えます。単一partial、高域抑制EQ、圧縮、短い残響、-1 dBFSリミッターは音楽的変換です。",
+      "音声は波動場の無加工再生ではありません。√λを420-920 Hzの基礎周波数へ圧縮し、bₘₙの基礎振幅比、許容条件、n>0の正弦・余弦対の位相関係を保持します。carrierを絶対transport時刻で連続評価し、モード変位と速度を振幅と定位へ写します。局所4 slot形へ16小節の長周期輪郭を重ね、強弱、尾長、wet、左右運動を非同期に変えます。2〜3部分音の母音を模した重み、330〜490 msの有限包絡、高域抑制EQ、圧縮、1.2秒の残響、-1 dBFSリミッターは音楽的変換です。",
     poeticLayerBody:
-      "息の粒子、六本の声部リボン、継ぎ目の淡いシアン残光は詩的造形です。音響と同じモード速度を粒子流へ渡し、局所変位・速度と継ぎ目通過から個別に応答します。厳密曲面、符号値、節線、境界の頂点は変形しません。",
+      "織り目の粒子、六本の声部リボン、継ぎ目の淡い残光は詩的造形です。局所発光は音と同じ係数利得・有限包絡・現在のモード変位を使い、部分音重みの比を色温度へ写します。進行するモードの光点は位相速度に従い、n=0の光点は固定します。厳密曲面、符号値、節線、境界の頂点は変形しません。",
   },
   MathematicalDetails: MobiusChoirMathematicalDetails,
   validate() {
@@ -127,7 +126,7 @@ export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
     return async (options) => {
       const scene = await module.createMobiusChoirScene(options);
       const adapter: PatternScene = {
-        update: (frame) => scene.update(frame.time),
+        update: (frame) => scene.update(frame.time, frame.reducedMotion),
         resize: (viewport) => scene.resize(viewport),
         setQuality: (level) => scene.setQuality(level),
         dispose: () => scene.dispose(),

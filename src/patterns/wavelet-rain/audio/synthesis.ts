@@ -15,7 +15,7 @@ const waveletRainAudio = definePikoChapterAudio({
   score: WAVELET_RAIN_SCORE,
   detuneRatio: 0.0007,
   maximumVoices: 18,
-  timbre: { partialRatio: 2.5, partialGain: 0.03, chirpRatio: -0.038 },
+  timbre: { partialRatio: 2.5, partialGain: 0.075, chirpRatio: 0.021, partialDecayScale: 0.48 },
   graph: WAVELET_RAIN_AUDIO_GRAPH,
 });
 

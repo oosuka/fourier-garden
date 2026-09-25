@@ -1,3 +1,6 @@
+import { createPatternQualityContract } from "../qualityContract";
+import { observation } from "./observation";
+import { study } from "./study";
 import { createFiveActSections } from "../analyticDefinition";
 import { BESSEL_TIDE_SCORE } from "./audio/score";
 import { createBesselTideAudioProgram } from "./audio/synthesis";
@@ -20,7 +23,7 @@ export const besselTidePattern: BesselTidePatternDefinition = {
     composition: "circular-bessel-basin",
     motion: "radial-angular-standing-tide",
     space: "central-disc-dark-rim",
-    palette: "teal-cyan-indigo",
+    palette: "celadon-ivory-forest",
     timbre: "water-drop-resonant-piko",
     rhythm: "slow-six-eight-wave",
     time: "seventy-two-second-tide",
@@ -49,13 +52,7 @@ export const besselTidePattern: BesselTidePatternDefinition = {
     ]),
     expressiveAxes: ["density", "dynamics", "register", "timbre", "space", "motion", "color"],
     localMathMapping: true,
-    qualityContract: {
-      comparableLoudness: true,
-      decayingSonicContinuity: true,
-      nonuniformVisualField: true,
-      localVisualMotion: true,
-      humanReviewRequired: true,
-    },
+    qualityContract: createPatternQualityContract(),
   },
   presentation: {
     observatoryLabel: "BESSEL TIDE OBSERVATORY",
@@ -72,6 +69,8 @@ export const besselTidePattern: BesselTidePatternDefinition = {
     poeticLines: ["円の縁に抱かれた波が、", "節を残して満ち引きする。"],
     canvasAriaLabel: "Fourier–Bessel固有モードから生成される円形水盤、節円、節径",
   },
+  observation,
+  study,
   education: {
     gentleTitle: "丸い器には、丸い器だけの揺れ方がある。",
     gentleBody:
@@ -82,7 +81,7 @@ export const besselTidePattern: BesselTidePatternDefinition = {
     scopeNotice:
       "Bessel零点は固定倍精度表で、画像から推定しません。使用するJₘの零点と、Neumann境界で現れる導関数J′ₘの零点を区別し、外側の膜を境界の変形とはみなしません。",
     sonificationBody:
-      "零点順jₘₙを420–940 Hzへ単調写像し、射影係数の絶対値は厳密値を保持したうえで、聴感強度だけを平方根で単調圧縮します。角度次数とcos/sin成分を定位へ使い、全周期のエネルギー重心を中央へ補正します。零点に比例する連続phase driftと小振幅の定位運動、72秒の潮汐輪郭、残響、帯域制限は音楽的変換です。",
+      "零点順jₘₙを420–940 Hzへ単調写像し、射影係数の絶対値は厳密値を保持したうえで、発音強度だけを立方根で圧縮します。弱いモードも聴こえるようにし、角度次数とcos/sin成分を定位へ写します。部分音は係数に応じて立ち上がり、基音より先に減衰します。零点に比例する位相移動、72秒の潮汐輪郭、残響、帯域制限は音楽的変換です。",
     poeticLayerBody:
       "外側膜、霧、粒子、波紋ハローは厳密円板を包む詩的造形です。節円・節径に対応する局所だけが発音へ反応し、r=1のDirichlet境界とモード頂点は動かしません。",
   },

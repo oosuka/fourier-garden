@@ -38,84 +38,108 @@ export interface CinematicLayerArtDirection {
 export function getCinematicLayerArtDirection(
   layout: CinematicEnvironmentLayout,
 ): CinematicLayerArtDirection {
-  if (layout === "constellation") {
-    return {
-      nebula: 0.56,
-      filament: 0.42,
-      halo: 1.34,
-      flare: 1.34,
-      aurora: 0.7,
-      pillar: 0.12,
+  const directions: Record<CinematicEnvironmentLayout, CinematicLayerArtDirection> = {
+    chain: {
+      nebula: 0.5,
+      filament: 0.04,
+      halo: 0.05,
+      flare: 0.015,
+      aurora: 0.08,
+      pillar: 0,
+      well: 0.2,
+    },
+    cathedral: {
+      nebula: 0.4,
+      filament: 0.025,
+      halo: 0.05,
+      flare: 0.01,
+      aurora: 0.05,
+      pillar: 0.08,
+      well: 0.22,
+    },
+    constellation: {
+      nebula: 0.48,
+      filament: 0.03,
+      halo: 0.08,
+      flare: 0.05,
+      aurora: 0.03,
+      pillar: 0,
+      well: 0.22,
+    },
+    ribbon: {
+      nebula: 0.4,
+      filament: 0.04,
+      halo: 0.05,
+      flare: 0.01,
+      aurora: 0.09,
+      pillar: 0,
+      well: 0.2,
+    },
+    tidal: {
+      nebula: 0.6,
+      filament: 0.03,
+      halo: 0.15,
+      flare: 0.015,
+      aurora: 0.16,
+      pillar: 0,
       well: 0.68,
-    };
-  }
-  if (layout === "tidal") {
-    return {
-      nebula: 0.82,
-      filament: 0.42,
-      halo: 1.18,
-      flare: 0.82,
-      aurora: 1.2,
-      pillar: 0.2,
-      well: 1.22,
-    };
-  }
-  if (layout === "orchard") {
-    return {
-      nebula: 1.08,
-      filament: 1.24,
-      halo: 0.66,
-      flare: 1.18,
-      aurora: 1.28,
-      pillar: 0.28,
-      well: 0.92,
-    };
-  }
-  if (layout === "lanterns") {
-    return {
-      nebula: 0.72,
-      filament: 0.52,
-      halo: 0.48,
-      flare: 0.92,
-      aurora: 0.7,
-      pillar: 1.3,
-      well: 0.82,
-    };
-  }
-  if (layout === "rain") {
-    return {
+    },
+    orchard: {
+      nebula: 0.52,
+      filament: 0.08,
+      halo: 0.04,
+      flare: 0.015,
+      aurora: 0.12,
+      pillar: 0.1,
+      well: 0.32,
+    },
+    lanterns: {
+      nebula: 0.56,
+      filament: 0.04,
+      halo: 0.06,
+      flare: 0.015,
+      aurora: 0.04,
+      pillar: 0.62,
+      well: 0.5,
+    },
+    rain: {
+      nebula: 0.48,
+      filament: 0,
+      halo: 0,
+      flare: 0.01,
+      aurora: 0.28,
+      pillar: 0.07,
+      well: 0.15,
+    },
+    veil: {
       nebula: 0.68,
-      filament: 0.24,
-      halo: 0.42,
-      flare: 0.82,
-      aurora: 1.48,
-      pillar: 0.52,
-      well: 0.74,
-    };
-  }
-  if (layout === "veil") {
-    return {
-      nebula: 1.12,
-      filament: 1.38,
-      halo: 0.72,
-      flare: 0.68,
-      aurora: 1.16,
-      pillar: 0.08,
-      well: 1.04,
-    };
-  }
-  if (layout === "torus") {
-    return {
-      nebula: 0.72,
-      filament: 0.3,
-      halo: 1.42,
-      flare: 0.88,
-      aurora: 1.08,
-      pillar: 0.08,
-      well: 1.36,
-    };
-  }
-  return { nebula: 1, filament: 1, halo: 1, flare: 1, aurora: 1, pillar: 1, well: 1 };
+      filament: 0.06,
+      halo: 0.06,
+      flare: 0.01,
+      aurora: 0.42,
+      pillar: 0,
+      well: 0.4,
+    },
+    torus: {
+      nebula: 0.64,
+      filament: 0,
+      halo: 0.18,
+      flare: 0.01,
+      aurora: 0.12,
+      pillar: 0,
+      well: 0.58,
+    },
+    field: {
+      nebula: 0.5,
+      filament: 0.04,
+      halo: 0.08,
+      flare: 0.015,
+      aurora: 0.16,
+      pillar: 0,
+      well: 0.3,
+    },
+  };
+  return directions[layout];
 }
 
 export function getCinematicEnvironmentParticleStyle(

@@ -15,7 +15,21 @@ export class Transport {
   }
 
   get currentTime(): number {
-    return this.playing ? this.elapsed + (this.clock() - this.anchorTime) : this.elapsed;
+    return this.playing ? this.elapsed + Math.max(0, this.clock() - this.anchorTime) : this.elapsed;
+  }
+
+  /** Audio and presentation reserve the same epoch; rendering may begin before it. */
+  startAt(positionSeconds: number, clockTimeSeconds: number): void {
+    if (
+      !Number.isFinite(positionSeconds) ||
+      positionSeconds < 0 ||
+      !Number.isFinite(clockTimeSeconds)
+    ) {
+      throw new Error("Transport position and epoch must be finite; position must be nonnegative");
+    }
+    this.elapsed = positionSeconds;
+    this.anchorTime = clockTimeSeconds;
+    this.playing = true;
   }
 
   play(): void {

@@ -1,4 +1,21 @@
-# Superpowers履歴索引
+# 設計と実装計画
+
+2026年9月22日確認。現行V2の検証状態は[作業・検証記録](../qa/renewal/progress.md)を参照し、
+この索引と設計文書の目標を完成判定の代わりに使わない。
+
+## V2の設計・実装・検証記録
+
+- [2026年9月6日 V2設計](specs/2026-09-06-renewal-design.md)
+- [V2実装計画](plans/2026-09-06-renewal.md)
+- [品質仕上げ計画](plans/2026-09-21-luna-quality-completion.md)
+- [作業・検証記録](../qa/renewal/progress.md)
+- [QA台帳](../qa/renewal/luna-task-board.md) · [次タスクへの引き継ぎ](../qa/renewal/luna-handoff.md)
+
+## Version 1の履歴
+
+以下は旧版の文書整理の記録。完成宣言、参照制限、数値評価は当時の状態を示し、
+上記V2設計への参照を禁止するものではない。
+
 
 このディレクトリには、2026年6月の試行錯誤で作成した詳細な設計書と実装計画が
 置かれていた。先行3章（現在のChapter 1、2、4）の音響仕様は2026年7月2日に整理し、

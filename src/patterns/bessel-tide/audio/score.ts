@@ -46,7 +46,7 @@ export function getBesselAudioMapping(index: number): Readonly<{
   const coefficientGain = Math.abs(mode.coefficient) / maximumCoefficientMagnitude;
   return {
     coefficientGain,
-    perceptualGain: Math.sqrt(coefficientGain),
+    perceptualGain: Math.cbrt(coefficientGain),
     pan: side * (mode.m / 4) * 0.72,
     phase: mode.coefficient < 0 ? Math.PI : 0,
   };
@@ -67,7 +67,7 @@ export const BESSEL_TIDE_SCORE: PikoScoreProgram = createEnergyBalancedPikoScore
         mathematicalGain: (index) => getBesselAudioMapping(index).coefficientGain,
         gain: (index) =>
           energyAt(index / 6) *
-          (index % 6 === 0 ? 0.72 : 0.38) *
+          (index % 6 === 0 ? 0.64 : 0.44) *
           getBesselAudioMapping(index).perceptualGain *
           motionAt(index).accent,
         pan: (index) => getBesselAudioMapping(index).pan,
@@ -78,9 +78,9 @@ export const BESSEL_TIDE_SCORE: PikoScoreProgram = createEnergyBalancedPikoScore
         wet: (index) =>
           (0.11 + 0.08 * Math.abs(Math.sin(index * 0.29))) * motionAt(index).spaceScale,
         articulation: (index) => ({
-          attackSeconds: 0.009,
-          decaySeconds: (0.09 + (index % 4) * 0.012) * motionAt(index).tailScale,
-          endSeconds: (0.23 + (index % 3) * 0.025) * motionAt(index).tailScale,
+          attackSeconds: 0.014,
+          decaySeconds: (0.13 + (index % 4) * 0.012) * motionAt(index).tailScale,
+          endSeconds: (0.33 + (index % 3) * 0.03) * motionAt(index).tailScale,
         }),
         phase: (index) => getBesselAudioMapping(index).phase,
         phaseDrift: (index) => BESSEL_MODES[index % BESSEL_MODES.length]!.zero * 0.18,

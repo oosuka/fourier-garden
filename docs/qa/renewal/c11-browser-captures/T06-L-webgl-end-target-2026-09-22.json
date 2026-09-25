@@ -1,0 +1,42 @@
+{
+  "chapter": "lissajous-orchard",
+  "renderer": "webgl",
+  "width": 1440,
+  "height": 900,
+  "pixelRatio": 1,
+  "rasterWidth": 1440,
+  "rasterHeight": 900,
+  "quality": "high",
+  "seed": "qa",
+  "postProcessing": "default",
+  "audioSampleRateHz": null,
+  "clock": "performance",
+  "mutedAtStart": true,
+  "volumeAtStart": 0.35,
+  "playingAtStart": true,
+  "motionAtStart": "full",
+  "physicalLatencyMeasured": false,
+  "status": "complete",
+  "reason": null,
+  "durationSeconds": 60.000099999999975,
+  "frames": 3593,
+  "averageFps": 59.88323352794414,
+  "cpuSubmissionP95Ms": 5,
+  "frameIntervalP95Ms": 18.300000000046566,
+  "maxFrameIntervalMs": 50.09999999997672,
+  "intervalsOver50Ms": 1,
+  "slowFrames": [
+    {
+      "elapsedSeconds": 18.800099999999976,
+      "frameIntervalMs": 50.09999999997672,
+      "cpuSubmissionMs": 3.9000000059604645
+    }
+  ],
+  "slowFramesOmitted": 0,
+  "synchronizationSamples": 0,
+  "visualLeadP95Ms": null,
+  "visualLeadMinMs": null,
+  "visualLeadMaxMs": null,
+  "firstScoreSeconds": 799.939599999994,
+  "lastScoreSeconds": 859.9395
+}

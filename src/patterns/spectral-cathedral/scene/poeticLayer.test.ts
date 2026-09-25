@@ -9,6 +9,55 @@ import {
 } from "./poeticLayer";
 
 describe("Spectral Cathedral poetic layer", () => {
+  it.each(["webgpu", "webgl"] as const)(
+    "keeps native dust energy stable across DPR without changing depth-sized %s points",
+    (backend) => {
+      const model = createSpectralCathedralPoeticModel(41_041);
+      const layer = new SpectralCathedralPoeticLayer(model, backend);
+      const cloud = layer.group.children.find(
+        (child) =>
+          child instanceof THREE.Points &&
+          child.geometry.getAttribute("position").array === model.particlePositions,
+      );
+      if (!(cloud instanceof THREE.Points) || !(cloud.material instanceof THREE.PointsMaterial))
+        throw new Error("Cathedral dust material is missing");
+
+      for (const time of [0.04, 127.318]) {
+        layer.setPixelRatio(2);
+        layer.update(time);
+        const retinaOpacity = cloud.material.opacity;
+        const positions = model.particlePositions.slice();
+        for (const pixelRatio of [1, 1.5, 2]) {
+          layer.setPixelRatio(pixelRatio);
+          layer.update(time);
+          const cssPixelEnergy =
+            cloud.material.opacity / (backend === "webgpu" ? pixelRatio ** 2 : 1);
+          expect(cssPixelEnergy).toBeCloseTo(retinaOpacity / (backend === "webgpu" ? 4 : 1), 12);
+          expect(model.particlePositions).toEqual(positions);
+        }
+      }
+      layer.dispose();
+    },
+  );
+
+  it("holds poetic positions still in reduced motion while local light continues to respond", () => {
+    const model = createSpectralCathedralPoeticModel(41_041);
+    const layer = new SpectralCathedralPoeticLayer(model, "webgpu");
+    const pillars = layer.group.children[0] as THREE.LineSegments;
+    const positions = pillars.geometry.getAttribute("position");
+    const colors = pillars.geometry.getAttribute("color");
+    layer.update(0.04, true);
+    const firstParticles = model.particlePositions.slice();
+    const firstPillars = Array.from(positions.array);
+    const firstColors = Array.from(colors.array);
+    layer.update(17.15, true);
+    expect(
+      model.particlePositions.findIndex((position, index) => position !== firstParticles[index]),
+    ).toBe(-1);
+    expect(Array.from(positions.array)).toEqual(firstPillars);
+    expect(Array.from(colors.array)).not.toEqual(firstColors);
+    layer.dispose();
+  });
   it("keeps WebGL dust finer and dimmer than the WebGPU particles", () => {
     const webgpu = getSpectralCathedralParticleStyle("webgpu");
     const webgl = getSpectralCathedralParticleStyle("webgl");

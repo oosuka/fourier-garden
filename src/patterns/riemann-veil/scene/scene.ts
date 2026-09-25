@@ -1,4 +1,9 @@
+import { createRiemannVeilWorkletProgram } from "../audio/synthesis";
+import { createCurveVeil } from "../../../rendering/analytic/curveVeil";
 import * as THREE from "three/webgpu";
+import { RIEMANN_VEIL_SCORE, getRiemannEventMapping } from "../audio/score";
+import { createEventResonance } from "../../../rendering/analytic/eventResonance";
+import { configurePoeticObjects } from "../../../rendering/analytic/displayLayers";
 import { createImmersiveAnalyticScene } from "../../../rendering/analytic/immersiveScene";
 import {
   createAnalyticProfile,
@@ -12,8 +17,11 @@ import {
   getRiemannObservation,
   getRiemannSampleCount,
 } from "../math/model";
-const PALETTE = [0xf4f7ff, 0xb99aff, 0x4255a8] as const;
-export function createRiemannVeilContent() {
+const PALETTE = [0xe2be9e, 0xa57862, 0x596963] as const;
+export function createRiemannVeilContent(
+  backend: "webgpu" | "webgl" = "webgpu",
+  poeticLayers = true,
+) {
   const group = new THREE.Group();
   const layers = RIEMANN_TRUNCATIONS.map((order, layerIndex) => {
     const count = getRiemannSampleCount(order);
@@ -26,7 +34,15 @@ export function createRiemannVeilContent() {
       positions[offset + 2] = -layerIndex * 1.15;
     }
     const line = createLine(positions, PALETTE[layerIndex % 3]!, 0.62 + layerIndex * 0.08);
-    group.add(line.line);
+    const veil = createCurveVeil(
+      positions,
+      PALETTE[layerIndex % 3]!,
+      0.44 + layerIndex * 0.16,
+      0.6,
+      8,
+    );
+    group.add(line.line, veil.mesh);
+    configurePoeticObjects(poeticLayers, veil.mesh);
     return line;
   });
   const veilEchoes = layers.flatMap((layer, layerIndex) =>
@@ -49,30 +65,49 @@ export function createRiemannVeilContent() {
   const focusPositions = new Float32Array([0, -4.5, 0.5, 0, 4.5, 0.5]);
   const focus = createLine(focusPositions, 0xffffff, 0.76);
   group.add(focus.line);
+  const mappings = RIEMANN_VEIL_SCORE.events.map((event) =>
+    getRiemannEventMapping(event.sourceIndex),
+  );
+  const resonance = createEventResonance(RIEMANN_VEIL_SCORE, backend, {
+    gesture: "veil",
+    colors: PALETTE,
+    timbre: createRiemannVeilWorkletProgram().timbre,
+    locate(voice, time, target) {
+      const mapping = mappings[voice.event.sourceIndex]!;
+      const x = Math.sin(mapping.indexN ** 2 * 0.037 * time) * Math.PI;
+      const layer = mapping.responseStep;
+      target.set(
+        (x / Math.PI) * 7.4,
+        evaluateRiemannPartial(RIEMANN_TRUNCATIONS[layer]!, x) * 2.2 + (layer - 1.5) * 0.38,
+        -layer * 1.15,
+      );
+    },
+  });
+  group.add(resonance.group);
+  configurePoeticObjects(poeticLayers, resonance.group, ...veilEchoes.map((echo) => echo.line));
   return {
     group,
-    update(timeSeconds: number) {
+    update(timeSeconds: number, reducedMotion = false) {
+      const stagingTime = reducedMotion ? 0 : timeSeconds;
       focus.line.position.x = (getRiemannObservation(timeSeconds) / Math.PI) * 7.4;
-      layers.forEach(({ line }, index) => {
-        line.position.y = Math.sin(timeSeconds * 0.071 + index) * 0.12;
-      });
+      resonance.update(timeSeconds, reducedMotion);
       veilEchoes.forEach(({ layerIndex, echoIndex, line, material }) => {
         const drift = Math.sin(
-          timeSeconds * (0.047 + echoIndex * 0.006) + layerIndex * 1.3 + echoIndex,
+          stagingTime * (0.047 + echoIndex * 0.006) + layerIndex * 1.3 + echoIndex,
         );
         line.position.x = drift * (0.035 + echoIndex * 0.018);
         line.position.y =
-          Math.cos(timeSeconds * (0.054 + layerIndex * 0.004) - echoIndex) *
+          Math.cos(stagingTime * (0.054 + layerIndex * 0.004) - echoIndex) *
           (0.06 + echoIndex * 0.035);
         line.position.z = -0.24 - echoIndex * 0.28 + drift * 0.12;
         material.opacity = 0.055 + echoIndex * 0.016 + (0.5 + 0.5 * drift) * 0.045;
       });
-      group.rotation.y = Math.sin(timeSeconds * 0.029) * 0.075;
-      group.rotation.z = Math.sin(timeSeconds * 0.018 + 1.4) * 0.018;
+      group.rotation.y = Math.sin(stagingTime * 0.029) * 0.075;
+      group.rotation.z = Math.sin(stagingTime * 0.018 + 1.4) * 0.018;
       return {
         energy: evaluateFiveActEnergy(timeSeconds, 80),
         warmth: 0.28,
-        cameraX: Math.sin(timeSeconds * 0.017) * 0.2,
+        cameraX: Math.sin(stagingTime * 0.017) * 0.2,
       };
     },
   };

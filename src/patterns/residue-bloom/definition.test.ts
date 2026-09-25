@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { renderToString } from "katex";
 
 import { residueBloomPattern } from "./definition";
 
@@ -29,7 +30,10 @@ describe("Residue Bloom definition", () => {
   it("provides the exact phasor, complex-coefficient, and sonification equations", () => {
     expect(residueBloomPattern.mathematics.phasorLatex).toContain("\\operatorname{Im}");
     expect(residueBloomPattern.mathematics.complexCoefficientLatex).toContain("c_{-n_k}");
-    expect(residueBloomPattern.audio.sonificationLatex).toContain("n_k\\nu_j");
+    expect(residueBloomPattern.audio.sonificationLatex).toContain("n_k\\nu_e");
+    expect(() =>
+      renderToString(residueBloomPattern.audio.sonificationLatex, { throwOnError: true }),
+    ).not.toThrow();
   });
 
   it("registers a deterministic audiovisual score", () => {
@@ -52,8 +56,9 @@ describe("Residue Bloom definition", () => {
   });
 
   it("describes stereo sonification without assigning wet-send to phasor radius", () => {
-    expect(residueBloomPattern.audio.sonificationLatex).toContain("f_{k,j}^{L/R}");
-    expect(residueBloomPattern.audio.sonificationLatex).toContain("P_k^{L/R}");
+    expect(residueBloomPattern.audio.sonificationLatex).toContain("f_{k,e}^{\\sigma}");
+    expect(residueBloomPattern.audio.sonificationLatex).toContain("P_{k,e}^{\\sigma}");
+    expect(residueBloomPattern.education.sonificationBody).toContain("左−1／右+1");
     expect(residueBloomPattern.education.sonificationBody).toContain("絶対イベント時刻");
     expect(residueBloomPattern.education.sonificationBody).toContain("残響量は区間プロファイル");
     expect(residueBloomPattern.education.sonificationBody).not.toContain(

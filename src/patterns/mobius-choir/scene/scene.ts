@@ -91,7 +91,7 @@ export interface MobiusChoirSceneOptions {
 
 export interface MobiusChoirScene {
   readonly backend: RendererBackend;
-  update(absoluteTimeSeconds: number): void;
+  update(absoluteTimeSeconds: number, reducedMotion?: boolean): void;
   resize(viewport: Viewport): void;
   setQuality(level: QualityLevel): void;
   getStats(): MobiusChoirSceneStats;
@@ -223,7 +223,9 @@ export function getMobiusChoirSceneReaction(
 export function getMobiusChoirChoreographedCameraPlacement(
   base: MobiusChoirCameraPlacement,
   absoluteTimeSeconds: number,
+  reducedMotion = false,
 ): MobiusChoirCameraPlacement {
+  if (reducedMotion) return base;
   const choreography = evaluateMobiusChoirDramaturgy(absoluteTimeSeconds).camera;
   const cosine = Math.cos(choreography.orbitRadians);
   const sine = Math.sin(choreography.orbitRadians);
@@ -250,10 +252,9 @@ function createSurface(model: MobiusChoirDrawingModel): {
   geometry.setIndex(new THREE.BufferAttribute(model.indices, 1));
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), MATHEMATICAL_BOUND_RADIUS);
   const material = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(0.38, 0.56, 1),
     vertexColors: true,
     transparent: true,
-    opacity: 0.14,
+    opacity: 0.62,
     side: THREE.DoubleSide,
     depthWrite: false,
     toneMapped: false,
@@ -327,7 +328,7 @@ function createNodalLines(model: MobiusChoirDrawingModel): {
   geometry.setAttribute("position", attribute);
   geometry.setDrawRange(0, model.nodalSegmentCount * 2);
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), MATHEMATICAL_BOUND_RADIUS);
-  const material = new THREE.LineBasicMaterial({ color: 0xd7c8ff, toneMapped: false });
+  const material = new THREE.LineBasicMaterial({ color: 0xd8cec7, toneMapped: false });
   const lines = new THREE.LineSegments(geometry, material);
   lines.frustumCulled = false;
   lines.renderOrder = 4;
@@ -372,7 +373,7 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
     this.renderer = renderer;
     this.backend = backend;
     this.canvas = canvas;
-    this.scene.background = new THREE.Color(0x010107);
+    this.scene.background = new THREE.Color(0x080b0c);
     this.environment = poeticLayers
       ? new CinematicEnvironmentLayer({
           backend,
@@ -383,7 +384,7 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
             "ultra",
             getMobiusChoirPoeticQuality("ultra").particleCount,
           ),
-          palette: [0x76efff, 0xa766ff, 0xffbd78],
+          palette: [0xd6c4be, 0x8d909c, 0xc6ac8f],
           extent: { x: 25, y: 16, z: 24 },
         })
       : null;
@@ -420,14 +421,14 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
     this.postProcessor.setQuality(this.quality);
   }
 
-  update(absoluteTimeSeconds: number): void {
+  update(absoluteTimeSeconds: number, reducedMotion = false): void {
     if (this.disposed) throw new Error("Möbius Choir scene has been disposed");
     updateMobiusChoirDrawingModel(this.drawing, absoluteTimeSeconds);
     this.surface.colorAttribute.needsUpdate = true;
     this.nodes.attribute.needsUpdate = true;
     this.nodes.lines.geometry.setDrawRange(0, this.drawing.nodalSegmentCount * 2);
     this.nodes.lines.visible = getMobiusChoirNodalVisibility(this.drawing.nodalSegmentCount);
-    const visualFrame = this.poetic?.update(absoluteTimeSeconds) ?? null;
+    const visualFrame = this.poetic?.update(absoluteTimeSeconds, reducedMotion) ?? null;
     const dramaturgy =
       visualFrame?.dramaturgy ?? evaluateMobiusChoirDramaturgy(absoluteTimeSeconds);
     const reaction = visualFrame ? getMobiusChoirSceneReaction(visualFrame) : null;
@@ -435,8 +436,9 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
       const placement = getMobiusChoirChoreographedCameraPlacement(
         this.basePlacement,
         absoluteTimeSeconds,
+        reducedMotion,
       );
-      const cameraDollyScale = reaction?.cameraDollyScale ?? 1;
+      const cameraDollyScale = reducedMotion ? 1 : (reaction?.cameraDollyScale ?? 1);
       this.camera.position.set(
         placement.targetX + (placement.positionX - placement.targetX) * cameraDollyScale,
         placement.targetY + (placement.positionY - placement.targetY) * cameraDollyScale,
@@ -445,11 +447,12 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
       this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     }
     this.environment?.update(
-      absoluteTimeSeconds,
+      reducedMotion ? 0 : absoluteTimeSeconds,
       reaction?.environmentEnergy ?? dramaturgy.visualEnergy,
       reaction?.warmth ??
         (dramaturgy.sectionId === "confluence" ? 0.8 : dramaturgy.audioEnergy * 0.45),
       this.camera,
+      reducedMotion,
     );
     this.postProcessor?.setEnergy(reaction?.bloomEnergy ?? dramaturgy.visualEnergy);
     if (this.postProcessor) this.postProcessor.render();
@@ -477,7 +480,8 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
     this.camera.position.set(placement.positionX, placement.positionY, placement.positionZ);
     this.camera.lookAt(placement.targetX, placement.targetY, placement.targetZ);
     this.camera.updateProjectionMatrix();
-    this.environment?.resize(aspect);
+    this.environment?.resize(aspect, viewport.pixelRatio);
+    this.poetic?.setPixelRatio(viewport.pixelRatio);
     if (this.postProcessor) {
       this.postProcessor.resize(viewport.width, viewport.height, viewport.pixelRatio);
     } else {
@@ -538,21 +542,36 @@ class MobiusChoirSceneImplementation implements MobiusChoirScene {
   }
 }
 
-export async function createMobiusChoirScene({
-  canvas,
-  seed = 0,
-  poeticLayers = true,
-  onDeviceLost,
-  preserveDrawingBuffer,
-}: MobiusChoirSceneOptions): Promise<MobiusChoirScene> {
-  const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
-  const backend = selectRendererBackend(forceWebGL, "gpu" in navigator);
+async function createMobiusChoirSceneForBackend(
+  {
+    canvas,
+    seed = 0,
+    poeticLayers = true,
+    onDeviceLost,
+    preserveDrawingBuffer,
+  }: MobiusChoirSceneOptions,
+  backend: RendererBackend,
+): Promise<MobiusChoirScene> {
+  let renderer: SceneRenderer;
   if (backend === "webgl") {
     const { WebGLRenderer } = await import("three");
-    const renderer = new WebGLRenderer(
+    renderer = new WebGLRenderer(
       getMobiusChoirWebGLRendererParameters({ canvas, preserveDrawingBuffer }),
     );
-    const scene = new MobiusChoirSceneImplementation(
+  } else {
+    const webgpu = new THREE.WebGPURenderer({ canvas, antialias: true, alpha: false });
+    const reportDeviceLost = webgpu.onDeviceLost.bind(webgpu);
+    webgpu.onDeviceLost = (info) => {
+      reportDeviceLost(info);
+      onDeviceLost?.();
+    };
+    renderer = webgpu;
+  }
+
+  let scene: MobiusChoirSceneImplementation | null = null;
+  try {
+    if (backend === "webgpu") await (renderer as THREE.WebGPURenderer).init();
+    scene = new MobiusChoirSceneImplementation(
       renderer,
       backend,
       canvas,
@@ -562,23 +581,30 @@ export async function createMobiusChoirScene({
     );
     await scene.initializePostProcessor();
     return scene;
+  } catch (error) {
+    if (scene) scene.dispose();
+    else renderer.dispose();
+    throw error;
+  }
+}
+
+export async function createMobiusChoirScene(
+  options: MobiusChoirSceneOptions,
+): Promise<MobiusChoirScene> {
+  const forceWebGL = new URLSearchParams(window.location.search).get("renderer") === "webgl";
+  const requestedBackend = selectRendererBackend(forceWebGL, "gpu" in navigator);
+  options.canvas.dataset.rendererBackend = requestedBackend;
+
+  try {
+    const scene = await createMobiusChoirSceneForBackend(options, requestedBackend);
+    options.canvas.dataset.rendererBackend = requestedBackend;
+    return scene;
+  } catch (error) {
+    if (requestedBackend !== "webgpu") throw error;
+    console.warn("WebGPU Möbius Choir initialization failed; falling back to WebGL.", error);
   }
 
-  const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, alpha: false });
-  const reportDeviceLost = renderer.onDeviceLost.bind(renderer);
-  renderer.onDeviceLost = (info) => {
-    reportDeviceLost(info);
-    onDeviceLost?.();
-  };
-  await renderer.init();
-  const scene = new MobiusChoirSceneImplementation(
-    renderer,
-    backend,
-    canvas,
-    seed,
-    poeticLayers,
-    onDeviceLost,
-  );
-  await scene.initializePostProcessor();
+  const scene = await createMobiusChoirSceneForBackend(options, "webgl");
+  options.canvas.dataset.rendererBackend = "webgl";
   return scene;
 }

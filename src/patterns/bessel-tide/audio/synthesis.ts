@@ -14,7 +14,7 @@ const besselTideAudio = definePikoChapterAudio({
   score: BESSEL_TIDE_SCORE,
   detuneRatio: 0.0014,
   maximumVoices: 24,
-  timbre: { partialRatio: 2, partialGain: 0.1, chirpRatio: -0.032 },
+  timbre: { partialRatio: 2, partialGain: 0.14, chirpRatio: 0.018, partialDecayScale: 0.7 },
   graph: BESSEL_TIDE_AUDIO_GRAPH,
 });
 

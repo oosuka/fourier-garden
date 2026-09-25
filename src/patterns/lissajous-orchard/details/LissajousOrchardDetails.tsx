@@ -2,7 +2,7 @@ import { AnalyticPatternDetails } from "../../../components/AnalyticPatternDetai
 import { LISSAJOUS_RATIOS, greatestCommonDivisor } from "../math/model";
 
 const IDENTITIES = [
-  "\\gamma_{a,b}(s,t)=(as+\\delta_L(t),bs)\\bmod2\\pi,\\qquad \\Gamma_{a,b}=(\\sin\\gamma_1,\\sin\\gamma_2)",
+  "\\begin{aligned}\\gamma_{a,b}(s,t)&=(as+\\delta_L(t),bs)\\bmod2\\pi,\\\\ \\Gamma_{a,b}&=(\\sin\\gamma_1,\\sin\\gamma_2)\\end{aligned}",
   "\\delta_L(t)=\\frac\\pi2+\\frac\\pi3\\sin(0.025t),\\qquad \\frac\\pi6\\le\\delta_L\\le\\frac{5\\pi}6",
   "\\gcd(a,b)=1\\Longrightarrow\\gamma_{a,b}(s+2\\pi,t)=\\gamma_{a,b}(s,t)",
 ];
@@ -74,24 +74,31 @@ export function LissajousOrchardDetails() {
       causality={[
         {
           id: "lissajous-ratio",
-          quantity: "既約比a:b",
+          quantity: "Farey比a:b / ratioIndex r",
           status: "保持",
-          visual: "曲線の水平・垂直巻回数",
-          audio: "左右声部の発音分割比",
+          visual: "曲線の水平・垂直巻回数と参照点(x,y)",
+          audio: "9比×32点、60秒288発音。発音間隔は60/288秒で等間隔",
         },
         {
           id: "lissajous-phase",
           quantity: "共有位相差δₗ(t)",
           status: "保持",
           visual: "全曲線の連続な形態変化",
-          audio: "発音開始位相と連続drift",
+          audio: "δₗ(tₑ)で開始位相、carrier driftはa/b。panの時間変調とは別",
         },
         {
           id: "lissajous-register",
-          quantity: "整数和a+b",
+          quantity: "ratioIndex r と参照座標(x,y)",
           status: "圧縮",
           visual: "Farey順の奥行き配置",
-          audio: "500–890 Hzの中域音高",
+          audio: "変調前の基準音高 f=440+12r+90(x+1)+50(y+1) Hz",
+        },
+        {
+          id: "lissajous-pan",
+          quantity: "曲線上の点と絶対時刻t",
+          status: "演出",
+          visual: "発音点は現在の曲線座標へ追従",
+          audio: "基準pan=0.12y。時間変調はdₑ sin(as+δₗ(t))",
         },
         {
           id: "lissajous-poetic",

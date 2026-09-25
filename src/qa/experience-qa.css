@@ -1,0 +1,52 @@
+.experienceQa {
+  position: fixed;
+  z-index: 100;
+  top: 12px;
+  right: 12px;
+  width: 280px;
+  padding: 10px 12px;
+  color: #e8e3d5;
+  background: #10130fee;
+  border: 1px solid #e8e3d52b;
+  font: 12px / 1.5 monospace;
+}
+.experienceQa summary {
+  cursor: pointer;
+}
+.experienceQa form {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  align-items: end;
+}
+.experienceQa label,
+.experienceQa output {
+  display: block;
+  margin-block: 8px;
+}
+.experienceQa input {
+  display: block;
+  width: 120px;
+}
+.experienceQa button,
+.experienceQa input {
+  padding: 6px;
+  margin: 3px;
+  color: inherit;
+  background: #242b21;
+  border: 1px solid #e8e3d547;
+  font: inherit;
+}
+.experienceQa button {
+  cursor: pointer;
+}
+.experienceQa button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.experienceQa pre {
+  max-height: 250px;
+  overflow: auto;
+  font-size: 10px;
+  user-select: text;
+}

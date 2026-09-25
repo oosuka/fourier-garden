@@ -1,3 +1,6 @@
+import { createPatternQualityContract } from "../qualityContract";
+import { observation } from "./observation";
+import { study } from "./study";
 import { createFiveActSections } from "../analyticDefinition";
 import { PHASE_TORUS_SCORE } from "./audio/score";
 import { createPhaseTorusAudioProgram } from "./audio/synthesis";
@@ -20,7 +23,7 @@ export const phaseTorusPattern: PhaseTorusPatternDefinition = {
     composition: "hero-three-dimensional-phase-torus",
     motion: "irrational-continuous-flow",
     space: "embedded-torus-and-flat-domain",
-    palette: "indigo-cyan-gold",
+    palette: "patinated-green-gold",
     timbre: "round-phase-modulated-piko",
     rhythm: "nonuniform-twenty-step-mode-orbit",
     time: "nonclosing-absolute-flow",
@@ -55,13 +58,7 @@ export const phaseTorusPattern: PhaseTorusPatternDefinition = {
     ]),
     expressiveAxes: ["density", "dynamics", "register", "timbre", "space", "motion", "color"],
     localMathMapping: true,
-    qualityContract: {
-      comparableLoudness: true,
-      decayingSonicContinuity: true,
-      nonuniformVisualField: true,
-      localVisualMotion: true,
-      humanReviewRequired: true,
-    },
+    qualityContract: createPatternQualityContract(),
   },
   presentation: {
     observatoryLabel: "PHASE TORUS OBSERVATORY",
@@ -78,6 +75,8 @@ export const phaseTorusPattern: PhaseTorusPatternDefinition = {
     poeticLines: ["二つの位相は同じ道へ戻らず、", "閉じた面を終わりなく巡る。"],
     canvasAriaLabel: "無理比Kronecker流の履歴を持つ巨大な位相トーラスとFourier場",
   },
+  observation,
+  study,
   education: {
     gentleTitle: "閉じた面の上を、同じ場所へ戻らず歩き続ける。",
     gentleBody:
@@ -96,7 +95,8 @@ export const phaseTorusPattern: PhaseTorusPatternDefinition = {
     mode: "sonification",
     initialVolume: 0.35,
     roomSeconds: 1.08,
-    sonificationLatex: "f_{m,n}=440+520\\,C(|m+n\\sqrt2|)",
+    sonificationLatex:
+      "f_{m,n}=430+390\\min\\left(1,\\frac{|m+n\\sqrt2|}{7}\\right)\\,\\mathrm{Hz}",
     score: PHASE_TORUS_SCORE,
     createProgram: createPhaseTorusAudioProgram,
   },

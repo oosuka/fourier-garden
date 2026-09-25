@@ -110,6 +110,39 @@ describe("ControlBar chapter navigation", () => {
     expect(fullscreen?.getAttribute("aria-keyshortcuts")).toBe("F");
   });
 
+  it("exposes the native volume range name and muted value text", () => {
+    const container = document.createElement("div");
+    container.innerHTML = renderToStaticMarkup(
+      <ControlBar
+        playing={false}
+        volume={0.35}
+        detailsOpen
+        detailsHintVisible={false}
+        fullscreen={false}
+        pattern={patternRegistry[0]!}
+        chapterCount={1}
+        chapterIndex={0}
+        switchingChapter={false}
+        transport={new Transport(() => 0)}
+        muted
+        onTogglePlay={vi.fn<() => void>()}
+        onVolume={vi.fn<(value: number) => void>()}
+        onPreviousChapter={vi.fn<() => void>()}
+        onNextChapter={vi.fn<() => void>()}
+        onToggleDetails={vi.fn<() => void>()}
+        onDismissDetailsHint={vi.fn<() => void>()}
+        onToggleFullscreen={vi.fn<() => void>()}
+      />,
+    );
+    const volume = container.querySelector<HTMLInputElement>("input[type='range']");
+
+    expect(volume?.getAttribute("aria-label")).toBe("音量");
+    expect(volume?.getAttribute("aria-valuetext")).toBe("35%・消音中");
+    expect(volume?.min).toBe("0");
+    expect(volume?.max).toBe("1");
+    expect(volume?.step).toBe("0.01");
+  });
+
   it("expands a readable observation-notes hint without changing the button name", () => {
     const container = document.createElement("div");
     container.innerHTML = renderToStaticMarkup(

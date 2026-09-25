@@ -7,6 +7,7 @@ const FORBIDDEN_REPEAT_EVENT_FIELDS = [
   "brightness",
   "accent",
   "absoluteTimeSeconds",
+  "absoluteStep",
 ] as const;
 
 function sameNumber(left: number, right: number): boolean {

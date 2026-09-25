@@ -1,0 +1,42 @@
+{
+  "chapter": "spectral-cathedral",
+  "renderer": "webgpu",
+  "width": 3840,
+  "height": 2160,
+  "pixelRatio": 1,
+  "rasterWidth": 3840,
+  "rasterHeight": 2160,
+  "quality": "high",
+  "seed": "qa",
+  "postProcessing": "default",
+  "audioSampleRateHz": 48000,
+  "clock": "audio-presentation-estimate",
+  "mutedAtStart": false,
+  "volumeAtStart": 0.35,
+  "playingAtStart": true,
+  "motionAtStart": "full",
+  "physicalLatencyMeasured": false,
+  "status": "complete",
+  "reason": null,
+  "durationSeconds": 60.01689999999999,
+  "frames": 3595,
+  "averageFps": 59.89979489110568,
+  "cpuSubmissionP95Ms": 6.4000000059604645,
+  "frameIntervalP95Ms": 17.69999999999709,
+  "maxFrameIntervalMs": 83.29999999999563,
+  "intervalsOver50Ms": 1,
+  "slowFrames": [
+    {
+      "elapsedSeconds": 0.45009999999999856,
+      "frameIntervalMs": 83.29999999999563,
+      "cpuSubmissionMs": 7.100000001490116
+    }
+  ],
+  "slowFramesOmitted": 0,
+  "synchronizationSamples": 3595,
+  "visualLeadP95Ms": 6.833333333332803,
+  "visualLeadMinMs": -12.800000004467904,
+  "visualLeadMaxMs": -4.7333333318420046,
+  "firstScoreSeconds": 22.213667666666666,
+  "lastScoreSeconds": 82.23056766666518
+}
