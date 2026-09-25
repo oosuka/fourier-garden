@@ -9,6 +9,7 @@ import { ExperienceCapture } from "../qa/experienceCapture";
 import { getExperienceQaConfig } from "../qa/experienceConfig";
 import type { ChapterEcho, ChapterFrameCapture } from "../experience/chapterEcho";
 import type { ChapterAfterimageState } from "../components/ChapterAfterimage";
+import { useGardenInterface } from "./useGardenInterface";
 
 const CHAPTER_NOTE_DURATION_MS = 1_800;
 const CHAPTER_TRANSITION_EXIT_MS = 300;
@@ -68,6 +69,26 @@ export function useFourierGardenController() {
   const playbackOperation = useRef(0);
   const [entered, setEntered] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const {
+    detailsOpen,
+    indexOpen,
+    detailsHintVisible,
+    fullscreen,
+    uiNotice,
+    interfaceHidden,
+    revealUi,
+    showUi,
+    onChapterEntered,
+    onChapterSwitchStart,
+    onChapterSwitchEnd,
+    dismissDetailsHint,
+    toggleDetails,
+    toggleIndex,
+    toggleFullscreen,
+    dismissNotice,
+    closeIndex,
+    closeDetails,
+  } = useGardenInterface({ entered, playing });
   const [startingPlayback, setStartingPlayback] = useState(false);
   const playbackIntent = useRef(false);
   const [silentPlayback, setSilentPlayback] = useState(false);
@@ -83,23 +104,14 @@ export function useFourierGardenController() {
   const sceneGenerationRef = useRef(0);
   const [sceneGeneration, setSceneGeneration] = useState(0);
   const sceneReadyResolver = useRef<SceneReadyWaiter | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [indexOpen, setIndexOpen] = useState(false);
   const [muted, setMuted] = useState(false);
   const transitionTimer = useRef<number>(0);
-  const [detailsHintVisible, setDetailsHintVisible] = useState(false);
-  const detailsDiscovered = useRef(false);
-  const hintedPatternIds = useRef(new Set<string>());
-  const [fullscreen, setFullscreen] = useState(false);
   const [volume, setVolume] = useState(audio.currentVolume);
-  const [uiVisible, setUiVisible] = useState(true);
   const [sceneStatus, setSceneStatus] = useState<SceneStatus>("loading");
   const sceneStatusRef = useRef<SceneStatus>("loading");
   const resumeAfterRecovery = useRef(false);
   const [sceneError, setSceneError] = useState("");
   const [audioError, setAudioError] = useState("");
-  const [uiNotice, setUiNotice] = useState("");
-  const hideTimer = useRef<number>(0);
   const autoPaused = useRef(false);
 
   const pausePlayback = useCallback(() => {
@@ -110,8 +122,8 @@ export function useFourierGardenController() {
     audioRef.current.pause();
     setPlaying(false);
     setStartingPlayback(false);
-    setUiVisible(true);
-  }, [qaCapture, transport]);
+    showUi();
+  }, [qaCapture, transport, showUi]);
 
   useEffect(
     () =>
@@ -137,34 +149,6 @@ export function useFourierGardenController() {
     },
     [qaCapture],
   );
-
-  const scheduleUiHide = useCallback(() => {
-    window.clearTimeout(hideTimer.current);
-    if (!entered || !playing || detailsOpen || indexOpen) return;
-    hideTimer.current = window.setTimeout(() => {
-      setUiVisible(false);
-    }, 4_000);
-  }, [detailsOpen, entered, indexOpen, playing]);
-
-  const revealUi = useCallback(() => {
-    setUiVisible(true);
-    scheduleUiHide();
-  }, [scheduleUiHide]);
-
-  const showDetailsHint = useCallback((patternId: string) => {
-    if (detailsDiscovered.current || hintedPatternIds.current.has(patternId)) return;
-    hintedPatternIds.current.add(patternId);
-    setDetailsHintVisible(true);
-  }, []);
-
-  const dismissDetailsHint = useCallback(() => setDetailsHintVisible(false), []);
-
-  const toggleDetails = useCallback(() => {
-    if (!detailsOpen) detailsDiscovered.current = true;
-    dismissDetailsHint();
-    setDetailsOpen(!detailsOpen);
-    setIndexOpen(false);
-  }, [detailsOpen, dismissDetailsHint]);
 
   const playAudio = useCallback(
     async (
@@ -245,14 +229,14 @@ export function useFourierGardenController() {
       audio.setMuted(!sound);
       setSilentPlaybackMode(!sound);
       setEntered(true);
-      showDetailsHint(pattern.id);
+      onChapterEntered(pattern.id);
       await startPlayback();
       revealUi();
     },
     [
       pattern.id,
       revealUi,
-      showDetailsHint,
+      onChapterEntered,
       startPlayback,
       audio,
       sceneStatus,
@@ -290,146 +274,124 @@ export function useFourierGardenController() {
     [qaConfig, switchingChapter, sceneStatus, pausePlayback, transport, startPlayback],
   );
 
-  const switchChapter = useCallback(
-    async (nextIndex: number) => {
-      if (
-        switchingChapter ||
-        nextIndex < 0 ||
-        nextIndex >= patterns.length ||
-        nextIndex === patternIndex
-      ) {
+  const switchChapter = async (nextIndex: number) => {
+    if (
+      switchingChapter ||
+      nextIndex < 0 ||
+      nextIndex >= patterns.length ||
+      nextIndex === patternIndex
+    ) {
+      return;
+    }
+
+    const operation = ++playbackOperation.current;
+    qaCapture?.interrupt("chapter-changed");
+    const resumeAfterSwitch = playbackIntent.current;
+    playbackIntent.current = false;
+    resumeAfterRecovery.current = false;
+    setStartingPlayback(false);
+    const nextPattern = patterns[nextIndex]!;
+    const nextSceneGeneration = ++sceneGenerationRef.current;
+    const transitionStarted = performance.now();
+    const sceneReady = new Promise<boolean>((resolve) => {
+      sceneReadyResolver.current = { generation: nextSceneGeneration, resolve };
+    });
+    window.clearTimeout(transitionTimer.current);
+    onChapterSwitchStart();
+    setSwitchingChapter(true);
+    setTransitionPattern(nextPattern);
+    setTransitionSource(pattern);
+    setTransitionLeaving(false);
+    setPlaying(false);
+    setSceneStatus("loading");
+    setSceneError("");
+    setAudioError("");
+
+    try {
+      const echo = await captureSceneRef.current?.();
+      if (operation !== playbackOperation.current) {
+        echo?.dispose();
         return;
       }
+      // A rapid second switch retires the earlier tail: at most one old graph remains.
+      for (const retiring of departingAudio.current) void retiring.dispose();
+      departingAudio.current.clear();
+      departingAudio.current.add(audio);
+      void audio
+        .fadeOutAndDispose({ preserveTail: true })
+        .catch(() => audio.dispose())
+        .finally(() => {
+          departingAudio.current.delete(audio);
+        });
+      capturedEcho.current?.dispose();
+      capturedEcho.current = echo ?? null;
+      setTransitionEcho(echo ? { echo, level: () => audio.departureGain } : null);
 
-      const operation = ++playbackOperation.current;
-      qaCapture?.interrupt("chapter-changed");
-      const resumeAfterSwitch = playbackIntent.current;
-      playbackIntent.current = false;
-      resumeAfterRecovery.current = false;
-      setStartingPlayback(false);
-      const nextPattern = patterns[nextIndex]!;
-      const nextSceneGeneration = ++sceneGenerationRef.current;
-      const transitionStarted = performance.now();
-      const sceneReady = new Promise<boolean>((resolve) => {
-        sceneReadyResolver.current = { generation: nextSceneGeneration, resolve };
-      });
-      window.clearTimeout(transitionTimer.current);
-      setIndexOpen(false);
-      setSwitchingChapter(true);
-      setTransitionPattern(nextPattern);
-      setTransitionSource(pattern);
-      setTransitionLeaving(false);
-      setPlaying(false);
-      dismissDetailsHint();
-      setUiVisible(true);
-      setSceneStatus("loading");
-      setSceneError("");
-      setAudioError("");
+      transport.pause();
+      transport.reset(0);
 
-      try {
-        const echo = await captureSceneRef.current?.();
-        if (operation !== playbackOperation.current) {
-          echo?.dispose();
-          return;
-        }
-        // A rapid second switch retires the earlier tail: at most one old graph remains.
-        for (const retiring of departingAudio.current) void retiring.dispose();
-        departingAudio.current.clear();
-        departingAudio.current.add(audio);
-        void audio
-          .fadeOutAndDispose({ preserveTail: true })
-          .catch(() => audio.dispose())
-          .finally(() => {
-            departingAudio.current.delete(audio);
-          });
-        capturedEcho.current?.dispose();
-        capturedEcho.current = echo ?? null;
-        setTransitionEcho(echo ? { echo, level: () => audio.departureGain } : null);
+      const nextAudio = new AudioEngine(
+        nextPattern.audio.createProgram(),
+        nextPattern.audio.initialVolume,
+      );
+      nextAudio.setMuted(muted);
+      nextAudio.setVolume(volume);
+      audioRef.current = nextAudio;
+      setPatternIndex(nextIndex);
+      setSceneGeneration(nextSceneGeneration);
+      setAudio(nextAudio);
+      setVolume(nextAudio.currentVolume);
 
-        transport.pause();
-        transport.reset(0);
+      const ready = await sceneReady;
+      if (operation !== playbackOperation.current) return;
 
-        const nextAudio = new AudioEngine(
-          nextPattern.audio.createProgram(),
-          nextPattern.audio.initialVolume,
-        );
-        nextAudio.setMuted(muted);
-        nextAudio.setVolume(volume);
-        audioRef.current = nextAudio;
-        setPatternIndex(nextIndex);
-        setSceneGeneration(nextSceneGeneration);
-        setAudio(nextAudio);
-        setVolume(nextAudio.currentVolume);
-
-        const ready = await sceneReady;
-        if (operation !== playbackOperation.current) return;
-
-        if (resumeAfterSwitch && ready && !document.hidden) {
-          if (silentPlaybackRef.current) startSilentPlayback();
-          else
-            await playAudio(
-              nextAudio,
-              0,
-              operation,
-              Math.max(0.065, audio.departureSecondsRemaining),
-            );
-        } else if (resumeAfterSwitch && ready) {
-          autoPaused.current = true;
-        }
-        transitionTimer.current = window.setTimeout(
-          () => {
-            setTransitionLeaving(true);
-            transitionTimer.current = window.setTimeout(() => {
-              setTransitionPattern(null);
-              setTransitionSource(null);
-              setTransitionEcho(null);
-              capturedEcho.current?.dispose();
-              capturedEcho.current = null;
-            }, CHAPTER_TRANSITION_EXIT_MS);
-          },
-          Math.max(0, CHAPTER_NOTE_DURATION_MS - (performance.now() - transitionStarted)),
-        );
-      } catch (error) {
-        if (operation === playbackOperation.current) {
-          setAudioError(
-            error instanceof Error ? error.message : "章の音声を切り替えられませんでした",
+      if (resumeAfterSwitch && ready && !document.hidden) {
+        if (silentPlaybackRef.current) startSilentPlayback();
+        else
+          await playAudio(
+            nextAudio,
+            0,
+            operation,
+            Math.max(0.065, audio.departureSecondsRemaining),
           );
-          setTransitionPattern(null);
-          setTransitionSource(null);
-          setTransitionEcho(null);
-          capturedEcho.current?.dispose();
-          capturedEcho.current = null;
-        }
-      } finally {
-        if (operation === playbackOperation.current) {
-          setSwitchingChapter(false);
-
-          if (sceneReadyResolver.current?.generation === nextSceneGeneration) {
-            sceneReadyResolver.current = null;
-          }
-          if (!detailsDiscovered.current && !hintedPatternIds.current.has(nextPattern.id)) {
-            hintedPatternIds.current.add(nextPattern.id);
-            setDetailsHintVisible(true);
-          }
-        }
+      } else if (resumeAfterSwitch && ready) {
+        autoPaused.current = true;
       }
-    },
-    [
-      audio,
-      dismissDetailsHint,
-      patternIndex,
-      pattern,
-      patterns,
-      playAudio,
-      startSilentPlayback,
-      departingAudio,
-      switchingChapter,
-      transport,
-      muted,
-      volume,
-      qaCapture,
-    ],
-  );
+      transitionTimer.current = window.setTimeout(
+        () => {
+          setTransitionLeaving(true);
+          transitionTimer.current = window.setTimeout(() => {
+            setTransitionPattern(null);
+            setTransitionSource(null);
+            setTransitionEcho(null);
+            capturedEcho.current?.dispose();
+            capturedEcho.current = null;
+          }, CHAPTER_TRANSITION_EXIT_MS);
+        },
+        Math.max(0, CHAPTER_NOTE_DURATION_MS - (performance.now() - transitionStarted)),
+      );
+    } catch (error) {
+      if (operation === playbackOperation.current) {
+        setAudioError(
+          error instanceof Error ? error.message : "章の音声を切り替えられませんでした",
+        );
+        setTransitionPattern(null);
+        setTransitionSource(null);
+        setTransitionEcho(null);
+        capturedEcho.current?.dispose();
+        capturedEcho.current = null;
+      }
+    } finally {
+      if (operation === playbackOperation.current) {
+        setSwitchingChapter(false);
+
+        if (sceneReadyResolver.current?.generation === nextSceneGeneration) {
+          sceneReadyResolver.current = null;
+        }
+        onChapterSwitchEnd(nextPattern.id);
+      }
+    }
+  };
 
   const handleSceneStatus = useCallback(
     (status: SceneStatus, generation: number) => {
@@ -513,12 +475,6 @@ export function useFourierGardenController() {
     revealUi();
   }, [audio, audioError, muted, revealUi, retryAudio, startPlayback, setSilentPlaybackMode]);
 
-  const toggleIndex = useCallback(() => {
-    setIndexOpen((value) => !value);
-    setDetailsOpen(false);
-    revealUi();
-  }, [revealUi]);
-
   const handleVolume = useCallback(
     (value: number) => {
       audio.setVolume(value);
@@ -527,25 +483,6 @@ export function useFourierGardenController() {
     },
     [audio, revealUi],
   );
-
-  const toggleFullscreen = useCallback(async () => {
-    setUiNotice("");
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-      } else {
-        await document.documentElement.requestFullscreen();
-      }
-    } catch {
-      setUiNotice("このブラウザでは全画面表示を開始できませんでした");
-    }
-  }, []);
-
-  useEffect(() => {
-    const onFullscreen = () => setFullscreen(Boolean(document.fullscreenElement));
-    document.addEventListener("fullscreenchange", onFullscreen);
-    return () => document.removeEventListener("fullscreenchange", onFullscreen);
-  }, []);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -567,8 +504,8 @@ export function useFourierGardenController() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!entered || event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.key === "Escape") {
-        setIndexOpen(false);
-        setDetailsOpen(false);
+        closeIndex();
+        closeDetails();
         return;
       }
       const target = event.target;
@@ -592,12 +529,17 @@ export function useFourierGardenController() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [entered, revealUi, toggleDetails, toggleFullscreen, togglePlayback, toggleIndex, toggleMute]);
-
-  useEffect(() => {
-    scheduleUiHide();
-    return () => window.clearTimeout(hideTimer.current);
-  }, [scheduleUiHide]);
+  }, [
+    entered,
+    revealUi,
+    toggleDetails,
+    toggleFullscreen,
+    togglePlayback,
+    toggleIndex,
+    toggleMute,
+    closeIndex,
+    closeDetails,
+  ]);
 
   useEffect(() => {
     for (const candidate of [patterns[patternIndex - 1], patterns[patternIndex + 1]]) {
@@ -647,17 +589,17 @@ export function useFourierGardenController() {
     sceneError,
     audioError,
     uiNotice,
-    dismissNotice: () => setUiNotice(""),
-    interfaceHidden: entered && !uiVisible && !detailsOpen && !indexOpen && !detailsHintVisible,
+    dismissNotice,
+    interfaceHidden,
     indexOpen,
     muted,
     toggleMute,
     toggleIndex,
-    closeIndex: () => setIndexOpen(false),
+    closeIndex,
     revealUi,
     dismissDetailsHint,
     toggleDetails,
-    closeDetails: () => setDetailsOpen(false),
+    closeDetails,
     handleEnter,
     togglePlayback,
     switchChapter,

@@ -13,6 +13,7 @@ V2現状品質版の現行構造。数学を原因として音響・視覚へ写
 | 章の空間・厳密描画 | 章の`scene/` |
 | 共有の局所共鳴・大気 | `src/rendering/analytic/`、`cinematic/` |
 | 再生・遷移・可視性・エラー | `src/app/useFourierGardenController.ts` |
+| 詳細・目録・ヒント・自動非表示・全画面のUI状態 | `src/app/useGardenInterface.ts` |
 | scene初期化・復旧・rAF | `src/components/CanvasStage.tsx` |
 | 観察の入口 | 各章の`observation.ts`、`DetailsPanel.tsx` |
 | 操作する数学比較 | 各章の`study.ts`、`MathematicalStudy.tsx` |

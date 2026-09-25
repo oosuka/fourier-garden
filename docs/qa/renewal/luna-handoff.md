@@ -56,10 +56,10 @@ Lunaというモデル名だけを理由に、数学・音響の正しさや完�
 最初の作業単位で、この引き継ぎと次の入口を読む。以後は対象章と変更責務に必要な部分だけ読む。
 
 1. [元の全31項目の依頼](renewal-request.md) — 利用者の原文を変更せず保存したもの。
-2. [進捗](progress.md) — 実装、実測、履歴、未検証を分けた記録。
+2. [進捗](progress.md) — 現在の状態と受入時の限界。[作業履歴](progress-history.md)は日付付きの経過を保存する。
 3. [V2設計](../../superpowers/specs/2026-09-06-renewal-design.md) と [実装計画](../../superpowers/plans/2026-09-06-renewal.md)。
    古い大項目のチェック欄には、実装済みでも包括的QAが未完の項目がある。未チェックだけで未実装と判断しない。
-4. [QA手順](../../qa-guide.md)、[性能](../../performance.md)、[作業台帳](luna-task-board.md)。
+4. [QA手順](../../qa-guide.md)、[性能](../../performance.md)、[性能の測定履歴](../../performance-history.md)、[作業台帳](luna-task-board.md)。
 
 対象別に参照するもの：
 

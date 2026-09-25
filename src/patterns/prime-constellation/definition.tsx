@@ -1,3 +1,4 @@
+import { createPatternQualityContract } from "../qualityContract";
 import { observation } from "./observation";
 import { study } from "./study";
 import { createFiveActSections } from "../analyticDefinition";
@@ -62,13 +63,7 @@ export const primeConstellationPattern: PrimeConstellationPatternDefinition = {
     ]),
     expressiveAxes: ["density", "dynamics", "register", "timbre", "space", "motion", "color"],
     localMathMapping: true,
-    qualityContract: {
-      comparableLoudness: true,
-      decayingSonicContinuity: true,
-      nonuniformVisualField: true,
-      localVisualMotion: true,
-      humanReviewRequired: true,
-    },
+    qualityContract: createPatternQualityContract(),
   },
   presentation: {
     observatoryLabel: "PRIME CONSTELLATION OBSERVATORY",

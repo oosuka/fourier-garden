@@ -1,3 +1,4 @@
+import { createPatternQualityContract } from "../qualityContract";
 import { observation } from "./observation";
 import { study } from "./study";
 import {
@@ -57,13 +58,7 @@ export const residueBloomPattern: ResidueBloomPatternDefinition = {
     cycleSeconds: 144,
     expressiveAxes: ["density", "dynamics", "timbre", "space", "motion", "color"],
     localMathMapping: true,
-    qualityContract: {
-      comparableLoudness: true,
-      decayingSonicContinuity: true,
-      nonuniformVisualField: true,
-      localVisualMotion: true,
-      humanReviewRequired: true,
-    },
+    qualityContract: createPatternQualityContract(),
     sections: [
       {
         id: "intro",

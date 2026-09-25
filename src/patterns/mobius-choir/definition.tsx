@@ -1,3 +1,4 @@
+import { createPatternQualityContract } from "../qualityContract";
 import { observation } from "./observation";
 import { study } from "./study";
 import "./details/details.css";
@@ -48,13 +49,7 @@ export const mobiusChoirPattern: MobiusChoirPatternDefinition = {
     sections: MOBIUS_CHOIR_DRAMATURGY_SECTIONS,
     expressiveAxes: ["dynamics", "timbre", "space", "motion", "color"],
     localMathMapping: true,
-    qualityContract: {
-      comparableLoudness: true,
-      decayingSonicContinuity: true,
-      nonuniformVisualField: true,
-      localVisualMotion: true,
-      humanReviewRequired: true,
-    },
+    qualityContract: createPatternQualityContract(),
   },
   presentation: {
     observatoryLabel: "MÖBIUS CHOIR OBSERVATORY",

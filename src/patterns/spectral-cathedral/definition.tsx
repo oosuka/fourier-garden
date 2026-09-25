@@ -1,3 +1,4 @@
+import { createPatternQualityContract } from "../qualityContract";
 import { observation } from "./observation";
 import { study } from "./study";
 import "./details/details.css";
@@ -52,13 +53,7 @@ export const spectralCathedralPattern: SpectralCathedralPatternDefinition = {
     cycleSeconds: 75,
     expressiveAxes: ["density", "dynamics", "register", "timbre", "space", "motion", "color"],
     localMathMapping: true,
-    qualityContract: {
-      comparableLoudness: true,
-      decayingSonicContinuity: true,
-      nonuniformVisualField: true,
-      localVisualMotion: true,
-      humanReviewRequired: true,
-    },
+    qualityContract: createPatternQualityContract(),
     sections: [
       {
         id: "illumination",
